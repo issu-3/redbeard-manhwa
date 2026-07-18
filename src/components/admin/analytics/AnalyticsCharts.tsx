@@ -141,7 +141,7 @@ export function RevenueLineChart({ data }: { data: any[] }) {
             tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
           />
           <Tooltip 
-            formatter={(value: number) => [`$${value}`, 'Revenue']}
+            formatter={(value: any) => [`$${value}`, 'Revenue']}
             contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
           />
           <Line type="monotone" dataKey="revenue" stroke="#22c55e" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
