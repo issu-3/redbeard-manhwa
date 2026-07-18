@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans, Poppins } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { SessionProvider } from '@/providers/session-provider';
 import { Toaster } from 'sonner';
+import { APP_URL } from '@/lib/constants';
 import './globals.css';
 
 const inter = Inter({
