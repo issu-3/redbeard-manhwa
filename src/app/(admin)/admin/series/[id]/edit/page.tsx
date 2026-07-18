@@ -1,30 +1,46 @@
-import { createSeries } from '@/app/actions/admin/series';
+import { updateSeries } from '@/app/actions/admin/series';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import { notFound } from 'next/navigation';
 import { MultiSelectField } from '@/components/admin/MultiSelectField';
 
-export default async function NewSeriesPage() {
-  const [genres, tags] = await Promise.all([
+export default async function EditSeriesPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  
+  const [series, genres, tags] = await Promise.all([
+    prisma.series.findUnique({
+      where: { id },
+      include: { genres: true, tags: true }
+    }),
     prisma.genre.findMany({ orderBy: { name: 'asc' } }),
     prisma.tag.findMany({ orderBy: { name: 'asc' } })
   ]);
 
+  if (!series) {
+    notFound();
+  }
+
+  const selectedGenreIds = series.genres.map((g: any) => g.id);
+  const selectedTagIds = series.tags.map((t: any) => t.id);
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-black tracking-tight">Add New Series</h1>
-        <p className="text-text-secondary">Create a new manhwa/manga entry.</p>
+        <h1 className="text-3xl font-black tracking-tight">Edit Series</h1>
+        <p className="text-text-secondary">Update details for {series.title}.</p>
       </div>
 
-      <form action={createSeries} className="space-y-6">
+      <form action={updateSeries} className="space-y-6">
+        <input type="hidden" name="id" value={series.id} />
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <label className="text-sm font-semibold">Title *</label>
             <input 
               name="title" 
               required 
+              defaultValue={series.title}
               className="w-full rounded-lg border border-border bg-card px-4 py-2" 
-              placeholder="e.g. Solo Leveling" 
             />
           </div>
           
@@ -33,14 +49,14 @@ export default async function NewSeriesPage() {
             <input 
               name="coverImage" 
               required 
+              defaultValue={series.coverImage}
               className="w-full rounded-lg border border-border bg-card px-4 py-2" 
-              placeholder="https://.../cover.jpg" 
             />
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-semibold">Type</label>
-            <select name="type" className="w-full rounded-lg border border-border bg-card px-4 py-2">
+            <select name="type" defaultValue={series.type} className="w-full rounded-lg border border-border bg-card px-4 py-2">
               <option value="MANHWA">Manhwa</option>
               <option value="MANGA">Manga</option>
               <option value="MANHUA">Manhua</option>
@@ -50,7 +66,7 @@ export default async function NewSeriesPage() {
 
           <div className="space-y-2">
             <label className="text-sm font-semibold">Status</label>
-            <select name="status" className="w-full rounded-lg border border-border bg-card px-4 py-2">
+            <select name="status" defaultValue={series.status} className="w-full rounded-lg border border-border bg-card px-4 py-2">
               <option value="ONGOING">Ongoing</option>
               <option value="COMPLETED">Completed</option>
               <option value="HIATUS">Hiatus</option>
@@ -59,7 +75,7 @@ export default async function NewSeriesPage() {
 
           <div className="space-y-2">
             <label className="text-sm font-semibold">Reading Direction</label>
-            <select name="readingDirection" className="w-full rounded-lg border border-border bg-card px-4 py-2">
+            <select name="readingDirection" defaultValue={series.readingDirection} className="w-full rounded-lg border border-border bg-card px-4 py-2">
               <option value="VERTICAL">Vertical (Webtoon)</option>
               <option value="RTL">Right to Left (Manga)</option>
               <option value="LTR">Left to Right (Comic)</option>
@@ -70,8 +86,8 @@ export default async function NewSeriesPage() {
             <label className="text-sm font-semibold">Banner Image URL</label>
             <input 
               name="bannerImage" 
+              defaultValue={series.bannerImage || ''}
               className="w-full rounded-lg border border-border bg-card px-4 py-2" 
-              placeholder="https://.../banner.jpg" 
             />
           </div>
         </div>
@@ -82,7 +98,8 @@ export default async function NewSeriesPage() {
             <MultiSelectField 
               name="genres"
               placeholder="Search genres..."
-              options={genres.map(g => ({ id: g.id, name: g.name }))}
+              options={genres.map((g: any) => ({ id: g.id, name: g.name }))}
+              initialSelectedIds={selectedGenreIds}
             />
           </div>
           <div className="space-y-2">
@@ -90,7 +107,8 @@ export default async function NewSeriesPage() {
             <MultiSelectField 
               name="tags"
               placeholder="Search tags..."
-              options={tags.map(t => ({ id: t.id, name: t.name }))}
+              options={tags.map((t: any) => ({ id: t.id, name: t.name }))}
+              initialSelectedIds={selectedTagIds}
             />
           </div>
         </div>
@@ -100,9 +118,9 @@ export default async function NewSeriesPage() {
           <textarea 
             name="description" 
             required 
+            defaultValue={series.description}
             rows={5}
             className="w-full rounded-lg border border-border bg-card px-4 py-2" 
-            placeholder="Full description..." 
           />
         </div>
         
@@ -110,9 +128,9 @@ export default async function NewSeriesPage() {
           <label className="text-sm font-semibold">Synopsis (Short)</label>
           <textarea 
             name="synopsis" 
+            defaultValue={series.synopsis || ''}
             rows={2}
             className="w-full rounded-lg border border-border bg-card px-4 py-2" 
-            placeholder="Short 1-2 sentence synopsis..." 
           />
         </div>
 
@@ -127,7 +145,7 @@ export default async function NewSeriesPage() {
             type="submit" 
             className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white hover:bg-primary/90"
           >
-            Create Series
+            Save Changes
           </button>
         </div>
       </form>

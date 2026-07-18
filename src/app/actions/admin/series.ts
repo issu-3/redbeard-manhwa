@@ -66,3 +66,48 @@ export async function createSeries(formData: FormData) {
   revalidatePath('/admin/series');
   redirect('/admin/series');
 }
+
+export async function updateSeries(formData: FormData) {
+  await checkAdmin();
+
+  const id = formData.get('id') as string;
+  const title = formData.get('title') as string;
+  const description = formData.get('description') as string;
+  const synopsis = formData.get('synopsis') as string;
+  const type = formData.get('type') as any;
+  const status = formData.get('status') as any;
+  const readingDirection = formData.get('readingDirection') as any;
+  const coverImage = formData.get('coverImage') as string;
+  const bannerImage = formData.get('bannerImage') as string;
+  
+  const genreIds = formData.getAll('genres') as string[];
+  const tagIds = formData.getAll('tags') as string[];
+
+  const slug = slugify(title);
+
+  await prisma.series.update({
+    where: { id },
+    data: {
+      title,
+      slug,
+      description,
+      synopsis,
+      type,
+      status,
+      readingDirection,
+      coverImage: coverImage || '/placeholder-cover.jpg',
+      bannerImage: bannerImage || null,
+      genres: {
+        set: genreIds.map(genreId => ({ id: genreId }))
+      },
+      tags: {
+        set: tagIds.map(tagId => ({ id: tagId }))
+      }
+    }
+  });
+
+  revalidatePath('/admin/series');
+  revalidatePath(`/series/${slug}`);
+  revalidatePath('/');
+  redirect('/admin/series');
+}

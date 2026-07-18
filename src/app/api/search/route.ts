@@ -8,19 +8,33 @@ export async function GET(request: NextRequest) {
   const query = searchParams.get('q') || '';
   const limit = parseInt(searchParams.get('limit') || '10', 10);
 
-  if (!query) {
+  const genreSlugs = searchParams.getAll('genre');
+
+  if (!query && genreSlugs.length === 0) {
     return NextResponse.json({ success: true, data: [] });
   }
 
   try {
+    const whereClause: any = {};
+    
+    if (query) {
+      whereClause.OR = [
+        { title: { contains: query, mode: 'insensitive' } },
+        { alternativeTitles: { has: query } },
+        { authors: { some: { name: { contains: query, mode: 'insensitive' } } } },
+      ];
+    }
+
+    if (genreSlugs.length > 0) {
+      whereClause.genres = {
+        some: {
+          slug: { in: genreSlugs }
+        }
+      };
+    }
+
     const results = await prisma.series.findMany({
-      where: {
-        OR: [
-          { title: { contains: query, mode: 'insensitive' } },
-          { alternativeTitles: { has: query } },
-          { authors: { some: { name: { contains: query, mode: 'insensitive' } } } },
-        ],
-      },
+      where: whereClause,
       include: {
         genres: true,
       },
