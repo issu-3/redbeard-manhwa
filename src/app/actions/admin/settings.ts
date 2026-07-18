@@ -5,14 +5,19 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 
 export async function getSettings() {
-  const settings = await prisma.siteSetting.findMany();
-  
-  const settingsMap: Record<string, string> = {};
-  for (const s of settings) {
-    settingsMap[s.key] = s.value;
+  try {
+    const settings = await prisma.siteSetting.findMany();
+    
+    const settingsMap: Record<string, string> = {};
+    for (const s of settings) {
+      settingsMap[s.key] = s.value;
+    }
+    
+    return settingsMap;
+  } catch (error: any) {
+    console.error('Failed to fetch settings (table might not exist):', error.message);
+    return {};
   }
-  
-  return settingsMap;
 }
 
 export async function saveSettings(formData: FormData) {
@@ -42,6 +47,14 @@ export async function saveSettings(formData: FormData) {
     return { success: true };
   } catch (error: any) {
     console.error('Failed to save settings:', error);
-    return { success: false, error: error.message || 'Failed to save settings' };
+    
+    let errorMessage = error.message || 'Failed to save settings';
+    
+    // Check if the error is about a missing table (P2021)
+    if (error.code === 'P2021' || errorMessage.includes('does not exist')) {
+      errorMessage = 'The Settings table does not exist in the database. Please run "npx prisma db push" or deploy migrations to create it.';
+    }
+    
+    return { success: false, error: errorMessage };
   }
 }
