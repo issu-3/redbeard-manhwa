@@ -25,7 +25,20 @@ async function getBookmarks(userId: string) {
     orderBy: { createdAt: 'desc' }
   });
   
-  return bookmarks.map(b => b.series) as unknown as SeriesCardData[];
+  return bookmarks.map((b) => ({
+    id: b.series.id,
+    title: b.series.title,
+    slug: b.series.slug,
+    coverImage: b.series.coverImage,
+    type: b.series.type as SeriesCardData['type'],
+    status: b.series.status as SeriesCardData['status'],
+    averageRating: b.series.averageRating,
+    totalViews: b.series.totalViews,
+    totalBookmarks: b.series.totalBookmarks,
+    chapterCount: b.series.chapterCount,
+    genres: b.series.genres,
+    updatedAt: b.series.updatedAt.toISOString(),
+  }));
 }
 
 export default async function BookmarksPage() {

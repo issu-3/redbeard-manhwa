@@ -174,5 +174,24 @@ export default async function ChapterPage({
     console.error('Failed to increment view count:', e);
   }
 
-  return <ChapterReader chapter={chapter} />;
+  // Fetch comments
+  const commentsData = await prisma.comment.findMany({
+    where: { chapterId: chapter.id },
+    include: {
+      user: {
+        select: { displayName: true, username: true, avatarUrl: true, role: true }
+      },
+      replies: {
+        include: {
+          user: {
+            select: { displayName: true, username: true, avatarUrl: true, role: true }
+          }
+        },
+        orderBy: { createdAt: 'asc' }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return <ChapterReader chapter={chapter} comments={commentsData} currentUserId={session?.user?.id} />;
 }

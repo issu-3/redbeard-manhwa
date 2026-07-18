@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import {
   Eye,
   BookOpen,
@@ -15,159 +16,31 @@ import {
 import { RatingStars } from '@/components/shared/RatingStars';
 import { Badge } from '@/components/shared/Badge';
 import { SeriesCard } from '@/components/shared/SeriesCard';
+import { BookmarkButton } from '@/components/shared/BookmarkButton';
 import { formatNumber, formatRelativeTime } from '@/lib/utils';
-import type { SeriesDetail, SeriesCardData, ChapterListItem } from '@/types';
 import { ChapterListSection } from './chapter-list';
+import { prisma } from '@/lib/prisma';
+import type { SeriesCardData } from '@/types';
+import { auth } from '@/auth';
+import { DescriptionClient } from './description-client';
 
-// ─── Sample Data ───────────────────────────────────────────────
-
-function getSampleSeries(): SeriesDetail {
-  const chapters: ChapterListItem[] = Array.from({ length: 20 }, (_, i) => {
-    const num = 20 - i;
-    const daysAgo = i * 7;
-    const date = new Date();
-    date.setDate(date.getDate() - daysAgo);
-    return {
-      id: `ch-${num}`,
-      number: num,
-      title:
-        num === 20
-          ? 'The Gates of Ragnarok'
-          : num === 19
-            ? 'Awakening of the Shadow'
-            : num === 18
-              ? 'The Monarch Returns'
-              : num === 17
-                ? 'Into the Abyss'
-                : num === 16
-                  ? 'The Final Warning'
-                  : num === 15
-                    ? 'Between Worlds'
-                    : num === 14
-                      ? 'Rise of the Rulers'
-                      : num === 13
-                        ? 'Shadows Converge'
-                        : num === 12
-                          ? 'The Architect\'s Design'
-                          : num === 11
-                            ? 'Through Fire and Ice'
-                            : num === 10
-                              ? 'The Tournament Begins'
-                              : num === 9
-                                ? 'Bonds of Power'
-                                : num === 8
-                                  ? 'A New Threat Emerges'
-                                  : num === 7
-                                    ? 'Legacy of the Monarchs'
-                                    : num === 6
-                                      ? 'The Hidden Dungeon'
-                                      : num === 5
-                                        ? 'First Awakening'
-                                        : num === 4
-                                          ? 'Shadows of Seoul'
-                                          : num === 3
-                                            ? 'The System Activates'
-                                            : num === 2
-                                              ? 'Inherited Power'
-                                              : 'A New Beginning',
-      slug: `chapter-${num}`,
-      totalPages: 18 + Math.floor(Math.random() * 15),
-      totalViews: Math.floor(50000 + Math.random() * 450000),
-      publishedAt: date.toISOString(),
-      isRead: num <= 5,
-    };
+async function getSeriesData(slug: string) {
+  const series = await prisma.series.findUnique({
+    where: { slug },
+    include: {
+      genres: true,
+      tags: true,
+      authors: true,
+      artists: true,
+      chapters: {
+        orderBy: { number: 'desc' },
+      },
+    },
   });
 
-  return {
-    id: 'series-solo-ragnarok',
-    title: 'Solo Leveling: Ragnarok',
-    slug: 'solo-leveling-ragnarok',
-    alternativeTitles: [
-      '나 혼자만 레벨업: 라그나로크',
-      'Solo Leveling: Ragnarök',
-      'Ore dake Level Up na Ken: Ragnarok',
-    ],
-    description: `Following the aftermath of the war between the Monarchs and the Rulers, Sung Suho — the son of the legendary Shadow Monarch, Sung Jinwoo — lives an ordinary life, unaware of the extraordinary battles his father once fought. However, when mysterious gates begin to reappear across the globe, threatening a new era of chaos, Suho is drawn into a world of hunters, dungeons, and shadows.
+  if (!series) return null;
 
-Armed with a fraction of his father's immense power and guided by an enigmatic system, Suho must rise to confront an ancient threat that dwarfs anything the original hunters ever faced. Ragnarok — the twilight of the gods — is approaching, and only the son of the Shadow Monarch stands between humanity and total annihilation.
-
-As Suho battles increasingly powerful monsters and uncovers the truth behind the new gates, he must decide: will he follow in his father's footsteps, or forge his own path as the next Shadow Monarch? The answer may determine the fate of every world in existence.`,
-    synopsis:
-      'The son of the Shadow Monarch must rise as new gates threaten the world in this epic continuation of the Solo Leveling saga.',
-    coverImage: 'https://picsum.photos/seed/solo-ragnarok-cover/400/600',
-    bannerImage: 'https://picsum.photos/seed/solo-ragnarok-banner/1920/800',
-    type: 'MANHWA',
-    status: 'ONGOING',
-    readingDirection: 'VERTICAL',
-    releaseYear: 2024,
-    averageRating: 8.7,
-    ratingCount: 24853,
-    totalViews: 12_500_000,
-    totalBookmarks: 385_000,
-    chapterCount: 20,
-    latestChapterNumber: 20,
-    isHot: true,
-    isFeatured: true,
-    isEditorChoice: true,
-    isHiddenGem: false,
-    genres: [
-      { name: 'Action', slug: 'action' },
-      { name: 'Fantasy', slug: 'fantasy' },
-      { name: 'Adventure', slug: 'adventure' },
-      { name: 'Supernatural', slug: 'supernatural' },
-      { name: 'Drama', slug: 'drama' },
-    ],
-    tags: [
-      { name: 'Overpowered MC', slug: 'overpowered-mc' },
-      { name: 'Dungeons', slug: 'dungeons' },
-      { name: 'Monsters', slug: 'monsters' },
-      { name: 'System', slug: 'system' },
-      { name: 'Leveling', slug: 'leveling' },
-      { name: 'Hunters', slug: 'hunters' },
-      { name: 'Sequel', slug: 'sequel' },
-      { name: 'Shadow Powers', slug: 'shadow-powers' },
-    ],
-    authors: [
-      { name: 'Chugong', slug: 'chugong' },
-      { name: 'Gi So-Ryeong', slug: 'gi-so-ryeong' },
-    ],
-    artists: [
-      { name: 'REDICE Studio', slug: 'redice-studio' },
-      { name: 'A-1 Pictures', slug: 'a1-pictures' },
-    ],
-    chapters,
-    updatedAt: new Date().toISOString(),
-    createdAt: '2024-01-15T00:00:00Z',
-  };
-}
-
-function getRelatedSeries(): SeriesCardData[] {
-  const titles = [
-    { t: 'Solo Leveling', s: 'solo-leveling' },
-    { t: 'Omniscient Reader\'s Viewpoint', s: 'omniscient-readers-viewpoint' },
-    { t: 'The Beginning After the End', s: 'the-beginning-after-the-end' },
-    { t: 'Tomb Raider King', s: 'tomb-raider-king' },
-    { t: 'Return of the Blossoming Blade', s: 'return-blossoming-blade' },
-    { t: 'Second Life Ranker', s: 'second-life-ranker' },
-  ];
-  return titles.map((item, i) => ({
-    id: `related-${i}`,
-    title: item.t,
-    slug: item.s,
-    coverImage: `https://picsum.photos/seed/${item.s}/400/600`,
-    type: 'MANHWA' as const,
-    status: i % 3 === 0 ? ('COMPLETED' as const) : ('ONGOING' as const),
-    averageRating: 7.5 + Math.random() * 2.5,
-    totalViews: Math.floor(1_000_000 + Math.random() * 20_000_000),
-    totalBookmarks: Math.floor(50_000 + Math.random() * 500_000),
-    chapterCount: 50 + Math.floor(Math.random() * 200),
-    latestChapterNumber: 50 + Math.floor(Math.random() * 200),
-    genres: [
-      { name: 'Action', slug: 'action' },
-      { name: 'Fantasy', slug: 'fantasy' },
-    ],
-    updatedAt: new Date().toISOString(),
-  }));
+  return series;
 }
 
 // ─── Metadata ──────────────────────────────────────────────────
@@ -177,8 +50,10 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  await params;
-  const series = getSampleSeries();
+  const { slug } = await params;
+  const series = await getSeriesData(slug);
+  
+  if (!series) return { title: 'Series Not Found' };
 
   return {
     title: series.title,
@@ -215,9 +90,38 @@ export default async function SeriesDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await params;
-  const series = getSampleSeries();
-  const relatedSeries = getRelatedSeries();
+  const { slug } = await params;
+  const series = await getSeriesData(slug);
+  
+  if (!series) {
+    notFound();
+  }
+
+  // Check if user has bookmarked this series
+  const session = await auth();
+  let isBookmarked = false;
+  
+  if (session?.user?.id) {
+    const bookmark = await prisma.bookmark.findUnique({
+      where: {
+        userId_seriesId: {
+          userId: session.user.id,
+          seriesId: series.id
+        }
+      }
+    });
+    isBookmarked = !!bookmark;
+  }
+
+  // Related series (mocked for now, but fetching real ones from same genres would be better)
+  const relatedSeries = await prisma.series.findMany({
+    where: { 
+      id: { not: series.id },
+      genres: { some: { id: { in: series.genres.map(g => g.id) } } }
+    },
+    take: 6,
+    include: { genres: true }
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -260,18 +164,17 @@ export default async function SeriesDetailPage({
 
             {/* ── Action Buttons (below cover on mobile, hidden on lg) ── */}
             <div className="flex flex-col gap-3 w-full mt-6 lg:hidden">
-              <Link
-                href={`/series/${series.slug}/chapter/1`}
-                className="flex items-center justify-center gap-2 w-full rounded-xl bg-primary px-6 py-3.5 font-semibold text-white transition-all hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
-              >
-                <BookOpen className="h-5 w-5" />
-                Read First Chapter
-              </Link>
+              {series.chapters.length > 0 && (
+                <Link
+                  href={`/series/${series.slug}/chapter/${series.chapters[series.chapters.length - 1].number}`}
+                  className="flex items-center justify-center gap-2 w-full rounded-xl bg-primary px-6 py-3.5 font-semibold text-white transition-all hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
+                >
+                  <BookOpen className="h-5 w-5" />
+                  Read First Chapter
+                </Link>
+              )}
               <div className="flex gap-3">
-                <button className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 font-medium text-text-primary transition-all hover:border-primary/40 hover:bg-card-hover">
-                  <Bookmark className="h-4 w-4" />
-                  Bookmark
-                </button>
+                <BookmarkButton seriesId={series.id} initialBookmarked={isBookmarked} bookmarkCount={series.totalBookmarks} />
                 <button className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 font-medium text-text-primary transition-all hover:border-primary/40 hover:bg-card-hover">
                   <Share2 className="h-4 w-4" />
                 </button>
@@ -342,7 +245,7 @@ export default async function SeriesDetailPage({
               <StatItem
                 icon={<Clock className="h-4 w-4" />}
                 label="Updated"
-                value={formatRelativeTime(series.updatedAt)}
+                value={formatRelativeTime(series.updatedAt.toISOString())}
               />
             </div>
 
@@ -433,26 +336,27 @@ export default async function SeriesDetailPage({
 
             {/* Action Buttons (desktop) */}
             <div className="hidden lg:flex gap-3 mb-8">
-              <Link
-                href={`/series/${series.slug}/chapter/1`}
-                className="flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 font-semibold text-white transition-all hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
-              >
-                <BookOpen className="h-5 w-5" />
-                Read First Chapter
-              </Link>
-              {series.latestChapterNumber && series.latestChapterNumber > 1 && (
+              {series.chapters.length > 0 && (
                 <Link
-                  href={`/series/${series.slug}/chapter/${series.latestChapterNumber}`}
+                  href={`/series/${series.slug}/chapter/${series.chapters[series.chapters.length - 1].number}`}
+                  className="flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 font-semibold text-white transition-all hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
+                >
+                  <BookOpen className="h-5 w-5" />
+                  Read First Chapter
+                </Link>
+              )}
+              {series.chapters.length > 1 && (
+                <Link
+                  href={`/series/${series.slug}/chapter/${series.chapters[0].number}`}
                   className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-6 py-3.5 font-semibold text-primary transition-all hover:bg-primary/10 hover:border-primary/50 active:scale-[0.98]"
                 >
-                  Continue Ch. {series.latestChapterNumber}
+                  Continue Ch. {series.chapters[0].number}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               )}
-              <button className="flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-3.5 font-medium text-text-primary transition-all hover:border-primary/40 hover:bg-card-hover">
-                <Bookmark className="h-4 w-4" />
-                Bookmark
-              </button>
+              
+              <BookmarkButton seriesId={series.id} initialBookmarked={isBookmarked} />
+              
               <button className="flex items-center justify-center rounded-xl border border-border bg-card w-[52px] text-text-primary transition-all hover:border-primary/40 hover:bg-card-hover">
                 <Share2 className="h-4 w-4" />
               </button>
@@ -462,8 +366,18 @@ export default async function SeriesDetailPage({
 
         {/* ── Chapter List ──────────────────────────────────── */}
         <section className="mt-12">
+          {/* Note: In a real app we'd map our DB Chapter model to ChapterListItem type */}
           <ChapterListSection
-            chapters={series.chapters}
+            chapters={series.chapters.map(c => ({
+              id: c.id,
+              number: c.number,
+              title: c.title || undefined,
+              slug: c.slug,
+              totalPages: c.totalPages,
+              totalViews: c.totalViews,
+              publishedAt: c.publishedAt?.toISOString(),
+              isRead: false // Real app would map ReadingHistory here
+            }))}
             seriesSlug={series.slug}
           />
         </section>
@@ -484,7 +398,11 @@ export default async function SeriesDetailPage({
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
             {relatedSeries.map((item, index) => (
-              <SeriesCard key={item.id} series={item} index={index} />
+              <SeriesCard 
+                key={item.id} 
+                series={{...item, type: item.type as SeriesCardData['type'], status: item.status as SeriesCardData['status'], updatedAt: item.updatedAt.toISOString(), genres: item.genres, latestChapterNumber: item.chapterCount}} 
+                index={index} 
+              />
             ))}
           </div>
         </section>
@@ -533,6 +451,3 @@ function DescriptionSection({ description }: { description: string }) {
   // For the server render, show truncated
   return <DescriptionClient description={description} />;
 }
-
-// Client component for expandable description — inlined here then imported
-import { DescriptionClient } from './description-client';

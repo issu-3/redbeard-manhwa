@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, Plus_Jakarta_Sans, Poppins } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { SessionProvider } from '@/providers/session-provider';
+import { Toaster } from 'sonner';
 import './globals.css';
 
 const inter = Inter({
@@ -98,6 +99,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <Toaster position="bottom-right" />
           </ThemeProvider>
         </SessionProvider>
       </body>

@@ -149,13 +149,14 @@ export function Header() {
 
             {/* Notifications (logged in only) */}
             {isLoggedIn && (
-              <button
+              <Link
+                href="/user/notifications"
                 className="relative flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-white"
                 aria-label="Notifications"
               >
                 <Bell className="h-[18px] w-[18px]" />
                 <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
-              </button>
+              </Link>
             )}
 
             {/* User Menu / Login — Desktop */}

@@ -28,6 +28,7 @@ import {
   SkipForward,
   Play,
   Gauge,
+  MessageSquare,
 } from 'lucide-react';
 import { useReaderStore, type ReaderMode, type FitMode, type ReadingDirection } from '@/store/reader-store';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -35,15 +36,20 @@ import { useSwipeGestures } from '@/hooks/useSwipeGestures';
 import { cn } from '@/lib/utils';
 import type { ChapterData } from '@/types';
 
+import { CommentSection } from '@/components/shared/CommentSection';
+import type { CommentData } from '@/components/shared/CommentItem';
+
 // ─── Types ─────────────────────────────────────────────────────
 
 interface ChapterReaderProps {
   chapter: ChapterData;
+  comments: CommentData[];
+  currentUserId?: string;
 }
 
 // ─── Main Component ────────────────────────────────────────────
 
-export function ChapterReader({ chapter }: ChapterReaderProps) {
+export function ChapterReader({ chapter, comments, currentUserId }: ChapterReaderProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -86,6 +92,7 @@ export function ChapterReader({ chapter }: ChapterReaderProps) {
 
   // Local state
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
   const [showUI, setShowUI] = useState(true);
 
@@ -102,9 +109,9 @@ export function ChapterReader({ chapter }: ChapterReaderProps) {
     setShowUI(true);
     if (uiTimeoutRef.current) clearTimeout(uiTimeoutRef.current);
     uiTimeoutRef.current = setTimeout(() => {
-      if (!settingsOpen) setShowUI(false);
+      if (!settingsOpen && !commentsOpen) setShowUI(false);
     }, 3000);
-  }, [settingsOpen]);
+  }, [settingsOpen, commentsOpen]);
 
   useEffect(() => {
     setTimeout(() => resetUITimer(), 0);
@@ -243,6 +250,8 @@ export function ChapterReader({ chapter }: ChapterReaderProps) {
       handler: () => {
         if (settingsOpen) {
           setSettingsOpen(false);
+        } else if (commentsOpen) {
+          setCommentsOpen(false);
         } else {
           router.push(`/series/${chapter.seriesSlug}`);
         }
@@ -357,6 +366,21 @@ export function ChapterReader({ chapter }: ChapterReaderProps) {
                     <Minimize className="h-4 w-4" />
                   ) : (
                     <Maximize className="h-4 w-4" />
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setCommentsOpen(true);
+                    resetUITimer();
+                  }}
+                  className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-all relative"
+                  title="Comments"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  {comments.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center text-[9px] font-bold text-white">
+                      {comments.length}
+                    </span>
                   )}
                 </button>
                 <button
@@ -828,6 +852,54 @@ export function ChapterReader({ chapter }: ChapterReaderProps) {
                     <ShortcutRow keys={['Esc']} action="Exit reader" />
                   </div>
                 </div>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Comments Panel ─────────────────────────────────── */}
+      <AnimatePresence>
+        {commentsOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-[60] bg-black/40"
+              onClick={() => setCommentsOpen(false)}
+            />
+
+            {/* Panel */}
+            <motion.aside
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="absolute top-0 right-0 bottom-0 z-[70] w-full max-w-md bg-surface border-l border-border overflow-y-auto thin-scrollbar"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Panel Header */}
+              <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-surface border-b border-border">
+                <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Comments
+                </h2>
+                <button
+                  onClick={() => setCommentsOpen(false)}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-card text-text-muted hover:text-text-primary hover:bg-card-hover transition-all"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="p-5">
+                <CommentSection 
+                  chapterId={chapter.id} 
+                  comments={comments} 
+                  currentUserId={currentUserId} 
+                />
               </div>
             </motion.aside>
           </>
