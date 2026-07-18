@@ -19,7 +19,6 @@ const navigation = [
   { name: 'Genres & Tags', href: '/admin/metadata', icon: Tags },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Comments', href: '/admin/comments', icon: MessageSquare },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
 export const dynamic = 'force-dynamic';
