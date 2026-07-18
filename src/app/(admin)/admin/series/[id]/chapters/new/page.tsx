@@ -1,6 +1,7 @@
 import { createChapter } from '@/app/actions/admin/chapters';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import { ChapterUploader } from '@/components/admin/ChapterUploader';
 
 export default async function NewChapterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -44,16 +45,9 @@ export default async function NewChapterPage({ params }: { params: Promise<{ id:
 
         <div className="space-y-2">
           <label className="text-sm font-semibold flex justify-between">
-            <span>Image URLs *</span>
-            <span className="text-xs text-text-secondary font-normal">One URL per line</span>
+            <span>Chapter Images *</span>
           </label>
-          <textarea 
-            name="imageUrls" 
-            required 
-            rows={10}
-            className="w-full rounded-lg border border-border bg-card px-4 py-2 font-mono text-sm" 
-            placeholder="https://.../page1.jpg&#10;https://.../page2.jpg" 
-          />
+          <ChapterUploader />
         </div>
         
         <div className="flex items-center gap-2">
