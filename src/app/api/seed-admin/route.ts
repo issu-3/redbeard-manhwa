@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const adminCount = await prisma.user.count({
@@ -39,6 +41,9 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Seed error:', error);
-    return NextResponse.json({ error: 'Failed to seed admin' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to seed admin',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
