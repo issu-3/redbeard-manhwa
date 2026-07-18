@@ -585,3 +585,16 @@ model Follow {
   @@unique([followerId, followingId])
   @@map("follows")
 }
+
+// ============================================================================
+// SETTINGS MODEL
+// ============================================================================
+
+model SiteSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
