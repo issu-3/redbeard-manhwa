@@ -3,9 +3,10 @@ import Image from 'next/image';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
-import { Save, User, Mail, Link as LinkIcon, Camera } from 'lucide-react';
+import { Mail, Link as LinkIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ProfileForm } from './ProfileForm';
 
 export const metadata: Metadata = {
   title: 'Account Settings | REDBEARD',
@@ -49,60 +50,7 @@ export default async function SettingsPage() {
       </div>
 
       <div className="space-y-8">
-        {/* Profile Form (Mock) */}
-        <section className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <User className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-bold">Public Profile</h2>
-          </div>
-          
-          <div className="flex flex-col md:flex-row gap-8">
-            <div className="flex-1 space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Username</label>
-                <Input defaultValue={user.username || ''} placeholder="redbeard_fan" />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Display Name</label>
-                <Input defaultValue={user.displayName || user.username || ''} placeholder="Redbeard Fan" />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Bio</label>
-                <textarea 
-                  className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                  defaultValue={user.bio || ''} 
-                  placeholder="Tell us about yourself..." 
-                />
-              </div>
-            </div>
-            
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-32 h-32 rounded-full border-2 border-border overflow-hidden bg-muted relative group cursor-pointer">
-                <img 
-                  src={user.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${user.id}`} 
-                  alt="Avatar" 
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Camera className="w-6 h-6 text-white mb-1" />
-                  <span className="text-xs text-white font-medium">Change</span>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground text-center">
-                JPG, GIF or PNG. Max size of 2MB.
-              </p>
-            </div>
-          </div>
-          
-          <div className="mt-6 flex justify-end">
-            <Button>
-              <Save className="w-4 h-4 mr-2" />
-              Save Profile
-            </Button>
-          </div>
-        </section>
+        <ProfileForm user={user} />
 
         {/* Account Details */}
         <section className="bg-card border border-border rounded-xl p-6">

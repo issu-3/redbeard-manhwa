@@ -9,10 +9,13 @@ import {
   BookOpen, 
   Star,
   Settings,
-  Bookmark
+  Bookmark,
+  Clock,
+  Heart
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { formatDistanceToNow } from 'date-fns';
 
 export const metadata: Metadata = {
   title: 'Profile | REDBEARD',
@@ -24,7 +27,19 @@ async function getProfileData(userId: string) {
     where: { id: userId },
     include: {
       bookmarks: true,
-      readingHistory: true,
+      readingHistory: {
+        include: {
+          series: {
+            include: {
+              genres: true
+            }
+          },
+          chapter: true
+        },
+        orderBy: {
+          updatedAt: 'desc'
+        }
+      },
       ratings: true,
     }
   });
@@ -44,6 +59,24 @@ export default async function ProfilePage() {
   if (!user) {
     redirect('/login');
   }
+
+  // Calculate stats
+  const recentlyRead = user.readingHistory.slice(0, 5);
+  
+  // Calculate favorite genres
+  const genreCounts: Record<string, { count: number, name: string }> = {};
+  user.readingHistory.forEach(rh => {
+    rh.series.genres.forEach(genre => {
+      if (!genreCounts[genre.id]) {
+        genreCounts[genre.id] = { count: 0, name: genre.name };
+      }
+      genreCounts[genre.id].count++;
+    });
+  });
+  
+  const favoriteGenres = Object.values(genreCounts)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
 
   return (
     <div className="space-y-8">
@@ -65,8 +98,8 @@ export default async function ProfilePage() {
         <div className="px-6 pb-6 -mt-12 md:-mt-16 relative flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
           <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-background overflow-hidden bg-muted flex-shrink-0">
             <Image
-              src={user.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${user.username || user.id}`}
-              alt={user.username || user.displayName || 'User'}
+              src={user.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${user.id}`}
+              alt={user.displayName || user.username || 'User'}
               fill
               className="object-cover"
             />
@@ -81,7 +114,7 @@ export default async function ProfilePage() {
             </p>
           </div>
           
-          <div className="md:pb-2">
+          <div className="md:pb-2 flex gap-3">
             <Button asChild variant="outline">
               <Link href="/user/settings">
                 <Settings className="w-4 h-4 mr-2" />
@@ -135,7 +168,6 @@ export default async function ProfilePage() {
         </div>
       </div>
 
-      {/* Bio & Details */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-6">
           <section className="bg-card border border-border rounded-xl p-6">
@@ -148,20 +180,78 @@ export default async function ProfilePage() {
           </section>
           
           <section className="bg-card border border-border rounded-xl p-6">
-            <h2 className="text-xl font-bold mb-4">Recent Activity</h2>
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                <Star className="w-8 h-8 text-muted-foreground opacity-50" />
-              </div>
-              <p className="text-lg font-medium">No recent activity</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Read some chapters or leave reviews to see them here!
-              </p>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold">Recently Read</h2>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/user/history">View All</Link>
+              </Button>
             </div>
+            
+            {recentlyRead.length > 0 ? (
+              <div className="space-y-4">
+                {recentlyRead.map((item) => (
+                  <Link 
+                    href={`/series/${item.series.slug}/chapter/${item.chapter.number}`} 
+                    key={item.id}
+                    className="flex gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-border"
+                  >
+                    <div className="relative w-16 h-20 rounded-md overflow-hidden flex-shrink-0">
+                      <Image 
+                        src={item.series.coverImage} 
+                        alt={item.series.title} 
+                        fill 
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-col justify-center">
+                      <h3 className="font-semibold line-clamp-1">{item.series.title}</h3>
+                      <p className="text-sm text-primary mb-1">
+                        Chapter {item.chapter.number} {item.chapter.title ? `- ${item.chapter.title}` : ''}
+                      </p>
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true })}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <Star className="w-8 h-8 text-muted-foreground opacity-50" />
+                </div>
+                <p className="text-lg font-medium">No recent activity</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Read some chapters to see them here!
+                </p>
+              </div>
+            )}
           </section>
         </div>
         
         <div className="space-y-6">
+          <section className="bg-card border border-border rounded-xl p-6">
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <Heart className="w-5 h-5 text-red-500" /> Favorite Genres
+            </h2>
+            {favoriteGenres.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {favoriteGenres.map((genre) => (
+                  <div 
+                    key={genre.name} 
+                    className="px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground text-sm font-medium flex items-center gap-2"
+                  >
+                    {genre.name}
+                    <span className="opacity-50 text-xs">{genre.count}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Read more series to establish your favorite genres.</p>
+            )}
+          </section>
+
           <section className="bg-card border border-border rounded-xl p-6">
             <h2 className="text-lg font-bold mb-4">Achievements</h2>
             <div className="space-y-4">
@@ -175,7 +265,6 @@ export default async function ProfilePage() {
             </div>
             
             <div className="mt-6 flex flex-col gap-3">
-              {/* Empty placeholder for achievements since we don't have UserAchievement data yet */}
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border/50">
                 <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500">
                   <BookOpen className="w-5 h-5" />
