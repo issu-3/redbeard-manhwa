@@ -4,6 +4,7 @@ import { ThemeProvider } from 'next-themes';
 import { SessionProvider } from '@/providers/session-provider';
 import { Toaster } from 'sonner';
 import { APP_URL } from '@/lib/constants';
+import { getCachedSettings } from '@/app/actions/admin/settings';
 import './globals.css';
 
 const inter = Inter({
@@ -78,11 +79,14 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getCachedSettings();
+  const theme = settings.defaultTheme || 'system';
+
   return (
     <html
       lang="en"
@@ -93,8 +97,9 @@ export default function RootLayout({
         <SessionProvider>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
-            enableSystem
+            defaultTheme={theme}
+            enableSystem={theme === 'system'}
+            forcedTheme={theme !== 'system' ? theme : undefined}
             disableTransitionOnChange
           >
             {children}

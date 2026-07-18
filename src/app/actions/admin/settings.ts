@@ -1,8 +1,16 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { auth } from '@/auth';
+
+export const getCachedSettings = unstable_cache(
+  async () => {
+    return await getSettings();
+  },
+  ['site-settings'],
+  { tags: ['settings'], revalidate: 3600 }
+);
 
 export async function getSettings() {
   try {

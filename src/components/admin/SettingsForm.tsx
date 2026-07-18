@@ -139,6 +139,7 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                     defaultValue={initialSettings.defaultTheme || 'dark'}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   >
+                    <option value="system">System (OS Preference)</option>
                     <option value="dark">Dark</option>
                     <option value="light">Light</option>
                   </select>
