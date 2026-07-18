@@ -598,3 +598,37 @@ model SiteSetting {
   @@map("site_settings")
 }
 
+// ============================================================================
+// HOMEPAGE MANAGEMENT MODELS
+// ============================================================================
+
+model HeroBanner {
+  id           String    @id @default(cuid())
+  title        String?
+  subtitle     String?
+  buttonText   String?
+  buttonUrl    String?
+  desktopImage String
+  mobileImage  String?
+  isActive     Boolean   @default(true)
+  startDate    DateTime?
+  endDate      DateTime?
+  order        Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("hero_banners")
+}
+
+model HomepageSection {
+  id             String   @id @default(cuid())
+  type           String   @unique
+  isActive       Boolean  @default(true)
+  order          Int      @default(0)
+  limit          Int      @default(10)
+  isManual       Boolean  @default(false)
+  manualSeriesId String[] 
+
+  @@map("homepage_sections")
+}
+

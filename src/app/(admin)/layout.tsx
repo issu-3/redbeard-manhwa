@@ -14,6 +14,7 @@ import { auth } from '@/auth';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { name: 'Homepage', href: '/admin/homepage', icon: LayoutDashboard },
   { name: 'Series', href: '/admin/series', icon: Library },
   { name: 'Chapters', href: '/admin/chapters', icon: BookOpen },
   { name: 'Genres & Tags', href: '/admin/metadata', icon: Tags },
