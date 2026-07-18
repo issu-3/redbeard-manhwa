@@ -44,37 +44,34 @@ async function fetchAnalyticsData(range: string) {
       break;
   }
 
-  // 1. Current Period Counts
+  const isAllTime = range === 'all';
+  const initialTotalUsersPromise = isAllTime ? Promise.resolve(0) : prisma.user.count({ where: { createdAt: { lt: startDate } } });
+
+  // 1. Current Period Counts & Data
   const [
-    usersCount,
-    seriesCount,
-    chaptersCount,
+    usersData,
+    seriesData,
+    chaptersData,
     commentsCount,
     bookmarksCount,
     readingHistory,
-    seriesByStatusRaw,
-    genreCounts,
+    initialTotalUsers,
     usersByRoleRaw
   ] = await Promise.all([
-    prisma.user.count({ where: { createdAt: { gte: startDate } } }),
-    prisma.series.count({ where: { createdAt: { gte: startDate } } }),
-    prisma.chapter.count({ where: { createdAt: { gte: startDate } } }),
+    prisma.user.findMany({ where: { createdAt: { gte: startDate } }, select: { createdAt: true } }),
+    prisma.series.findMany({ where: { createdAt: { gte: startDate } }, select: { createdAt: true } }),
+    prisma.chapter.findMany({ where: { createdAt: { gte: startDate } }, select: { createdAt: true } }),
     prisma.comment.count({ where: { createdAt: { gte: startDate } } }),
     prisma.bookmark.count({ where: { createdAt: { gte: startDate } } }),
     prisma.readingHistory.findMany({
       where: { createdAt: { gte: startDate } },
-      select: { createdAt: true, userId: true }
+      select: { 
+        createdAt: true, 
+        userId: true,
+        series: { select: { title: true, genres: { select: { name: true } } } } 
+      }
     }),
-    prisma.series.groupBy({
-      by: ['status'],
-      _count: { id: true },
-      where: { createdAt: { gte: startDate } }
-    }),
-    prisma.genre.findMany({
-      include: { _count: { select: { series: true } } },
-      take: 5,
-      orderBy: { seriesCount: 'desc' }
-    }),
+    initialTotalUsersPromise,
     prisma.user.groupBy({
       by: ['role'],
       _count: { id: true },
@@ -82,15 +79,16 @@ async function fetchAnalyticsData(range: string) {
     })
   ]);
 
-  // Current active & unique visitors from reading history
+  const usersCount = usersData.length;
+  const seriesCount = seriesData.length;
+  const chaptersCount = chaptersData.length;
+
   const uniqueUsers = new Set<string>();
   readingHistory.forEach(h => uniqueUsers.add(h.userId));
   const activeUsersCount = uniqueUsers.size; 
   const viewsCount = readingHistory.length;
-  // uniqueVisitors is the same as activeUsers in this context, but we will provide both as requested
 
   // 2. Previous Period Counts (for trend calculation)
-  const isAllTime = range === 'all';
   let prevUsersCount = 0, prevSeriesCount = 0, prevChaptersCount = 0;
   let prevCommentsCount = 0, prevBookmarksCount = 0, prevViewsCount = 0, prevActiveUsersCount = 0;
 
@@ -173,20 +171,109 @@ async function fetchAnalyticsData(range: string) {
     activeUsers: generateSparkline(spHistory, true),
   };
 
-  // 4. Formatting output
-  const trafficByDay: Record<string, number> = {};
-  readingHistory.forEach(history => {
-    const day = history.createdAt.toISOString().split('T')[0];
-    trafficByDay[day] = (trafficByDay[day] || 0) + 1;
-  });
-  const trafficData = Object.entries(trafficByDay)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, views]) => ({ date, views }));
+  // 4. Generating Continuous Days for Charts
+  const getDatesBetween = (start: Date, end: Date) => {
+    const dates = [];
+    let current = new Date(start);
+    current.setHours(0, 0, 0, 0);
+    const stop = new Date(end);
+    stop.setHours(0, 0, 0, 0);
+    
+    // If range is large (all time), let's limit the chart data points to a maximum of 90 days.
+    if (isAllTime) {
+      current = new Date();
+      current.setDate(current.getDate() - 90);
+    }
+    
+    while (current <= stop) {
+      dates.push(current.toISOString().split('T')[0]);
+      current.setDate(current.getDate() + 1);
+    }
+    return dates;
+  };
+  const timelineDates = getDatesBetween(startDate, now);
 
-  const seriesByStatus = seriesByStatusRaw.map(s => ({
-    name: s.status,
-    value: s._count.id
+  // Daily Traffic
+  const viewsByDay: Record<string, number> = {};
+  readingHistory.forEach(h => {
+    const day = h.createdAt.toISOString().split('T')[0];
+    viewsByDay[day] = (viewsByDay[day] || 0) + 1;
+  });
+  const trafficData = timelineDates.map(date => ({
+    date,
+    views: viewsByDay[date] || 0
   }));
+
+  // User Growth
+  const newUsersByDay: Record<string, number> = {};
+  usersData.forEach(u => {
+    const day = u.createdAt.toISOString().split('T')[0];
+    newUsersByDay[day] = (newUsersByDay[day] || 0) + 1;
+  });
+  
+  let currentCumulativeUsers = initialTotalUsers;
+  // If 'all' time, usersData contains everything, so cumulative starts at 0
+  if (isAllTime) {
+     const earliestDateStr = timelineDates[0];
+     // Count everything before the cut-off (90 days ago) to set baseline
+     const cutoffDate = new Date(earliestDateStr);
+     currentCumulativeUsers = usersData.filter(u => u.createdAt < cutoffDate).length;
+  }
+
+  const userGrowthData = timelineDates.map(date => {
+    const newUsers = newUsersByDay[date] || 0;
+    currentCumulativeUsers += newUsers;
+    return {
+      date,
+      newUsers,
+      cumulativeUsers: currentCumulativeUsers
+    };
+  });
+
+  // Content Publishing
+  const seriesByDay: Record<string, number> = {};
+  seriesData.forEach(s => {
+    const day = s.createdAt.toISOString().split('T')[0];
+    seriesByDay[day] = (seriesByDay[day] || 0) + 1;
+  });
+  const chaptersByDay: Record<string, number> = {};
+  chaptersData.forEach(c => {
+    const day = c.createdAt.toISOString().split('T')[0];
+    chaptersByDay[day] = (chaptersByDay[day] || 0) + 1;
+  });
+  const publishingData = timelineDates.map(date => ({
+    date,
+    series: seriesByDay[date] || 0,
+    chapters: chaptersByDay[date] || 0
+  }));
+
+  // Reading Distribution
+  const genreViews: Record<string, number> = {};
+  const seriesViews: Record<string, number> = {};
+  
+  readingHistory.forEach(h => {
+    if (h.series) {
+      seriesViews[h.series.title] = (seriesViews[h.series.title] || 0) + 1;
+      if (h.series.genres && h.series.genres.length > 0) {
+        h.series.genres.forEach(g => {
+          genreViews[g.name] = (genreViews[g.name] || 0) + 1;
+        });
+      }
+    }
+  });
+
+  let readingDistributionData = Object.entries(genreViews)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, value]) => ({ name, value }))
+    .slice(0, 10); // Top 10 genres
+
+  if (readingDistributionData.length === 0) {
+    // Fallback to top series if no genres exist
+    readingDistributionData = Object.entries(seriesViews)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, value]) => ({ name, value }))
+      .slice(0, 10);
+  }
 
   const usersByRole = usersByRoleRaw.map(r => ({
     name: r.role,
@@ -204,12 +291,13 @@ async function fetchAnalyticsData(range: string) {
       bookmarks: { value: bookmarksCount, trend: calcTrend(bookmarksCount, prevBookmarksCount), sparkline: sparklines.bookmarks },
       comments: { value: commentsCount, trend: calcTrend(commentsCount, prevCommentsCount), sparkline: sparklines.comments },
     },
-    traffic: trafficData,
-    content: {
-      byStatus: seriesByStatus,
-      topGenres: genreCounts.map(g => ({ name: g.name, value: g._count.series }))
+    charts: {
+      dailyTraffic: trafficData,
+      userGrowth: userGrowthData,
+      publishingActivity: publishingData,
+      readingDistribution: readingDistributionData,
     },
-    users: usersByRole,
+    users: usersByRole, // We can keep this just in case, or for another pie chart
     lastUpdated: new Date().toISOString(),
   };
 }

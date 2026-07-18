@@ -5,7 +5,12 @@ import {
   Users, BookOpen, Layers, MessageSquare, Activity, Bookmark, Eye, Fingerprint
 } from 'lucide-react';
 import { MetricCard } from './MetricCard';
-import { TrafficLineChart, ContentBarChart, SimplePieChart } from './AnalyticsCharts';
+import { 
+  DailyTrafficChart, 
+  UserGrowthChart, 
+  PublishingActivityChart, 
+  ReadingDistributionChart 
+} from './AnalyticsCharts';
 
 export function AnalyticsDashboard({ initialData, currentRange }: { initialData: any, currentRange: string }) {
   const router = useRouter();
@@ -14,7 +19,7 @@ export function AnalyticsDashboard({ initialData, currentRange }: { initialData:
     router.push(`/admin/analytics?range=${e.target.value}`);
   };
 
-  const { overview, traffic, content, users, lastUpdated } = initialData;
+  const { overview, charts, lastUpdated } = initialData;
 
   const isAllTime = currentRange === 'all';
   const prefix = isAllTime ? 'Total' : 'New';
@@ -60,64 +65,39 @@ export function AnalyticsDashboard({ initialData, currentRange }: { initialData:
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8">
         {/* TRAFFIC TREND */}
-        <section className="lg:col-span-2">
+        <section>
           <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold">Traffic & Views</h2>
+              <h2 className="text-lg font-bold">Daily Traffic</h2>
               <span className="text-xs font-semibold bg-primary/10 text-primary px-2 py-1 rounded">Reads</span>
             </div>
-            <TrafficLineChart data={traffic} />
-          </div>
-        </section>
-        
-        {/* TOP GENRES */}
-        <section className="lg:col-span-1">
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
-            <h2 className="text-lg font-bold mb-6">Top Genres</h2>
-            <div className="space-y-4">
-              {content.topGenres.map((g: any, i: number) => (
-                <div key={i} className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{g.name}</span>
-                  <div className="flex items-center gap-3">
-                    <div className="w-24 h-2 bg-surface rounded-full overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: `${Math.min(100, (g.value / (content.topGenres[0]?.value || 1)) * 100)}%` }} />
-                    </div>
-                    <span className="text-xs font-bold w-8 text-right">{g.value}</span>
-                  </div>
-                </div>
-              ))}
-              {content.topGenres.length === 0 && (
-                <div className="text-sm text-text-muted text-center py-4">No genres found</div>
-              )}
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* CONTENT BREAKDOWN */}
-        <section className="lg:col-span-2">
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
-            <h2 className="text-lg font-bold mb-6">Content by Status</h2>
-            <ContentBarChart data={content.byStatus} />
+            <DailyTrafficChart data={charts.dailyTraffic} />
           </div>
         </section>
 
-        {/* USER ROLES */}
-        <section className="lg:col-span-1">
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
-            <h2 className="text-lg font-bold mb-6">User Roles</h2>
-            <SimplePieChart data={users} />
-            <div className="flex flex-wrap justify-center gap-3 mt-4">
-              {users.map((u: any, i: number) => (
-                <div key={u.name} className="flex items-center gap-1.5 text-xs font-medium">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ['#ef4444', '#f97316', '#eab308'][i] }} />
-                  {u.name} ({u.value})
-                </div>
-              ))}
+        {/* 2 COLUMN GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <section>
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
+              <h2 className="text-lg font-bold mb-6">User Growth</h2>
+              <UserGrowthChart data={charts.userGrowth} />
             </div>
+          </section>
+          <section>
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
+              <h2 className="text-lg font-bold mb-6">Publishing Activity</h2>
+              <PublishingActivityChart data={charts.publishingActivity} />
+            </div>
+          </section>
+        </div>
+
+        {/* READING DISTRIBUTION */}
+        <section>
+          <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
+            <h2 className="text-lg font-bold mb-6">Reading Distribution (Top Genres / Series)</h2>
+            <ReadingDistributionChart data={charts.readingDistribution} />
           </div>
         </section>
       </div>

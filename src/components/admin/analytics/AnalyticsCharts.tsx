@@ -4,13 +4,26 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar,
   PieChart, Pie, Cell,
-  AreaChart, Area
+  AreaChart, Area,
+  ComposedChart,
+  Legend
 } from 'recharts';
 
-const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6'];
+const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#84cc16'];
 
-export function TrafficLineChart({ data }: { data: any[] }) {
-  if (!data || data.length === 0) return <div className="h-[300px] flex items-center justify-center text-text-muted text-sm border border-dashed border-border rounded-lg">No traffic data for this period</div>;
+const EmptyState = ({ message }: { message: string }) => (
+  <div className="h-[300px] flex items-center justify-center text-text-muted text-sm border border-dashed border-border rounded-lg">
+    {message}
+  </div>
+);
+
+const dateFormatter = (str: string) => {
+  const d = new Date(str);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+};
+
+export function DailyTrafficChart({ data }: { data: any[] }) {
+  if (!data || data.length === 0) return <EmptyState message="No traffic data for this period" />;
   
   return (
     <div className="h-[300px] w-full">
@@ -25,33 +38,78 @@ export function TrafficLineChart({ data }: { data: any[] }) {
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
           <XAxis 
             dataKey="date" 
-            tickFormatter={(str) => {
-              const d = new Date(str);
-              return `${d.getMonth() + 1}/${d.getDate()}`;
-            }}
+            tickFormatter={dateFormatter}
             axisLine={false}
             tickLine={false}
             tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
             dy={10}
+            minTickGap={20}
           />
           <YAxis 
             axisLine={false}
             tickLine={false}
             tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+            allowDecimals={false}
           />
           <Tooltip 
             contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
             itemStyle={{ color: 'var(--primary)' }}
+            labelFormatter={(label) => new Date(label as string).toLocaleDateString()}
           />
-          <Area type="monotone" dataKey="views" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
+          <Area type="monotone" name="Views" dataKey="views" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
         </AreaChart>
       </ResponsiveContainer>
     </div>
   );
 }
 
-export function ContentBarChart({ data }: { data: any[] }) {
-  if (!data || data.length === 0) return <div className="h-[300px] flex items-center justify-center text-text-muted text-sm border border-dashed border-border rounded-lg">No content data</div>;
+export function UserGrowthChart({ data }: { data: any[] }) {
+  if (!data || data.length === 0) return <EmptyState message="No user growth data" />;
+
+  return (
+    <div className="h-[300px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+          <XAxis 
+            dataKey="date" 
+            tickFormatter={dateFormatter}
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+            dy={10}
+            minTickGap={20}
+          />
+          <YAxis 
+            yAxisId="left"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+            allowDecimals={false}
+          />
+          <YAxis 
+            yAxisId="right"
+            orientation="right"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+            allowDecimals={false}
+          />
+          <Tooltip 
+            contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
+            labelFormatter={(label) => new Date(label as string).toLocaleDateString()}
+          />
+          <Legend wrapperStyle={{ paddingTop: '20px' }} />
+          <Bar yAxisId="left" name="New Users" dataKey="newUsers" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
+          <Line yAxisId="right" name="Cumulative Users" type="monotone" dataKey="cumulativeUsers" stroke="#8b5cf6" strokeWidth={3} dot={false} />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+export function PublishingActivityChart({ data }: { data: any[] }) {
+  if (!data || data.length === 0) return <EmptyState message="No publishing data" />;
 
   return (
     <div className="h-[300px] w-full">
@@ -59,30 +117,36 @@ export function ContentBarChart({ data }: { data: any[] }) {
         <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
           <XAxis 
-            dataKey="name" 
+            dataKey="date" 
+            tickFormatter={dateFormatter}
             axisLine={false}
             tickLine={false}
             tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
             dy={10}
+            minTickGap={20}
           />
           <YAxis 
             axisLine={false}
             tickLine={false}
             tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+            allowDecimals={false}
           />
           <Tooltip 
             contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
             cursor={{ fill: 'var(--surface-hover)' }}
+            labelFormatter={(label) => new Date(label as string).toLocaleDateString()}
           />
-          <Bar dataKey="value" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={40} />
+          <Legend wrapperStyle={{ paddingTop: '20px' }} />
+          <Bar name="New Series" dataKey="series" fill="#ef4444" radius={[4, 4, 0, 0]} />
+          <Bar name="New Chapters" dataKey="chapters" fill="#f97316" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
   );
 }
 
-export function SimplePieChart({ data }: { data: any[] }) {
-  if (!data || data.length === 0) return <div className="h-[300px] flex items-center justify-center text-text-muted text-sm border border-dashed border-border rounded-lg">No data available</div>;
+export function ReadingDistributionChart({ data }: { data: any[] }) {
+  if (!data || data.length === 0) return <EmptyState message="No reading data available" />;
 
   return (
     <div className="h-[300px] w-full relative">
@@ -94,7 +158,7 @@ export function SimplePieChart({ data }: { data: any[] }) {
             cy="50%"
             innerRadius={60}
             outerRadius={100}
-            paddingAngle={5}
+            paddingAngle={2}
             dataKey="value"
             stroke="none"
           >
@@ -104,13 +168,16 @@ export function SimplePieChart({ data }: { data: any[] }) {
           </Pie>
           <Tooltip 
             contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
+            formatter={(value: any) => [`${value} Views`, undefined]}
+          />
+          <Legend 
+            layout="vertical" 
+            verticalAlign="middle" 
+            align="right"
+            wrapperStyle={{ fontSize: '12px', paddingLeft: '20px' }}
           />
         </PieChart>
       </ResponsiveContainer>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-        <span className="text-2xl font-bold text-text-primary">{data.reduce((a, b) => a + (b.value || 0), 0)}</span>
-        <span className="block text-xs text-text-muted">Total</span>
-      </div>
     </div>
   );
 }
