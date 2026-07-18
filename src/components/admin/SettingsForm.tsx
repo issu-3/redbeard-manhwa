@@ -12,6 +12,7 @@ const TABS = [
   { id: 'reading', label: 'Reading', icon: BookOpen },
   { id: 'ads', label: 'Advertisement', icon: MonitorPlay },
   { id: 'seo', label: 'SEO', icon: Globe },
+  { id: 'social', label: 'Social Links', icon: Globe },
   { id: 'security', label: 'Security', icon: Shield },
 ];
 
@@ -300,6 +301,24 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                     rows={4}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
                   />
+                </div>
+              </div>
+            )}
+
+            {/* SOCIAL TAB */}
+            {activeTab === 'social' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">YouTube Channel URL</label>
+                  <input
+                    name="youtubeUrl"
+                    defaultValue={initialSettings.youtubeUrl || ''}
+                    placeholder="https://www.youtube.com/@RedBeardShort"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="mt-1 text-xs text-text-muted">
+                    Leave blank to hide the YouTube subscription section in the footer.
+                  </p>
                 </div>
               </div>
             )}

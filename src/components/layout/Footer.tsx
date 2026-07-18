@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { BookOpen } from 'lucide-react';
 import { APP_NAME, APP_TAGLINE } from '@/lib/constants';
+import { getCachedSettings } from '@/app/actions/admin/settings';
 
 const FOOTER_LINKS = {
   Browse: [
@@ -63,8 +64,10 @@ const SOCIAL_LINKS = [
   { label: 'GitHub', href: 'https://github.com/redbeard', Icon: GitHubIcon },
 ];
 
-export function Footer() {
+export async function Footer() {
   const currentYear = new Date().getFullYear();
+  const settings = await getCachedSettings();
+  const youtubeUrl = settings.youtubeUrl || '';
 
   return (
     <footer className="relative mt-auto hidden border-t border-border bg-surface md:block">
@@ -106,30 +109,35 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Newsletter */}
-          <div className="max-w-md lg:text-right">
-            <h3 className="text-sm font-semibold text-white">
-              Stay in the loop
-            </h3>
-            <p className="mt-1 text-sm text-text-muted">
-              Get notified about new releases and updates.
-            </p>
-            <div
-              className="mt-4 flex gap-2"
-            >
-              <input
-                type="email"
-                placeholder="your@email.com"
-                className="min-w-0 flex-1 rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-white placeholder:text-text-muted transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
-              />
-              <button
-                type="button"
-                className="shrink-0 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-all duration-200 hover:bg-primary-hover hover:shadow-xl hover:shadow-primary/30"
-              >
-                Subscribe
-              </button>
+          {/* YouTube Channel Promotion or Empty */}
+          {youtubeUrl ? (
+            <div className="max-w-md lg:text-right">
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2 lg:justify-end">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-red-600">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                </svg>
+                Subscribe to Our YouTube Channel
+              </h3>
+              <p className="mt-2 text-sm text-text-muted">
+                Get manga/manhwa recommendations, chapter reviews, explanations, and the latest anime updates.
+              </p>
+              <div className="mt-4 flex lg:justify-end">
+                <a
+                  href={youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#FF0000] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-500/20 transition-all duration-200 hover:bg-[#CC0000] hover:shadow-xl hover:shadow-red-500/30"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                  </svg>
+                  Subscribe on YouTube
+                </a>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="max-w-md lg:text-right hidden lg:block" />
+          )}
         </div>
 
         {/* Link columns */}

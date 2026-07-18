@@ -31,7 +31,8 @@ export async function getSettings() {
         { key: 'commentsEnabled', value: 'true' },
         { key: 'registrationEnabled', value: 'true' },
         { key: 'emailVerificationRequired', value: 'false' },
-        { key: 'maintenanceMode', value: 'false' }
+        { key: 'maintenanceMode', value: 'false' },
+        { key: 'youtubeUrl', value: 'https://www.youtube.com/@RedBeardShort' }
       ];
 
       // Perform upserts in a transaction to safely seed
