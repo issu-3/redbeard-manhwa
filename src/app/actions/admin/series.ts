@@ -37,6 +37,9 @@ export async function createSeries(formData: FormData) {
   const readingDirection = formData.get('readingDirection') as any;
   const coverImage = formData.get('coverImage') as string;
   const bannerImage = formData.get('bannerImage') as string;
+  
+  const genreIds = formData.getAll('genres') as string[];
+  const tagIds = formData.getAll('tags') as string[];
 
   const slug = slugify(title);
 
@@ -51,6 +54,12 @@ export async function createSeries(formData: FormData) {
       readingDirection,
       coverImage: coverImage || '/placeholder-cover.jpg',
       bannerImage: bannerImage || null,
+      genres: {
+        connect: genreIds.map(id => ({ id }))
+      },
+      tags: {
+        connect: tagIds.map(id => ({ id }))
+      }
     }
   });
 
