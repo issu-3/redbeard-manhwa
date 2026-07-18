@@ -1,0 +1,587 @@
+// ============================================================================
+// REDBEARD — Manhwa Reading Platform
+// Prisma Schema (PostgreSQL)
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum SeriesStatus {
+  ONGOING
+  COMPLETED
+  HIATUS
+  CANCELLED
+  UPCOMING
+}
+
+enum SeriesType {
+  MANHWA
+  MANGA
+  MANHUA
+  WEBTOON
+}
+
+enum ReadingDirection {
+  LTR
+  RTL
+  VERTICAL
+}
+
+enum NotificationType {
+  NEW_CHAPTER
+  REPLY
+  LIKE
+  FOLLOW
+  ACHIEVEMENT
+  SYSTEM
+  WARNING
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
+enum ReportType {
+  SPAM
+  HARASSMENT
+  SPOILER
+  INAPPROPRIATE
+  COPYRIGHT
+  OTHER
+}
+
+enum AchievementCategory {
+  READING
+  SOCIAL
+  COLLECTION
+  STREAK
+  SPECIAL
+}
+
+// ============================================================================
+// AUTH MODELS
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String?   @unique
+  passwordHash  String?
+  displayName   String?
+  bio           String?   @db.Text
+  avatarUrl     String?
+  bannerUrl     String?
+  role          Role      @default(USER)
+  xp            Int       @default(0)
+  level         Int       @default(1)
+  readingStreak Int       @default(0)
+  lastReadAt    DateTime?
+  isVerified    Boolean   @default(false)
+  isBanned      Boolean   @default(false)
+  banReason     String?
+  preferences   Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts       Account[]
+  sessions       Session[]
+  bookmarks      Bookmark[]
+  readingHistory ReadingHistory[]
+  ratings        Rating[]
+  reviews        Review[]
+  comments       Comment[]
+  commentReplies CommentReply[]
+  readingLists   ReadingList[]
+  notifications  Notification[]
+  reportsFiled   Report[]          @relation("ReportsFiled")
+  reportsAgainst Report[]          @relation("ReportsResolved")
+  achievements   UserAchievement[]
+  followers      Follow[]          @relation("Following")
+  following      Follow[]          @relation("Followers")
+  auditLogs      AuditLog[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refreshToken      String? @db.Text @map("refresh_token")
+  accessToken       String? @db.Text @map("access_token")
+  expiresAt         Int?    @map("expires_at")
+  tokenType         String? @map("token_type")
+  scope             String?
+  idToken           String? @db.Text @map("id_token")
+  sessionState      String? @map("session_state")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String
+  expires      DateTime
+  ipAddress    String?
+  userAgent    String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================================================
+// CONTENT MODELS
+// ============================================================================
+
+model Series {
+  id                String           @id @default(cuid())
+  title             String
+  slug              String           @unique
+  alternativeTitles String[]
+  description       String           @db.Text
+  synopsis          String?          @db.Text
+  coverImage        String
+  bannerImage       String?
+  type              SeriesType       @default(MANHWA)
+  status            SeriesStatus     @default(ONGOING)
+  readingDirection  ReadingDirection @default(VERTICAL)
+  releaseYear       Int?
+  isHot             Boolean          @default(false)
+  isFeatured        Boolean          @default(false)
+  isEditorChoice    Boolean          @default(false)
+  isHiddenGem       Boolean          @default(false)
+  isNSFW            Boolean          @default(false)
+  totalViews        Int              @default(0)
+  totalBookmarks    Int              @default(0)
+  averageRating     Float            @default(0)
+  ratingCount       Int              @default(0)
+  chapterCount      Int              @default(0)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  // Relations
+  chapters         Chapter[]
+  genres           Genre[]
+  tags             Tag[]
+  authors          Author[]
+  artists          Artist[]
+  bookmarks        Bookmark[]
+  ratings          Rating[]
+  reviews          Review[]
+  readingListItems ReadingListItem[]
+  readingHistory   ReadingHistory[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([type])
+  @@index([isFeatured])
+  @@index([isHot])
+  @@index([totalViews])
+  @@index([averageRating])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("series")
+}
+
+model Chapter {
+  id          String    @id @default(cuid())
+  seriesId    String
+  number      Float
+  title       String?
+  slug        String
+  totalPages  Int       @default(0)
+  totalViews  Int       @default(0)
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  series         Series           @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  images         ChapterImage[]
+  readingHistory ReadingHistory[]
+  comments       Comment[]
+
+  @@unique([seriesId, number])
+  @@index([seriesId])
+  @@index([publishedAt])
+  @@map("chapters")
+}
+
+model ChapterImage {
+  id         String  @id @default(cuid())
+  chapterId  String
+  pageNumber Int
+  imageUrl   String
+  width      Int?
+  height     Int?
+  blurHash   String?
+
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([chapterId, pageNumber])
+  @@map("chapter_images")
+}
+
+// ============================================================================
+// TAXONOMY MODELS
+// ============================================================================
+
+model Genre {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  slug        String  @unique
+  description String?
+  iconName    String?
+  color       String?
+  seriesCount Int     @default(0)
+
+  series Series[]
+
+  @@map("genres")
+}
+
+model Tag {
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
+
+  series Series[]
+
+  @@map("tags")
+}
+
+model Author {
+  id       String  @id @default(cuid())
+  name     String
+  slug     String  @unique
+  bio      String? @db.Text
+  imageUrl String?
+
+  series Series[]
+
+  @@map("authors")
+}
+
+model Artist {
+  id       String  @id @default(cuid())
+  name     String
+  slug     String  @unique
+  bio      String? @db.Text
+  imageUrl String?
+
+  series Series[]
+
+  @@map("artists")
+}
+
+// ============================================================================
+// USER INTERACTION MODELS
+// ============================================================================
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  seriesId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  series Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, seriesId])
+  @@map("bookmarks")
+}
+
+model ReadingHistory {
+  id           String    @id @default(cuid())
+  userId       String
+  chapterId    String
+  seriesId     String
+  pageNumber   Int       @default(0)
+  completedAt  DateTime?
+  readDuration Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  series  Series  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chapterId])
+  @@index([userId, seriesId])
+  @@map("reading_history")
+}
+
+model ReadingList {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  isPublic    Boolean  @default(true)
+  coverImage  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items ReadingListItem[]
+
+  @@map("reading_lists")
+}
+
+model ReadingListItem {
+  id            String   @id @default(cuid())
+  readingListId String
+  seriesId      String
+  order         Int      @default(0)
+  addedAt       DateTime @default(now())
+
+  readingList ReadingList @relation(fields: [readingListId], references: [id], onDelete: Cascade)
+  series      Series      @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@unique([readingListId, seriesId])
+  @@map("reading_list_items")
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  userId    String
+  seriesId  String
+  score     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  series Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, seriesId])
+  @@map("ratings")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  userId     String
+  seriesId   String
+  title      String
+  content    String   @db.Text
+  isSpoiler  Boolean  @default(false)
+  likesCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  series Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, seriesId])
+  @@map("reviews")
+}
+
+// ============================================================================
+// COMMENT MODELS
+// ============================================================================
+
+model Comment {
+  id         String   @id @default(cuid())
+  userId     String
+  chapterId  String
+  content    String   @db.Text
+  likesCount Int      @default(0)
+  isPinned   Boolean  @default(false)
+  isSpoiler  Boolean  @default(false)
+  isEdited   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  replies CommentReply[]
+  reports Report[]
+
+  @@index([chapterId])
+  @@map("comments")
+}
+
+model CommentReply {
+  id            String   @id @default(cuid())
+  userId        String
+  commentId     String
+  parentReplyId String?
+  content       String   @db.Text
+  likesCount    Int      @default(0)
+  isEdited      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment      Comment        @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  parentReply  CommentReply?  @relation("ReplyToReply", fields: [parentReplyId], references: [id], onDelete: SetNull)
+  childReplies CommentReply[] @relation("ReplyToReply")
+
+  @@map("comment_replies")
+}
+
+// ============================================================================
+// NOTIFICATION & MODERATION MODELS
+// ============================================================================
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean          @default(false)
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model Report {
+  id           String       @id @default(cuid())
+  reporterId   String
+  targetType   String
+  targetId     String
+  commentId    String?
+  type         ReportType
+  reason       String       @db.Text
+  status       ReportStatus @default(PENDING)
+  resolvedById String?
+  resolvedAt   DateTime?
+  createdAt    DateTime     @default(now())
+
+  reporter   User     @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
+  resolvedBy User?    @relation("ReportsResolved", fields: [resolvedById], references: [id], onDelete: SetNull)
+  comment    Comment? @relation(fields: [commentId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@map("reports")
+}
+
+// ============================================================================
+// GAMIFICATION MODELS
+// ============================================================================
+
+model Achievement {
+  id          String              @id @default(cuid())
+  name        String              @unique
+  slug        String              @unique
+  description String
+  iconName    String
+  category    AchievementCategory
+  xpReward    Int                 @default(0)
+  requirement Json
+  isSecret    Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+// ============================================================================
+// ADMIN & SYSTEM MODELS
+// ============================================================================
+
+model Announcement {
+  id          String    @id @default(cuid())
+  title       String
+  content     String    @db.Text
+  type        String    @default("info")
+  isPinned    Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  createdById String
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("announcements")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================================================
+// SOCIAL MODELS
+// ============================================================================
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Followers", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}

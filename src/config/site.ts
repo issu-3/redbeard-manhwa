@@ -1,0 +1,26 @@
+export const siteConfig = {
+  name: 'REDBEARD',
+  tagline: 'The Ultimate Reading Experience',
+  description: 'REDBEARD is a premium manhwa reading platform offering the best reading experience with thousands of manhwa, manga, and webtoon titles.',
+  url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  ogImage: '/images/og-default.png',
+  links: {
+    twitter: 'https://twitter.com/redbeard',
+    discord: 'https://discord.gg/redbeard',
+    github: 'https://github.com/redbeard',
+  },
+  creator: 'REDBEARD Team',
+  keywords: [
+    'manhwa',
+    'manga',
+    'manhua',
+    'webtoon',
+    'read manhwa',
+    'read manga',
+    'korean comics',
+    'webcomic reader',
+    'manga reader',
+    'free manhwa',
+    'online reader',
+  ],
+} as const;
