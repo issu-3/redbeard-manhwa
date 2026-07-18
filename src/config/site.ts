@@ -1,8 +1,10 @@
+import { APP_URL, APP_NAME, APP_DESCRIPTION } from '@/lib/constants';
+
 export const siteConfig = {
-  name: 'REDBEARD',
+  name: APP_NAME,
   tagline: 'The Ultimate Reading Experience',
-  description: 'REDBEARD is a premium manhwa reading platform offering the best reading experience with thousands of manhwa, manga, and webtoon titles.',
-  url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  description: APP_DESCRIPTION,
+  url: APP_URL,
   ogImage: '/images/og-default.png',
   links: {
     twitter: 'https://twitter.com/redbeard',

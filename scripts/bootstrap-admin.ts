@@ -1,37 +1,35 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../src/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 async function main() {
   const email = 'irshadansaripagla@gmail.com';
+  const temporaryPassword = 'AdminPassword123!';
   
-  console.log(`Looking for user with email: ${email}`);
+  console.log(`Seeding admin user with email: ${email}`);
   
-  const user = await prisma.user.findUnique({
-    where: { email },
-  });
+  const passwordHash = await bcrypt.hash(temporaryPassword, 10);
 
-  if (!user) {
-    console.error(`User with email ${email} not found.`);
-    console.log('Creating admin user...');
-    
-    // In a real app we'd hash a password, but we assume the user exists or will register
-    // For now, if the user doesn't exist, we just output instructions
-    console.error('Please register an account with this email through the UI first, then run this script again.');
-    process.exit(1);
-  }
-
-  const updatedUser = await prisma.user.update({
+  const adminUser = await prisma.user.upsert({
     where: { email },
-    data: {
+    update: {
+      role: 'ADMIN',
+      passwordHash: passwordHash,
+    },
+    create: {
+      email,
+      username: 'admin',
+      displayName: 'System Admin',
+      passwordHash: passwordHash,
       role: 'ADMIN',
     },
   });
 
-  console.log('Success! User promoted to ADMIN:');
-  console.log(`ID: ${updatedUser.id}`);
-  console.log(`Email: ${updatedUser.email}`);
-  console.log(`Role: ${updatedUser.role}`);
+  console.log('Success! Admin user seeded:');
+  console.log(`ID: ${adminUser.id}`);
+  console.log(`Email: ${adminUser.email}`);
+  console.log(`Role: ${adminUser.role}`);
+  console.log(`Temporary Password: ${temporaryPassword}`);
+  console.log('Please change this password immediately after logging in.');
 }
 
 main()
