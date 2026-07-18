@@ -16,7 +16,7 @@ const prismaClientSingleton = () => {
   // This uses the pooled connection string (DATABASE_URL).
   const pool = new Pool({
     connectionString,
-    max: process.env.NODE_ENV === 'production' ? 2 : 2,
+    max: process.env.NODE_ENV === 'production' ? 1 : 1,
     idleTimeoutMillis: 15000,
     allowExitOnIdle: true,
   });
