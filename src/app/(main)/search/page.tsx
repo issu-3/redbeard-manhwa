@@ -13,14 +13,7 @@ const TRENDING_SEARCHES = [
   'Solo Leveling', 'Tower of God', 'Omniscient Reader', 'Return of the Mount Hua Sect',
   'The Beginning After the End', 'Nano Machine', 'Eleceed', 'Lookism',
 ];
-const SAMPLE_RESULTS: SeriesCardData[] = [
-  { id: 's1', title: 'Solo Leveling: Ragnarok', slug: 'solo-leveling-ragnarok', coverImage: 'https://picsum.photos/seed/cover1/300/450', type: 'MANHWA', status: 'ONGOING', averageRating: 9.5, totalViews: 12500000, totalBookmarks: 890000, chapterCount: 156, genres: [{ name: 'Action', slug: 'action' }, { name: 'Fantasy', slug: 'fantasy' }], updatedAt: new Date().toISOString() },
-  { id: 's2', title: 'Solo Leveling', slug: 'solo-leveling', coverImage: 'https://picsum.photos/seed/cover2/300/450', type: 'MANHWA', status: 'COMPLETED', averageRating: 9.4, totalViews: 45000000, totalBookmarks: 2100000, chapterCount: 200, genres: [{ name: 'Action', slug: 'action' }, { name: 'Fantasy', slug: 'fantasy' }], updatedAt: new Date().toISOString() },
-  { id: 's3', title: 'Tower of God', slug: 'tower-of-god', coverImage: 'https://picsum.photos/seed/cover3/300/450', type: 'MANHWA', status: 'ONGOING', averageRating: 9.2, totalViews: 28000000, totalBookmarks: 1500000, chapterCount: 580, genres: [{ name: 'Action', slug: 'action' }, { name: 'Adventure', slug: 'adventure' }], updatedAt: new Date().toISOString() },
-  { id: 's4', title: 'Omniscient Reader\'s Viewpoint', slug: 'omniscient-readers-viewpoint', coverImage: 'https://picsum.photos/seed/cover4/300/450', type: 'MANHWA', status: 'ONGOING', averageRating: 9.6, totalViews: 18000000, totalBookmarks: 1200000, chapterCount: 178, genres: [{ name: 'Action', slug: 'action' }, { name: 'Isekai', slug: 'isekai' }], updatedAt: new Date().toISOString() },
-  { id: 's5', title: 'The Beginning After the End', slug: 'the-beginning-after-the-end', coverImage: 'https://picsum.photos/seed/cover5/300/450', type: 'MANHWA', status: 'ONGOING', averageRating: 9.3, totalViews: 15000000, totalBookmarks: 980000, chapterCount: 204, genres: [{ name: 'Action', slug: 'action' }, { name: 'Fantasy', slug: 'fantasy' }], updatedAt: new Date().toISOString() },
-  { id: 's6', title: 'Nano Machine', slug: 'nano-machine', coverImage: 'https://picsum.photos/seed/cover6/300/450', type: 'MANHWA', status: 'ONGOING', averageRating: 8.9, totalViews: 9800000, totalBookmarks: 560000, chapterCount: 190, genres: [{ name: 'Action', slug: 'action' }, { name: 'Martial Arts', slug: 'martial-arts' }], updatedAt: new Date().toISOString() },
-];
+
 export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SeriesCardData[]>([]);
@@ -45,15 +38,28 @@ export default function SearchPage() {
       setTimeout(() => setResults([]), 0);
       return;
     }
-    setTimeout(() => setIsSearching(true), 0);
-    const timer = setTimeout(() => {
-      const filtered = SAMPLE_RESULTS.filter((s) =>
-        s.title.toLowerCase().includes(debouncedQuery.toLowerCase())
-      );
-      setResults(filtered.length > 0 ? filtered : SAMPLE_RESULTS.slice(0, 3));
-      setIsSearching(false);
-    }, 400);
-    return () => clearTimeout(timer);
+    
+    let isMounted = true;
+    const fetchResults = async () => {
+      try {
+        setIsSearching(true);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}&limit=20`);
+        const data = await res.json();
+        if (isMounted && data.success) {
+          setResults(data.data);
+        }
+      } catch (err) {
+        console.error('Search failed:', err);
+      } finally {
+        if (isMounted) setIsSearching(false);
+      }
+    };
+
+    fetchResults();
+
+    return () => {
+      isMounted = false;
+    };
   }, [debouncedQuery]);
 
   const addRecentSearch = (term: string) => {
