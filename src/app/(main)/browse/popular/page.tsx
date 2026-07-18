@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 import { Metadata } from 'next';
 import { TrendingUp } from 'lucide-react';
 import { BrowseGrid } from '@/components/shared/BrowseGrid';

@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 import { Metadata } from 'next';
 import { GenreCard } from '@/components/shared/GenreCard';
 import { prisma } from '@/lib/prisma';

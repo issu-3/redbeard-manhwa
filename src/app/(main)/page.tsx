@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 import { Metadata } from 'next';
 import { HomepageClient } from './homepage-client';
 import { prisma } from '@/lib/prisma';
