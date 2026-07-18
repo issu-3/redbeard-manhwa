@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { Metadata } from 'next';
 import { Rows3 } from 'lucide-react';
 import { BrowseGrid } from '@/components/shared/BrowseGrid';
