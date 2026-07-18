@@ -6,7 +6,8 @@ import { SortableList } from './SortableList';
 import { 
   upsertBanner, deleteBanner, reorderBanners, 
   updateSection, reorderSections, 
-  searchSeries, updateHomepageSettings
+  searchSeries, updateHomepageSettings,
+  refreshHomepageCache
 } from '@/app/actions/admin/homepage';
 import { toast } from 'sonner';
 
@@ -111,9 +112,20 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
         const sec = sections.find((s: any) => s.type === update.type);
         if (sec) {
           await updateSection(sec.id, { isManual: update.isManual, limit: update.limit });
+          // Update local sections state so UI updates immediately
+          setSections((prev: any[]) => prev.map(s => s.id === sec.id ? { ...s, isManual: update.isManual, limit: update.limit } : s));
         }
       }
       toast.success('Automation settings saved');
+    });
+  };
+
+  const handleRefreshCache = () => {
+    startTransition(async () => {
+      const res = await refreshHomepageCache();
+      if (res.success) {
+        toast.success(`Cache refreshed at ${new Date(res.timestamp).toLocaleTimeString()}`);
+      }
     });
   };
 
@@ -245,9 +257,14 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                 </div>
               </div>
 
-              <button type="submit" disabled={isPending} className="bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors w-full">
-                {isPending ? 'Saving...' : 'Save Automation Settings'}
-              </button>
+              <div className="flex gap-4 pt-4">
+                <button type="submit" disabled={isPending} className="flex-1 bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
+                  {isPending ? 'Saving...' : 'Save Automation Settings'}
+                </button>
+                <button type="button" onClick={handleRefreshCache} disabled={isPending} className="flex-1 bg-surface-hover text-text-primary border border-border px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-border transition-colors">
+                  {isPending ? 'Refreshing...' : 'Refresh Cache Now'}
+                </button>
+              </div>
             </form>
           </div>
         )}
@@ -377,18 +394,11 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
 
           return (
             <div>
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-6 border-b border-border pb-4">
                 <h2 className="text-xl font-bold">{activeTab.replace('_', ' ')} Settings</h2>
-                {!isAlwaysManual && (
-                  <select 
-                    value={sec.isManual ? 'true' : 'false'}
-                    onChange={(e) => handleSectionUpdate(sec.id, { isManual: e.target.value === 'true' })}
-                    className="bg-background border border-input rounded-md px-3 py-2 text-sm"
-                  >
-                    <option value="false">Auto-populate</option>
-                    <option value="true">Manual Selection</option>
-                  </select>
-                )}
+                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${sec.isManual ? 'bg-orange-500/10 text-orange-500' : 'bg-primary/10 text-primary'}`}>
+                  {sec.isManual ? 'Manual Mode' : 'Automated Mode'}
+                </div>
               </div>
 
               {(sec.isManual || isAlwaysManual) ? (
@@ -441,8 +451,32 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                   </div>
                 </div>
               ) : (
-                <div className="p-8 text-center border-2 border-dashed border-border rounded-xl">
-                  <p className="text-text-muted">This section is currently auto-populated by the database based on metrics.</p>
+                <div className="space-y-6">
+                  <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl text-primary font-medium text-sm flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    This section is automatically managed by Homepage Automation.
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-semibold mb-4 text-text-muted uppercase tracking-wider">Live Preview</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {items.map((series: any) => (
+                        <div key={series.id} className="bg-surface rounded-lg border border-border overflow-hidden">
+                          <div className="aspect-[2/3] relative">
+                            <img src={series.coverImage} alt={series.title} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="p-3">
+                            <h4 className="font-semibold text-xs line-clamp-2 leading-tight">{series.title}</h4>
+                          </div>
+                        </div>
+                      ))}
+                      {items.length === 0 && (
+                        <div className="col-span-full py-8 text-center text-text-muted text-sm border border-dashed border-border rounded-lg">
+                          No automated results currently matched.
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

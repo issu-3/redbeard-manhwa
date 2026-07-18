@@ -15,8 +15,13 @@ export default async function AdminHomepagePage() {
     getHomepageSettings()
   ]);
 
-  // Fetch manuals for sections that are manual
-  const manualSeriesData: Record<string, any[]> = {};
+  // Fetch manual or automated series for sections
+  const sectionSeriesData: Record<string, any[]> = {};
+  
+  // We can't import getAutomatedSeries here directly if it's a server action, 
+  // but it's safe since it's just a server-side async function.
+  const { getAutomatedSeries } = await import('@/app/actions/admin/homepage');
+
   for (const sec of sections) {
     if (sec.isManual && sec.manualSeriesId.length > 0) {
       const seriesList = await prisma.series.findMany({
@@ -24,7 +29,9 @@ export default async function AdminHomepagePage() {
         select: { id: true, title: true, coverImage: true, type: true, status: true }
       });
       // Sort back into array order
-      manualSeriesData[sec.type] = sec.manualSeriesId.map(id => seriesList.find(s => s.id === id)).filter(Boolean);
+      sectionSeriesData[sec.type] = sec.manualSeriesId.map(id => seriesList.find(s => s.id === id)).filter(Boolean);
+    } else if (!sec.isManual) {
+      sectionSeriesData[sec.type] = await getAutomatedSeries(sec.type, sec.limit);
     }
   }
 
@@ -42,7 +49,7 @@ export default async function AdminHomepagePage() {
       <HomepageManager 
         initialBanners={banners}
         initialSections={sections}
-        initialManualData={manualSeriesData}
+        initialManualData={sectionSeriesData}
         featuredCount={featuredSeriesCount}
         initialSettings={settings}
       />

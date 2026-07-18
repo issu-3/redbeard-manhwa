@@ -186,3 +186,58 @@ export async function updateHomepageSettings(data: Record<string, string>) {
   );
   revalidatePath('/', 'layout');
 }
+
+import { revalidateTag } from 'next/cache';
+
+export async function refreshHomepageCache() {
+  await checkAdmin();
+  revalidateTag('homepage_data');
+  return { success: true, timestamp: new Date().toISOString() };
+}
+
+export async function getAutomatedSeries(type: string, limit: number) {
+  await checkAdmin();
+  
+  if (type === 'TRENDING') {
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const topReads = await prisma.readingHistory.groupBy({
+      by: ['seriesId'],
+      where: { updatedAt: { gte: yesterday } },
+      _count: { seriesId: true },
+      orderBy: { _count: { seriesId: 'desc' } },
+      take: limit
+    });
+    if (topReads.length > 0) {
+      const seriesIds = topReads.map(t => t.seriesId);
+      const foundSeries = await prisma.series.findMany({
+        where: { id: { in: seriesIds } },
+        select: { id: true, title: true, coverImage: true, status: true, type: true }
+      });
+      return seriesIds.map(id => foundSeries.find(s => s.id === id)).filter(Boolean);
+    } else {
+      return prisma.series.findMany({ orderBy: { totalViews: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
+    }
+  }
+  else if (type === 'POPULAR') {
+    return prisma.series.findMany({ orderBy: { totalViews: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
+  }
+  else if (type === 'LATEST') {
+    return prisma.series.findMany({ orderBy: { updatedAt: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
+  }
+  else if (type === 'NEW_RELEASES') {
+    return prisma.series.findMany({ orderBy: { createdAt: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
+  }
+  else if (type === 'FEATURED') {
+    return prisma.series.findMany({ where: { isFeatured: true }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
+  }
+  else if (type === 'COMPLETED') {
+    return prisma.series.findMany({ where: { status: 'COMPLETED' }, orderBy: { updatedAt: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
+  }
+  else if (type === 'ONGOING') {
+    return prisma.series.findMany({ where: { status: 'ONGOING' }, orderBy: { updatedAt: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
+  }
+  else if (type === 'TOP_RATED') {
+    return prisma.series.findMany({ orderBy: { averageRating: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
+  }
+  return [];
+}
