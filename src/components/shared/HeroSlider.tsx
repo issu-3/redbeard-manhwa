@@ -111,7 +111,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
         </motion.div>
       </AnimatePresence>
 
-      <div className="relative z-10 flex h-full items-end px-6 pb-16 pt-32 md:px-12 lg:px-20">
+      <div className="relative z-10 flex h-full items-end px-6 pb-16 pt-16 md:px-12 lg:px-20">
         <div className="max-w-2xl">
           <AnimatePresence mode="wait">
             <motion.div

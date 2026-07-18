@@ -83,15 +83,15 @@ export function Header() {
         animate={{ y: 0 }}
         transition={{ type: 'spring', stiffness: 260, damping: 30 }}
         className={cn(
-          'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
+          'sticky top-0 z-50 w-full transition-all duration-500',
           scrolled
-            ? 'bg-surface/70 backdrop-blur-xl border-b border-border shadow-lg shadow-black/20'
-            : 'bg-transparent border-b border-transparent'
+            ? 'bg-surface/90 backdrop-blur-xl border-b border-border shadow-lg shadow-black/20'
+            : 'bg-background border-b border-transparent'
         )}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-6">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 lg:px-6">
           {/* Logo */}
-          <Link href="/" className="group flex items-center gap-2.5">
+          <Link href="/" className="group flex shrink-0 items-center gap-2.5">
             <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/25">
               <BookOpen className="h-5 w-5 text-white" strokeWidth={2.5} />
               <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary to-accent opacity-0 blur-md transition-opacity group-hover:opacity-60" />
@@ -137,7 +137,7 @@ export function Header() {
           </nav>
 
           {/* Right Side Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             {/* Search Button */}
             <Link
               href="/search"
