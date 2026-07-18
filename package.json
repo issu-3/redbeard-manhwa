@@ -5,7 +5,7 @@
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && npx prisma db push --skip-generate --accept-data-loss && next build",
     "type-check": "tsc --noEmit",
     "start": "next start",
     "lint": "eslint",

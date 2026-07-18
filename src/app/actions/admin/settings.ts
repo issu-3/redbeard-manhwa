@@ -8,6 +8,43 @@ export async function getSettings() {
   try {
     const settings = await prisma.siteSetting.findMany();
     
+    // If no settings exist yet, create defaults
+    if (settings.length === 0) {
+      console.log('No settings found. Seeding default settings...');
+      const defaultSettings = [
+        { key: 'siteName', value: 'REDBEARD' },
+        { key: 'defaultLanguage', value: 'en' },
+        { key: 'defaultTheme', value: 'dark' },
+        { key: 'heroBannerEnabled', value: 'true' },
+        { key: 'trendingCount', value: '10' },
+        { key: 'latestCount', value: '20' },
+        { key: 'defaultReadingMode', value: 'VERTICAL' },
+        { key: 'lazyLoadingEnabled', value: 'true' },
+        { key: 'commentsEnabled', value: 'true' },
+        { key: 'registrationEnabled', value: 'true' },
+        { key: 'emailVerificationRequired', value: 'false' },
+        { key: 'maintenanceMode', value: 'false' }
+      ];
+
+      // Perform upserts in a transaction to safely seed
+      await prisma.$transaction(
+        defaultSettings.map(({ key, value }) => 
+          prisma.siteSetting.upsert({
+            where: { key },
+            update: { value },
+            create: { key, value }
+          })
+        )
+      );
+
+      // Return the defaults immediately
+      const settingsMap: Record<string, string> = {};
+      for (const s of defaultSettings) {
+        settingsMap[s.key] = s.value;
+      }
+      return settingsMap;
+    }
+
     const settingsMap: Record<string, string> = {};
     for (const s of settings) {
       settingsMap[s.key] = s.value;
