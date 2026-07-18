@@ -21,6 +21,7 @@ import { formatNumber, formatRelativeTime } from '@/lib/utils';
 import { ChapterListSection } from './chapter-list';
 import { prisma } from '@/lib/prisma';
 import type { SeriesCardData } from '@/types';
+import type { Series, Genre, Chapter } from '@prisma/client';
 import { auth } from '@/auth';
 import { DescriptionClient } from './description-client';
 
@@ -266,7 +267,7 @@ export default async function SeriesDetailPage({
                 Genres
               </h3>
               <div className="flex flex-wrap gap-2">
-                {series.genres.map((genre) => (
+                {series.genres.map((genre: { slug: string, name: string }) => (
                   <Link
                     key={genre.slug}
                     href={`/browse?genre=${genre.slug}`}
@@ -284,7 +285,7 @@ export default async function SeriesDetailPage({
                 Tags
               </h3>
               <div className="flex flex-wrap gap-1.5">
-                {series.tags.map((tag) => (
+                {series.tags.map((tag: { slug: string, name: string }) => (
                   <Link
                     key={tag.slug}
                     href={`/browse?tag=${tag.slug}`}
@@ -304,7 +305,7 @@ export default async function SeriesDetailPage({
                   Authors
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {series.authors.map((author) => (
+                  {series.authors.map((author: { slug: string, name: string }) => (
                     <Link
                       key={author.slug}
                       href={`/author/${author.slug}`}
@@ -321,7 +322,7 @@ export default async function SeriesDetailPage({
                   Artists
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {series.artists.map((artist) => (
+                  {series.artists.map((artist: { slug: string, name: string }) => (
                     <Link
                       key={artist.slug}
                       href={`/artist/${artist.slug}`}
@@ -368,7 +369,7 @@ export default async function SeriesDetailPage({
         <section className="mt-12">
           {/* Note: In a real app we'd map our DB Chapter model to ChapterListItem type */}
           <ChapterListSection
-            chapters={series.chapters.map(c => ({
+            chapters={series.chapters.map((c: Chapter) => ({
               id: c.id,
               number: c.number,
               title: c.title || undefined,
@@ -397,7 +398,7 @@ export default async function SeriesDetailPage({
             </Link>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-            {relatedSeries.map((item, index) => (
+            {relatedSeries.map((item: Series & { genres: Genre[] }, index: number) => (
               <SeriesCard 
                 key={item.id} 
                 series={{...item, type: item.type as SeriesCardData['type'], status: item.status as SeriesCardData['status'], updatedAt: item.updatedAt.toISOString(), genres: item.genres, latestChapterNumber: item.chapterCount}} 
