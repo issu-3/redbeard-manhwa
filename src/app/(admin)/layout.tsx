@@ -18,7 +18,6 @@ const navigation = [
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { name: 'Homepage', href: '/admin/homepage', icon: LayoutDashboard },
   { name: 'Series', href: '/admin/series', icon: Library },
-  { name: 'Chapters', href: '/admin/chapters', icon: BookOpen },
   { name: 'Genres & Tags', href: '/admin/metadata', icon: Tags },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Comments', href: '/admin/comments', icon: MessageSquare },
