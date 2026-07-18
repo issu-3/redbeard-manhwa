@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ThumbsUp, MessageSquare, Clock } from 'lucide-react';
+import Image from 'next/image';
 import { formatRelativeTime } from '@/lib/utils';
 import { likeComment, replyToComment } from '@/app/actions/comments';
 import { toast } from 'sonner';
@@ -63,7 +64,7 @@ export function CommentItem({
     setLikes(prev => prev + 1); // Optimistic
     try {
       await likeComment(comment.id, false);
-    } catch (e: unknown) {
+    } catch {
       setLikes(prev => prev - 1);
       toast.error('Failed to like comment');
     } finally {
@@ -91,9 +92,9 @@ export function CommentItem({
 
   return (
     <div className="flex gap-4">
-      <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden bg-surface-light border border-border flex items-center justify-center text-sm font-bold">
+      <div className="relative h-10 w-10 shrink-0 rounded-full overflow-hidden bg-surface-light border border-border flex items-center justify-center text-sm font-bold">
         {comment.user.avatarUrl ? (
-          <img src={comment.user.avatarUrl} alt={displayName} className="h-full w-full object-cover" />
+          <Image src={comment.user.avatarUrl} alt={displayName} fill className="object-cover" unoptimized />
         ) : (
           initial
         )}
@@ -173,9 +174,9 @@ export function CommentItem({
               const rInitial = rDisplayName.slice(0, 2).toUpperCase();
               return (
                 <div key={reply.id} className="flex gap-3">
-                  <div className="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-surface-light border border-border flex items-center justify-center text-xs font-bold">
+                  <div className="relative h-8 w-8 shrink-0 rounded-full overflow-hidden bg-surface-light border border-border flex items-center justify-center text-xs font-bold">
                     {reply.user.avatarUrl ? (
-                      <img src={reply.user.avatarUrl} alt={rDisplayName} className="h-full w-full object-cover" />
+                      <Image src={reply.user.avatarUrl} alt={rDisplayName} fill className="object-cover" unoptimized />
                     ) : (
                       rInitial
                     )}
