@@ -429,7 +429,7 @@ function StatItem({
       </div>
       <div>
         <p className="text-xs text-text-muted">{label}</p>
-        <p className="text-sm font-semibold text-text-primary">{value}</p>
+        <p className="text-sm font-semibold text-text-primary" suppressHydrationWarning>{value}</p>
       </div>
     </div>
   );

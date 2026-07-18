@@ -1,19 +1,22 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((prev: T) => T)) => void, () => void] {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === 'undefined') return initialValue;
+  const [storedValue, setStoredValue] = useState<T>(initialValue);
 
+  // Use useEffect to read from localStorage only on the client
+  useEffect(() => {
     try {
       const item = window.localStorage.getItem(key);
-      return item ? (JSON.parse(item) as T) : initialValue;
+      if (item) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setStoredValue(JSON.parse(item) as T);
+      }
     } catch (error) {
       console.warn(`Error reading localStorage key "${key}":`, error);
-      return initialValue;
     }
-  });
+  }, [key]);
 
   const setValue = useCallback(
     (value: T | ((prev: T) => T)) => {

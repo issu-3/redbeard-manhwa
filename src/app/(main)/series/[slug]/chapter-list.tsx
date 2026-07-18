@@ -149,10 +149,10 @@ export function ChapterListSection({
                         {formatNumber(chapter.totalViews)}
                       </span>
                       {chapter.publishedAt && (
-                        <span className="flex items-center gap-1 text-xs text-text-muted">
-                          <Calendar className="h-3 w-3" />
-                          {formatRelativeTime(chapter.publishedAt)}
-                        </span>
+                      <span className="flex items-center gap-1 text-xs text-text-muted" suppressHydrationWarning>
+                        <Calendar className="h-3 w-3" />
+                        {formatRelativeTime(chapter.publishedAt)}
+                      </span>
                       )}
                       <span className="text-xs text-text-muted">
                         {chapter.totalPages} pages

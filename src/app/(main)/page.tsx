@@ -29,6 +29,7 @@ const SAMPLE_GENRES = [
 ];
 
 function makeSeries(id: number, overrides: Partial<SeriesDetail> = {}) {
+  const pseudoRandom = (id * 17) % 10 / 10;
   const baseSeries = {
     id: `series-${id}`,
     title: '',
@@ -36,12 +37,12 @@ function makeSeries(id: number, overrides: Partial<SeriesDetail> = {}) {
     coverImage: `https://picsum.photos/seed/cover${id}/300/450`,
     type: 'MANHWA' as const,
     status: 'ONGOING' as const,
-    averageRating: 8.0 + Math.random() * 2,
-    totalViews: Math.floor(50000 + Math.random() * 5000000),
-    totalBookmarks: Math.floor(1000 + Math.random() * 100000),
-    chapterCount: Math.floor(20 + Math.random() * 300),
+    averageRating: parseFloat((8.0 + pseudoRandom * 2).toFixed(1)),
+    totalViews: Math.floor(50000 + pseudoRandom * 5000000),
+    totalBookmarks: Math.floor(1000 + pseudoRandom * 100000),
+    chapterCount: Math.floor(20 + pseudoRandom * 300),
     genres: [SAMPLE_GENRES[0], SAMPLE_GENRES[4]],
-    updatedAt: new Date(Date.now() - Math.random() * 7 * 86400000).toISOString(),
+    updatedAt: new Date(1700000000000 - pseudoRandom * 7 * 86400000).toISOString(),
   };
   return { ...baseSeries, ...overrides };
 }
@@ -76,14 +77,14 @@ const popularSeries = [
 ];
 
 const recentlyUpdated = [
-  makeSeries(21, { title: 'Sword Sheath\'s Child', slug: 'sword-sheaths-child', genres: [SAMPLE_GENRES[0], SAMPLE_GENRES[7]], updatedAt: new Date(Date.now() - 3600000).toISOString() }),
-  makeSeries(22, { title: 'A Returner\'s Magic Should Be Special', slug: 'returners-magic', genres: [SAMPLE_GENRES[4], SAMPLE_GENRES[0]], updatedAt: new Date(Date.now() - 7200000).toISOString() }),
-  makeSeries(23, { title: 'Overgeared', slug: 'overgeared', genres: [SAMPLE_GENRES[0], SAMPLE_GENRES[4]], updatedAt: new Date(Date.now() - 10800000).toISOString() }),
-  makeSeries(24, { title: 'Legend of the Northern Blade', slug: 'northern-blade', genres: [SAMPLE_GENRES[7], SAMPLE_GENRES[0]], updatedAt: new Date(Date.now() - 14400000).toISOString() }),
-  makeSeries(25, { title: 'Reformation of the Deadbeat Noble', slug: 'deadbeat-noble', genres: [SAMPLE_GENRES[0], SAMPLE_GENRES[4]], updatedAt: new Date(Date.now() - 18000000).toISOString() }),
-  makeSeries(26, { title: 'Trash of the Count\'s Family', slug: 'trash-counts-family', genres: [SAMPLE_GENRES[4], SAMPLE_GENRES[2]], updatedAt: new Date(Date.now() - 21600000).toISOString() }),
-  makeSeries(27, { title: 'Second Life Ranker', slug: 'second-life-ranker', genres: [SAMPLE_GENRES[0], SAMPLE_GENRES[4]], updatedAt: new Date(Date.now() - 25200000).toISOString() }),
-  makeSeries(28, { title: 'Medical Return', slug: 'medical-return', genres: [SAMPLE_GENRES[3], SAMPLE_GENRES[12]], updatedAt: new Date(Date.now() - 28800000).toISOString() }),
+  makeSeries(21, { title: 'Sword Sheath\'s Child', slug: 'sword-sheaths-child', genres: [SAMPLE_GENRES[0], SAMPLE_GENRES[7]], updatedAt: new Date(1700000000000 - 3600000).toISOString() }),
+  makeSeries(22, { title: 'A Returner\'s Magic Should Be Special', slug: 'returners-magic', genres: [SAMPLE_GENRES[4], SAMPLE_GENRES[0]], updatedAt: new Date(1700000000000 - 7200000).toISOString() }),
+  makeSeries(23, { title: 'Overgeared', slug: 'overgeared', genres: [SAMPLE_GENRES[0], SAMPLE_GENRES[4]], updatedAt: new Date(1700000000000 - 10800000).toISOString() }),
+  makeSeries(24, { title: 'Legend of the Northern Blade', slug: 'northern-blade', genres: [SAMPLE_GENRES[7], SAMPLE_GENRES[0]], updatedAt: new Date(1700000000000 - 14400000).toISOString() }),
+  makeSeries(25, { title: 'Reformation of the Deadbeat Noble', slug: 'deadbeat-noble', genres: [SAMPLE_GENRES[0], SAMPLE_GENRES[4]], updatedAt: new Date(1700000000000 - 18000000).toISOString() }),
+  makeSeries(26, { title: 'Trash of the Count\'s Family', slug: 'trash-counts-family', genres: [SAMPLE_GENRES[4], SAMPLE_GENRES[2]], updatedAt: new Date(1700000000000 - 21600000).toISOString() }),
+  makeSeries(27, { title: 'Second Life Ranker', slug: 'second-life-ranker', genres: [SAMPLE_GENRES[0], SAMPLE_GENRES[4]], updatedAt: new Date(1700000000000 - 25200000).toISOString() }),
+  makeSeries(28, { title: 'Medical Return', slug: 'medical-return', genres: [SAMPLE_GENRES[3], SAMPLE_GENRES[12]], updatedAt: new Date(1700000000000 - 28800000).toISOString() }),
 ];
 
 const completedSeries = [

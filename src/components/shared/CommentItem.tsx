@@ -109,7 +109,7 @@ export function CommentItem({
               ADMIN
             </span>
           )}
-          <span className="text-xs text-text-muted flex items-center gap-1">
+          <span className="text-xs text-text-muted flex items-center gap-1" suppressHydrationWarning>
             <Clock className="w-3 h-3" />
             {formatRelativeTime(comment.createdAt.toISOString())}
           </span>
@@ -190,7 +190,7 @@ export function CommentItem({
                           ADMIN
                         </span>
                       )}
-                      <span className="text-[11px] text-text-muted">
+                      <span className="text-[11px] text-text-muted" suppressHydrationWarning>
                         {formatRelativeTime(reply.createdAt.toISOString())}
                       </span>
                     </div>

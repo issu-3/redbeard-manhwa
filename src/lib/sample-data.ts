@@ -33,6 +33,7 @@ export function generateSampleSeries(
 ): SeriesCardData[] {
   return Array.from({ length: count }, (_, i) => {
     const idx = (startIndex + i) % titles.length;
+    const pseudoRandom = (idx * 17) % 10 / 10;
     return {
       id: `s-${startIndex + i}`,
       title: titles[idx],
@@ -40,12 +41,12 @@ export function generateSampleSeries(
       coverImage: `https://picsum.photos/seed/cover${(idx % 10) + 1}/300/450`,
       type: 'MANHWA' as const,
       status: 'ONGOING' as const,
-      averageRating: parseFloat((7.5 + Math.random() * 2.5).toFixed(1)),
-      totalViews: Math.floor(100000 + Math.random() * 10000000),
-      totalBookmarks: Math.floor(5000 + Math.random() * 500000),
-      chapterCount: Math.floor(20 + Math.random() * 300),
+      averageRating: parseFloat((7.5 + pseudoRandom * 2.5).toFixed(1)),
+      totalViews: Math.floor(100000 + pseudoRandom * 10000000),
+      totalBookmarks: Math.floor(5000 + pseudoRandom * 500000),
+      chapterCount: Math.floor(20 + pseudoRandom * 300),
       genres: [genres[idx % genres.length], genres[(idx + 3) % genres.length]],
-      updatedAt: new Date(Date.now() - Math.random() * 7 * 86400000).toISOString(),
+      updatedAt: new Date(1700000000000 - pseudoRandom * 7 * 86400000).toISOString(),
       ...overrides,
     };
   });
