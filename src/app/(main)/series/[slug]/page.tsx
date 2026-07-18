@@ -117,7 +117,7 @@ export default async function SeriesDetailPage({
   const relatedSeries = await prisma.series.findMany({
     where: { 
       id: { not: series.id },
-      genres: { some: { id: { in: series.genres.map(g => g.id) } } }
+      genres: { some: { id: { in: series.genres.map((g: { id: string }) => g.id) } } }
     },
     take: 6,
     include: { genres: true }
