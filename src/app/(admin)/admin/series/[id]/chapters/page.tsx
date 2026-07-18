@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Link as LinkIcon } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { deleteChapter } from '@/app/actions/admin/chapters';
 
@@ -49,7 +49,10 @@ export default async function AdminChaptersPage({ params }: { params: Promise<{ 
             <tbody className="divide-y divide-border">
               {series.chapters.map((chapter) => (
                 <tr key={chapter.id} className="hover:bg-surface/50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-text-primary">Chapter {chapter.number}</td>
+                  <td className="px-6 py-4 font-bold text-text-primary flex items-center gap-2">
+                    Chapter {chapter.number}
+                    {chapter.sourceType === 'EXTERNAL' && <span title={`External Link: ${chapter.externalProvider}`}><LinkIcon className="h-4 w-4 text-primary" /></span>}
+                  </td>
                   <td className="px-6 py-4 text-text-secondary">{chapter.title || '-'}</td>
                   <td className="px-6 py-4">
                     <span className={`rounded-full px-2 py-1 text-xs font-semibold ${
@@ -58,7 +61,9 @@ export default async function AdminChaptersPage({ params }: { params: Promise<{ 
                       {chapter.isPublished ? 'Published' : 'Draft'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-text-secondary">{chapter.totalPages}</td>
+                  <td className="px-6 py-4 text-text-secondary">
+                    {chapter.sourceType === 'EXTERNAL' ? '-' : chapter.totalPages}
+                  </td>
                   <td className="px-6 py-4 text-text-secondary">{formatDate(chapter.createdAt)}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">

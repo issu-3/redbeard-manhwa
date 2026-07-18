@@ -42,6 +42,9 @@ export interface ChapterListItem {
   totalViews: number;
   publishedAt?: string;
   isRead?: boolean;
+  sourceType?: string;
+  externalUrl?: string;
+  externalProvider?: string;
 }
 
 export interface ChapterData {

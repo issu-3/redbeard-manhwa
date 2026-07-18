@@ -11,6 +11,7 @@ import {
   Calendar,
   BookOpen,
   CheckCircle2,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { formatNumber, formatRelativeTime, cn } from '@/lib/utils';
 import type { ChapterListItem } from '@/types';
@@ -112,7 +113,9 @@ export function ChapterListSection({
                 transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.3) }}
               >
                 <Link
-                  href={`/series/${seriesSlug}/chapter/${chapter.number}`}
+                  href={chapter.sourceType === 'EXTERNAL' && chapter.externalUrl ? chapter.externalUrl : `/series/${seriesSlug}/chapter/${chapter.number}`}
+                  target={chapter.sourceType === 'EXTERNAL' ? '_blank' : undefined}
+                  rel={chapter.sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
                   className={cn(
                     'group flex items-center gap-4 px-4 sm:px-6 py-4 transition-all hover:bg-card/50',
                     index < filteredChapters.length - 1 &&
@@ -139,6 +142,9 @@ export function ChapterListSection({
                         Chapter {chapter.number}
                         {chapter.title && ` — ${chapter.title}`}
                       </h3>
+                      {chapter.sourceType === 'EXTERNAL' && (
+                        <span title={`External Link: ${chapter.externalProvider}`} className="shrink-0"><LinkIcon className="h-4 w-4 text-primary" /></span>
+                      )}
                       {chapter.isRead && (
                         <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
                       )}
@@ -155,7 +161,7 @@ export function ChapterListSection({
                       </span>
                       )}
                       <span className="text-xs text-text-muted">
-                        {chapter.totalPages} pages
+                        {chapter.sourceType === 'EXTERNAL' ? chapter.externalProvider || 'External' : `${chapter.totalPages} pages`}
                       </span>
                     </div>
                   </div>

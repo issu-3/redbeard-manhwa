@@ -231,6 +231,10 @@ model Chapter {
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  // Dual source system
+  sourceType       String?  @default("UPLOAD") // UPLOAD, EXTERNAL
+  externalUrl      String?
+  externalProvider String?
 
   // Relations
   series         Series           @relation(fields: [seriesId], references: [id], onDelete: Cascade)

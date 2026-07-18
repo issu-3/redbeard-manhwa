@@ -167,7 +167,9 @@ export default async function SeriesDetailPage({
             <div className="flex flex-col gap-3 w-full mt-6 lg:hidden">
               {series.chapters.length > 0 && (
                 <Link
-                  href={`/series/${series.slug}/chapter/${series.chapters[series.chapters.length - 1].number}`}
+                  href={series.chapters[series.chapters.length - 1].sourceType === 'EXTERNAL' && series.chapters[series.chapters.length - 1].externalUrl ? (series.chapters[series.chapters.length - 1].externalUrl || '#') : `/series/${series.slug}/chapter/${series.chapters[series.chapters.length - 1].number}`}
+                  target={series.chapters[series.chapters.length - 1].sourceType === 'EXTERNAL' ? '_blank' : undefined}
+                  rel={series.chapters[series.chapters.length - 1].sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
                   className="flex items-center justify-center gap-2 w-full rounded-xl bg-primary px-6 py-3.5 font-semibold text-white transition-all hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
                 >
                   <BookOpen className="h-5 w-5" />
@@ -339,7 +341,9 @@ export default async function SeriesDetailPage({
             <div className="hidden lg:flex gap-3 mb-8">
               {series.chapters.length > 0 && (
                 <Link
-                  href={`/series/${series.slug}/chapter/${series.chapters[series.chapters.length - 1].number}`}
+                  href={series.chapters[series.chapters.length - 1].sourceType === 'EXTERNAL' && series.chapters[series.chapters.length - 1].externalUrl ? (series.chapters[series.chapters.length - 1].externalUrl || '#') : `/series/${series.slug}/chapter/${series.chapters[series.chapters.length - 1].number}`}
+                  target={series.chapters[series.chapters.length - 1].sourceType === 'EXTERNAL' ? '_blank' : undefined}
+                  rel={series.chapters[series.chapters.length - 1].sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
                   className="flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 font-semibold text-white transition-all hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
                 >
                   <BookOpen className="h-5 w-5" />
@@ -348,7 +352,9 @@ export default async function SeriesDetailPage({
               )}
               {series.chapters.length > 1 && (
                 <Link
-                  href={`/series/${series.slug}/chapter/${series.chapters[0].number}`}
+                  href={series.chapters[0].sourceType === 'EXTERNAL' && series.chapters[0].externalUrl ? (series.chapters[0].externalUrl || '#') : `/series/${series.slug}/chapter/${series.chapters[0].number}`}
+                  target={series.chapters[0].sourceType === 'EXTERNAL' ? '_blank' : undefined}
+                  rel={series.chapters[0].sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
                   className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-6 py-3.5 font-semibold text-primary transition-all hover:bg-primary/10 hover:border-primary/50 active:scale-[0.98]"
                 >
                   Continue Ch. {series.chapters[0].number}
@@ -377,6 +383,9 @@ export default async function SeriesDetailPage({
               totalPages: c.totalPages,
               totalViews: c.totalViews,
               publishedAt: c.publishedAt?.toISOString(),
+              sourceType: c.sourceType || 'UPLOAD',
+              externalUrl: c.externalUrl || undefined,
+              externalProvider: c.externalProvider || undefined,
               isRead: false // Real app would map ReadingHistory here
             }))}
             seriesSlug={series.slug}

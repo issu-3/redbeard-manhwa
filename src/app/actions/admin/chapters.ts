@@ -36,9 +36,15 @@ export async function createChapter(seriesId: string, formData: FormData) {
   const number = parseFloat(formData.get('number') as string);
   const title = formData.get('title') as string;
   const isPublished = formData.get('isPublished') === 'on' || formData.get('isPublished') === 'true';
+  const sourceType = (formData.get('sourceType') as string) || 'UPLOAD';
+  
+  // CBZ Upload logic
   const imageUrlsText = formData.get('imageUrls') as string;
+  const imageUrls = imageUrlsText ? imageUrlsText.split('\n').map(url => url.trim()).filter(url => url.length > 0) : [];
 
-  const imageUrls = imageUrlsText.split('\n').map(url => url.trim()).filter(url => url.length > 0);
+  // External logic
+  const externalProvider = formData.get('externalProvider') as string;
+  const externalUrl = formData.get('externalUrl') as string;
 
   try {
     await prisma.chapter.create({
@@ -47,15 +53,18 @@ export async function createChapter(seriesId: string, formData: FormData) {
         number,
         title: title || undefined,
         slug: `chapter-${number}`,
-        totalPages: imageUrls.length,
+        totalPages: sourceType === 'EXTERNAL' ? 0 : imageUrls.length,
         isPublished,
         publishedAt: isPublished ? new Date() : null,
-        images: {
+        sourceType,
+        externalProvider: sourceType === 'EXTERNAL' ? externalProvider : null,
+        externalUrl: sourceType === 'EXTERNAL' ? externalUrl : null,
+        images: sourceType === 'UPLOAD' ? {
           create: imageUrls.map((url, index) => ({
             pageNumber: index + 1,
             imageUrl: url
           }))
-        }
+        } : undefined
       }
     });
 
@@ -84,9 +93,15 @@ export async function updateChapter(chapterId: string, seriesId: string, formDat
   const number = parseFloat(formData.get('number') as string);
   const title = formData.get('title') as string;
   const isPublished = formData.get('isPublished') === 'on' || formData.get('isPublished') === 'true';
+  const sourceType = (formData.get('sourceType') as string) || 'UPLOAD';
+  
+  // CBZ Upload logic
   const imageUrlsText = formData.get('imageUrls') as string;
+  const imageUrls = imageUrlsText ? imageUrlsText.split('\n').map(url => url.trim()).filter(url => url.length > 0) : [];
 
-  const imageUrls = imageUrlsText.split('\n').map(url => url.trim()).filter(url => url.length > 0);
+  // External logic
+  const externalProvider = formData.get('externalProvider') as string;
+  const externalUrl = formData.get('externalUrl') as string;
 
   try {
     await prisma.$transaction([
@@ -97,15 +112,18 @@ export async function updateChapter(chapterId: string, seriesId: string, formDat
           number,
           title: title || undefined,
           slug: `chapter-${number}`,
-          totalPages: imageUrls.length,
+          totalPages: sourceType === 'EXTERNAL' ? 0 : imageUrls.length,
           isPublished,
           publishedAt: isPublished ? new Date() : null,
-          images: {
+          sourceType,
+          externalProvider: sourceType === 'EXTERNAL' ? externalProvider : null,
+          externalUrl: sourceType === 'EXTERNAL' ? externalUrl : null,
+          images: sourceType === 'UPLOAD' && imageUrls.length > 0 ? {
             create: imageUrls.map((url, index) => ({
               pageNumber: index + 1,
               imageUrl: url
             }))
-          }
+          } : undefined
         }
       })
     ]);
