@@ -1,59 +1,77 @@
 import type { Metadata } from 'next';
-import type { ChapterData } from '@/types';
+import { notFound } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
 import { ChapterReader } from '@/components/reader/ChapterReader';
+import type { ChapterData } from '@/types';
+import { auth } from '@/auth';
 
-// ─── Sample Data ───────────────────────────────────────────────
+// ─── Data Fetching ───────────────────────────────────────────────
 
-function getChapterData(slug: string, number: number): ChapterData {
-  const chapterTitles: Record<number, string> = {
-    1: 'A New Beginning',
-    2: 'Inherited Power',
-    3: 'The System Activates',
-    4: 'Shadows of Seoul',
-    5: 'First Awakening',
-    6: 'The Hidden Dungeon',
-    7: 'Legacy of the Monarchs',
-    8: 'A New Threat Emerges',
-    9: 'Bonds of Power',
-    10: 'The Tournament Begins',
-    11: 'Through Fire and Ice',
-    12: "The Architect's Design",
-    13: 'Shadows Converge',
-    14: 'Rise of the Rulers',
-    15: 'Between Worlds',
-    16: 'The Final Warning',
-    17: 'Into the Abyss',
-    18: 'The Monarch Returns',
-    19: 'Awakening of the Shadow',
-    20: 'The Gates of Ragnarok',
-  };
+async function getChapterData(slug: string, number: number): Promise<ChapterData | null> {
+  const series = await prisma.series.findUnique({
+    where: { slug },
+    select: { id: true, title: true, slug: true },
+  });
 
-  const totalImages = 15;
+  if (!series) return null;
+
+  const chapter = await prisma.chapter.findUnique({
+    where: {
+      seriesId_number: {
+        seriesId: series.id,
+        number,
+      },
+    },
+    include: {
+      images: {
+        orderBy: { pageNumber: 'asc' },
+      },
+    },
+  });
+
+  if (!chapter) return null;
+
+  // Find previous chapter
+  const prevChapter = await prisma.chapter.findFirst({
+    where: {
+      seriesId: series.id,
+      number: { lt: number },
+      isPublished: true,
+    },
+    orderBy: { number: 'desc' },
+    select: { number: true, slug: true },
+  });
+
+  // Find next chapter
+  const nextChapter = await prisma.chapter.findFirst({
+    where: {
+      seriesId: series.id,
+      number: { gt: number },
+      isPublished: true,
+    },
+    orderBy: { number: 'asc' },
+    select: { number: true, slug: true },
+  });
 
   return {
-    id: `chapter-${number}`,
-    seriesId: 'series-solo-ragnarok',
-    seriesTitle: 'Solo Leveling: Ragnarok',
-    seriesSlug: slug,
-    number,
-    title: chapterTitles[number] || `Chapter ${number}`,
-    slug: `chapter-${number}`,
-    totalPages: totalImages,
-    images: Array.from({ length: totalImages }, (_, i) => ({
-      id: `img-${number}-${i + 1}`,
-      pageNumber: i + 1,
-      imageUrl: `https://picsum.photos/seed/slr-ch${number}-p${i + 1}/800/1200`,
-      width: 800,
-      height: 1200,
+    id: chapter.id,
+    seriesId: series.id,
+    seriesTitle: series.title,
+    seriesSlug: series.slug,
+    number: chapter.number,
+    title: chapter.title || undefined,
+    slug: chapter.slug,
+    totalPages: chapter.totalPages || chapter.images.length,
+    images: chapter.images.map((img) => ({
+      id: img.id,
+      pageNumber: img.pageNumber,
+      imageUrl: img.imageUrl,
+      width: img.width || undefined,
+      height: img.height || undefined,
+      blurHash: img.blurHash || undefined,
     })),
-    prevChapter:
-      number > 1
-        ? { number: number - 1, slug: `chapter-${number - 1}` }
-        : undefined,
-    nextChapter:
-      number < 20
-        ? { number: number + 1, slug: `chapter-${number + 1}` }
-        : undefined,
+    prevChapter: prevChapter ? { number: prevChapter.number, slug: prevChapter.slug } : undefined,
+    nextChapter: nextChapter ? { number: nextChapter.number, slug: nextChapter.slug } : undefined,
   };
 }
 
@@ -65,8 +83,12 @@ export async function generateMetadata({
   params: Promise<{ slug: string; number: string }>;
 }): Promise<Metadata> {
   const { slug, number } = await params;
-  const chapterNum = parseInt(number, 10);
-  const chapter = getChapterData(slug, chapterNum);
+  const chapterNum = parseFloat(number);
+  
+  if (isNaN(chapterNum)) return { title: 'Chapter Not Found' };
+  
+  const chapter = await getChapterData(slug, chapterNum);
+  if (!chapter) return { title: 'Chapter Not Found' };
 
   return {
     title: `Ch. ${chapter.number}${chapter.title ? ` — ${chapter.title}` : ''} | ${chapter.seriesTitle}`,
@@ -91,8 +113,66 @@ export default async function ChapterPage({
   params: Promise<{ slug: string; number: string }>;
 }) {
   const { slug, number } = await params;
-  const chapterNum = parseInt(number, 10);
-  const chapter = getChapterData(slug, chapterNum);
+  const chapterNum = parseFloat(number);
+  
+  if (isNaN(chapterNum)) {
+    notFound();
+  }
+
+  const chapter = await getChapterData(slug, chapterNum);
+  if (!chapter) {
+    notFound();
+  }
+
+  // Record reading history in the background (or rather, when page loads)
+  // We can do it right here since this is a server component
+  const session = await auth();
+  if (session?.user?.id) {
+    try {
+      await prisma.readingHistory.upsert({
+        where: {
+          userId_chapterId: {
+            userId: session.user.id,
+            chapterId: chapter.id,
+          },
+        },
+        create: {
+          userId: session.user.id,
+          chapterId: chapter.id,
+          seriesId: chapter.seriesId,
+          pageNumber: 1,
+        },
+        update: {
+          updatedAt: new Date(),
+          // We don't overwrite pageNumber here, as they might have been further along.
+          // Tracking actual scroll position requires a client-side API call.
+        },
+      });
+      
+      // Update lastReadAt on user
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { lastReadAt: new Date() }
+      });
+    } catch (e) {
+      console.error('Failed to update reading history:', e);
+    }
+  }
+  
+  // Increment chapter view count
+  try {
+    await prisma.chapter.update({
+      where: { id: chapter.id },
+      data: { totalViews: { increment: 1 } }
+    });
+    // Also increment series view count
+    await prisma.series.update({
+      where: { id: chapter.seriesId },
+      data: { totalViews: { increment: 1 } }
+    });
+  } catch (e) {
+    console.error('Failed to increment view count:', e);
+  }
 
   return <ChapterReader chapter={chapter} />;
 }
