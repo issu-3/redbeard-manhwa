@@ -221,15 +221,19 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                 <div className="flex items-center justify-between w-full pr-2">
                   <span className="font-semibold text-sm">{sec.type.replace('_', ' ')}</span>
                   <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2 text-xs">
-                      Limit:
-                      <input 
-                        type="number" 
-                        value={sec.limit} 
-                        onChange={(e) => handleSectionUpdate(sec.id, { limit: parseInt(e.target.value) || 10 })}
-                        className="w-16 bg-background border border-input rounded px-2 py-1"
-                      />
-                    </label>
+                    <div className="flex flex-col gap-1 w-24 shrink-0">
+                      <label className="text-xs text-gray-500 uppercase font-semibold">Limit</label>
+                      <select
+                        defaultValue={sec.limit}
+                        onChange={(e) => handleSectionUpdate(sec.id, { limit: parseInt(e.target.value) })}
+                        className="bg-gray-100 border-none rounded p-2 text-sm focus:ring-2 focus:ring-primary w-full"
+                      >
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                      </select>
+                    </div>
                     <button 
                       onClick={() => handleSectionUpdate(sec.id, { isActive: !sec.isActive })}
                       className={`text-xs px-3 py-1 rounded-full ${sec.isActive ? 'bg-success/20 text-success' : 'bg-surface-hover text-text-muted'}`}

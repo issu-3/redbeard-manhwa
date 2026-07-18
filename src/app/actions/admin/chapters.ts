@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 
@@ -22,6 +22,7 @@ export async function deleteChapter(chapterId: string, seriesId: string) {
   revalidatePath(`/admin/series/${seriesId}/chapters`);
   revalidatePath(`/series/[slug]`, 'page');
   revalidatePath(`/series/[slug]/chapter/[number]`, 'page');
+  updateTag('homepage_data');
 }
 
 export async function createChapter(seriesId: string, formData: FormData) {
@@ -32,7 +33,7 @@ export async function createChapter(seriesId: string, formData: FormData) {
   const isPublished = formData.get('isPublished') === 'on';
   const imageUrlsText = formData.get('imageUrls') as string;
 
-  const imageUrls = imageUrlsText.split('\\n').map(url => url.trim()).filter(url => url.length > 0);
+  const imageUrls = imageUrlsText.split('\n').map(url => url.trim()).filter(url => url.length > 0);
 
   const chapter = await prisma.chapter.create({
     data: {
@@ -52,6 +53,15 @@ export async function createChapter(seriesId: string, formData: FormData) {
     }
   });
 
+  if (isPublished) {
+    // Optionally update series updatedAt to bump latest release
+    await prisma.series.update({
+      where: { id: seriesId },
+      data: { updatedAt: new Date() }
+    });
+  }
+
   revalidatePath(`/admin/series/${seriesId}/chapters`);
+  updateTag('homepage_data');
   redirect(`/admin/series/${seriesId}/chapters`);
 }

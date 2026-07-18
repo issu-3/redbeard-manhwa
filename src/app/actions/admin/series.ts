@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { slugify } from '@/lib/utils';
@@ -24,6 +24,7 @@ export async function deleteSeries(id: string) {
   revalidatePath('/browse/trending');
   revalidatePath('/browse/popular');
   revalidatePath('/');
+  updateTag('homepage_data');
 }
 
 export async function createSeries(formData: FormData) {
@@ -64,6 +65,7 @@ export async function createSeries(formData: FormData) {
   });
 
   revalidatePath('/admin/series');
+  updateTag('homepage_data');
   redirect('/admin/series');
 }
 
@@ -109,5 +111,6 @@ export async function updateSeries(formData: FormData) {
   revalidatePath('/admin/series');
   revalidatePath(`/series/${slug}`);
   revalidatePath('/');
+  updateTag('homepage_data');
   redirect('/admin/series');
 }
