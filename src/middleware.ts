@@ -20,12 +20,12 @@ export default auth((req) => {
   // Protect Admin routes
   if (isAdminRoute) {
     if (!isLoggedIn) {
-      return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(nextUrl.pathname)}`, nextUrl));
+      return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(nextUrl.pathname)}`, req.url));
     }
 
     if (role === 'USER') {
       // Forbidden: redirect to home or an unauthorized page
-      return NextResponse.redirect(new URL('/', nextUrl));
+      return NextResponse.redirect(new URL('/', req.url));
     }
   }
 

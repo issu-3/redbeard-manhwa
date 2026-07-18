@@ -1,6 +1,7 @@
 import type { NextAuthConfig } from 'next-auth';
 
 export const authConfig = {
+  trustHost: true,
   providers: [], // Providers are configured in auth.ts to avoid Edge Runtime issues
   pages: {
     signIn: '/login',
