@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { unstable_cache } from 'next/cache';
 
 async function checkAdmin() {
   const session = await auth();
@@ -10,9 +11,7 @@ async function checkAdmin() {
   }
 }
 
-export async function getAnalyticsData(range: string) {
-  await checkAdmin();
-
+async function fetchAnalyticsData(range: string) {
   const now = new Date();
   let startDate = new Date();
 
@@ -33,107 +32,76 @@ export async function getAnalyticsData(range: string) {
   }
 
   // OVERVIEW METRICS (Real)
-  const totalUsers = await prisma.user.count({ where: { createdAt: { gte: startDate } } });
-  const totalSeries = await prisma.series.count({ where: { createdAt: { gte: startDate } } });
-  const totalChapters = await prisma.chapter.count({ where: { createdAt: { gte: startDate } } });
-  const totalComments = await prisma.comment.count({ where: { createdAt: { gte: startDate } } });
+  const [
+    newUsers,
+    totalSeries,
+    totalChapters,
+    newComments,
+    newBookmarks,
+    readingHistory,
+    seriesByStatusRaw,
+    genreCounts,
+    usersByRoleRaw
+  ] = await Promise.all([
+    prisma.user.count({ where: { createdAt: { gte: startDate } } }),
+    prisma.series.count({ where: { createdAt: { gte: startDate } } }),
+    prisma.chapter.count({ where: { createdAt: { gte: startDate } } }),
+    prisma.comment.count({ where: { createdAt: { gte: startDate } } }),
+    prisma.bookmark.count({ where: { createdAt: { gte: startDate } } }),
+    prisma.readingHistory.findMany({
+      where: { createdAt: { gte: startDate } },
+      select: { createdAt: true, userId: true }
+    }),
+    prisma.series.groupBy({
+      by: ['status'],
+      _count: { id: true },
+      where: { createdAt: { gte: startDate } }
+    }),
+    prisma.genre.findMany({
+      include: { _count: { select: { series: true } } },
+      take: 5,
+      orderBy: { seriesCount: 'desc' }
+    }),
+    prisma.user.groupBy({
+      by: ['role'],
+      _count: { id: true },
+      where: { createdAt: { gte: startDate } }
+    })
+  ]);
 
   // TRAFFIC METRICS (Real)
-  const readingHistory = await prisma.readingHistory.findMany({
-    where: { createdAt: { gte: startDate } },
-    select: { createdAt: true }
-  });
-  
-  // Aggregate history by day to form a timeline for Traffic
   const trafficByDay: Record<string, number> = {};
+  const uniqueUsers = new Set<string>();
+
   readingHistory.forEach(history => {
     const day = history.createdAt.toISOString().split('T')[0];
     trafficByDay[day] = (trafficByDay[day] || 0) + 1;
+    uniqueUsers.add(history.userId);
   });
 
   const trafficData = Object.entries(trafficByDay)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, views]) => ({ date, views }));
 
-  // CONTENT METRICS (Real)
-  const seriesByStatusRaw = await prisma.series.groupBy({
-    by: ['status'],
-    _count: { id: true },
-    where: { createdAt: { gte: startDate } }
-  });
   const seriesByStatus = seriesByStatusRaw.map(s => ({
     name: s.status,
     value: s._count.id
   }));
 
-  const genreCounts = await prisma.genre.findMany({
-    include: { _count: { select: { series: true } } },
-    take: 5,
-    orderBy: { seriesCount: 'desc' }
-  });
-
-  // USERS METRICS (Real)
-  const usersByRoleRaw = await prisma.user.groupBy({
-    by: ['role'],
-    _count: { id: true },
-    where: { createdAt: { gte: startDate } }
-  });
   const usersByRole = usersByRoleRaw.map(r => ({
     name: r.role,
     value: r._count.id
   }));
 
-  // MOCKED METRICS
-  const generateMockTrend = (days: number, base: number, variance: number) => {
-    const data = [];
-    for (let i = days; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      data.push({
-        date: d.toISOString().split('T')[0],
-        value: Math.floor(Math.max(0, base + (Math.random() * variance * 2 - variance)))
-      });
-    }
-    return data;
-  };
-
-  const daysCount = range === 'today' ? 1 : range === '7d' ? 7 : range === '30d' ? 30 : 90;
-
-  const revenueData = generateMockTrend(daysCount, 500, 200).map(d => ({ date: d.date, revenue: d.value }));
-  const totalRevenue = revenueData.reduce((acc, curr) => acc + curr.revenue, 0);
-
-  const deviceData = [
-    { name: 'Mobile', value: 65 },
-    { name: 'Desktop', value: 25 },
-    { name: 'Tablet', value: 10 }
-  ];
-
-  const searchData = [
-    { query: 'solo leveling', count: 1204 },
-    { query: 'action', count: 850 },
-    { query: 'romance', count: 620 },
-    { query: 'omniscient reader', count: 430 }
-  ];
-
-  const systemHealth = {
-    uptime: '99.98%',
-    avgResponseTime: '124ms',
-    databaseLoad: '32%',
-    activeConnections: 45
-  };
-
-  const errorLogs = [
-    { id: 1, type: 'Network', message: 'Failed to fetch image proxy', time: '10 mins ago', level: 'warning' },
-    { id: 2, type: 'Database', message: 'Connection pool exhausted (P2037)', time: '2 hours ago', level: 'error' },
-    { id: 3, type: 'Auth', message: 'Invalid JWT signature', time: '5 hours ago', level: 'info' }
-  ];
-
   return {
     overview: {
-      totalUsers,
+      newUsers,
       totalSeries,
       totalChapters,
-      totalComments
+      newComments,
+      newBookmarks,
+      chapterViews: readingHistory.length,
+      uniqueVisitors: uniqueUsers.size,
     },
     traffic: trafficData,
     content: {
@@ -141,13 +109,19 @@ export async function getAnalyticsData(range: string) {
       topGenres: genreCounts.map(g => ({ name: g.name, value: g._count.series }))
     },
     users: usersByRole,
-    revenue: {
-      total: totalRevenue,
-      timeline: revenueData
-    },
-    devices: deviceData,
-    search: searchData,
-    system: systemHealth,
-    errors: errorLogs
   };
+}
+
+export async function getAnalyticsData(range: string) {
+  await checkAdmin();
+  
+  // Using unstable_cache to cache this for 5 minutes (300 seconds)
+  // We use `range` as part of the key
+  const getCachedData = unstable_cache(
+    async (r: string) => fetchAnalyticsData(r),
+    [`analytics_data_${range}`],
+    { revalidate: 300, tags: [`analytics_${range}`] }
+  );
+
+  return getCachedData(range);
 }

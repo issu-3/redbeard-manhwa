@@ -115,38 +115,3 @@ export function SimplePieChart({ data }: { data: any[] }) {
   );
 }
 
-export function RevenueLineChart({ data }: { data: any[] }) {
-  if (!data || data.length === 0) return <div className="h-[300px] flex items-center justify-center text-text-muted text-sm border border-dashed border-border rounded-lg">No revenue data</div>;
-  
-  return (
-    <div className="h-[300px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-          <XAxis 
-            dataKey="date" 
-            tickFormatter={(str) => {
-              const d = new Date(str);
-              return `${d.getMonth() + 1}/${d.getDate()}`;
-            }}
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
-            dy={10}
-          />
-          <YAxis 
-            tickFormatter={(val) => `$${val}`}
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
-          />
-          <Tooltip 
-            formatter={(value: any) => [`$${value}`, 'Revenue']}
-            contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
-          />
-          <Line type="monotone" dataKey="revenue" stroke="#22c55e" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
