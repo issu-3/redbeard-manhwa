@@ -4,7 +4,7 @@ import { useState } from 'react';
 import JSZip from 'jszip';
 import { UploadCloud, CheckCircle2, Loader2, Image as ImageIcon } from 'lucide-react';
 
-export function ChapterUploader() {
+export function ChapterUploader({ onUploadComplete }: { onUploadComplete?: (urls: string[]) => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -88,6 +88,7 @@ export function ChapterUploader() {
 
       setUploadedUrls(urls);
       setIsUploading(false);
+      if (onUploadComplete) onUploadComplete(urls);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'An error occurred during extraction/upload.');
@@ -175,13 +176,15 @@ export function ChapterUploader() {
       </div>
 
       {/* Hidden input to pass the final URLs to the server action */}
-      <textarea 
-        name="imageUrls"
-        readOnly
-        required
-        value={uploadedUrls.join('\n')}
-        className="sr-only" // Hide from UI, but keep in DOM for form submission
-      />
+      {!onUploadComplete && (
+        <textarea 
+          name="imageUrls"
+          readOnly
+          required
+          value={uploadedUrls.join('\n')}
+          className="sr-only" // Hide from UI, but keep in DOM for form submission
+        />
+      )}
     </div>
   );
 }

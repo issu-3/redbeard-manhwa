@@ -62,10 +62,25 @@ export default async function AdminChaptersPage({ params }: { params: Promise<{ 
                   <td className="px-6 py-4 text-text-secondary">{formatDate(chapter.createdAt)}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <Link 
+                        href={`/admin/series/${series.id}/chapters/${chapter.id}/preview`}
+                        className="rounded-lg p-2 text-text-secondary hover:bg-surface-hover transition-colors"
+                        title="Preview Chapter"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </Link>
+                      <Link 
+                        href={`/admin/series/${series.id}/chapters/${chapter.id}/edit`}
+                        className="rounded-lg p-2 text-text-secondary hover:bg-surface-hover transition-colors"
+                        title="Edit Chapter"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                      </Link>
                       <form action={deleteChapter.bind(null, chapter.id, series.id)}>
                         <button 
                           type="submit"
                           className="rounded-lg p-2 text-text-secondary hover:bg-red-500/10 hover:text-red-500 transition-colors"
+                          title="Delete Chapter"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
