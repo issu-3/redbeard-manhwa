@@ -6,11 +6,12 @@ import { SortableList } from './SortableList';
 import { 
   upsertBanner, deleteBanner, reorderBanners, 
   updateSection, reorderSections, 
-  searchSeries 
+  searchSeries, updateHomepageSettings
 } from '@/app/actions/admin/homepage';
 import { toast } from 'sonner';
 
 const TABS = [
+  { id: 'AUTOMATION', label: 'Automation', icon: Settings },
   { id: 'banners', label: 'Hero Banner', icon: ImageIcon },
   { id: 'sections', label: 'Sections', icon: Layers },
   { id: 'FEATURED', label: 'Featured Series', icon: Star },
@@ -21,10 +22,11 @@ const TABS = [
   { id: 'EDITORS_PICKS', label: 'Editor\'s Picks', icon: Edit3 },
 ];
 
-export function HomepageManager({ initialBanners, initialSections, initialManualData, featuredCount }: any) {
-  const [activeTab, setActiveTab] = useState('banners');
+export function HomepageManager({ initialBanners, initialSections, initialManualData, featuredCount, initialSettings }: any) {
+  const [activeTab, setActiveTab] = useState('AUTOMATION');
   const [banners, setBanners] = useState(initialBanners);
   const [sections, setSections] = useState(initialSections);
+  const [settings, setSettings] = useState(initialSettings || {});
   const [manualData, setManualData] = useState<Record<string, any[]>>(initialManualData);
   const [isPending, startTransition] = useTransition();
 
@@ -76,6 +78,42 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
     startTransition(async () => {
       await updateSection(id, updates);
       toast.success('Section updated');
+    });
+  };
+
+  const handleSettingsSave = (e: any) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries()) as Record<string, string>;
+    
+    // Also save section limits and toggles if they were changed
+    const autoTrending = data.autoTrending === 'true';
+    const autoPopular = data.autoPopular === 'true';
+    const autoLatest = data.autoLatest === 'true';
+    const autoNewReleases = data.autoNewReleases === 'true';
+    
+    const updates = [
+      { type: 'TRENDING', isManual: !autoTrending, limit: parseInt(data.limitTrending) },
+      { type: 'POPULAR', isManual: !autoPopular, limit: parseInt(data.limitPopular) },
+      { type: 'LATEST', isManual: !autoLatest, limit: parseInt(data.limitLatest) },
+      { type: 'NEW_RELEASES', isManual: !autoNewReleases, limit: parseInt(data.limitNewReleases) }
+    ];
+    
+    const settingsData = {
+      homepage_auto_genres: data.homepage_auto_genres,
+      homepage_cache_interval: data.homepage_cache_interval
+    };
+
+    startTransition(async () => {
+      await updateHomepageSettings(settingsData);
+      setSettings(settingsData);
+      for (const update of updates) {
+        const sec = sections.find((s: any) => s.type === update.type);
+        if (sec) {
+          await updateSection(sec.id, { isManual: update.isManual, limit: update.limit });
+        }
+      }
+      toast.success('Automation settings saved');
     });
   };
 
@@ -144,6 +182,76 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
       </aside>
 
       <div className="flex-1 bg-card rounded-xl border border-border p-6 shadow-sm min-h-[500px]">
+        {/* ================================== */}
+        {/* AUTOMATION TAB                     */}
+        {/* ================================== */}
+        {activeTab === 'AUTOMATION' && (
+          <div>
+            <h2 className="text-xl font-bold mb-4">Automation Settings</h2>
+            <p className="text-sm text-text-muted mb-6">Configure how the homepage auto-populates data.</p>
+            
+            <form onSubmit={handleSettingsSave} className="space-y-6 max-w-2xl">
+              
+              <div className="bg-surface rounded-xl p-4 border border-border space-y-4">
+                <h3 className="font-semibold text-sm mb-2">Automated Sections</h3>
+                
+                {[
+                  { id: 'TRENDING', label: 'Auto Trending', limitName: 'limitTrending', toggleName: 'autoTrending' },
+                  { id: 'POPULAR', label: 'Auto Most Popular', limitName: 'limitPopular', toggleName: 'autoPopular' },
+                  { id: 'LATEST', label: 'Auto Latest Updates', limitName: 'limitLatest', toggleName: 'autoLatest' },
+                  { id: 'NEW_RELEASES', label: 'Auto New Releases', limitName: 'limitNewReleases', toggleName: 'autoNewReleases' },
+                ].map(item => {
+                  const sec = sections.find((s: any) => s.type === item.id);
+                  return (
+                    <div key={item.id} className="flex items-center justify-between p-3 bg-background rounded-lg border border-border">
+                      <div className="font-medium text-sm">{item.label}</div>
+                      <div className="flex items-center gap-4">
+                        <label className="text-xs text-text-muted flex items-center gap-2">
+                          Items:
+                          <select name={item.limitName} defaultValue={sec?.limit || 10} className="bg-surface border border-input rounded p-1 text-xs">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                          </select>
+                        </label>
+                        <select name={item.toggleName} defaultValue={sec ? (!sec.isManual).toString() : 'true'} className="bg-surface border border-input rounded p-1 text-xs font-semibold">
+                          <option value="true">Enabled</option>
+                          <option value="false">Disabled (Manual)</option>
+                        </select>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="bg-surface rounded-xl p-4 border border-border space-y-4">
+                <h3 className="font-semibold text-sm mb-2">General Automation</h3>
+                
+                <div className="flex items-center justify-between p-3 bg-background rounded-lg border border-border">
+                  <div className="font-medium text-sm">Auto Genre Counts</div>
+                  <select name="homepage_auto_genres" defaultValue={settings.homepage_auto_genres || 'true'} className="bg-surface border border-input rounded p-1 text-xs font-semibold">
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-background rounded-lg border border-border">
+                  <div className="font-medium text-sm">Cache Refresh Interval</div>
+                  <div className="flex items-center gap-2">
+                    <input name="homepage_cache_interval" type="number" defaultValue={settings.homepage_cache_interval || '3600'} className="bg-surface border border-input rounded p-1.5 text-xs w-24 text-right" />
+                    <span className="text-xs text-text-muted">seconds</span>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" disabled={isPending} className="bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors w-full">
+                {isPending ? 'Saving...' : 'Save Automation Settings'}
+              </button>
+            </form>
+          </div>
+        )}
+
         {/* ================================== */}
         {/* HERO BANNERS                       */}
         {/* ================================== */}

@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getBanners, getSections } from '@/app/actions/admin/homepage';
+import { getBanners, getSections, getHomepageSettings } from '@/app/actions/admin/homepage';
 import { HomepageManager } from '@/components/admin/homepage/HomepageManager';
 import { prisma } from '@/lib/prisma';
 
@@ -8,10 +8,11 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminHomepagePage() {
-  const [banners, sections, featuredSeriesCount] = await Promise.all([
+  const [banners, sections, featuredSeriesCount, settings] = await Promise.all([
     getBanners(),
     getSections(),
-    prisma.series.count({ where: { isFeatured: true } })
+    prisma.series.count({ where: { isFeatured: true } }),
+    getHomepageSettings()
   ]);
 
   // Fetch manuals for sections that are manual
@@ -43,6 +44,7 @@ export default async function AdminHomepagePage() {
         initialSections={sections}
         initialManualData={manualSeriesData}
         featuredCount={featuredSeriesCount}
+        initialSettings={settings}
       />
     </div>
   );

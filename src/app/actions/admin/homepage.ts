@@ -151,3 +151,38 @@ export async function getSeriesByIds(ids: string[]) {
   // Return in original id array order
   return ids.map(id => series.find(s => s.id === id)).filter(Boolean);
 }
+
+// ==========================================
+// HOMEPAGE SETTINGS (Automation)
+// ==========================================
+
+export async function getHomepageSettings() {
+  await checkAdmin();
+  const settings = await prisma.siteSetting.findMany({
+    where: { key: { in: ['homepage_auto_genres', 'homepage_cache_interval'] } }
+  });
+  
+  const map = {
+    homepage_auto_genres: 'true',
+    homepage_cache_interval: '3600',
+  };
+  
+  for (const s of settings) {
+    if (s.key in map) (map as any)[s.key] = s.value;
+  }
+  return map;
+}
+
+export async function updateHomepageSettings(data: Record<string, string>) {
+  await checkAdmin();
+  await prisma.$transaction(
+    Object.entries(data).map(([key, value]) =>
+      prisma.siteSetting.upsert({
+        where: { key },
+        update: { value },
+        create: { key, value }
+      })
+    )
+  );
+  revalidatePath('/', 'layout');
+}
