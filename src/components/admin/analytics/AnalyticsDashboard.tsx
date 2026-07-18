@@ -14,9 +14,10 @@ export function AnalyticsDashboard({ initialData, currentRange }: { initialData:
     router.push(`/admin/analytics?range=${e.target.value}`);
   };
 
-  const { overview, traffic, content, users } = initialData;
+  const { overview, traffic, content, users, lastUpdated } = initialData;
 
   const isAllTime = currentRange === 'all';
+  const prefix = isAllTime ? 'Total' : 'New';
 
   return (
     <div className="space-y-8 pb-12">
@@ -46,15 +47,16 @@ export function AnalyticsDashboard({ initialData, currentRange }: { initialData:
       <section>
         <h2 className="text-xl font-bold mb-4">Platform Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          <MetricCard title={isAllTime ? "Total Users" : "New Users"} value={overview.newUsers.toLocaleString()} icon={Users} />
-          <MetricCard title={isAllTime ? "Total Series" : "New Series"} value={overview.totalSeries.toLocaleString()} icon={BookOpen} />
-          <MetricCard title={isAllTime ? "Total Chapters" : "New Chapters"} value={overview.totalChapters.toLocaleString()} icon={Layers} />
-          <MetricCard title={isAllTime ? "Total Comments" : "New Comments"} value={overview.newComments.toLocaleString()} icon={MessageSquare} />
+          <MetricCard title={`${prefix} Users`} value={overview.users.value.toLocaleString()} trend={overview.users.trend} sparkline={overview.users.sparkline} lastUpdated={lastUpdated} icon={Users} />
+          <MetricCard title="Active Users" value={overview.activeUsers.value.toLocaleString()} trend={overview.activeUsers.trend} sparkline={overview.activeUsers.sparkline} lastUpdated={lastUpdated} icon={Users} />
+          <MetricCard title={`${prefix} Series`} value={overview.series.value.toLocaleString()} trend={overview.series.trend} sparkline={overview.series.sparkline} lastUpdated={lastUpdated} icon={BookOpen} />
+          <MetricCard title={`${prefix} Chapters`} value={overview.chapters.value.toLocaleString()} trend={overview.chapters.trend} sparkline={overview.chapters.sparkline} lastUpdated={lastUpdated} icon={Layers} />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <MetricCard title="New Bookmarks" value={overview.newBookmarks.toLocaleString()} icon={Bookmark} />
-          <MetricCard title="Chapter Views" value={overview.chapterViews.toLocaleString()} icon={Eye} />
-          <MetricCard title="Unique Visitors" value={overview.uniqueVisitors.toLocaleString()} icon={Fingerprint} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <MetricCard title="Total Views" value={overview.views.value.toLocaleString()} trend={overview.views.trend} sparkline={overview.views.sparkline} lastUpdated={lastUpdated} icon={Eye} />
+          <MetricCard title="Unique Visitors" value={overview.uniqueVisitors.value.toLocaleString()} trend={overview.uniqueVisitors.trend} sparkline={overview.uniqueVisitors.sparkline} lastUpdated={lastUpdated} icon={Fingerprint} />
+          <MetricCard title={`${prefix} Bookmarks`} value={overview.bookmarks.value.toLocaleString()} trend={overview.bookmarks.trend} sparkline={overview.bookmarks.sparkline} lastUpdated={lastUpdated} icon={Bookmark} />
+          <MetricCard title={`${prefix} Comments`} value={overview.comments.value.toLocaleString()} trend={overview.comments.trend} sparkline={overview.comments.sparkline} lastUpdated={lastUpdated} icon={MessageSquare} />
         </div>
       </section>
 
