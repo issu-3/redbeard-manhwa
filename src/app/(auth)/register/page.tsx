@@ -19,10 +19,33 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (form.password !== form.confirmPassword) {
-      setError('Passwords do not match');
+
+    if (!form.email || !form.username || !form.password || !form.confirmPassword) {
+      setError('Please fill in all fields.');
       return;
     }
+
+    if (form.username.length < 3) {
+      setError('Username must be at least 3 characters long.');
+      return;
+    }
+
+    if (form.password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    const termsCheckbox = document.getElementById('terms') as HTMLInputElement;
+    if (!termsCheckbox?.checked) {
+      setError('You must agree to the Terms of Service and Privacy Policy.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -89,14 +112,14 @@ export default function RegisterPage() {
           <div className="h-px flex-1 bg-border" />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           {error && <div className="rounded-xl bg-danger/10 px-4 py-3 text-sm text-danger">{error}</div>}
 
           <div>
             <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-text-secondary">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-              <input id="email" type="email" value={form.email} onChange={(e) => update('email', e.target.value)} className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" placeholder="you@example.com" required />
+              <input id="email" type="email" value={form.email} onChange={(e) => update('email', e.target.value)} className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" placeholder="you@example.com" />
             </div>
           </div>
 
@@ -104,7 +127,7 @@ export default function RegisterPage() {
             <label htmlFor="username" className="mb-1.5 block text-sm font-medium text-text-secondary">Username</label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-              <input id="username" type="text" value={form.username} onChange={(e) => update('username', e.target.value)} className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" placeholder="coolreader42" required minLength={3} maxLength={30} />
+              <input id="username" type="text" value={form.username} onChange={(e) => update('username', e.target.value)} className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" placeholder="coolreader42" />
             </div>
           </div>
 
@@ -112,7 +135,7 @@ export default function RegisterPage() {
             <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-text-secondary">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-              <input id="password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={(e) => update('password', e.target.value)} className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-12 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Min. 8 characters" required minLength={8} />
+              <input id="password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={(e) => update('password', e.target.value)} className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-12 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Min. 8 characters" />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary">
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -123,12 +146,12 @@ export default function RegisterPage() {
             <label htmlFor="confirmPassword" className="mb-1.5 block text-sm font-medium text-text-secondary">Confirm Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-              <input id="confirmPassword" type={showPassword ? 'text' : 'password'} value={form.confirmPassword} onChange={(e) => update('confirmPassword', e.target.value)} className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Repeat password" required minLength={8} />
+              <input id="confirmPassword" type={showPassword ? 'text' : 'password'} value={form.confirmPassword} onChange={(e) => update('confirmPassword', e.target.value)} className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Repeat password" />
             </div>
           </div>
 
-          <label className="flex items-start gap-2 text-sm text-text-secondary">
-            <input type="checkbox" className="mt-1 h-4 w-4 rounded border-border bg-surface accent-primary" required />
+          <label className="flex items-start gap-2 text-sm text-text-secondary cursor-pointer">
+            <input type="checkbox" className="mt-1 h-4 w-4 rounded border-border bg-surface accent-primary" id="terms" />
             <span>I agree to the <Link href="/terms" className="text-primary hover:text-primary-hover">Terms of Service</Link> and <Link href="/privacy" className="text-primary hover:text-primary-hover">Privacy Policy</Link></span>
           </label>
 
