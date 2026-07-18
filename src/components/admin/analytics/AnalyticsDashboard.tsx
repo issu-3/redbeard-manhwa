@@ -12,6 +12,7 @@ import {
   ReadingDistributionChart 
 } from './AnalyticsCharts';
 import { ChartErrorBoundary } from './ChartErrorBoundary';
+import { SystemHealthPanel } from './SystemHealthPanel';
 
 export function AnalyticsDashboard({ initialData, currentRange }: { initialData: any, currentRange: string }) {
   const router = useRouter();
@@ -110,6 +111,13 @@ export function AnalyticsDashboard({ initialData, currentRange }: { initialData:
           </div>
         </section>
       </div>
+
+      {/* SYSTEM HEALTH */}
+      <section>
+        <ChartErrorBoundary chartName="System Health">
+          <SystemHealthPanel />
+        </ChartErrorBoundary>
+      </section>
 
     </div>
   );
