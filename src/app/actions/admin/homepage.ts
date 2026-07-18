@@ -187,11 +187,9 @@ export async function updateHomepageSettings(data: Record<string, string>) {
   revalidatePath('/', 'layout');
 }
 
-import { revalidateTag } from 'next/cache';
-
 export async function refreshHomepageCache() {
   await checkAdmin();
-  revalidateTag('homepage_data');
+  revalidatePath('/', 'layout');
   return { success: true, timestamp: new Date().toISOString() };
 }
 
