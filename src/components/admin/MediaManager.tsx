@@ -86,11 +86,12 @@ export function MediaManager({ name, label, recommendedDimensions, defaultValue 
         body: formData,
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Upload failed');
+        throw new Error(data.error || 'Upload failed');
       }
 
-      const data = await response.json();
       setProgress(100);
       setFinalUrl(data.url);
       setMode('url');
