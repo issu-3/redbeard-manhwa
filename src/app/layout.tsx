@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { Inter, Plus_Jakarta_Sans, Poppins } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { SessionProvider } from '@/providers/session-provider';
@@ -129,16 +130,15 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${plusJakarta.variable} ${poppins.variable}`}
     >
-      <head>
+      <body className="min-h-screen bg-background font-sans antialiased">
         {settings.adsenseId && (
-          <script
-            async
+          <Script
+            id="adsense-init"
+            strategy="beforeInteractive"
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${settings.adsenseId}`}
             crossOrigin="anonymous"
-          ></script>
+          />
         )}
-      </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
