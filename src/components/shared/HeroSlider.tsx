@@ -4,8 +4,9 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, Eye, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
-import { formatNumber } from '@/lib/utils';
+import { BookOpen, ChevronLeft, ChevronRight, Bookmark } from 'lucide-react';
+import { BookmarkButton } from '@/components/shared/BookmarkButton';
+import { Badge } from '@/components/shared/Badge';
 
 interface HeroSlide {
   id: string;
@@ -15,14 +16,20 @@ interface HeroSlide {
   bannerImage?: string;
   description: string;
   genres: { name: string; slug: string }[];
-  averageRating: number;
-  chapterCount: number;
-  totalViews: number;
+  status: string;
 }
 
 interface HeroSliderProps {
   slides: HeroSlide[];
 }
+
+const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'primary'> = {
+  ONGOING: 'success',
+  COMPLETED: 'info',
+  HIATUS: 'warning',
+  CANCELLED: 'danger',
+  UPCOMING: 'primary',
+};
 
 export function HeroSlider({ slides }: HeroSliderProps) {
   const [current, setCurrent] = useState(0);
@@ -67,6 +74,15 @@ export function HeroSlider({ slides }: HeroSliderProps) {
     startAutoplay();
   };
 
+  const handleDragEnd = (e: any, { offset, velocity }: any) => {
+    const swipe = Math.abs(offset.x) * velocity.x;
+    if (swipe < -10000) {
+      goNext();
+    } else if (swipe > 10000) {
+      goPrev();
+    }
+  };
+
   if (!slides.length) return null;
   const slide = slides[current];
 
@@ -94,9 +110,13 @@ export function HeroSlider({ slides }: HeroSliderProps) {
           animate="center"
           exit="exit"
           transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
-          className="absolute inset-0"
+          className="absolute inset-0 cursor-grab active:cursor-grabbing"
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={1}
+          onDragEnd={handleDragEnd}
         >
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 pointer-events-none">
             <Image
               src={slide.bannerImage || slide.coverImage}
               alt={slide.title}
@@ -111,8 +131,8 @@ export function HeroSlider({ slides }: HeroSliderProps) {
         </motion.div>
       </AnimatePresence>
 
-      <div className="relative z-10 flex h-full items-end px-6 pb-16 pt-16 md:px-12 lg:px-20">
-        <div className="max-w-2xl">
+      <div className="relative z-10 flex h-full items-end px-6 pb-16 pt-16 md:px-12 lg:px-20 pointer-events-none">
+        <div className="max-w-2xl pointer-events-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={slide.id + '-content'}
@@ -121,62 +141,47 @@ export function HeroSlider({ slides }: HeroSliderProps) {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <div className="mb-3 flex flex-wrap gap-2">
+              <div className="mb-3 flex items-center flex-wrap gap-2">
+                <Badge variant={statusVariant[slide.status] || 'primary'} size="sm" className="font-bold uppercase tracking-wider">
+                  {slide.status}
+                </Badge>
                 {slide.genres.slice(0, 3).map((genre) => (
                   <span
                     key={genre.slug}
-                    className="rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium text-text-primary backdrop-blur-sm"
+                    className="rounded-md bg-foreground/10 px-3 py-1 text-xs font-medium text-text-primary backdrop-blur-sm border border-border/50"
                   >
                     {genre.name}
                   </span>
                 ))}
               </div>
 
-              <h1 className="mb-4 text-3xl font-bold leading-tight text-text-primary md:text-5xl lg:text-6xl"
+              <h1 className="mb-4 text-3xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
                   style={{ fontFamily: 'var(--font-heading)' }}>
                 {slide.title}
               </h1>
 
-              <p className="mb-6 line-clamp-3 max-w-lg text-sm text-white/70 md:text-base">
+              <p className="mb-8 line-clamp-3 max-w-lg text-sm text-text-secondary md:text-base">
                 {slide.description}
               </p>
 
-              <div className="mb-6 flex items-center gap-4 text-sm text-white/60">
-                <span className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-warning text-warning" />
-                  {slide.averageRating.toFixed(1)}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Eye className="h-4 w-4" />
-                  {formatNumber(slide.totalViews)}
-                </span>
-                <span className="flex items-center gap-1">
-                  <BookOpen className="h-4 w-4" />
-                  {slide.chapterCount} Chapters
-                </span>
-              </div>
-
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <Link
                   href={`/series/${slide.slug}`}
-                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-semibold text-white transition-all hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25"
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
                 >
                   <BookOpen className="h-5 w-5" />
                   Read Now
                 </Link>
-                <Link
-                  href={`/series/${slide.slug}`}
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3 font-semibold text-text-primary backdrop-blur-sm transition-all hover:bg-foreground/10"
-                >
-                  More Info
-                </Link>
+                <div className="h-[52px]">
+                  {/* BookmarkButton handles its own height/padding, we just ensure it aligns by putting it in a flex context */}
+                  <BookmarkButton seriesId={slide.id} initialBookmarked={false} />
+                </div>
               </div>
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Navigation arrows */}
       <button
         onClick={goPrev}
         className="absolute left-4 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/40 p-3 text-white backdrop-blur-md transition-all hover:bg-black/60 md:flex"
@@ -192,7 +197,6 @@ export function HeroSlider({ slides }: HeroSliderProps) {
         <ChevronRight className="h-5 w-5" />
       </button>
 
-      {/* Slide indicators */}
       <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2">
         {slides.map((_, i) => (
           <button
