@@ -225,42 +225,152 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
 
             {/* ADS TAB */}
             {activeTab === 'ads' && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">Google AdSense ID</label>
-                  <input
-                    name="adsenseId"
-                    defaultValue={initialSettings.adsenseId || ''}
-                    placeholder="ca-pub-XXXXXXXXXXXXXXXX"
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+              <div className="space-y-8">
+                {/* Global Settings */}
+                <div className="bg-background/50 border border-border/50 rounded-lg p-4 space-y-4">
+                  <h3 className="text-lg font-semibold text-text-primary border-b border-border/50 pb-2">Global Settings</h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-text-primary mb-1">Ad Provider Priority (Fallback Order)</label>
+                    <input
+                      name="ads_provider_priority"
+                      defaultValue={initialSettings.ads_provider_priority || 'adsense,monetag,adsterra,propeller'}
+                      placeholder="e.g. adsense,monetag,adsterra,propeller"
+                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="text-xs text-text-muted mt-1">Comma-separated list of providers to use for 'Auto' placement.</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">Monetag Code</label>
-                  <textarea
-                    name="monetagCode"
-                    defaultValue={initialSettings.monetagCode || ''}
-                    rows={2}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+
+                {/* Placement Manager */}
+                <div className="bg-background/50 border border-border/50 rounded-lg p-4 space-y-4">
+                  <h3 className="text-lg font-semibold text-text-primary border-b border-border/50 pb-2">Placement Manager</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {['header', 'footer', 'sidebar', 'reader'].map(placement => (
+                      <div key={placement}>
+                        <label className="block text-sm font-medium text-text-primary mb-1 capitalize">{placement} Placement</label>
+                        <select
+                          name={`ads_placement_${placement}`}
+                          defaultValue={initialSettings[`ads_placement_${placement}`] || 'none'}
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        >
+                          <option value="none">None</option>
+                          <option value="auto">Auto (Priority Based)</option>
+                          <option value="adsense">AdSense</option>
+                          <option value="monetag">Monetag</option>
+                          <option value="adsterra">Adsterra</option>
+                          <option value="propeller">PropellerAds</option>
+                        </select>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">Adsterra Code</label>
-                  <textarea
-                    name="adsterraCode"
-                    defaultValue={initialSettings.adsterraCode || ''}
-                    rows={2}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">PropellerAds Code</label>
-                  <textarea
-                    name="propellerAdsCode"
-                    defaultValue={initialSettings.propellerAdsCode || ''}
-                    rows={2}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+
+                {/* Network Providers */}
+                <div className="bg-background/50 border border-border/50 rounded-lg p-4 space-y-6">
+                  <h3 className="text-lg font-semibold text-text-primary border-b border-border/50 pb-2">Ad Networks Configuration</h3>
+                  
+                  {/* AdSense */}
+                  <div className="space-y-2 pb-4 border-b border-border/20">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-text-primary">Google AdSense</label>
+                      <div className="flex items-center space-x-2">
+                        <select name="ads_enabled_adsense" defaultValue={initialSettings.ads_enabled_adsense || 'false'} className="text-xs rounded border border-input bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary">
+                          <option value="true">Enabled</option>
+                          <option value="false">Disabled</option>
+                        </select>
+                        <button type="button" onClick={() => {
+                          const id = (document.querySelector('input[name="adsenseId"]') as HTMLInputElement)?.value;
+                          if (!id) return alert('Enter AdSense ID first');
+                          alert(`AdSense ID: ${id}\nTest integration: Place a generic <ins> tag with client ID.`);
+                        }} className="px-2 py-1 text-xs bg-primary/20 text-primary hover:bg-primary/30 rounded">Test</button>
+                      </div>
+                    </div>
+                    <input
+                      name="adsenseId"
+                      defaultValue={initialSettings.adsenseId || ''}
+                      placeholder="ca-pub-XXXXXXXXXXXXXXXX"
+                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  {/* Monetag */}
+                  <div className="space-y-2 pb-4 border-b border-border/20">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-text-primary">Monetag</label>
+                      <div className="flex items-center space-x-2">
+                        <select name="ads_enabled_monetag" defaultValue={initialSettings.ads_enabled_monetag || 'false'} className="text-xs rounded border border-input bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary">
+                          <option value="true">Enabled</option>
+                          <option value="false">Disabled</option>
+                        </select>
+                        <button type="button" onClick={() => {
+                          const code = (document.querySelector('textarea[name="monetagCode"]') as HTMLTextAreaElement)?.value;
+                          if (!code) return alert('Enter code first');
+                          const w = window.open('', '_blank', 'width=400,height=300');
+                          if (w) { w.document.write(`<html><body><h3>Monetag Preview</h3>${code}</body></html>`); w.document.close(); }
+                        }} className="px-2 py-1 text-xs bg-primary/20 text-primary hover:bg-primary/30 rounded">Test Preview</button>
+                      </div>
+                    </div>
+                    <textarea
+                      name="monetagCode"
+                      defaultValue={initialSettings.monetagCode || ''}
+                      rows={2}
+                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
+                      placeholder="<script>...</script>"
+                    />
+                  </div>
+
+                  {/* Adsterra */}
+                  <div className="space-y-2 pb-4 border-b border-border/20">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-text-primary">Adsterra</label>
+                      <div className="flex items-center space-x-2">
+                        <select name="ads_enabled_adsterra" defaultValue={initialSettings.ads_enabled_adsterra || 'false'} className="text-xs rounded border border-input bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary">
+                          <option value="true">Enabled</option>
+                          <option value="false">Disabled</option>
+                        </select>
+                        <button type="button" onClick={() => {
+                          const code = (document.querySelector('textarea[name="adsterraCode"]') as HTMLTextAreaElement)?.value;
+                          if (!code) return alert('Enter code first');
+                          const w = window.open('', '_blank', 'width=400,height=300');
+                          if (w) { w.document.write(`<html><body><h3>Adsterra Preview</h3>${code}</body></html>`); w.document.close(); }
+                        }} className="px-2 py-1 text-xs bg-primary/20 text-primary hover:bg-primary/30 rounded">Test Preview</button>
+                      </div>
+                    </div>
+                    <textarea
+                      name="adsterraCode"
+                      defaultValue={initialSettings.adsterraCode || ''}
+                      rows={2}
+                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
+                      placeholder="<script>...</script>"
+                    />
+                  </div>
+
+                  {/* PropellerAds */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-text-primary">PropellerAds</label>
+                      <div className="flex items-center space-x-2">
+                        <select name="ads_enabled_propeller" defaultValue={initialSettings.ads_enabled_propeller || 'false'} className="text-xs rounded border border-input bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary">
+                          <option value="true">Enabled</option>
+                          <option value="false">Disabled</option>
+                        </select>
+                        <button type="button" onClick={() => {
+                          const code = (document.querySelector('textarea[name="propellerAdsCode"]') as HTMLTextAreaElement)?.value;
+                          if (!code) return alert('Enter code first');
+                          const w = window.open('', '_blank', 'width=400,height=300');
+                          if (w) { w.document.write(`<html><body><h3>PropellerAds Preview</h3>${code}</body></html>`); w.document.close(); }
+                        }} className="px-2 py-1 text-xs bg-primary/20 text-primary hover:bg-primary/30 rounded">Test Preview</button>
+                      </div>
+                    </div>
+                    <textarea
+                      name="propellerAdsCode"
+                      defaultValue={initialSettings.propellerAdsCode || ''}
+                      rows={2}
+                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
+                      placeholder="<script>...</script>"
+                    />
+                  </div>
                 </div>
               </div>
             )}

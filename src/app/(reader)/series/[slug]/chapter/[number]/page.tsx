@@ -6,6 +6,7 @@ import type { ChapterData } from '@/types';
 import { auth } from '@/auth';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/admin/settings';
+import { AdSlot } from '@/components/ads/AdSlot';
 
 // ─── Data Fetching ───────────────────────────────────────────────
 
@@ -242,5 +243,12 @@ export default async function ChapterPage({
     orderBy: { createdAt: 'desc' }
   });
 
-  return <ChapterReader chapter={chapter} comments={commentsData} currentUserId={session?.user?.id} />;
+  return (
+    <ChapterReader 
+      chapter={chapter} 
+      comments={commentsData} 
+      currentUserId={session?.user?.id} 
+      adSlot={<AdSlot placement="reader" />}
+    />
+  );
 }

@@ -29,6 +29,7 @@ import { toSeriesCardData } from '@/lib/data-mappers';
 
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/admin/settings';
+import { AdSlot } from '@/components/ads/AdSlot';
 
 async function getSeriesData(slug: string) {
   const series = await prisma.series.findUnique({
@@ -267,6 +268,11 @@ export default async function SeriesDetailPage({
                   <Share2 className="h-4 w-4" />
                 </button>
               </div>
+            </div>
+
+            {/* Sidebar Ad Slot */}
+            <div className="mt-8 w-full hidden lg:block">
+              <AdSlot placement="sidebar" />
             </div>
           </div>
 

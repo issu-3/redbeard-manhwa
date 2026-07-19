@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { toSeriesCardData } from '@/lib/data-mappers';
 import { getSections } from '@/app/actions/admin/homepage';
 import { unstable_cache } from 'next/cache';
+import { AdSlot } from '@/components/ads/AdSlot';
 
 export const metadata: Metadata = {
   title: 'REDBEARD — The Ultimate Reading Experience',
@@ -162,6 +163,7 @@ export default async function HomePage() {
       sections={sections}
       sectionData={sectionData}
       genres={formattedGenres}
+      adSlot={<AdSlot placement="in_feed" />}
     />
   );
 }

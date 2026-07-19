@@ -45,11 +45,12 @@ interface ChapterReaderProps {
   chapter: ChapterData;
   comments: CommentData[];
   currentUserId?: string;
+  adSlot?: React.ReactNode;
 }
 
 // ─── Main Component ────────────────────────────────────────────
 
-export function ChapterReader({ chapter, comments, currentUserId }: ChapterReaderProps) {
+export function ChapterReader({ chapter, comments, currentUserId, adSlot }: ChapterReaderProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -456,6 +457,11 @@ export function ChapterReader({ chapter, comments, currentUserId }: ChapterReade
                   />
                 </div>
               ))}
+
+              {/* Reader Ad Slot */}
+              <div className="max-w-[900px] mx-auto px-4" onClick={e => e.stopPropagation()}>
+                {adSlot}
+              </div>
 
               {/* End of chapter */}
               <div className="py-16 px-4 text-center">

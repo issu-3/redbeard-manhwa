@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Star, Eye } from 'lucide-react';
 import { HeroSlider } from '@/components/shared/HeroSlider';
@@ -14,6 +15,7 @@ interface HomepageClientProps {
   sections: any[];
   sectionData: Record<string, SeriesCardData[]>;
   genres: { name: string; slug: string; icon: string; color: string; seriesCount: number }[];
+  adSlot?: React.ReactNode;
 }
 
 const sectionVariants = {
@@ -40,6 +42,7 @@ export function HomepageClient({
   sections,
   sectionData,
   genres,
+  adSlot,
 }: HomepageClientProps) {
 
   // Create a mapping of section type to rendering logic
@@ -214,7 +217,18 @@ export function HomepageClient({
   return (
     <div className="space-y-12 pb-16 md:space-y-16">
       {/* Dynamically render sections based on DB order */}
-      {sections.map(sec => renderSection(sec))}
+      {sections.map((sec, index) => (
+        <React.Fragment key={sec.id || index}>
+          {renderSection(sec)}
+          {index === 1 && adSlot && (
+            <SectionWrapper>
+              <div className="flex justify-center w-full py-4">
+                {adSlot}
+              </div>
+            </SectionWrapper>
+          )}
+        </React.Fragment>
+      ))}
 
       {/* ── Browse by Genre (Always show near the bottom) ──────────────────────────────── */}
       <SectionWrapper>
