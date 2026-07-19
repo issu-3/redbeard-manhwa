@@ -77,6 +77,10 @@ export async function generateMetadata(): Promise<Metadata> {
     verification: {
       google: settings.seo_gsc_verification || undefined,
     },
+    icons: {
+      icon: "/favicon.ico",
+      apple: "/apple-icon.png",
+    },
     manifest: '/manifest.json',
   };
 }
