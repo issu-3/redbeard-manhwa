@@ -275,10 +275,11 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium text-text-primary">Google AdSense</label>
                       <div className="flex items-center space-x-2">
-                        <select name="ads_enabled_adsense" defaultValue={initialSettings.ads_enabled_adsense || 'false'} className="text-xs rounded border border-input bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary">
-                          <option value="true">Enabled</option>
-                          <option value="false">Disabled</option>
-                        </select>
+                        <label className="relative inline-flex items-center cursor-pointer mr-2">
+                          <input type="hidden" name="ads_enabled_adsense" value="false" />
+                          <input type="checkbox" name="ads_enabled_adsense" value="true" defaultChecked={initialSettings.ads_enabled_adsense === 'true'} className="sr-only peer" />
+                          <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
                         <button type="button" onClick={() => {
                           const id = (document.querySelector('input[name="adsenseId"]') as HTMLInputElement)?.value;
                           if (!id) return alert('Enter AdSense ID first');
@@ -299,10 +300,11 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium text-text-primary">Monetag</label>
                       <div className="flex items-center space-x-2">
-                        <select name="ads_enabled_monetag" defaultValue={initialSettings.ads_enabled_monetag || 'false'} className="text-xs rounded border border-input bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary">
-                          <option value="true">Enabled</option>
-                          <option value="false">Disabled</option>
-                        </select>
+                        <label className="relative inline-flex items-center cursor-pointer mr-2">
+                          <input type="hidden" name="ads_enabled_monetag" value="false" />
+                          <input type="checkbox" name="ads_enabled_monetag" value="true" defaultChecked={initialSettings.ads_enabled_monetag === 'true'} className="sr-only peer" />
+                          <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
                         <button type="button" onClick={() => {
                           const code = (document.querySelector('textarea[name="monetagCode"]') as HTMLTextAreaElement)?.value;
                           if (!code) return alert('Enter code first');
@@ -325,10 +327,11 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium text-text-primary">Adsterra</label>
                       <div className="flex items-center space-x-2">
-                        <select name="ads_enabled_adsterra" defaultValue={initialSettings.ads_enabled_adsterra || 'false'} className="text-xs rounded border border-input bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary">
-                          <option value="true">Enabled</option>
-                          <option value="false">Disabled</option>
-                        </select>
+                        <label className="relative inline-flex items-center cursor-pointer mr-2">
+                          <input type="hidden" name="ads_enabled_adsterra" value="false" />
+                          <input type="checkbox" name="ads_enabled_adsterra" value="true" defaultChecked={initialSettings.ads_enabled_adsterra === 'true'} className="sr-only peer" />
+                          <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
                         <button type="button" onClick={() => {
                           const code = (document.querySelector('textarea[name="adsterraCode"]') as HTMLTextAreaElement)?.value;
                           if (!code) return alert('Enter code first');
@@ -351,10 +354,11 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium text-text-primary">PropellerAds</label>
                       <div className="flex items-center space-x-2">
-                        <select name="ads_enabled_propeller" defaultValue={initialSettings.ads_enabled_propeller || 'false'} className="text-xs rounded border border-input bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary">
-                          <option value="true">Enabled</option>
-                          <option value="false">Disabled</option>
-                        </select>
+                        <label className="relative inline-flex items-center cursor-pointer mr-2">
+                          <input type="hidden" name="ads_enabled_propeller" value="false" />
+                          <input type="checkbox" name="ads_enabled_propeller" value="true" defaultChecked={initialSettings.ads_enabled_propeller === 'true'} className="sr-only peer" />
+                          <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
                         <button type="button" onClick={() => {
                           const code = (document.querySelector('textarea[name="propellerAdsCode"]') as HTMLTextAreaElement)?.value;
                           if (!code) return alert('Enter code first');
