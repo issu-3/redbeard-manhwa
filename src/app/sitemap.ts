@@ -1,9 +1,9 @@
 import type { MetadataRoute } from 'next';
-
+import { prisma } from '@/lib/prisma';
 import { APP_URL } from '@/lib/constants';
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = APP_URL;
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = APP_URL || 'http://localhost:3000';
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
@@ -20,14 +20,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/dmca`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
   ];
 
-  // In production, dynamically generate series and genre URLs:
-  // const series = await prisma.series.findMany({ select: { slug: true, updatedAt: true } });
-  // const seriesRoutes = series.map((s) => ({
-  //   url: `${baseUrl}/series/${s.slug}`,
-  //   lastModified: s.updatedAt,
-  //   changeFrequency: 'daily' as const,
-  //   priority: 0.8,
-  // }));
+  const series = await prisma.series.findMany({ select: { slug: true, updatedAt: true } });
+  const seriesRoutes = series.map((s) => ({
+    url: `${baseUrl}/series/${s.slug}`,
+    lastModified: s.updatedAt,
+    changeFrequency: 'daily' as const,
+    priority: 0.8,
+  }));
 
-  return staticRoutes;
+  return [...staticRoutes, ...seriesRoutes];
 }

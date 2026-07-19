@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ChapterReader } from '@/components/reader/ChapterReader';
 import type { ChapterData } from '@/types';
@@ -62,6 +62,9 @@ async function getChapterData(slug: string, number: number): Promise<ChapterData
     title: chapter.title || undefined,
     slug: chapter.slug,
     totalPages: chapter.totalPages || chapter.images.length,
+    sourceType: chapter.sourceType || 'UPLOAD',
+    externalUrl: chapter.externalUrl || undefined,
+    externalProvider: chapter.externalProvider || undefined,
     images: chapter.images.map((img) => ({
       id: img.id,
       pageNumber: img.pageNumber,
@@ -124,8 +127,35 @@ export default async function ChapterPage({
     notFound();
   }
 
-  // Record reading history in the background (or rather, when page loads)
-  // We can do it right here since this is a server component
+  // Handle external redirect
+  if (chapter.sourceType === 'EXTERNAL' && chapter.externalUrl) {
+    // Record reading history before redirecting
+    const session = await auth();
+    if (session?.user?.id) {
+      await prisma.readingHistory.upsert({
+        where: {
+          userId_chapterId: {
+            userId: session.user.id,
+            chapterId: chapter.id,
+          },
+        },
+        update: {
+          pageNumber: 1,
+        },
+        create: {
+          userId: session.user.id,
+          chapterId: chapter.id,
+          seriesId: chapter.seriesId,
+          pageNumber: 1,
+        },
+      });
+    }
+
+    // Redirect to the external URL
+    redirect(chapter.externalUrl);
+  }
+
+  // Record reading history in the background for regular chapters
   const session = await auth();
   if (session?.user?.id) {
     try {

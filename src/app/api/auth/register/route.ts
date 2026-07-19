@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { generateVerificationToken } from '@/lib/tokens';
 
 export async function POST(request: Request) {
   try {
@@ -31,6 +32,9 @@ export async function POST(request: Request) {
         username: name.toLowerCase().replace(/\s+/g, '') + Math.floor(Math.random() * 1000),
       },
     });
+
+    const verificationToken = await generateVerificationToken(user.email);
+    console.log(`[DEV MODE] Email verification link: http://localhost:3000/verify-email?token=${verificationToken.token}`);
 
     return NextResponse.json(
       { message: 'User created successfully', id: user.id },

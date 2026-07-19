@@ -56,6 +56,9 @@ export interface ChapterData {
   title?: string;
   slug: string;
   totalPages: number;
+  sourceType?: string;
+  externalUrl?: string;
+  externalProvider?: string;
   images: ChapterImageData[];
   prevChapter?: { number: number; slug: string };
   nextChapter?: { number: number; slug: string };
