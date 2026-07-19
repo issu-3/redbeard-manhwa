@@ -36,5 +36,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...seriesRoutes, ...genreRoutes];
+  const chapters = await prisma.chapter.findMany({ 
+    where: { isPublished: true },
+    select: { number: true, updatedAt: true, series: { select: { slug: true } } },
+    take: 10000,
+    orderBy: { updatedAt: 'desc' }
+  });
+  const chapterRoutes = chapters.map((c) => ({
+    url: `${baseUrl}/series/${c.series.slug}/chapter/${c.number}`,
+    lastModified: c.updatedAt,
+    changeFrequency: 'never' as const,
+    priority: 0.6,
+  }));
+
+  return [...staticRoutes, ...seriesRoutes, ...genreRoutes, ...chapterRoutes];
 }

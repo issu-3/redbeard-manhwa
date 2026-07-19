@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
+import { put } from '@vercel/blob';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,14 +12,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file received.' }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Sanitize filename to prevent directory traversal or special character issues
     const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
     const filename = `${Date.now()}_${safeName}`;
+
+    // Cloud Storage via Vercel Blob
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      const blob = await put(filename, file, { access: 'public' });
+      return NextResponse.json({ url: blob.url }, { status: 200 });
+    }
+
+    // Fallback: Local Disk Storage
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
     
-    // Ensure the uploads directory exists
     const uploadDir = join(process.cwd(), 'public', 'uploads', 'chapters');
     try {
       await mkdir(uploadDir, { recursive: true });

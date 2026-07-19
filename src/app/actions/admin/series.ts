@@ -44,6 +44,26 @@ export async function createSeries(formData: FormData) {
 
   const slug = slugify(title);
 
+  const seoTitle = formData.get('seoTitle') as string;
+  const seoDescription = formData.get('seoDescription') as string;
+  const seoFocusKeyword = formData.get('seoFocusKeyword') as string;
+  const seoKeywords = formData.get('seoKeywords') as string;
+  const seoCanonicalUrl = formData.get('seoCanonicalUrl') as string;
+  const seoRobots = formData.get('seoRobots') as string;
+  const seoOgImage = formData.get('seoOgImage') as string;
+  const seoTwitterImage = formData.get('seoTwitterImage') as string;
+
+  const seo = {
+    title: seoTitle || undefined,
+    description: seoDescription || undefined,
+    focusKeyword: seoFocusKeyword || undefined,
+    keywords: seoKeywords || undefined,
+    canonicalUrl: seoCanonicalUrl || undefined,
+    robots: seoRobots || undefined,
+    ogImage: seoOgImage || undefined,
+    twitterImage: seoTwitterImage || undefined,
+  };
+
   await prisma.series.create({
     data: {
       title,
@@ -55,6 +75,7 @@ export async function createSeries(formData: FormData) {
       readingDirection,
       coverImage: coverImage || '/placeholder-cover.jpg',
       bannerImage: bannerImage || null,
+      seo,
       genres: {
         connect: genreIds.map(id => ({ id }))
       },
@@ -87,6 +108,26 @@ export async function updateSeries(formData: FormData) {
 
   const slug = slugify(title);
 
+  const seoTitle = formData.get('seoTitle') as string;
+  const seoDescription = formData.get('seoDescription') as string;
+  const seoFocusKeyword = formData.get('seoFocusKeyword') as string;
+  const seoKeywords = formData.get('seoKeywords') as string;
+  const seoCanonicalUrl = formData.get('seoCanonicalUrl') as string;
+  const seoRobots = formData.get('seoRobots') as string;
+  const seoOgImage = formData.get('seoOgImage') as string;
+  const seoTwitterImage = formData.get('seoTwitterImage') as string;
+
+  const seo = {
+    title: seoTitle || undefined,
+    description: seoDescription || undefined,
+    focusKeyword: seoFocusKeyword || undefined,
+    keywords: seoKeywords || undefined,
+    canonicalUrl: seoCanonicalUrl || undefined,
+    robots: seoRobots || undefined,
+    ogImage: seoOgImage || undefined,
+    twitterImage: seoTwitterImage || undefined,
+  };
+
   await prisma.series.update({
     where: { id },
     data: {
@@ -99,6 +140,7 @@ export async function updateSeries(formData: FormData) {
       readingDirection,
       coverImage: coverImage || '/placeholder-cover.jpg',
       bannerImage: bannerImage || null,
+      seo,
       genres: {
         set: genreIds.map(genreId => ({ id: genreId }))
       },

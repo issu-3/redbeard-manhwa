@@ -9,13 +9,14 @@ import {
   Tags,
   Settings,
   ArrowLeft,
-  BarChart3
+  BarChart3,
+  Search
 } from 'lucide-react';
 import { auth } from '@/auth';
-
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+  { name: 'SEO Health', href: '/admin/seo', icon: Search },
   { name: 'Homepage', href: '/admin/homepage', icon: LayoutDashboard },
   { name: 'Series', href: '/admin/series', icon: Library },
   { name: 'Genres & Tags', href: '/admin/metadata', icon: Tags },

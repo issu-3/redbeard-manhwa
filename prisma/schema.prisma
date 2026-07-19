@@ -194,6 +194,7 @@ model Series {
   chapterCount      Int              @default(0)
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
+  seo               Json?
 
   // Relations
   chapters         Chapter[]
@@ -231,6 +232,7 @@ model Chapter {
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  seo         Json?
   // Dual source system
   sourceType       String?  @default("UPLOAD") // UPLOAD, EXTERNAL
   externalUrl      String?
@@ -275,6 +277,7 @@ model Genre {
   iconName    String?
   color       String?
   seriesCount Int     @default(0)
+  seo         Json?
 
   series Series[]
 
@@ -285,6 +288,7 @@ model Tag {
   id   String @id @default(cuid())
   name String @unique
   slug String @unique
+  seo  Json?
 
   series Series[]
 

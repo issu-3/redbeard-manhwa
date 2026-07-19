@@ -78,6 +78,7 @@ async function getChapterData(slug: string, number: number): Promise<ChapterData
     })),
     prevChapter: prevChapter ? { number: prevChapter.number, slug: prevChapter.slug } : undefined,
     nextChapter: nextChapter ? { number: nextChapter.number, slug: nextChapter.slug } : undefined,
+    seo: chapter.seo as Record<string, string> | undefined,
   };
 }
 
@@ -98,32 +99,42 @@ export async function generateMetadata({
   
   if (!chapter) return { title: 'Chapter Not Found' };
 
+  const seo = chapter.seo || {};
   const siteTitle = settings.seo_site_title || 'REDBEARD';
-  const title = `${chapter.seriesTitle} Chapter ${chapter.number} - Read Online | ${settings.siteName || 'REDBEARD'}`;
-  const description = `Read ${chapter.seriesTitle} Chapter ${chapter.number}${chapter.title ? ` - ${chapter.title}` : ''} online on ${settings.siteName || 'REDBEARD'}. High quality manhwa reading experience.`;
-  const url = `${APP_URL}/series/${slug}/chapter/${number}`;
+  
+  const defaultTitle = `${chapter.seriesTitle} Chapter ${chapter.number} - Read Online | ${settings.siteName || 'REDBEARD'}`;
+  const defaultDesc = `Read ${chapter.seriesTitle} Chapter ${chapter.number}${chapter.title ? ` - ${chapter.title}` : ''} online on ${settings.siteName || 'REDBEARD'}. High quality manhwa reading experience.`;
+  const defaultUrl = `${APP_URL}/series/${slug}/chapter/${number}`;
+  const defaultImage = chapter.images.length > 0 ? chapter.images[0].imageUrl : undefined;
+
+  const title = seo.title || defaultTitle;
+  const description = seo.description || defaultDesc;
+  const canonical = seo.canonicalUrl || defaultUrl;
+  const robots = seo.robots || 'index, follow';
+  const ogImage = seo.ogImage || defaultImage;
+  const twitterImage = seo.twitterImage || defaultImage;
+  const keywords = seo.keywords ? seo.keywords.split(',').map(k => k.trim()) : undefined;
   
   return {
     title,
     description,
+    keywords,
+    robots,
     openGraph: {
       title,
       description,
-      images: chapter.images.length > 0 ? [{ url: chapter.images[0].imageUrl, width: 800, height: 1200 }] : [],
-      url,
+      images: ogImage ? [{ url: ogImage, width: 800, height: 1200 }] : [],
+      url: canonical,
       type: 'article',
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
+      images: twitterImage ? [twitterImage] : undefined,
     },
     alternates: {
-      canonical: url,
-    },
-    robots: {
-      index: true,
-      follow: true,
+      canonical: canonical,
     },
   };
 }

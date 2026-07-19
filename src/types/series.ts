@@ -62,6 +62,7 @@ export interface ChapterData {
   images: ChapterImageData[];
   prevChapter?: { number: number; slug: string };
   nextChapter?: { number: number; slug: string };
+  seo?: Record<string, string>;
 }
 
 export interface ChapterImageData {

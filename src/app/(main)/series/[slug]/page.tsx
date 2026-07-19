@@ -61,37 +61,47 @@ export async function generateMetadata({
   
   if (!series) return { title: 'Series Not Found' };
 
+  const seo = (series.seo as Record<string, string>) || {};
   const siteTitle = settings.seo_site_title || 'REDBEARD';
-  const title = `${series.title} Manhwa - Read Online | ${settings.siteName || 'REDBEARD'}`;
-  const description = series.synopsis || series.description.slice(0, 160);
   
-  const keywords = [
-    ...series.genres.map(g => g.name),
-    ...series.tags.map(t => t.name),
-    ...series.authors.map(a => a.name),
-    series.title,
-    'read manhwa online'
-  ];
+  const title = seo.title || `${series.title} Manhwa - Read Online | ${siteTitle}`;
+  const description = seo.description || series.synopsis || series.description.slice(0, 160);
+  
+  const keywords = seo.keywords 
+    ? seo.keywords.split(',').map(k => k.trim()) 
+    : [
+        ...series.genres.map(g => g.name),
+        ...series.tags.map(t => t.name),
+        ...series.authors.map(a => a.name),
+        series.title,
+        'read manhwa online'
+      ];
+
+  const robots = seo.robots || 'index, follow';
+  const canonical = seo.canonicalUrl || `${APP_URL}/series/${slug}`;
+  const ogImage = seo.ogImage || series.coverImage;
+  const twitterImage = seo.twitterImage || series.coverImage;
 
   return {
     title,
     description,
     keywords,
+    robots,
     openGraph: {
       title,
       description,
-      images: [{ url: series.coverImage, width: 800, height: 1200 }],
+      images: [{ url: ogImage, width: 800, height: 1200 }],
       type: 'book',
-      url: `${APP_URL}/series/${slug}`,
+      url: canonical,
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [series.coverImage],
+      images: [twitterImage],
     },
     alternates: {
-      canonical: `${APP_URL}/series/${slug}`,
+      canonical: canonical,
     }
   };
 }
