@@ -82,10 +82,12 @@ export async function saveSettings(formData: FormData) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    const updates = Array.from(formData.entries()).map(([key, value]) => ({
-      key,
-      value: value.toString()
-    }));
+    const updates = Array.from(formData.entries())
+      .filter(([key]) => !key.startsWith('$ACTION_ID') && !key.startsWith('ACTION_ID'))
+      .map(([key, value]) => ({
+        key,
+        value: value.toString()
+      }));
 
     // Perform upserts in a transaction
     await prisma.$transaction(
@@ -98,6 +100,8 @@ export async function saveSettings(formData: FormData) {
       )
     );
 
+    // @ts-ignore - Next.js canary type expects 2 arguments for revalidateTag but at runtime works with 1
+    revalidateTag('settings'); // IMPORTANT: Invalidates getCachedSettings cache
     revalidatePath('/', 'layout'); // Revalidate everything so new settings take effect
     return { success: true };
   } catch (error: any) {
