@@ -4,29 +4,20 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
-  Eye,
   BookOpen,
-  Bookmark,
   Share2,
-  Clock,
-  User,
-  Palette,
   ArrowRight,
   ChevronRight,
 } from 'lucide-react';
-import { InteractiveRating } from '@/components/shared/InteractiveRating';
 import { Badge } from '@/components/shared/Badge';
 import { SeriesCard } from '@/components/shared/SeriesCard';
 import { BookmarkButton } from '@/components/shared/BookmarkButton';
-import { formatNumber, formatRelativeTime } from '@/lib/utils';
 import { ChapterListSection } from './chapter-list';
 import { prisma } from '@/lib/prisma';
 import type { SeriesCardData } from '@/types';
 import type { Series, Genre, Chapter } from '@prisma/client';
 import { auth } from '@/auth';
 import { DescriptionClient } from './description-client';
-import { toSeriesCardData } from '@/lib/data-mappers';
-
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/admin/settings';
 import { AdSlot } from '@/components/ads/AdSlot';
@@ -44,11 +35,8 @@ async function getSeriesData(slug: string) {
       },
     },
   });
-
   return series;
 }
-
-// ─── Metadata ──────────────────────────────────────────────────
 
 export async function generateMetadata({
   params,
@@ -106,8 +94,6 @@ export async function generateMetadata({
   };
 }
 
-// ─── Status Config ─────────────────────────────────────────────
-
 const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'primary'> = {
   ONGOING: 'success',
   COMPLETED: 'info',
@@ -115,8 +101,6 @@ const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'info' | 
   CANCELLED: 'danger',
   UPCOMING: 'primary',
 };
-
-// ─── Page Component ────────────────────────────────────────────
 
 export default async function SeriesDetailPage({
   params,
@@ -130,10 +114,9 @@ export default async function SeriesDetailPage({
     notFound();
   }
 
-  // Check if user has bookmarked or rated this series
   const session = await auth();
   let isBookmarked = false;
-  let userRating: number | null = null;
+  let continueReadingChapter: number | null = null;
   
   if (session?.user?.id) {
     const bookmark = await prisma.bookmark.findUnique({
@@ -146,23 +129,43 @@ export default async function SeriesDetailPage({
     });
     isBookmarked = !!bookmark;
 
-    const ratingRecord = await prisma.rating.findFirst({
+    const history = await prisma.readingHistory.findFirst({
       where: {
         userId: session.user.id,
         seriesId: series.id,
       },
+      orderBy: {
+        updatedAt: 'desc'
+      },
+      include: {
+        chapter: true
+      }
     });
-    if (ratingRecord) {
-      userRating = ratingRecord.score;
+    
+    if (history?.chapter) {
+      continueReadingChapter = history.chapter.number;
     }
   }
 
-  // Related series
   const relatedSeries = await prisma.series.findMany({
     where: { 
       id: { not: series.id },
       genres: { some: { id: { in: series.genres.map((g: { id: string }) => g.id) } } }
     },
+    take: 6,
+    include: { genres: true }
+  });
+
+  const trendingSeries = await prisma.series.findMany({
+    where: { id: { not: series.id } },
+    orderBy: { totalViews: 'desc' },
+    take: 6,
+    include: { genres: true }
+  });
+
+  const recentSeries = await prisma.series.findMany({
+    where: { id: { not: series.id } },
+    orderBy: { updatedAt: 'desc' },
     take: 6,
     include: { genres: true }
   });
@@ -212,267 +215,133 @@ export default async function SeriesDetailPage({
     ]
   };
 
+  const firstChapter = series.chapters.length > 0 ? series.chapters[series.chapters.length - 1] : null;
+  const firstChapterLink = firstChapter 
+    ? (firstChapter.sourceType === 'EXTERNAL' && firstChapter.externalUrl ? firstChapter.externalUrl : `/series/${series.slug}/chapter/${firstChapter.number}`) 
+    : '#';
+
+  const continueChapterObj = continueReadingChapter 
+    ? series.chapters.find((c: Chapter) => c.number === continueReadingChapter)
+    : null;
+
+  const continueLink = continueChapterObj
+    ? (continueChapterObj.sourceType === 'EXTERNAL' && continueChapterObj.externalUrl ? continueChapterObj.externalUrl : `/series/${series.slug}/chapter/${continueChapterObj.number}`)
+    : firstChapterLink;
+
+  const hasHistory = !!continueChapterObj;
+
   return (
-    <div className="min-h-screen bg-background">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
-      />
+    <div className="min-h-screen bg-background pb-24 md:pb-0">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      
       {/* ── Banner Section ────────────────────────────────── */}
-      <section className="relative h-[40vh] min-h-[320px] w-full overflow-hidden">
-        {/* Blurred background image */}
+      <section className="relative h-[45vh] min-h-[400px] w-full overflow-hidden">
         <Image
           src={series.bannerImage || series.coverImage}
           alt=""
           fill
-          className="object-cover scale-110 blur-sm"
+          className="object-cover scale-110 blur-xl opacity-40"
           priority
           sizes="100vw"
         />
-        {/* Gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/20" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/40" />
-
-        {/* Red accent glow at top */}
-        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-primary/8 rounded-full blur-[120px]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-transparent" />
       </section>
 
       {/* ── Main Content (overlapping banner) ─────────────── */}
-      <div className="relative -mt-40 z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="flex flex-col lg:flex-row gap-8">
+      <div className="relative -mt-64 z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
           {/* ── Cover Image ─────────────────────────────── */}
-          <div className="shrink-0 flex flex-col items-center lg:items-start">
-            <div className="relative w-[200px] sm:w-[220px] lg:w-[260px] aspect-[2/3] rounded-2xl overflow-hidden border-2 border-border shadow-2xl shadow-black/50 group">
+          <div className="shrink-0 flex flex-col items-center md:items-start md:w-[280px] lg:w-[320px]">
+            <div className="relative w-[220px] md:w-full aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-border/50">
               <Image
                 src={series.coverImage}
                 alt={series.title}
                 fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                className="object-cover"
                 priority
-                sizes="260px"
+                sizes="(max-width: 768px) 220px, 320px"
               />
-              {/* Glow effect on hover */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-t from-primary/10 via-transparent to-transparent" />
-            </div>
-
-            {/* ── Action Buttons (below cover on mobile, hidden on lg) ── */}
-            <div className="flex flex-col gap-3 w-full mt-6 lg:hidden">
-              {series.chapters.length > 0 && (
-                <Link
-                  href={series.chapters[series.chapters.length - 1].sourceType === 'EXTERNAL' && series.chapters[series.chapters.length - 1].externalUrl ? (series.chapters[series.chapters.length - 1].externalUrl || '#') : `/series/${series.slug}/chapter/${series.chapters[series.chapters.length - 1].number}`}
-                  target={series.chapters[series.chapters.length - 1].sourceType === 'EXTERNAL' ? '_blank' : undefined}
-                  rel={series.chapters[series.chapters.length - 1].sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
-                  className="flex items-center justify-center gap-2 w-full rounded-xl bg-primary px-6 py-3.5 font-semibold text-white transition-all hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
-                >
-                  <BookOpen className="h-5 w-5" />
-                  Read First Chapter
-                </Link>
-              )}
-              <div className="flex gap-3">
-                <BookmarkButton seriesId={series.id} initialBookmarked={isBookmarked} bookmarkCount={series.totalBookmarks} />
-                <button className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 font-medium text-text-primary transition-all hover:border-primary/40 hover:bg-card-hover">
-                  <Share2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Sidebar Ad Slot */}
-            <div className="mt-8 w-full hidden lg:block">
-              <AdSlot placement="sidebar" />
             </div>
           </div>
 
-          {/* ── Series Info ──────────────────────────────── */}
-          <div className="flex-1 min-w-0">
-            {/* Title & Alt titles */}
-            <div className="mb-4">
-              <div className="flex items-center gap-3 mb-2 flex-wrap">
-                <Badge variant={statusVariant[series.status]} size="md">
-                  {series.status}
-                </Badge>
-                <Badge variant="primary" size="md">
-                  {series.type}
-                </Badge>
-                {series.isHot && (
-                  <Badge variant="danger" size="md">
-                    🔥 HOT
-                  </Badge>
-                )}
-                {series.isEditorChoice && (
-                  <Badge variant="warning" size="md">
-                    ⭐ Editor&apos;s Choice
-                  </Badge>
-                )}
-              </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-text-primary tracking-tight leading-tight">
-                {series.title}
-              </h1>
-              {series.alternativeTitles.length > 0 && (
-                <p className="mt-2 text-sm text-text-muted leading-relaxed">
-                  {series.alternativeTitles.join(' • ')}
-                </p>
-              )}
+          {/* ── Series Hero Info ──────────────────────────────── */}
+          <div className="flex-1 min-w-0 flex flex-col justify-end pt-4 md:pt-16">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
+              <Badge variant={statusVariant[series.status]} size="sm" className="font-bold uppercase tracking-wider">
+                {series.status}
+              </Badge>
+              {series.isHot && <Badge variant="danger" size="sm">🔥 HOT</Badge>}
             </div>
+            
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-text-primary tracking-tight leading-tight mb-4">
+              {series.title}
+            </h1>
 
-            {/* Rating */}
-            <InteractiveRating 
-              seriesId={series.id}
-              initialAverage={series.averageRating}
-              initialCount={series.ratingCount}
-              initialUserRating={userRating}
-              isLoggedIn={!!session?.user?.id}
-            />
-
-            {/* Stats Row */}
-            <div className="flex flex-wrap gap-4 sm:gap-6 mb-6">
-              <StatItem
-                icon={<Eye className="h-4 w-4" />}
-                label="Views"
-                value={formatNumber(series.totalViews)}
-              />
-              <StatItem
-                icon={<Bookmark className="h-4 w-4" />}
-                label="Bookmarks"
-                value={formatNumber(series.totalBookmarks)}
-              />
-              <StatItem
-                icon={<BookOpen className="h-4 w-4" />}
-                label="Chapters"
-                value={series.chapterCount.toString()}
-              />
-              <StatItem
-                icon={<Clock className="h-4 w-4" />}
-                label="Updated"
-                value={formatRelativeTime(series.updatedAt.toISOString())}
-              />
-            </div>
-
-            {/* Description */}
-            <DescriptionSection description={series.description} />
-
-            {/* Metadata Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 p-4 rounded-2xl bg-surface/60 border border-border/50">
-              <MetaItem label="Type" value={series.type} />
-              <MetaItem label="Status" value={series.status} />
-              <MetaItem label="Released" value={series.releaseYear?.toString() || 'N/A'} />
-              <MetaItem label="Direction" value={series.readingDirection === 'VERTICAL' ? 'Vertical' : series.readingDirection} />
-            </div>
-
-            {/* Genres */}
-            <div className="mb-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">
-                Genres
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {series.genres.map((genre: { slug: string, name: string }) => (
-                  <Link
-                    key={genre.slug}
-                    href={`/browse?genre=${genre.slug}`}
-                    className="rounded-lg bg-card px-3 py-1.5 text-sm font-medium text-text-secondary border border-border transition-all hover:bg-primary/10 hover:text-primary hover:border-primary/30"
-                  >
-                    {genre.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Tags */}
-            <div className="mb-6">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">
-                Tags
-              </h3>
-              <div className="flex flex-wrap gap-1.5">
-                {series.tags.map((tag: { slug: string, name: string }) => (
-                  <Link
-                    key={tag.slug}
-                    href={`/browse?tag=${tag.slug}`}
-                    className="rounded-full bg-card/50 px-2.5 py-1 text-xs text-text-muted border border-border/50 transition-all hover:text-text-secondary hover:border-border"
-                  >
-                    #{tag.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Authors & Artists */}
-            <div className="flex flex-wrap gap-6 mb-6">
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-1.5 flex items-center gap-1.5">
-                  <User className="h-3 w-3" />
-                  Authors
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {series.authors.map((author: { slug: string, name: string }) => (
-                    <Link
-                      key={author.slug}
-                      href={`/author/${author.slug}`}
-                      className="text-sm font-medium text-text-primary hover:text-primary transition-colors"
-                    >
-                      {author.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-1.5 flex items-center gap-1.5">
-                  <Palette className="h-3 w-3" />
-                  Artists
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {series.artists.map((artist: { slug: string, name: string }) => (
-                    <Link
-                      key={artist.slug}
-                      href={`/artist/${artist.slug}`}
-                      className="text-sm font-medium text-text-primary hover:text-primary transition-colors"
-                    >
-                      {artist.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons (desktop) */}
-            <div className="hidden lg:flex gap-3 mb-8">
-              {series.chapters.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mb-6">
+              {series.genres.slice(0, 4).map((genre: { slug: string, name: string }) => (
                 <Link
-                  href={series.chapters[series.chapters.length - 1].sourceType === 'EXTERNAL' && series.chapters[series.chapters.length - 1].externalUrl ? (series.chapters[series.chapters.length - 1].externalUrl || '#') : `/series/${series.slug}/chapter/${series.chapters[series.chapters.length - 1].number}`}
-                  target={series.chapters[series.chapters.length - 1].sourceType === 'EXTERNAL' ? '_blank' : undefined}
-                  rel={series.chapters[series.chapters.length - 1].sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
-                  className="flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 font-semibold text-white transition-all hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
+                  key={genre.slug}
+                  href={`/browse?genre=${genre.slug}`}
+                  className="rounded-md bg-card/60 backdrop-blur-md px-3 py-1 text-sm font-medium text-text-primary border border-border/50 hover:bg-primary/20 hover:text-primary transition-colors"
+                >
+                  {genre.name}
+                </Link>
+              ))}
+              {series.tags.slice(0, 3).map((tag: { slug: string, name: string }) => (
+                <span key={tag.slug} className="text-sm font-medium text-text-muted">
+                  #{tag.name}
+                </span>
+              ))}
+            </div>
+
+            <div className="mb-8 max-w-3xl">
+              <DescriptionClient description={series.synopsis || series.description} />
+            </div>
+
+            {/* Action Buttons (Desktop) */}
+            <div className="hidden md:flex flex-wrap gap-4">
+              {firstChapter && (
+                <Link
+                  href={hasHistory ? continueLink : firstChapterLink}
+                  target={firstChapter.sourceType === 'EXTERNAL' ? '_blank' : undefined}
+                  rel={firstChapter.sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
+                  className="flex items-center gap-2 rounded-xl bg-primary px-10 py-4 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
                 >
                   <BookOpen className="h-5 w-5" />
-                  Read First Chapter
-                </Link>
-              )}
-              {series.chapters.length > 1 && (
-                <Link
-                  href={series.chapters[0].sourceType === 'EXTERNAL' && series.chapters[0].externalUrl ? (series.chapters[0].externalUrl || '#') : `/series/${series.slug}/chapter/${series.chapters[0].number}`}
-                  target={series.chapters[0].sourceType === 'EXTERNAL' ? '_blank' : undefined}
-                  rel={series.chapters[0].sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
-                  className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-6 py-3.5 font-semibold text-primary transition-all hover:bg-primary/10 hover:border-primary/50 active:scale-[0.98]"
-                >
-                  Continue Ch. {series.chapters[0].number}
-                  <ArrowRight className="h-4 w-4" />
+                  {hasHistory ? `Continue Ch. ${continueReadingChapter}` : 'Read First Chapter'}
                 </Link>
               )}
               
               <BookmarkButton seriesId={series.id} initialBookmarked={isBookmarked} />
               
-              <button className="flex items-center justify-center rounded-xl border border-border bg-card w-[52px] text-text-primary transition-all hover:border-primary/40 hover:bg-card-hover">
-                <Share2 className="h-4 w-4" />
+              <button className="flex items-center justify-center rounded-xl border-2 border-border bg-card/50 backdrop-blur-sm w-[56px] text-text-primary transition-all hover:border-primary/50 hover:bg-card-hover hover:text-primary">
+                <Share2 className="h-5 w-5" />
               </button>
             </div>
           </div>
         </div>
 
+        {/* ── Metadata Grid ──────────────────────────────────── */}
+        <div className="mt-12 mb-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 p-6 rounded-2xl bg-card border border-border">
+            <MetaItem label="Type" value={series.type} />
+            <MetaItem label="Release Year" value={series.releaseYear?.toString() || 'N/A'} />
+            <MetaItem label="Author" value={series.authors.map((a: { name: string }) => a.name).join(', ') || 'Unknown'} />
+            <MetaItem label="Artist" value={series.artists.map((a: { name: string }) => a.name).join(', ') || 'Unknown'} />
+            <MetaItem label="Direction" value={series.readingDirection === 'VERTICAL' ? 'Vertical' : series.readingDirection} />
+            <MetaItem label="Alt Names" value={series.alternativeTitles[0] || 'None'} />
+          </div>
+        </div>
+
+        {/* ── Ad Slot ──────────────────────────────────────── */}
+        <div className="my-8 w-full">
+          <AdSlot placement="sidebar" />
+        </div>
+
         {/* ── Chapter List ──────────────────────────────────── */}
         <section className="mt-12">
-          {/* Note: In a real app we'd map our DB Chapter model to ChapterListItem type */}
           <ChapterListSection
             chapters={series.chapters.map((c: Chapter) => ({
               id: c.id,
@@ -485,60 +354,72 @@ export default async function SeriesDetailPage({
               sourceType: c.sourceType || 'UPLOAD',
               externalUrl: c.externalUrl || undefined,
               externalProvider: c.externalProvider || undefined,
-              isRead: false // Real app would map ReadingHistory here
+              isRead: false
             }))}
             seriesSlug={series.slug}
           />
         </section>
 
-        {/* ── Related Series ────────────────────────────────── */}
-        <section className="mt-16">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-text-primary">
-              You May Also Like
-            </h2>
-            <Link
-              href="/browse"
-              className="flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-hover transition-colors"
-            >
-              Browse All
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-            {relatedSeries.map((item: Series & { genres: Genre[] }, index: number) => (
-              <SeriesCard 
-                key={item.id} 
-                series={{...item, type: item.type as SeriesCardData['type'], status: item.status as SeriesCardData['status'], updatedAt: item.updatedAt.toISOString(), genres: item.genres, latestChapterNumber: item.chapterCount}} 
-                index={index} 
-              />
-            ))}
-          </div>
+        {/* ── Recommendations ────────────────────────────────── */}
+        <section className="mt-20 space-y-16">
+          {relatedSeries.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-text-primary">Similar Series</h2>
+                <Link href="/browse" className="text-sm font-medium text-primary hover:underline">Browse All</Link>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+                {relatedSeries.map((item: Series & { genres: Genre[] }, index: number) => (
+                  <SeriesCard key={item.id} series={{...item, type: item.type as SeriesCardData['type'], status: item.status as SeriesCardData['status'], updatedAt: item.updatedAt.toISOString(), genres: item.genres, latestChapterNumber: item.chapterCount}} index={index} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {trendingSeries.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-text-primary">Trending This Week</h2>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+                {trendingSeries.map((item: Series & { genres: Genre[] }, index: number) => (
+                  <SeriesCard key={item.id} series={{...item, type: item.type as SeriesCardData['type'], status: item.status as SeriesCardData['status'], updatedAt: item.updatedAt.toISOString(), genres: item.genres, latestChapterNumber: item.chapterCount}} index={index} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {recentSeries.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-text-primary">Recently Updated</h2>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+                {recentSeries.map((item: Series & { genres: Genre[] }, index: number) => (
+                  <SeriesCard key={item.id} series={{...item, type: item.type as SeriesCardData['type'], status: item.status as SeriesCardData['status'], updatedAt: item.updatedAt.toISOString(), genres: item.genres, latestChapterNumber: item.chapterCount}} index={index} />
+                ))}
+              </div>
+            </div>
+          )}
         </section>
       </div>
-    </div>
-  );
-}
 
-// ─── Sub-components ────────────────────────────────────────────
-
-function StatItem({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-card border border-border text-text-muted">
-        {icon}
-      </div>
-      <div>
-        <p className="text-xs text-text-muted">{label}</p>
-        <p className="text-sm font-semibold text-text-primary" suppressHydrationWarning>{value}</p>
+      {/* ── Mobile Sticky Action Bar ──────────────────────── */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-lg border-t border-border p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+        <div className="flex gap-3 max-w-7xl mx-auto">
+          {firstChapter && (
+            <Link
+              href={hasHistory ? continueLink : firstChapterLink}
+              target={firstChapter.sourceType === 'EXTERNAL' ? '_blank' : undefined}
+              rel={firstChapter.sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 font-bold text-white active:scale-95 transition-transform shadow-lg shadow-primary/25"
+            >
+              <BookOpen className="h-5 w-5" />
+              {hasHistory ? `Continue Ch. ${continueReadingChapter}` : 'Read First Chapter'}
+            </Link>
+          )}
+          <BookmarkButton seriesId={series.id} initialBookmarked={isBookmarked} />
+        </div>
       </div>
     </div>
   );
@@ -546,17 +427,13 @@ function StatItem({
 
 function MetaItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="text-center">
-      <p className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">
+    <div className="flex flex-col gap-1">
+      <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
         {label}
-      </p>
-      <p className="text-sm font-semibold text-text-primary">{value}</p>
+      </span>
+      <span className="text-sm font-semibold text-text-primary truncate" title={value}>
+        {value}
+      </span>
     </div>
   );
-}
-
-function DescriptionSection({ description }: { description: string }) {
-  // We'll inline a client-side expandable via the chapter-list file
-  // For the server render, show truncated
-  return <DescriptionClient description={description} />;
 }

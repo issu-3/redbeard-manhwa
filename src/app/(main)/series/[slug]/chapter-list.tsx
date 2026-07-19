@@ -9,7 +9,6 @@ import {
   Search,
   Eye,
   Calendar,
-  BookOpen,
   CheckCircle2,
   Link as LinkIcon,
 } from 'lucide-react';
@@ -31,7 +30,6 @@ export function ChapterListSection({
   const filteredChapters = useMemo(() => {
     let filtered = [...chapters];
 
-    // Filter by search query
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       filtered = filtered.filter(
@@ -41,7 +39,6 @@ export function ChapterListSection({
       );
     }
 
-    // Sort
     filtered.sort((a, b) =>
       sortAsc ? a.number - b.number : b.number - a.number
     );
@@ -49,19 +46,19 @@ export function ChapterListSection({
     return filtered;
   }, [chapters, sortAsc, searchQuery]);
 
+  // Identify the latest chapter globally to highlight it
+  const latestChapterNumber = chapters.length > 0 ? Math.max(...chapters.map(c => c.number)) : null;
+
   return (
     <div>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <h2 className="text-2xl font-bold text-text-primary flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-primary" />
           Chapters
-          <span className="text-base font-normal text-text-muted">
-            ({chapters.length})
+          <span className="text-sm font-medium bg-card px-2 py-0.5 rounded-full text-text-muted border border-border">
+            {chapters.length}
           </span>
         </h2>
         <div className="flex items-center gap-3">
-          {/* Search */}
           <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
             <input
@@ -69,122 +66,110 @@ export function ChapterListSection({
               placeholder="Search chapters..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-56 rounded-xl border border-border bg-card pl-9 pr-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 transition-all"
+              className="w-full sm:w-64 rounded-xl border border-border bg-card pl-9 pr-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 transition-all"
             />
           </div>
-          {/* Sort toggle */}
           <button
             onClick={() => setSortAsc(!sortAsc)}
-            className={cn(
-              'flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-all hover:border-primary/40 hover:bg-card-hover',
-              'text-text-secondary'
-            )}
+            className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold transition-all hover:border-primary/40 hover:bg-card-hover text-text-secondary whitespace-nowrap"
           >
-            {sortAsc ? (
-              <ArrowUp className="h-4 w-4" />
-            ) : (
-              <ArrowDown className="h-4 w-4" />
-            )}
+            {sortAsc ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
             {sortAsc ? 'Oldest' : 'Newest'}
           </button>
         </div>
       </div>
 
-      {/* Chapter list */}
-      <div className="rounded-2xl border border-border bg-surface/30 overflow-hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <AnimatePresence mode="popLayout">
           {filteredChapters.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="py-16 text-center text-text-muted"
+              className="col-span-full py-16 text-center text-text-muted bg-card/30 rounded-2xl border border-border/50"
             >
               <Search className="h-8 w-8 mx-auto mb-3 opacity-50" />
               <p>No chapters match your search.</p>
             </motion.div>
           ) : (
-            filteredChapters.map((chapter, index) => (
-              <motion.div
-                key={chapter.id}
-                layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.3) }}
-              >
-                <Link
-                  href={chapter.sourceType === 'EXTERNAL' && chapter.externalUrl ? chapter.externalUrl : `/series/${seriesSlug}/chapter/${chapter.number}`}
-                  target={chapter.sourceType === 'EXTERNAL' ? '_blank' : undefined}
-                  rel={chapter.sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
-                  className={cn(
-                    'group flex items-center gap-4 px-4 sm:px-6 py-4 transition-all hover:bg-card/50',
-                    index < filteredChapters.length - 1 &&
-                      'border-b border-border/50',
-                    chapter.isRead && 'opacity-60'
-                  )}
+            filteredChapters.map((chapter, index) => {
+              const isLatest = chapter.number === latestChapterNumber;
+              
+              return (
+                <motion.div
+                  key={chapter.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.2) }}
                 >
-                  {/* Chapter number badge */}
-                  <div
+                  <Link
+                    href={chapter.sourceType === 'EXTERNAL' && chapter.externalUrl ? chapter.externalUrl : `/series/${seriesSlug}/chapter/${chapter.number}`}
+                    target={chapter.sourceType === 'EXTERNAL' ? '_blank' : undefined}
+                    rel={chapter.sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
                     className={cn(
-                      'flex items-center justify-center w-12 h-12 rounded-xl text-sm font-bold shrink-0 transition-all',
-                      chapter.isRead
-                        ? 'bg-card border border-border text-text-muted'
-                        : 'bg-primary/10 border border-primary/20 text-primary group-hover:bg-primary/15 group-hover:border-primary/30'
+                      'group relative flex flex-col justify-between p-4 rounded-xl border transition-all h-full',
+                      isLatest 
+                        ? 'bg-primary/5 border-primary/30 hover:border-primary/60 hover:bg-primary/10 shadow-sm'
+                        : 'bg-card border-border hover:border-primary/40 hover:bg-card-hover',
+                      chapter.isRead && 'opacity-60'
                     )}
                   >
-                    {chapter.number}
-                  </div>
-
-                  {/* Chapter info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors truncate">
-                        Chapter {chapter.number}
-                        {chapter.title && ` — ${chapter.title}`}
-                      </h3>
-                      {chapter.sourceType === 'EXTERNAL' && (
-                        <span title={`External Link: ${chapter.externalProvider}`} className="shrink-0"><LinkIcon className="h-4 w-4 text-primary" /></span>
-                      )}
+                    {isLatest && (
+                      <div className="absolute -top-2.5 -right-2.5 bg-primary text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-md z-10">
+                        New
+                      </div>
+                    )}
+                    
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0 pr-4">
+                        <h3 className={cn(
+                          "font-bold truncate transition-colors",
+                          isLatest ? "text-primary" : "text-text-primary group-hover:text-primary"
+                        )}>
+                          Chapter {chapter.number}
+                        </h3>
+                        {chapter.title && (
+                          <p className="text-xs text-text-secondary truncate mt-0.5">
+                            {chapter.title}
+                          </p>
+                        )}
+                      </div>
+                      
                       {chapter.isRead && (
                         <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
                       )}
                     </div>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="flex items-center gap-1 text-xs text-text-muted">
-                        <Eye className="h-3 w-3" />
-                        {formatNumber(chapter.totalViews)}
-                      </span>
-                      {chapter.publishedAt && (
-                      <span className="flex items-center gap-1 text-xs text-text-muted" suppressHydrationWarning>
-                        <Calendar className="h-3 w-3" />
-                        {formatRelativeTime(chapter.publishedAt)}
-                      </span>
-                      )}
-                      <span className="text-xs text-text-muted">
-                        {chapter.sourceType === 'EXTERNAL' ? chapter.externalProvider || 'External' : `${chapter.totalPages} pages`}
-                      </span>
+                    
+                    <div className="flex items-center justify-between text-[11px] font-medium text-text-muted mt-auto pt-3 border-t border-border/50">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          {formatNumber(chapter.totalViews)}
+                        </span>
+                        {chapter.publishedAt && (
+                          <span className="flex items-center gap-1" suppressHydrationWarning>
+                            <Calendar className="h-3 w-3" />
+                            {formatRelativeTime(chapter.publishedAt)}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-1 text-text-secondary group-hover:text-primary transition-colors">
+                        {chapter.sourceType === 'EXTERNAL' ? (
+                          <>
+                            <LinkIcon className="h-3 w-3" />
+                            <span>{chapter.externalProvider || 'Link'}</span>
+                          </>
+                        ) : (
+                          <span>{chapter.totalPages} pgs</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Arrow on hover */}
-                  <div className="hidden sm:flex items-center text-text-muted group-hover:text-primary transition-colors">
-                    <svg
-                      className="h-5 w-5 transition-transform group-hover:translate-x-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </div>
-                </Link>
-              </motion.div>
-            ))
+                  </Link>
+                </motion.div>
+              );
+            })
           )}
         </AnimatePresence>
       </div>
