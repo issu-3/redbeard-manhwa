@@ -7,7 +7,6 @@ import { HeroSlider } from '@/components/shared/HeroSlider';
 import { SeriesCard } from '@/components/shared/SeriesCard';
 import { Carousel } from '@/components/shared/Carousel';
 import { GenreCard } from '@/components/shared/GenreCard';
-import { WebsiteStatistics } from '@/components/shared/WebsiteStatistics';
 import type { SeriesCardData } from '@/types';
 
 interface HomepageClientProps {
@@ -245,10 +244,6 @@ export function HomepageClient({
         </div>
       </SectionWrapper>
 
-      {/* ── Stats Banner (Always show at bottom) ─────────────────────────────────── */}
-      <SectionWrapper>
-        <WebsiteStatistics />
-      </SectionWrapper>
     </div>
   );
 }
