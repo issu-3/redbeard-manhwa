@@ -40,7 +40,7 @@ export function NotificationClient({ initialNotifications }: { initialNotificati
       case 'NEW_CHAPTER': return <BookOpen className="h-5 w-5 text-primary" />;
       case 'ACHIEVEMENT': return <Zap className="h-5 w-5 text-yellow-400" />;
       case 'WARNING': return <ShieldAlert className="h-5 w-5 text-red-400" />;
-      default: return <Info className="h-5 w-5 text-gray-400" />;
+      default: return <Info className="h-5 w-5 text-text-muted" />;
     }
   };
 
@@ -51,7 +51,7 @@ export function NotificationClient({ initialNotifications }: { initialNotificati
           <button
             onClick={handleMarkAllAsRead}
             disabled={unreadCount === 0}
-            className="flex items-center gap-2 text-sm text-text-secondary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Check className="h-4 w-4" />
             Mark all as read
@@ -62,7 +62,7 @@ export function NotificationClient({ initialNotifications }: { initialNotificati
       {notifications.length === 0 ? (
         <div className="text-center py-16 px-4 bg-surface rounded-2xl border border-border">
           <Bell className="mx-auto h-12 w-12 text-white/20 mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">No notifications yet</h3>
+          <h3 className="text-lg font-medium text-text-primary mb-2">No notifications yet</h3>
           <p className="text-text-secondary">When you get replies or updates, they&apos;ll show up here.</p>
         </div>
       ) : (
@@ -88,7 +88,7 @@ export function NotificationClient({ initialNotifications }: { initialNotificati
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h4 className="text-sm font-semibold text-white">
+                      <h4 className="text-sm font-semibold text-text-primary">
                         {notification.title}
                       </h4>
                       <p className="text-sm text-text-secondary mt-1 break-words">
@@ -114,7 +114,7 @@ export function NotificationClient({ initialNotifications }: { initialNotificati
                     {!notification.isRead && (
                       <button 
                         onClick={() => handleMarkAsRead(notification.id)}
-                        className="text-xs font-medium text-text-muted hover:text-white transition-colors ml-auto"
+                        className="text-xs font-medium text-text-muted hover:text-text-primary transition-colors ml-auto"
                       >
                         Mark as read
                       </button>

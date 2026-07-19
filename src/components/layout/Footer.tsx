@@ -81,9 +81,9 @@ export async function Footer() {
           <div className="max-w-sm">
             <Link href="/" className="group inline-flex items-center gap-2.5">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/20">
-                <BookOpen className="h-5 w-5 text-white" strokeWidth={2.5} />
+                <BookOpen className="h-5 w-5 text-text-primary" strokeWidth={2.5} />
               </div>
-              <span className="bg-gradient-to-r from-white to-text-secondary bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">
+              <span className="bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">
                 {APP_NAME}
               </span>
             </Link>
@@ -100,7 +100,7 @@ export async function Footer() {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04] text-text-muted transition-all duration-200 hover:bg-white/[0.08] hover:text-white hover:scale-110"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-foreground/[0.04] text-text-muted transition-all duration-200 hover:bg-foreground/[0.08] hover:text-text-primary hover:scale-110"
                   aria-label={label}
                 >
                   <Icon className="h-4 w-4" />
@@ -112,7 +112,7 @@ export async function Footer() {
           {/* YouTube Channel Promotion or Empty */}
           {youtubeUrl ? (
             <div className="max-w-md lg:text-right">
-              <h3 className="text-sm font-semibold text-white flex items-center gap-2 lg:justify-end">
+              <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2 lg:justify-end">
                 <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-red-600">
                   <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                 </svg>
@@ -152,7 +152,7 @@ export async function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-text-muted transition-colors duration-200 hover:text-white"
+                      className="text-sm text-text-muted transition-colors duration-200 hover:text-text-primary"
                     >
                       {link.label}
                     </Link>
@@ -171,19 +171,19 @@ export async function Footer() {
           <div className="flex items-center gap-4">
             <Link
               href="/legal/terms"
-              className="text-xs text-text-muted transition-colors hover:text-white"
+              className="text-xs text-text-muted transition-colors hover:text-text-primary"
             >
               Terms
             </Link>
             <Link
               href="/legal/privacy"
-              className="text-xs text-text-muted transition-colors hover:text-white"
+              className="text-xs text-text-muted transition-colors hover:text-text-primary"
             >
               Privacy
             </Link>
             <Link
               href="/legal/dmca"
-              className="text-xs text-text-muted transition-colors hover:text-white"
+              className="text-xs text-text-muted transition-colors hover:text-text-primary"
             >
               DMCA
             </Link>

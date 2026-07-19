@@ -342,12 +342,12 @@ export function ChapterReader({ chapter, comments, currentUserId }: ChapterReade
               <div className="flex items-center gap-3 min-w-0">
                 <Link
                   href={`/series/${chapter.seriesSlug}`}
-                  className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-all"
+                  className="flex items-center justify-center w-9 h-9 rounded-lg bg-foreground/5 text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </Link>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">
+                  <p className="text-sm font-semibold text-text-primary truncate">
                     {chapter.seriesTitle}
                   </p>
                   <p className="text-xs text-white/50 truncate">
@@ -359,7 +359,7 @@ export function ChapterReader({ chapter, comments, currentUserId }: ChapterReade
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleFullscreen}
-                  className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-all"
+                  className="flex items-center justify-center w-9 h-9 rounded-lg bg-foreground/5 text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                   title="Toggle Fullscreen (F)"
                 >
                   {isFullscreen ? (
@@ -373,7 +373,7 @@ export function ChapterReader({ chapter, comments, currentUserId }: ChapterReade
                     setCommentsOpen(true);
                     resetUITimer();
                   }}
-                  className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-all relative"
+                  className="flex items-center justify-center w-9 h-9 rounded-lg bg-foreground/5 text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all relative"
                   title="Comments"
                 >
                   <MessageSquare className="h-4 w-4" />
@@ -388,7 +388,7 @@ export function ChapterReader({ chapter, comments, currentUserId }: ChapterReade
                     setSettingsOpen(true);
                     resetUITimer();
                   }}
-                  className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-all"
+                  className="flex items-center justify-center w-9 h-9 rounded-lg bg-foreground/5 text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                   title="Settings"
                 >
                   <Settings className="h-4 w-4" />
@@ -466,7 +466,7 @@ export function ChapterReader({ chapter, comments, currentUserId }: ChapterReade
                   {chapter.prevChapter && (
                     <Link
                       href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.number}`}
-                      className="flex items-center gap-2 rounded-xl bg-white/5 px-6 py-3 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-all"
+                      className="flex items-center gap-2 rounded-xl bg-foreground/5 px-6 py-3 text-sm font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -564,7 +564,7 @@ export function ChapterReader({ chapter, comments, currentUserId }: ChapterReade
           >
             {/* Progress bar */}
             <div
-              className="relative h-1 w-full bg-white/5 cursor-pointer group"
+              className="relative h-1 w-full bg-foreground/5 cursor-pointer group"
               onClick={(e) => {
                 e.stopPropagation();
                 const rect = e.currentTarget.getBoundingClientRect();
@@ -590,7 +590,7 @@ export function ChapterReader({ chapter, comments, currentUserId }: ChapterReade
                 {chapter.prevChapter ? (
                   <Link
                     href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.number}`}
-                    className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-xs font-medium text-white/70 hover:bg-white/10 hover:text-white transition-all"
+                    className="flex items-center gap-1.5 rounded-lg bg-foreground/5 px-3 py-2 text-xs font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
@@ -616,7 +616,7 @@ export function ChapterReader({ chapter, comments, currentUserId }: ChapterReade
                 {chapter.nextChapter ? (
                   <Link
                     href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.number}`}
-                    className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-xs font-medium text-white/70 hover:bg-white/10 hover:text-white transition-all"
+                    className="flex items-center gap-1.5 rounded-lg bg-foreground/5 px-3 py-2 text-xs font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <span className="hidden sm:inline">Ch. {chapter.nextChapter.number}</span>

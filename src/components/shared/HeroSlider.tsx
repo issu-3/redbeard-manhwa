@@ -125,14 +125,14 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                 {slide.genres.slice(0, 3).map((genre) => (
                   <span
                     key={genre.slug}
-                    className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm"
+                    className="rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium text-text-primary backdrop-blur-sm"
                   >
                     {genre.name}
                   </span>
                 ))}
               </div>
 
-              <h1 className="mb-4 text-3xl font-bold leading-tight text-white md:text-5xl lg:text-6xl"
+              <h1 className="mb-4 text-3xl font-bold leading-tight text-text-primary md:text-5xl lg:text-6xl"
                   style={{ fontFamily: 'var(--font-heading)' }}>
                 {slide.title}
               </h1>
@@ -166,7 +166,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                 </Link>
                 <Link
                   href={`/series/${slide.slug}`}
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3 font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/10"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3 font-semibold text-text-primary backdrop-blur-sm transition-all hover:bg-foreground/10"
                 >
                   More Info
                 </Link>
@@ -199,7 +199,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
             key={i}
             onClick={() => goTo(i)}
             className={`h-2 rounded-full transition-all duration-300 ${
-              i === current ? 'w-8 bg-primary' : 'w-2 bg-white/30 hover:bg-white/50'
+              i === current ? 'w-8 bg-primary' : 'w-2 bg-foreground/30 hover:bg-foreground/50'
             }`}
             aria-label={`Go to slide ${i + 1}`}
           />

@@ -46,11 +46,11 @@ function SortableImage({ id, url, pageNumber, onRemove, onReplace }: any) {
       </div>
 
       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-        <button type="button" {...attributes} {...listeners} className="p-2 bg-white/20 hover:bg-white/40 rounded-lg text-white cursor-grab active:cursor-grabbing">
+        <button type="button" {...attributes} {...listeners} className="p-2 bg-foreground/20 hover:bg-foreground/40 rounded-lg text-white cursor-grab active:cursor-grabbing">
           <GripVertical className="h-5 w-5" />
         </button>
         
-        <label className="p-2 bg-white/20 hover:bg-white/40 rounded-lg text-white cursor-pointer">
+        <label className="p-2 bg-foreground/20 hover:bg-foreground/40 rounded-lg text-text-primary cursor-pointer">
           <Upload className="h-5 w-5" />
           <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
         </label>

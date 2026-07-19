@@ -138,7 +138,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
               />
               <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera className="w-6 h-6 text-white mb-1" />
-                <span className="text-xs text-white font-medium">Change</span>
+                <span className="text-xs text-text-primary font-medium">Change</span>
               </div>
             </div>
             <p className="text-xs text-muted-foreground text-center">

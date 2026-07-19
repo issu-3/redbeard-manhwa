@@ -23,7 +23,7 @@ export default async function NotificationsPage() {
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+          <h1 className="text-3xl font-bold tracking-tight text-text-primary flex items-center gap-3">
             <Bell className="h-8 w-8 text-primary" />
             Notifications
           </h1>

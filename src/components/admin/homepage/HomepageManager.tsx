@@ -347,7 +347,7 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                   <span className="font-semibold text-sm">{sec.type.replace('_', ' ')}</span>
                   <div className="flex items-center gap-4">
                     <div className="flex flex-col gap-1 w-24 shrink-0">
-                      <label className="text-xs text-gray-500 uppercase font-semibold">Limit</label>
+                      <label className="text-xs text-text-muted uppercase font-semibold">Limit</label>
                       <select
                         defaultValue={sec.limit}
                         onChange={(e) => handleSectionUpdate(sec.id, { limit: parseInt(e.target.value) })}

@@ -98,7 +98,7 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
 
           {/* Status badge */}
           <div className="absolute left-2 top-2 z-10">
-            <span className={`rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase text-white ${statusColors[series.status] || 'bg-gray-500'}`}>
+            <span className={`rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase text-text-primary ${statusColors[series.status] || 'bg-gray-500'}`}>
               {series.status}
             </span>
           </div>
@@ -121,7 +121,7 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
           <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/60 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <div className="flex flex-wrap gap-1 mb-2">
               {series.genres.slice(0, 2).map((g) => (
-                <span key={g.slug} className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm">
+                <span key={g.slug} className="rounded-full bg-foreground/15 px-2 py-0.5 text-[10px] text-text-primary backdrop-blur-sm">
                   {g.name}
                 </span>
               ))}

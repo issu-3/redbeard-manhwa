@@ -93,10 +93,10 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="group flex shrink-0 items-center gap-2.5">
             <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/25">
-              <BookOpen className="h-5 w-5 text-white" strokeWidth={2.5} />
+              <BookOpen className="h-5 w-5 text-text-primary" strokeWidth={2.5} />
               <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary to-accent opacity-0 blur-md transition-opacity group-hover:opacity-60" />
             </div>
-            <span className="bg-gradient-to-r from-white via-white to-text-secondary bg-clip-text text-xl font-extrabold tracking-tight text-transparent">
+            <span className="bg-gradient-to-r from-text-primary via-white to-text-secondary bg-clip-text text-xl font-extrabold tracking-tight text-transparent">
               {APP_NAME}
             </span>
           </Link>
@@ -115,15 +115,15 @@ export function Header() {
                   className={cn(
                     'relative rounded-lg px-3.5 py-2 text-sm font-medium transition-colors duration-200',
                     isActive
-                      ? 'text-white'
-                      : 'text-text-secondary hover:text-white'
+                      ? 'text-text-primary'
+                      : 'text-text-secondary hover:text-text-primary'
                   )}
                 >
                   {item.label}
                   {isActive && (
                     <motion.div
                       layoutId="nav-indicator"
-                      className="absolute inset-0 rounded-lg bg-white/[0.08]"
+                      className="absolute inset-0 rounded-lg bg-foreground/[0.08]"
                       transition={{
                         type: 'spring',
                         stiffness: 380,
@@ -141,7 +141,7 @@ export function Header() {
             {/* Search Button */}
             <Link
               href="/search"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-white"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary"
               aria-label="Search"
             >
               <Search className="h-[18px] w-[18px]" />
@@ -151,7 +151,7 @@ export function Header() {
             {isLoggedIn && (
               <Link
                 href="/user/notifications"
-                className="relative flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-white"
+                className="relative flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary"
                 aria-label="Notifications"
               >
                 <Bell className="h-[18px] w-[18px]" />
@@ -206,7 +206,7 @@ export function Header() {
                       >
                         {/* User info header */}
                         <div className="mb-1.5 border-b border-border px-3 pb-3 pt-2">
-                          <p className="text-sm font-semibold text-white">
+                          <p className="text-sm font-semibold text-text-primary">
                             {user?.name || 'User'}
                           </p>
                           <p className="text-xs text-text-muted">
@@ -218,7 +218,7 @@ export function Header() {
                           <Link
                             key={href}
                             href={href}
-                            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-white"
+                            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary"
                           >
                             <Icon className="h-4 w-4" />
                             {label}
@@ -253,7 +253,7 @@ export function Header() {
             {/* Mobile Hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-white md:hidden"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary md:hidden"
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
               <AnimatePresence mode="wait">
@@ -326,7 +326,7 @@ export function Header() {
                             'flex items-center gap-3 rounded-xl px-4 py-3 text-[15px] font-medium transition-colors',
                             isActive
                               ? 'bg-primary/10 text-primary'
-                              : 'text-text-secondary hover:bg-white/[0.04] hover:text-white'
+                              : 'text-text-secondary hover:bg-foreground/[0.04] hover:text-white'
                           )}
                         >
                           {item.label}
@@ -355,7 +355,7 @@ export function Header() {
                           <Link
                             key={href}
                             href={href}
-                            className="flex items-center gap-3 rounded-xl px-4 py-3 text-[15px] text-text-secondary transition-colors hover:bg-white/[0.04] hover:text-white"
+                            className="flex items-center gap-3 rounded-xl px-4 py-3 text-[15px] text-text-secondary transition-colors hover:bg-foreground/[0.04] hover:text-text-primary"
                           >
                             <Icon className="h-4.5 w-4.5" />
                             {label}
