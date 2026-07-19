@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { ChapterReader } from '@/components/reader/ChapterReader';
 import type { ChapterData } from '@/types';
 import { auth } from '@/auth';
+import { APP_URL } from '@/lib/constants';
+import { getCachedSettings } from '@/app/actions/admin/settings';
 
 // ─── Data Fetching ───────────────────────────────────────────────
 
@@ -91,18 +93,35 @@ export async function generateMetadata({
   if (isNaN(chapterNum)) return { title: 'Chapter Not Found' };
   
   const chapter = await getChapterData(slug, chapterNum);
+  const settings = await getCachedSettings();
+  
   if (!chapter) return { title: 'Chapter Not Found' };
 
+  const siteTitle = settings.seo_site_title || 'REDBEARD';
+  const title = `${chapter.seriesTitle} Chapter ${chapter.number} - Read Online | ${settings.siteName || 'REDBEARD'}`;
+  const description = `Read ${chapter.seriesTitle} Chapter ${chapter.number}${chapter.title ? ` - ${chapter.title}` : ''} online on ${settings.siteName || 'REDBEARD'}. High quality manhwa reading experience.`;
+  const url = `${APP_URL}/series/${slug}/chapter/${number}`;
+  
   return {
-    title: `Ch. ${chapter.number}${chapter.title ? ` — ${chapter.title}` : ''} | ${chapter.seriesTitle}`,
-    description: `Read ${chapter.seriesTitle} Chapter ${chapter.number}${chapter.title ? ` — ${chapter.title}` : ''} on REDBEARD. High quality manhwa reading experience.`,
+    title,
+    description,
     openGraph: {
-      title: `${chapter.seriesTitle} - Chapter ${chapter.number}`,
-      description: `Read Chapter ${chapter.number} of ${chapter.seriesTitle}`,
-      images: chapter.images.length > 0 ? [{ url: chapter.images[0].imageUrl }] : [],
+      title,
+      description,
+      images: chapter.images.length > 0 ? [{ url: chapter.images[0].imageUrl, width: 800, height: 1200 }] : [],
+      url,
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+    alternates: {
+      canonical: url,
     },
     robots: {
-      index: false,
+      index: true,
       follow: true,
     },
   };

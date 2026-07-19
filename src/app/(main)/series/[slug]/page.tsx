@@ -27,6 +27,9 @@ import { auth } from '@/auth';
 import { DescriptionClient } from './description-client';
 import { toSeriesCardData } from '@/lib/data-mappers';
 
+import { APP_URL } from '@/lib/constants';
+import { getCachedSettings } from '@/app/actions/admin/settings';
+
 async function getSeriesData(slug: string) {
   const series = await prisma.series.findUnique({
     where: { slug },
@@ -53,24 +56,42 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const series = await getSeriesData(slug);
+  const settings = await getCachedSettings();
   
   if (!series) return { title: 'Series Not Found' };
 
+  const siteTitle = settings.seo_site_title || 'REDBEARD';
+  const title = `${series.title} Manhwa - Read Online | ${settings.siteName || 'REDBEARD'}`;
+  const description = series.synopsis || series.description.slice(0, 160);
+  
+  const keywords = [
+    ...series.genres.map(g => g.name),
+    ...series.tags.map(t => t.name),
+    ...series.authors.map(a => a.name),
+    series.title,
+    'read manhwa online'
+  ];
+
   return {
-    title: series.title,
-    description: series.synopsis || series.description.slice(0, 160),
+    title,
+    description,
+    keywords,
     openGraph: {
-      title: `${series.title} | REDBEARD`,
-      description: series.synopsis || series.description.slice(0, 160),
-      images: [{ url: series.coverImage, width: 400, height: 600 }],
-      type: 'article',
+      title,
+      description,
+      images: [{ url: series.coverImage, width: 800, height: 1200 }],
+      type: 'book',
+      url: `${APP_URL}/series/${slug}`,
     },
     twitter: {
       card: 'summary_large_image',
-      title: series.title,
-      description: series.synopsis || series.description.slice(0, 160),
+      title,
+      description,
       images: [series.coverImage],
     },
+    alternates: {
+      canonical: `${APP_URL}/series/${slug}`,
+    }
   };
 }
 
@@ -135,8 +156,61 @@ export default async function SeriesDetailPage({
     include: { genres: true }
   });
 
+  const siteUrl = APP_URL || 'http://localhost:3000';
+  
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ComicSeries',
+    name: series.title,
+    description: series.synopsis || series.description,
+    image: series.coverImage,
+    url: `${siteUrl}/series/${slug}`,
+    genre: series.genres.map((g: { name: string }) => g.name),
+    author: series.authors.map((a: { name: string }) => ({
+      '@type': 'Person',
+      name: a.name,
+    })),
+    publisher: {
+      '@type': 'Organization',
+      name: 'REDBEARD'
+    }
+  };
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: siteUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Browse',
+        item: `${siteUrl}/browse`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: series.title,
+        item: `${siteUrl}/series/${slug}`,
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       {/* ── Banner Section ────────────────────────────────── */}
       <section className="relative h-[40vh] min-h-[320px] w-full overflow-hidden">
         {/* Blurred background image */}

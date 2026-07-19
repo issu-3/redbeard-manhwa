@@ -28,5 +28,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticRoutes, ...seriesRoutes];
+  const genres = await prisma.genre.findMany({ select: { slug: true } });
+  const genreRoutes = genres.map((g) => ({
+    url: `${baseUrl}/browse/genres/${g.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
+
+  return [...staticRoutes, ...seriesRoutes, ...genreRoutes];
 }

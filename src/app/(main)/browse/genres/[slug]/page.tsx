@@ -6,10 +6,35 @@ import { toSeriesCardData } from '@/lib/data-mappers';
 
 type Params = { slug: string };
 
+import { APP_URL } from '@/lib/constants';
+import { getCachedSettings } from '@/app/actions/admin/settings';
+
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { slug } = await params;
   const genre = await prisma.genre.findUnique({ where: { slug } });
-  return { title: genre?.name || 'Genre' };
+  const settings = await getCachedSettings();
+  
+  if (!genre) return { title: 'Genre Not Found' };
+  
+  const siteTitle = settings.seo_site_title || 'REDBEARD';
+  const title = `Best ${genre.name} Manhwa | ${settings.siteName || 'REDBEARD'}`;
+  const description = `Read the best ${genre.name} manhwa, manga, and webtoons online on ${settings.siteName || 'REDBEARD'}. ${genre.description || ''}`;
+  const url = `${APP_URL}/browse/genres/${slug}`;
+
+  return { 
+    title,
+    description,
+    keywords: [genre.name, 'manhwa', 'manga', 'read online', `${genre.name} manhwa`],
+    openGraph: {
+      title,
+      description,
+      url,
+      type: 'website',
+    },
+    alternates: {
+      canonical: url,
+    }
+  };
 }
 
 export default async function GenreDetailPage({ params }: { params: Promise<Params> }) {

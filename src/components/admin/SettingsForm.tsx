@@ -269,38 +269,67 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
             {activeTab === 'seo' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">Default Meta Title</label>
+                  <label className="block text-sm font-medium text-text-primary mb-1">Site Title</label>
                   <input
-                    name="metaTitle"
-                    defaultValue={initialSettings.metaTitle || 'REDBEARD - Read Manhwa Online'}
+                    name="seo_site_title"
+                    defaultValue={initialSettings.seo_site_title || 'REDBEARD - The Ultimate Reading Experience'}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">Default Meta Description</label>
+                  <label className="block text-sm font-medium text-text-primary mb-1">Site Description</label>
                   <textarea
-                    name="metaDescription"
-                    defaultValue={initialSettings.metaDescription || 'Read the best high quality manhwa, manga, and webtoons.'}
+                    name="seo_site_description"
+                    defaultValue={initialSettings.seo_site_description || 'Premium manhwa reading platform offering the best reading experience.'}
                     rows={3}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">OpenGraph Image URL</label>
+                  <label className="block text-sm font-medium text-text-primary mb-1">Default Keywords</label>
                   <input
-                    name="ogImageUrl"
-                    defaultValue={initialSettings.ogImageUrl || ''}
+                    name="seo_default_keywords"
+                    defaultValue={initialSettings.seo_default_keywords || 'manhwa, manga, webtoon, read online'}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">Robots.txt Content</label>
-                  <textarea
-                    name="robotsTxt"
-                    defaultValue={initialSettings.robotsTxt || 'User-agent: *\nAllow: /'}
-                    rows={4}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
+                  <label className="block text-sm font-medium text-text-primary mb-1">Default OpenGraph Image URL</label>
+                  <input
+                    name="seo_og_image"
+                    defaultValue={initialSettings.seo_og_image || '/images/og-default.png'}
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">Twitter/X Handle</label>
+                  <input
+                    name="seo_twitter_handle"
+                    defaultValue={initialSettings.seo_twitter_handle || '@redbeard'}
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text-primary mb-1">Robots Rules</label>
+                    <select
+                      name="seo_robots"
+                      defaultValue={initialSettings.seo_robots || 'index, follow'}
+                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="index, follow">Index, Follow (Recommended)</option>
+                      <option value="noindex, follow">No Index, Follow</option>
+                      <option value="noindex, nofollow">No Index, No Follow</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-primary mb-1">Google Search Console Verification</label>
+                    <input
+                      name="seo_gsc_verification"
+                      defaultValue={initialSettings.seo_gsc_verification || ''}
+                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
                 </div>
               </div>
             )}

@@ -32,7 +32,16 @@ export async function getSettings() {
         { key: 'registrationEnabled', value: 'true' },
         { key: 'emailVerificationRequired', value: 'false' },
         { key: 'maintenanceMode', value: 'false' },
-        { key: 'youtubeUrl', value: 'https://www.youtube.com/@RedBeardShort' }
+        { key: 'youtubeUrl', value: 'https://www.youtube.com/@RedBeardShort' },
+        // SEO Defaults
+        { key: 'seo_site_title', value: 'REDBEARD - The Ultimate Reading Experience' },
+        { key: 'seo_site_description', value: 'Premium manhwa reading platform offering the best reading experience.' },
+        { key: 'seo_default_keywords', value: 'manhwa, manga, webtoon, read online' },
+        { key: 'seo_robots', value: 'index, follow' },
+        { key: 'seo_gsc_verification', value: '' },
+        { key: 'seo_ga_measurement_id', value: '' },
+        { key: 'seo_og_image', value: '/images/og-default.png' },
+        { key: 'seo_twitter_handle', value: '@redbeard' }
       ];
 
       // Perform upserts in a transaction to safely seed
