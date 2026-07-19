@@ -1,11 +1,12 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Flame, BookCheck, Sparkles, Star, Eye } from 'lucide-react';
+import { Sparkles, Star, Eye } from 'lucide-react';
 import { HeroSlider } from '@/components/shared/HeroSlider';
 import { SeriesCard } from '@/components/shared/SeriesCard';
 import { Carousel } from '@/components/shared/Carousel';
 import { GenreCard } from '@/components/shared/GenreCard';
+import { WebsiteStatistics } from '@/components/shared/WebsiteStatistics';
 import type { SeriesCardData } from '@/types';
 
 interface HomepageClientProps {
@@ -232,25 +233,7 @@ export function HomepageClient({
 
       {/* ── Stats Banner (Always show at bottom) ─────────────────────────────────── */}
       <SectionWrapper>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {[
-            { icon: Flame, label: 'Active Series', value: '2,400+', color: '#E53935' },
-            { icon: BookCheck, label: 'Total Chapters', value: '156,000+', color: '#4CAF50' },
-            { icon: Eye, label: 'Monthly Readers', value: '12M+', color: '#2196F3' },
-            { icon: Star, label: 'Average Rating', value: '4.6★', color: '#FFC107' },
-          ].map((stat) => (
-            <motion.div
-              key={stat.label}
-              whileHover={{ scale: 1.02, y: -2 }}
-              className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 text-center"
-            >
-              <div className="absolute inset-0 opacity-10" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}, transparent 70%)` }} />
-              <stat.icon className="mx-auto mb-2 h-7 w-7" style={{ color: stat.color }} />
-              <p className="text-2xl font-bold text-text-primary">{stat.value}</p>
-              <p className="text-xs text-text-muted">{stat.label}</p>
-            </motion.div>
-          ))}
-        </div>
+        <WebsiteStatistics />
       </SectionWrapper>
     </div>
   );
