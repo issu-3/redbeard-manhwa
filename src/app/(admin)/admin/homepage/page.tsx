@@ -15,20 +15,20 @@ export default async function AdminHomepagePage() {
     getHomepageSettings()
   ]);
 
-  // Fetch manual or automated series for sections
+  // Fetch data for live preview
   const sectionSeriesData: Record<string, any[]> = {};
   
-  // We can't import getAutomatedSeries here directly if it's a server action, 
-  // but it's safe since it's just a server-side async function.
   const { getAutomatedSeries } = await import('@/app/actions/admin/homepage');
 
   for (const sec of sections) {
-    if (sec.isManual && sec.manualSeriesId.length > 0) {
+    if (sec.type === 'HERO_BANNER') {
+      // Banners are managed independently for now, but we can pass them as manual data
+      sectionSeriesData[sec.type] = banners;
+    } else if (sec.isManual && sec.manualSeriesId.length > 0) {
       const seriesList = await prisma.series.findMany({
         where: { id: { in: sec.manualSeriesId } },
-        select: { id: true, title: true, coverImage: true, type: true, status: true }
+        include: { genres: true }
       });
-      // Sort back into array order
       sectionSeriesData[sec.type] = sec.manualSeriesId.map(id => seriesList.find(s => s.id === id)).filter(Boolean);
     } else if (!sec.isManual) {
       sectionSeriesData[sec.type] = await getAutomatedSeries(sec.type, sec.limit);

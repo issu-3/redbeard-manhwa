@@ -5,16 +5,12 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 
 const DEFAULT_SECTIONS = [
-  { type: 'HERO', isActive: true, order: 0, limit: 10, isManual: false },
-  { type: 'TRENDING', isActive: true, order: 1, limit: 10, isManual: false },
-  { type: 'POPULAR', isActive: true, order: 2, limit: 10, isManual: false },
-  { type: 'LATEST', isActive: true, order: 3, limit: 8, isManual: false },
-  { type: 'NEW_RELEASES', isActive: true, order: 4, limit: 8, isManual: false },
-  { type: 'FEATURED', isActive: true, order: 5, limit: 4, isManual: false },
-  { type: 'COMPLETED', isActive: true, order: 6, limit: 6, isManual: false },
-  { type: 'ONGOING', isActive: true, order: 7, limit: 6, isManual: false },
-  { type: 'TOP_RATED', isActive: false, order: 8, limit: 6, isManual: false },
-  { type: 'EDITORS_PICKS', isActive: true, order: 9, limit: 6, isManual: true },
+  { type: 'HERO_BANNER', isActive: true, order: 0, limit: 10, isManual: false, title: null, subtitle: null, showViewAll: false },
+  { type: 'CONTINUE_READING', isActive: true, order: 1, limit: 10, isManual: false, title: '📚 Continue Reading', subtitle: 'Pick up where you left off', showViewAll: true },
+  { type: 'TRENDING', isActive: true, order: 2, limit: 10, isManual: false, title: '🔥 Trending', subtitle: 'Top 10 most viewed this week', showViewAll: true },
+  { type: 'RECENTLY_UPDATED', isActive: true, order: 3, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true },
+  { type: 'RECOMMENDED', isActive: true, order: 4, limit: 10, isManual: false, title: 'Recommended For You', subtitle: 'Based on your reading history', showViewAll: true },
+  { type: 'FEATURED', isActive: true, order: 5, limit: 10, isManual: false, title: '⭐ Featured Series', subtitle: 'Handpicked by our staff', showViewAll: true }
 ];
 
 async function checkAdmin() {
@@ -78,9 +74,27 @@ export async function getSections() {
   
   let sections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
   
-  // Seed if empty
-  if (sections.length === 0) {
-    await prisma.homepageSection.createMany({ data: DEFAULT_SECTIONS });
+  // Seed if empty or if it contains old unsupported sections (like LATEST instead of RECENTLY_UPDATED)
+  const hasOldSections = sections.some(s => ['LATEST', 'POPULAR', 'HERO'].includes(s.type));
+  
+  if (sections.length === 0 || hasOldSections) {
+    if (hasOldSections) {
+      await prisma.homepageSection.deleteMany({});
+    }
+    
+    // We map the manual creation here because Prisma createMany won't work on SQLite/Edge if there's type conflicts, but we are using Postgres so createMany works.
+    await prisma.homepageSection.createMany({ 
+      data: DEFAULT_SECTIONS.map(s => ({
+        type: s.type,
+        isActive: s.isActive,
+        order: s.order,
+        limit: s.limit,
+        isManual: s.isManual,
+        title: s.title,
+        subtitle: s.subtitle,
+        showViewAll: s.showViewAll
+      }))
+    });
     sections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
   }
   
@@ -209,33 +223,43 @@ export async function getAutomatedSeries(type: string, limit: number) {
       const seriesIds = topReads.map(t => t.seriesId);
       const foundSeries = await prisma.series.findMany({
         where: { id: { in: seriesIds } },
-        select: { id: true, title: true, coverImage: true, status: true, type: true }
+        include: { genres: true }
       });
       return seriesIds.map(id => foundSeries.find(s => s.id === id)).filter(Boolean);
     } else {
-      return prisma.series.findMany({ orderBy: { totalViews: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
+      return prisma.series.findMany({ orderBy: { totalViews: 'desc' }, include: { genres: true }, take: limit });
     }
   }
-  else if (type === 'POPULAR') {
-    return prisma.series.findMany({ orderBy: { totalViews: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
+  else if (type === 'RECENTLY_UPDATED') {
+    // For recently updated, we actually need to return chapters wrapped in a specific format for the preview.
+    // However, the admin panel currently expects series. Let's return the series with the latest chapter included.
+    const chapters = await prisma.chapter.findMany({
+      where: { isPublished: true },
+      orderBy: { publishedAt: 'desc' },
+      take: limit * 2,
+      include: { series: { include: { genres: true } } }
+    });
+    const unique = new Map();
+    for (const ch of chapters) {
+      if (!unique.has(ch.seriesId)) unique.set(ch.seriesId, ch);
+    }
+    return Array.from(unique.values()).slice(0, limit);
   }
-  else if (type === 'LATEST') {
-    return prisma.series.findMany({ orderBy: { updatedAt: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
-  }
-  else if (type === 'NEW_RELEASES') {
-    return prisma.series.findMany({ orderBy: { createdAt: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
+  else if (type === 'RECOMMENDED') {
+    // Recommended requires session, for admin live preview just show editor's picks
+    return prisma.series.findMany({ where: { isEditorChoice: true }, include: { genres: true }, take: limit });
   }
   else if (type === 'FEATURED') {
-    return prisma.series.findMany({ where: { isFeatured: true }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
+    return prisma.series.findMany({ where: { isFeatured: true }, include: { genres: true }, take: limit });
   }
-  else if (type === 'COMPLETED') {
-    return prisma.series.findMany({ where: { status: 'COMPLETED' }, orderBy: { updatedAt: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
-  }
-  else if (type === 'ONGOING') {
-    return prisma.series.findMany({ where: { status: 'ONGOING' }, orderBy: { updatedAt: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
-  }
-  else if (type === 'TOP_RATED') {
-    return prisma.series.findMany({ orderBy: { averageRating: 'desc' }, select: { id: true, title: true, coverImage: true, status: true, type: true }, take: limit });
+  else if (type === 'CONTINUE_READING') {
+    // This is user-specific. For admin live preview, fetch the most recent global reading history just to show *something*
+    const history = await prisma.readingHistory.findMany({
+      orderBy: { updatedAt: 'desc' },
+      take: limit,
+      include: { series: { include: { genres: true } }, chapter: true }
+    });
+    return history;
   }
   return [];
 }

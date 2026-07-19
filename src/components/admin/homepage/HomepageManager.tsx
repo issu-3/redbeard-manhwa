@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Layers, Image as ImageIcon, Settings, Star, TrendingUp, Award, Clock, Calendar, Edit3, Plus, Trash2, Search } from 'lucide-react';
+import { useState, useTransition, useMemo } from 'react';
+import { Settings, Plus, Trash2, Search, GripVertical, Eye, EyeOff } from 'lucide-react';
 import { SortableList } from './SortableList';
 import { 
   upsertBanner, deleteBanner, reorderBanners, 
@@ -11,26 +11,24 @@ import {
 } from '@/app/actions/admin/homepage';
 import { toast } from 'sonner';
 
-const TABS = [
-  { id: 'AUTOMATION', label: 'Automation', icon: Settings },
-  { id: 'banners', label: 'Hero Banner', icon: ImageIcon },
-  { id: 'sections', label: 'Sections', icon: Layers },
-  { id: 'FEATURED', label: 'Featured Series', icon: Star },
-  { id: 'TRENDING', label: 'Trending', icon: TrendingUp },
-  { id: 'POPULAR', label: 'Popular', icon: Award },
-  { id: 'LATEST', label: 'Latest Updates', icon: Clock },
-  { id: 'NEW_RELEASES', label: 'New Releases', icon: Calendar },
-  { id: 'EDITORS_PICKS', label: 'Editor\'s Picks', icon: Edit3 },
-];
+// Preview Components
+import { HeroSlider } from '@/components/shared/HeroSlider';
+import { TrendingCarousel } from '@/components/home/TrendingCarousel';
+import { RecentlyUpdatedCarousel } from '@/components/home/RecentlyUpdatedCarousel';
+import { ContinueReadingCarousel } from '@/components/home/ContinueReadingCarousel';
+import { SeriesCard } from '@/components/shared/SeriesCard';
+import { Carousel } from '@/components/shared/Carousel';
+import { toSeriesCardData } from '@/lib/data-mappers';
 
 export function HomepageManager({ initialBanners, initialSections, initialManualData, featuredCount, initialSettings }: any) {
-  const [activeTab, setActiveTab] = useState('AUTOMATION');
   const [banners, setBanners] = useState(initialBanners);
   const [sections, setSections] = useState(initialSections);
   const [settings, setSettings] = useState(initialSettings || {});
   const [manualData, setManualData] = useState<Record<string, any[]>>(initialManualData);
   const [isPending, startTransition] = useTransition();
 
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
 
@@ -53,7 +51,6 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
     startTransition(async () => {
       await upsertBanner(data);
       toast.success('Banner saved! Please refresh to see changes locally.');
-      // Full refresh handled by revalidatePath in action
     });
   };
 
@@ -87,19 +84,6 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries()) as Record<string, string>;
     
-    // Also save section limits and toggles if they were changed
-    const autoTrending = data.autoTrending === 'true';
-    const autoPopular = data.autoPopular === 'true';
-    const autoLatest = data.autoLatest === 'true';
-    const autoNewReleases = data.autoNewReleases === 'true';
-    
-    const updates = [
-      { type: 'TRENDING', isManual: !autoTrending, limit: parseInt(data.limitTrending) },
-      { type: 'POPULAR', isManual: !autoPopular, limit: parseInt(data.limitPopular) },
-      { type: 'LATEST', isManual: !autoLatest, limit: parseInt(data.limitLatest) },
-      { type: 'NEW_RELEASES', isManual: !autoNewReleases, limit: parseInt(data.limitNewReleases) }
-    ];
-    
     const settingsData = {
       homepage_auto_genres: data.homepage_auto_genres,
       homepage_cache_interval: data.homepage_cache_interval
@@ -108,14 +92,6 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
     startTransition(async () => {
       await updateHomepageSettings(settingsData);
       setSettings(settingsData);
-      for (const update of updates) {
-        const sec = sections.find((s: any) => s.type === update.type);
-        if (sec) {
-          await updateSection(sec.id, { isManual: update.isManual, limit: update.limit });
-          // Update local sections state so UI updates immediately
-          setSections((prev: any[]) => prev.map(s => s.id === sec.id ? { ...s, isManual: update.isManual, limit: update.limit } : s));
-        }
-      }
       toast.success('Automation settings saved');
     });
   };
@@ -168,320 +144,304 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
     }
   };
 
+  const activeSection = sections.find((s: any) => s.id === activeSectionId);
+
+  const renderLivePreview = (sec: any) => {
+    const data = manualData[sec.type] || [];
+    
+    if (sec.type === 'HERO_BANNER') {
+      const slides = data.map((b: any) => ({
+        id: b.id,
+        title: b.title || 'Untitled',
+        slug: '#',
+        coverImage: b.desktopImage,
+        bannerImage: b.desktopImage,
+        description: b.buttonText || '',
+        genres: [],
+        averageRating: 0,
+        chapterCount: 0,
+        totalViews: 0,
+        status: 'ONGOING'
+      }));
+      return slides.length > 0 ? (
+        <div className="scale-[0.8] origin-top-left w-[125%] -mb-16 pointer-events-none">
+          <HeroSlider slides={slides} />
+        </div>
+      ) : <p className="text-sm text-text-muted">No banners active.</p>;
+    }
+
+    if (sec.type === 'TRENDING') {
+      const mapped = data.map(toSeriesCardData);
+      return (
+        <div className="pointer-events-none p-4">
+          <TrendingCarousel series={mapped} />
+        </div>
+      );
+    }
+
+    if (sec.type === 'RECENTLY_UPDATED') {
+      const mapped = data.map((ch: any) => ({
+        series: toSeriesCardData(ch.series),
+        chapterNumber: ch.number,
+        publishedAt: ch.publishedAt || new Date().toISOString()
+      }));
+      return (
+        <div className="pointer-events-none p-4">
+          <RecentlyUpdatedCarousel updates={mapped} />
+        </div>
+      );
+    }
+
+    if (sec.type === 'CONTINUE_READING') {
+      const mapped = data.map((h: any) => ({
+        series: toSeriesCardData(h.series),
+        chapterNumber: h.chapter?.number || h.pageNumber || 1,
+        progress: 50
+      }));
+      return (
+        <div className="pointer-events-none p-4">
+          <ContinueReadingCarousel items={mapped} />
+        </div>
+      );
+    }
+
+    // Default for FEATURED, RECOMMENDED
+    const mapped = data.map(toSeriesCardData);
+    return (
+      <div className="pointer-events-none p-4">
+        <Carousel title={sec.title || sec.type} subtitle={sec.subtitle || ''} href={sec.showViewAll ? '#' : undefined}>
+          {mapped.map((s: any, i: number) => (
+            <SeriesCard key={s.id} series={s} index={i} />
+          ))}
+        </Carousel>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex flex-col md:flex-row gap-6">
-      <aside className="w-full md:w-64 flex-shrink-0">
-        <nav className="flex space-x-2 md:flex-col md:space-x-0 md:space-y-1 overflow-x-auto pb-2 md:pb-0">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                <span className="whitespace-nowrap">{tab.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-      </aside>
-
-      <div className="flex-1 bg-card rounded-xl border border-border p-6 shadow-sm min-h-[500px]">
-        {/* ================================== */}
-        {/* AUTOMATION TAB                     */}
-        {/* ================================== */}
-        {activeTab === 'AUTOMATION' && (
-          <div>
-            <h2 className="text-xl font-bold mb-4">Automation Settings</h2>
-            <p className="text-sm text-text-muted mb-6">Configure how the homepage auto-populates data.</p>
-            
-            <form onSubmit={handleSettingsSave} className="space-y-6 max-w-2xl">
-              
-              <div className="bg-surface rounded-xl p-4 border border-border space-y-4">
-                <h3 className="font-semibold text-sm mb-2">Automated Sections</h3>
-                
-                {[
-                  { id: 'TRENDING', label: 'Auto Trending', limitName: 'limitTrending', toggleName: 'autoTrending' },
-                  { id: 'POPULAR', label: 'Auto Most Popular', limitName: 'limitPopular', toggleName: 'autoPopular' },
-                  { id: 'LATEST', label: 'Auto Latest Updates', limitName: 'limitLatest', toggleName: 'autoLatest' },
-                  { id: 'NEW_RELEASES', label: 'Auto New Releases', limitName: 'limitNewReleases', toggleName: 'autoNewReleases' },
-                ].map(item => {
-                  const sec = sections.find((s: any) => s.type === item.id);
-                  return (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-background rounded-lg border border-border">
-                      <div className="font-medium text-sm">{item.label}</div>
-                      <div className="flex items-center gap-4">
-                        <label className="text-xs text-text-muted flex items-center gap-2">
-                          Items:
-                          <select name={item.limitName} defaultValue={sec?.limit || 10} className="bg-surface border border-input rounded p-1 text-xs">
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="15">15</option>
-                            <option value="20">20</option>
-                          </select>
-                        </label>
-                        <select name={item.toggleName} defaultValue={sec ? (!sec.isManual).toString() : 'true'} className="bg-surface border border-input rounded p-1 text-xs font-semibold">
-                          <option value="true">Enabled</option>
-                          <option value="false">Disabled (Manual)</option>
-                        </select>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="bg-surface rounded-xl p-4 border border-border space-y-4">
-                <h3 className="font-semibold text-sm mb-2">General Automation</h3>
-                
-                <div className="flex items-center justify-between p-3 bg-background rounded-lg border border-border">
-                  <div className="font-medium text-sm">Auto Genre Counts</div>
-                  <select name="homepage_auto_genres" defaultValue={settings.homepage_auto_genres || 'true'} className="bg-surface border border-input rounded p-1 text-xs font-semibold">
-                    <option value="true">Enabled</option>
-                    <option value="false">Disabled</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-background rounded-lg border border-border">
-                  <div className="font-medium text-sm">Cache Refresh Interval</div>
+    <div className="flex flex-col xl:flex-row gap-6">
+      {/* Left Sidebar: Section Reordering */}
+      <aside className="w-full xl:w-1/3 flex-shrink-0 flex flex-col gap-6">
+        <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+          <h2 className="text-lg font-bold mb-1">Homepage Structure</h2>
+          <p className="text-xs text-text-muted mb-4">Drag to reorder sections on the homepage.</p>
+          
+          <SortableList
+            items={sections}
+            onReorder={handleReorderSections}
+            renderItem={(sec) => {
+              const isActive = activeSectionId === sec.id;
+              return (
+                <div 
+                  className={`flex items-center justify-between w-full pr-2 p-2 -ml-2 rounded-lg cursor-pointer transition-colors ${isActive ? 'bg-primary/10 border border-primary/20' : 'hover:bg-surface'}`}
+                  onClick={() => setActiveSectionId(sec.id)}
+                >
                   <div className="flex items-center gap-2">
-                    <input name="homepage_cache_interval" type="number" defaultValue={settings.homepage_cache_interval || '3600'} className="bg-surface border border-input rounded p-1.5 text-xs w-24 text-right" />
-                    <span className="text-xs text-text-muted">seconds</span>
+                    <span className="font-semibold text-sm">{sec.title || sec.type.replace('_', ' ')}</span>
                   </div>
-                </div>
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <button type="submit" disabled={isPending} className="flex-1 bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
-                  {isPending ? 'Saving...' : 'Save Automation Settings'}
-                </button>
-                <button type="button" onClick={handleRefreshCache} disabled={isPending} className="flex-1 bg-surface-hover text-text-primary border border-border px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-border transition-colors">
-                  {isPending ? 'Refreshing...' : 'Refresh Cache Now'}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* ================================== */}
-        {/* HERO BANNERS                       */}
-        {/* ================================== */}
-        {activeTab === 'banners' && (
-          <div>
-            <h2 className="text-xl font-bold mb-4">Hero Banners</h2>
-            <SortableList
-              items={banners}
-              onReorder={handleReorderBanners}
-              renderItem={(banner) => (
-                <div className="flex items-center justify-between w-full pr-2">
-                  <div className="flex items-center gap-4">
-                    <img src={banner.desktopImage} className="w-24 h-12 object-cover rounded-md" alt="banner" />
-                    <div>
-                      <h4 className="font-semibold text-sm">{banner.title || 'Untitled'}</h4>
-                      <p className="text-xs text-text-muted">{banner.isActive ? 'Active' : 'Inactive'}</p>
-                    </div>
-                  </div>
-                  <button onClick={() => handleDeleteBanner(banner.id)} className="text-error hover:bg-error/10 p-2 rounded-lg">
-                    <Trash2 className="h-4 w-4" />
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSectionUpdate(sec.id, { isActive: !sec.isActive });
+                    }}
+                    className={`text-xs px-2 py-1 rounded-md flex items-center gap-1 ${sec.isActive ? 'bg-success/20 text-success' : 'bg-surface-hover text-text-muted'}`}
+                  >
+                    {sec.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                    {sec.isActive ? 'On' : 'Off'}
                   </button>
                 </div>
-              )}
-            />
+              );
+            }}
+          />
+        </div>
 
-            <div className="mt-8 border-t border-border pt-6">
-              <h3 className="font-semibold mb-4">Add New Banner</h3>
-              <form onSubmit={handleBannerSave} className="space-y-4 max-w-xl">
-                <div>
-                  <label className="block text-xs mb-1">Desktop Image URL *</label>
-                  <input required name="desktopImage" className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+        <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+          <h2 className="text-lg font-bold mb-4">Global Automation</h2>
+          <form onSubmit={handleSettingsSave} className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold mb-1 block">Cache Refresh Interval (seconds)</label>
+              <input name="homepage_cache_interval" type="number" defaultValue={settings.homepage_cache_interval || '3600'} className="bg-surface border border-input rounded p-2 text-sm w-full" />
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" disabled={isPending} className="flex-1 bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90">
+                Save
+              </button>
+              <button type="button" onClick={handleRefreshCache} disabled={isPending} className="flex-1 bg-surface-hover text-text-primary border border-border px-4 py-2 rounded-lg text-sm font-semibold hover:bg-border">
+                Refresh Cache
+              </button>
+            </div>
+          </form>
+        </div>
+      </aside>
+
+      {/* Right Content: Section Editor */}
+      <div className="flex-1 bg-card rounded-xl border border-border overflow-hidden shadow-sm flex flex-col min-h-[700px]">
+        {activeSection ? (
+          <div className="h-full flex flex-col">
+            {/* Header config */}
+            <div className="p-6 border-b border-border bg-surface/50">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-black">{activeSection.type.replace('_', ' ')} Configuration</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {activeSection.type !== 'HERO_BANNER' && (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Display Title</label>
+                      <input 
+                        defaultValue={activeSection.title || ''}
+                        onBlur={(e) => handleSectionUpdate(activeSection.id, { title: e.target.value })}
+                        className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm"
+                        placeholder="e.g. 🔥 Trending"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Subtitle</label>
+                      <input 
+                        defaultValue={activeSection.subtitle || ''}
+                        onBlur={(e) => handleSectionUpdate(activeSection.id, { subtitle: e.target.value })}
+                        className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm"
+                      />
+                    </div>
+                  </>
+                )}
+                
+                <div className="flex gap-4 col-span-1 md:col-span-2">
                   <div>
-                    <label className="block text-xs mb-1">Title</label>
-                    <input name="title" className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs mb-1">Button Text</label>
-                    <input name="buttonText" className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs mb-1">Button URL</label>
-                    <input name="buttonUrl" className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs mb-1">Active Status</label>
-                    <select name="isActive" className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm">
-                      <option value="true">Active</option>
-                      <option value="false">Hidden</option>
+                    <label className="block text-xs font-semibold mb-1">Maximum Items</label>
+                    <select
+                      value={activeSection.limit}
+                      onChange={(e) => handleSectionUpdate(activeSection.id, { limit: parseInt(e.target.value) })}
+                      className="bg-background border border-input rounded-md px-3 py-2 text-sm min-w-[100px]"
+                    >
+                      <option value="5">5</option>
+                      <option value="10">10</option>
+                      <option value="15">15</option>
+                      <option value="20">20</option>
                     </select>
                   </div>
-                </div>
-                <button type="submit" disabled={isPending} className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90">
-                  {isPending ? 'Saving...' : 'Add Banner'}
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* ================================== */}
-        {/* HOMEPAGE SECTIONS                  */}
-        {/* ================================== */}
-        {activeTab === 'sections' && (
-          <div>
-            <h2 className="text-xl font-bold mb-4">Section Ordering</h2>
-            <p className="text-sm text-text-muted mb-6">Drag and drop to reorder sections on the homepage. Toggle visibility.</p>
-            <SortableList
-              items={sections}
-              onReorder={handleReorderSections}
-              renderItem={(sec) => (
-                <div className="flex items-center justify-between w-full pr-2">
-                  <span className="font-semibold text-sm">{sec.type.replace('_', ' ')}</span>
-                  <div className="flex items-center gap-4">
-                    <div className="flex flex-col gap-1 w-24 shrink-0">
-                      <label className="text-xs text-text-muted uppercase font-semibold">Limit</label>
-                      <select
-                        defaultValue={sec.limit}
-                        onChange={(e) => handleSectionUpdate(sec.id, { limit: parseInt(e.target.value) })}
-                        className="bg-gray-100 border-none rounded p-2 text-sm focus:ring-2 focus:ring-primary w-full"
-                      >
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="15">15</option>
-                        <option value="20">20</option>
-                      </select>
+                  {activeSection.type !== 'HERO_BANNER' && (
+                    <div className="flex items-center gap-2 pt-5">
+                      <input 
+                        type="checkbox" 
+                        id="showViewAll"
+                        checked={activeSection.showViewAll} 
+                        onChange={(e) => handleSectionUpdate(activeSection.id, { showViewAll: e.target.checked })}
+                      />
+                      <label htmlFor="showViewAll" className="text-sm">Show &quot;View All&quot; Link</label>
                     </div>
-                    <button 
-                      onClick={() => handleSectionUpdate(sec.id, { isActive: !sec.isActive })}
-                      className={`text-xs px-3 py-1 rounded-full ${sec.isActive ? 'bg-success/20 text-success' : 'bg-surface-hover text-text-muted'}`}
-                    >
-                      {sec.isActive ? 'Visible' : 'Hidden'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            />
-          </div>
-        )}
-
-        {/* ================================== */}
-        {/* FEATURED SERIES TAB                */}
-        {/* ================================== */}
-        {activeTab === 'FEATURED' && (
-          <div>
-             <h2 className="text-xl font-bold mb-4">Featured Series</h2>
-             <p className="text-sm text-text-muted mb-6">There are currently <strong className="text-primary">{featuredCount}</strong> featured series. To feature a series, edit it in the <a href="/admin/series" className="text-primary hover:underline">Series Management</a> page and toggle the "Is Featured" flag.</p>
-          </div>
-        )}
-
-        {/* ================================== */}
-        {/* CONFIGURABLE SECTIONS (TRENDING, POPULAR, LATEST, etc) */}
-        {/* ================================== */}
-        {['TRENDING', 'POPULAR', 'LATEST', 'NEW_RELEASES', 'EDITORS_PICKS'].includes(activeTab) && (() => {
-          const sec = sections.find((s: any) => s.type === activeTab);
-          if (!sec) return <div>Section not found</div>;
-          
-          const isAlwaysManual = activeTab === 'EDITORS_PICKS';
-          const items = manualData[activeTab] || [];
-
-          return (
-            <div>
-              <div className="flex items-center justify-between mb-6 border-b border-border pb-4">
-                <h2 className="text-xl font-bold">{activeTab.replace('_', ' ')} Settings</h2>
-                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${sec.isManual ? 'bg-orange-500/10 text-orange-500' : 'bg-primary/10 text-primary'}`}>
-                  {sec.isManual ? 'Manual Mode' : 'Automated Mode'}
+                  )}
+                  {['TRENDING', 'RECOMMENDED', 'FEATURED'].includes(activeSection.type) && (
+                    <div className="flex items-center gap-2 pt-5 ml-4">
+                      <input 
+                        type="checkbox" 
+                        id="isManual"
+                        checked={activeSection.isManual} 
+                        onChange={(e) => handleSectionUpdate(activeSection.id, { isManual: e.target.checked })}
+                      />
+                      <label htmlFor="isManual" className="text-sm font-semibold text-warning">Manual Curation Mode</label>
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
 
-              {(sec.isManual || isAlwaysManual) ? (
-                <div className="space-y-6">
-                  <div className="bg-surface rounded-lg p-4 border border-border">
-                    <h3 className="text-sm font-semibold mb-3">Add Series to {activeTab.replace('_', ' ')}</h3>
-                    <form onSubmit={handleSearch} className="flex gap-2">
-                      <input 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search series by title..."
-                        className="flex-1 bg-background border border-input rounded-lg px-4 py-2 text-sm"
-                      />
-                      <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg"><Search className="h-4 w-4" /></button>
-                    </form>
-                    
-                    {searchResults.length > 0 && (
-                      <div className="mt-4 space-y-2 max-h-64 overflow-y-auto pr-2">
-                        {searchResults.map(s => (
-                          <div key={s.id} className="flex items-center justify-between bg-background p-2 rounded border border-border">
-                            <span className="text-sm">{s.title}</span>
-                            <button onClick={() => handleAddManual(activeTab, s)} className="text-primary hover:bg-primary/10 p-1 rounded"><Plus className="h-4 w-4"/></button>
-                          </div>
-                        ))}
+            {/* Manual curation tool if active */}
+            {activeSection.isManual && activeSection.type !== 'HERO_BANNER' && (
+              <div className="p-6 border-b border-border">
+                <h3 className="text-sm font-bold mb-3">Manual Series Selection</h3>
+                <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+                  <input 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search series by title..."
+                    className="flex-1 bg-surface border border-input rounded-lg px-4 py-2 text-sm"
+                  />
+                  <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg text-sm">Search</button>
+                </form>
+                {searchResults.length > 0 && (
+                  <div className="mb-4 space-y-1 max-h-32 overflow-y-auto bg-surface p-2 rounded-lg border border-border">
+                    {searchResults.map(s => (
+                      <div key={s.id} className="flex items-center justify-between p-1.5 rounded hover:bg-background">
+                        <span className="text-xs font-medium">{s.title}</span>
+                        <button onClick={() => handleAddManual(activeSection.type, s)} className="text-primary hover:bg-primary/10 p-1 rounded"><Plus width={14} height={14}/></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="bg-surface p-3 rounded-lg border border-border">
+                  <h4 className="text-xs font-semibold mb-2 text-text-muted">Currently Selected (Drag to Reorder)</h4>
+                  <SortableList
+                    items={manualData[activeSection.type] || []}
+                    onReorder={(newItems) => handleReorderManual(activeSection.type, newItems)}
+                    renderItem={(series) => (
+                      <div className="flex items-center justify-between w-full pr-2 py-1">
+                        <div className="flex items-center gap-3">
+                          <img src={series.coverImage} className="w-8 h-12 object-cover rounded" alt="cover"/>
+                          <span className="text-sm font-medium">{series.title}</span>
+                        </div>
+                        <button onClick={() => handleRemoveManual(activeSection.type, series.id)} className="text-error hover:bg-error/10 p-1.5 rounded">
+                          <Trash2 width={14} height={14} />
+                        </button>
                       </div>
                     )}
-                  </div>
+                  />
+                </div>
+              </div>
+            )}
 
-                  <div>
-                    <h3 className="text-sm font-semibold mb-3">Selected Series (Drag to reorder)</h3>
-                    {items.length === 0 ? (
-                      <p className="text-sm text-text-muted">No series selected manually yet.</p>
-                    ) : (
-                      <SortableList
-                        items={items}
-                        onReorder={(newItems) => handleReorderManual(activeTab, newItems)}
-                        renderItem={(series) => (
-                          <div className="flex items-center justify-between w-full pr-2">
-                            <div className="flex items-center gap-3">
-                              <img src={series.coverImage} className="w-8 h-12 object-cover rounded" alt="cover"/>
-                              <span className="text-sm font-medium">{series.title}</span>
-                            </div>
-                            <button onClick={() => handleRemoveManual(activeTab, series.id)} className="text-error hover:bg-error/10 p-1.5 rounded">
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        )}
-                      />
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl text-primary font-medium text-sm flex items-center gap-2">
-                    <Settings className="h-4 w-4" />
-                    This section is automatically managed by Homepage Automation.
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-semibold mb-4 text-text-muted uppercase tracking-wider">Live Preview</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {items.map((series: any) => (
-                        <div key={series.id} className="bg-surface rounded-lg border border-border overflow-hidden">
-                          <div className="aspect-[2/3] relative">
-                            <img src={series.coverImage} alt={series.title} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="p-3">
-                            <h4 className="font-semibold text-xs line-clamp-2 leading-tight">{series.title}</h4>
-                          </div>
+            {/* Banners Manager */}
+            {activeSection.type === 'HERO_BANNER' && (
+              <div className="p-6 border-b border-border bg-surface">
+                <h3 className="font-semibold mb-4 text-sm">Manage Banners</h3>
+                <SortableList
+                  items={banners}
+                  onReorder={handleReorderBanners}
+                  renderItem={(banner) => (
+                    <div className="flex items-center justify-between w-full pr-2 py-1">
+                      <div className="flex items-center gap-4">
+                        <img src={banner.desktopImage} className="w-20 h-10 object-cover rounded-md border border-border" alt="banner" />
+                        <div>
+                          <h4 className="font-semibold text-xs">{banner.title || 'Untitled'}</h4>
                         </div>
-                      ))}
-                      {items.length === 0 && (
-                        <div className="col-span-full py-8 text-center text-text-muted text-sm border border-dashed border-border rounded-lg">
-                          No automated results currently matched.
-                        </div>
-                      )}
+                      </div>
+                      <button onClick={() => handleDeleteBanner(banner.id)} className="text-error hover:bg-error/10 p-1.5 rounded">
+                        <Trash2 width={14} height={14} />
+                      </button>
                     </div>
+                  )}
+                />
+                <form onSubmit={handleBannerSave} className="mt-4 grid grid-cols-2 gap-3 p-4 bg-background rounded-xl border border-border">
+                  <div className="col-span-2">
+                    <input required name="desktopImage" placeholder="Image URL (e.g. from Vercel Blob)" className="w-full bg-surface border border-input rounded-md px-3 py-2 text-sm" />
                   </div>
-                </div>
-              )}
+                  <input name="title" placeholder="Title (Optional)" className="bg-surface border border-input rounded-md px-3 py-2 text-sm" />
+                  <input name="buttonText" placeholder="Synopsis (Optional)" className="bg-surface border border-input rounded-md px-3 py-2 text-sm" />
+                  <div className="col-span-2">
+                    <button type="submit" className="w-full bg-primary text-white py-2 rounded-lg text-sm font-semibold">Add New Banner</button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Live Preview Pane */}
+            <div className="flex-1 bg-background relative overflow-hidden flex flex-col">
+              <div className="absolute top-2 left-2 z-10 bg-black/80 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded shadow">Live Preview</div>
+              <div className="flex-1 overflow-y-auto no-scrollbar pt-10">
+                {renderLivePreview(activeSection)}
+              </div>
             </div>
-          );
-        })()}
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-text-muted p-10 text-center">
+            <div className="w-16 h-16 rounded-full bg-surface flex items-center justify-center mb-4">
+              <Settings className="w-8 h-8 opacity-50" />
+            </div>
+            <h3 className="text-lg font-bold text-text-primary">No Section Selected</h3>
+            <p className="text-sm max-w-sm mt-2">Click on a homepage section from the left sidebar to configure its settings and view a live preview.</p>
+          </div>
+        )}
       </div>
     </div>
   );

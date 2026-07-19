@@ -636,6 +636,9 @@ model HomepageSection {
   limit          Int      @default(10)
   isManual       Boolean  @default(false)
   manualSeriesId String[] 
+  title          String?
+  subtitle       String?
+  showViewAll    Boolean  @default(true)
 
   @@map("homepage_sections")
 }
