@@ -5,7 +5,6 @@ import { SessionProvider } from '@/providers/session-provider';
 import { Toaster } from 'sonner';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/admin/settings';
-import Script from 'next/script';
 import './globals.css';
 
 const inter = Inter({
@@ -130,15 +129,16 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${plusJakarta.variable} ${poppins.variable}`}
     >
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <head>
         {settings.adsenseId && (
-          <Script
-            id="adsbygoogle-init"
-            strategy="afterInteractive"
-            crossOrigin="anonymous"
+          <script
+            async
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${settings.adsenseId}`}
-          />
+            crossOrigin="anonymous"
+          ></script>
         )}
+      </head>
+      <body className="min-h-screen bg-background font-sans antialiased">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
