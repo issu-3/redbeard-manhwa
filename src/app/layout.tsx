@@ -5,6 +5,7 @@ import { SessionProvider } from '@/providers/session-provider';
 import { Toaster } from 'sonner';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/admin/settings';
+import Script from 'next/script';
 import './globals.css';
 
 const inter = Inter({
@@ -130,6 +131,14 @@ export default async function RootLayout({
       className={`${inter.variable} ${plusJakarta.variable} ${poppins.variable}`}
     >
       <body className="min-h-screen bg-background font-sans antialiased">
+        {settings.adsenseId && (
+          <Script
+            id="adsbygoogle-init"
+            strategy="afterInteractive"
+            crossOrigin="anonymous"
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${settings.adsenseId}`}
+          />
+        )}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
