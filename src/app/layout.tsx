@@ -49,6 +49,9 @@ export async function generateMetadata(): Promise<Metadata> {
     authors: [{ name: `${settings.siteName || 'REDBEARD'} Team` }],
     creator: settings.siteName || 'REDBEARD',
     metadataBase: new URL(APP_URL || 'http://localhost:3000'),
+    alternates: {
+      canonical: '/',
+    },
     openGraph: {
       type: 'website',
       locale: 'en_US',
@@ -130,15 +133,14 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${plusJakarta.variable} ${poppins.variable}`}
     >
+      {settings.adsenseId && (
+        <script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${settings.adsenseId}`}
+          crossOrigin="anonymous"
+        />
+      )}
       <body className="min-h-screen bg-background font-sans antialiased">
-        {settings.adsenseId && (
-          <Script
-            id="adsense-init"
-            strategy="beforeInteractive"
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${settings.adsenseId}`}
-            crossOrigin="anonymous"
-          />
-        )}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
