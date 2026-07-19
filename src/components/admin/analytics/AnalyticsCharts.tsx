@@ -182,3 +182,69 @@ export function ReadingDistributionChart({ data }: { data: any[] }) {
   );
 }
 
+
+
+export function HorizontalBarChart({ data, xKey, yKey, nameKey, color = '#ef4444' }: { data: any[], xKey: string, yKey: string, nameKey: string, color?: string }) {
+  if (!data || data.length === 0) return <EmptyState message="No data available" />;
+  
+  return (
+    <div className="h-[300px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} layout="vertical" margin={{ top: 10, right: 30, left: 40, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="var(--border)" />
+          <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+          <YAxis type="category" dataKey={nameKey} axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} width={120} />
+          <Tooltip 
+            contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
+            cursor={{ fill: 'var(--surface-hover)' }}
+          />
+          <Bar dataKey={yKey} fill={color} radius={[0, 4, 4, 0]} barSize={20} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+export function RetentionChart({ data }: { data: any[] }) {
+  if (!data || data.length === 0) return <EmptyState message="No retention data" />;
+
+  return (
+    <div className="h-[300px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+          <XAxis dataKey="cohort" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} dy={10} />
+          <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+          <Tooltip contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }} />
+          <Legend wrapperStyle={{ paddingTop: '20px' }} />
+          <Line name="Week 1" type="monotone" dataKey="week1" stroke="#3b82f6" strokeWidth={2} />
+          <Line name="Week 2" type="monotone" dataKey="week2" stroke="#8b5cf6" strokeWidth={2} />
+          <Line name="Week 3" type="monotone" dataKey="week3" stroke="#f43f5e" strokeWidth={2} />
+          <Line name="Week 4" type="monotone" dataKey="week4" stroke="#eab308" strokeWidth={2} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+export function DeviceDistributionChart({ data }: { data: any[] }) {
+  if (!data || data.length === 0) return <EmptyState message="No device data available" />;
+  return (
+    <div className="h-[300px] w-full relative">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie data={data} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value" stroke="none">
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip 
+            contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
+            formatter={(value: any) => [`${value} Sessions`, undefined]}
+          />
+          <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: '12px', paddingLeft: '20px' }} />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}

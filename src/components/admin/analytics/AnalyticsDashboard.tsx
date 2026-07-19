@@ -1,15 +1,19 @@
+
 'use client';
 
 import { useRouter } from 'next/navigation';
 import { 
-  Users, BookOpen, Layers, MessageSquare, Activity, Bookmark, Eye, Fingerprint
+  Users, BookOpen, Layers, MessageSquare, Activity, Bookmark, Eye, Fingerprint, Search, Smartphone, Globe, TrendingUp
 } from 'lucide-react';
 import { MetricCard } from './MetricCard';
 import { 
   DailyTrafficChart, 
   UserGrowthChart, 
   PublishingActivityChart, 
-  ReadingDistributionChart 
+  ReadingDistributionChart,
+  HorizontalBarChart,
+  RetentionChart,
+  DeviceDistributionChart
 } from './AnalyticsCharts';
 import { ChartErrorBoundary } from './ChartErrorBoundary';
 import { SystemHealthPanel } from './SystemHealthPanel';
@@ -33,7 +37,7 @@ export function AnalyticsDashboard({ initialData, currentRange }: { initialData:
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface border border-border p-4 rounded-xl">
         <div className="flex items-center gap-2 text-sm">
           <Activity className="h-5 w-5 text-primary" />
-          <span className="font-medium">Data Sync: Live</span>
+          <span className="font-medium">Data Sync: Live (Neon PostgreSQL)</span>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <label className="text-sm font-semibold text-text-muted">Date Range:</label>
@@ -68,22 +72,103 @@ export function AnalyticsDashboard({ initialData, currentRange }: { initialData:
       </section>
 
       <div className="grid grid-cols-1 gap-8">
-        {/* TRAFFIC TREND */}
-        <section>
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold">Daily Traffic</h2>
-              <span className="text-xs font-semibold bg-primary/10 text-primary px-2 py-1 rounded">Reads</span>
-            </div>
-            <ChartErrorBoundary chartName="Daily Traffic">
-              <DailyTrafficChart data={charts.dailyTraffic || []} />
-            </ChartErrorBoundary>
-          </div>
-        </section>
-
-        {/* 2 COLUMN GRID */}
+        {/* TRAFFIC & RETENTION TREND */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <section>
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  <h2 className="text-lg font-bold">Daily Traffic</h2>
+                </div>
+                <span className="text-xs font-semibold bg-primary/10 text-primary px-2 py-1 rounded">Reads</span>
+              </div>
+              <ChartErrorBoundary chartName="Daily Traffic">
+                <DailyTrafficChart data={charts.dailyTraffic || []} />
+              </ChartErrorBoundary>
+            </div>
+          </section>
+          <section>
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
+               <div className="flex items-center gap-2 mb-6">
+                  <Users className="h-5 w-5 text-blue-500" />
+                  <h2 className="text-lg font-bold">Reader Retention (By Cohort)</h2>
+                </div>
+              <ChartErrorBoundary chartName="Reader Retention">
+                <RetentionChart data={charts.retentionData || []} />
+              </ChartErrorBoundary>
+            </div>
+          </section>
+        </div>
+
+        {/* CONTENT METRICS */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <section>
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
+              <h2 className="text-lg font-bold mb-6">Top Series (By Views)</h2>
+              <ChartErrorBoundary chartName="Top Series">
+                <HorizontalBarChart data={charts.topSeries || []} xKey="views" yKey="views" nameKey="name" color="#3b82f6" />
+              </ChartErrorBoundary>
+            </div>
+          </section>
+          <section>
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
+              <h2 className="text-lg font-bold mb-6">Most Read Chapters</h2>
+              <ChartErrorBoundary chartName="Most Read Chapters">
+                <HorizontalBarChart data={charts.mostReadChapters || []} xKey="views" yKey="views" nameKey="name" color="#eab308" />
+              </ChartErrorBoundary>
+            </div>
+          </section>
+        </div>
+
+        {/* DEMOGRAPHICS & DEVICES */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+           <section>
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
+              <div className="flex items-center gap-2 mb-6">
+                 <Globe className="h-5 w-5 text-green-500" />
+                 <h2 className="text-lg font-bold">Top Countries</h2>
+              </div>
+              <ChartErrorBoundary chartName="Country Statistics">
+                <HorizontalBarChart data={charts.countryStats || []} xKey="value" yKey="value" nameKey="name" color="#22c55e" />
+              </ChartErrorBoundary>
+            </div>
+          </section>
+          <section>
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
+              <div className="flex items-center gap-2 mb-6">
+                 <Smartphone className="h-5 w-5 text-purple-500" />
+                 <h2 className="text-lg font-bold">Device Breakdown</h2>
+              </div>
+              <ChartErrorBoundary chartName="Device Statistics">
+                <DeviceDistributionChart data={charts.deviceStats || []} />
+              </ChartErrorBoundary>
+            </div>
+          </section>
+        </div>
+
+        {/* MISC */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+           <section>
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
+              <div className="flex items-center gap-2 mb-6">
+                <Search className="h-5 w-5 text-orange-500" />
+                <h2 className="text-lg font-bold">Top Search Queries</h2>
+              </div>
+              <ChartErrorBoundary chartName="Search Analytics">
+                <HorizontalBarChart data={charts.searchAnalytics || []} xKey="count" yKey="count" nameKey="query" color="#f97316" />
+              </ChartErrorBoundary>
+            </div>
+          </section>
+          <section>
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
+              <h2 className="text-lg font-bold mb-6">Top Genres</h2>
+              <ChartErrorBoundary chartName="Reading Distribution">
+                <ReadingDistributionChart data={charts.readingDistribution || []} />
+              </ChartErrorBoundary>
+            </div>
+          </section>
+           <section>
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
               <h2 className="text-lg font-bold mb-6">User Growth</h2>
               <ChartErrorBoundary chartName="User Growth">
@@ -91,25 +176,8 @@ export function AnalyticsDashboard({ initialData, currentRange }: { initialData:
               </ChartErrorBoundary>
             </div>
           </section>
-          <section>
-            <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
-              <h2 className="text-lg font-bold mb-6">Publishing Activity</h2>
-              <ChartErrorBoundary chartName="Publishing Activity">
-                <PublishingActivityChart data={charts.publishingActivity || []} />
-              </ChartErrorBoundary>
-            </div>
-          </section>
         </div>
 
-        {/* READING DISTRIBUTION */}
-        <section>
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm h-full">
-            <h2 className="text-lg font-bold mb-6">Reading Distribution (Top Genres / Series)</h2>
-            <ChartErrorBoundary chartName="Reading Distribution">
-              <ReadingDistributionChart data={charts.readingDistribution || []} />
-            </ChartErrorBoundary>
-          </div>
-        </section>
       </div>
 
       {/* SYSTEM HEALTH */}

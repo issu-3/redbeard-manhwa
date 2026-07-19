@@ -41,6 +41,18 @@ export async function GET(request: NextRequest) {
       take: limit,
     });
 
+    if (query) {
+      // Log search analytics asynchronously so we don't block the request
+      prisma.auditLog.create({
+        data: {
+          action: 'SEARCH',
+          targetType: 'SearchQuery',
+          targetId: 'public',
+          metadata: { query: query.toLowerCase() }
+        }
+      }).catch(err => console.error('Failed to log search:', err));
+    }
+
     return NextResponse.json({
       success: true,
       data: results.map(toSeriesCardData),
