@@ -14,7 +14,7 @@ import {
   ArrowRight,
   ChevronRight,
 } from 'lucide-react';
-import { RatingStars } from '@/components/shared/RatingStars';
+import { InteractiveRating } from '@/components/shared/InteractiveRating';
 import { Badge } from '@/components/shared/Badge';
 import { SeriesCard } from '@/components/shared/SeriesCard';
 import { BookmarkButton } from '@/components/shared/BookmarkButton';
@@ -98,9 +98,10 @@ export default async function SeriesDetailPage({
     notFound();
   }
 
-  // Check if user has bookmarked this series
+  // Check if user has bookmarked or rated this series
   const session = await auth();
   let isBookmarked = false;
+  let userRating: number | null = null;
   
   if (session?.user?.id) {
     const bookmark = await prisma.bookmark.findUnique({
@@ -112,6 +113,16 @@ export default async function SeriesDetailPage({
       }
     });
     isBookmarked = !!bookmark;
+
+    const ratingRecord = await prisma.rating.findFirst({
+      where: {
+        userId: session.user.id,
+        seriesId: series.id,
+      },
+    });
+    if (ratingRecord) {
+      userRating = ratingRecord.score;
+    }
   }
 
   // Related series
@@ -218,15 +229,13 @@ export default async function SeriesDetailPage({
             </div>
 
             {/* Rating */}
-            <div className="flex items-center gap-3 mb-5">
-              <RatingStars rating={series.averageRating} size="lg" />
-              <span className="text-xl font-bold text-amber-400">
-                {series.averageRating.toFixed(1)}
-              </span>
-              <span className="text-sm text-text-muted">
-                ({formatNumber(series.ratingCount)} ratings)
-              </span>
-            </div>
+            <InteractiveRating 
+              seriesId={series.id}
+              initialAverage={series.averageRating}
+              initialCount={series.ratingCount}
+              initialUserRating={userRating}
+              isLoggedIn={!!session?.user?.id}
+            />
 
             {/* Stats Row */}
             <div className="flex flex-wrap gap-4 sm:gap-6 mb-6">
