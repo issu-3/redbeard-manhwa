@@ -7,6 +7,16 @@ import {
   Database, HardDrive, Cpu, Server, Shield, Key, RefreshCw, CheckCircle2, AlertTriangle, XCircle 
 } from 'lucide-react';
 
+const StatusIcon = ({ status }: { status: string }) => {
+  if (status === 'Healthy' || status === 'Running' || status === 'Enabled' || status === 'Active' || status === 'Configured') {
+    return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+  }
+  if (status === 'Warning') {
+    return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+  }
+  return <XCircle className="h-5 w-5 text-red-500" />;
+};
+
 export function SystemHealthPanel() {
   const [health, setHealth] = useState<SystemHealthData | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -54,16 +64,6 @@ export function SystemHealthPanel() {
       </div>
     );
   }
-
-  const StatusIcon = ({ status }: { status: string }) => {
-    if (status === 'Healthy' || status === 'Running' || status === 'Enabled' || status === 'Active' || status === 'Configured') {
-      return <CheckCircle2 className="h-5 w-5 text-green-500" />;
-    }
-    if (status === 'Warning') {
-      return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
-    }
-    return <XCircle className="h-5 w-5 text-red-500" />;
-  };
 
   return (
     <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
