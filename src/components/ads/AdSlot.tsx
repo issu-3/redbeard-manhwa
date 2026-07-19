@@ -1,5 +1,6 @@
 import Script from 'next/script';
 import { getCachedSettings } from '@/app/actions/admin/settings';
+import { RawHtmlIframe } from './RawHtmlIframe';
 
 type Placement = 'header' | 'footer' | 'sidebar' | 'reader' | 'in_feed';
 
@@ -54,7 +55,7 @@ export async function AdSlot({ placement }: { placement: Placement }) {
   if (providerToUse === 'monetag') {
     return (
       <div className="w-full overflow-hidden flex justify-center my-4 ad-container" data-provider="monetag">
-        <div dangerouslySetInnerHTML={{ __html: settings.monetagCode }} />
+        <RawHtmlIframe html={settings.monetagCode || ''} title="Monetag Ad" />
       </div>
     );
   }
@@ -62,7 +63,7 @@ export async function AdSlot({ placement }: { placement: Placement }) {
   if (providerToUse === 'adsterra') {
     return (
       <div className="w-full overflow-hidden flex justify-center my-4 ad-container" data-provider="adsterra">
-        <div dangerouslySetInnerHTML={{ __html: settings.adsterraCode }} />
+        <RawHtmlIframe html={settings.adsterraCode || ''} title="Adsterra Ad" />
       </div>
     );
   }
@@ -70,7 +71,7 @@ export async function AdSlot({ placement }: { placement: Placement }) {
   if (providerToUse === 'propeller') {
     return (
       <div className="w-full overflow-hidden flex justify-center my-4 ad-container" data-provider="propeller">
-        <div dangerouslySetInnerHTML={{ __html: settings.propellerAdsCode }} />
+        <RawHtmlIframe html={settings.propellerAdsCode || ''} title="PropellerAds Ad" />
       </div>
     );
   }
