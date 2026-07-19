@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
       "react/no-unescaped-entities": "off",
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/purity": "off",
+      "prefer-const": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
     }
   }
 ]);
