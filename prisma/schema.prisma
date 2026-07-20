@@ -107,7 +107,6 @@ model User {
   sessions       Session[]
   bookmarks      Bookmark[]
   readingHistory ReadingHistory[]
-  ratings        Rating[]
   reviews        Review[]
   comments       Comment[]
   commentReplies CommentReply[]
@@ -204,7 +203,6 @@ model Series {
   authors          Author[]
   artists          Artist[]
   bookmarks        Bookmark[]
-  ratings          Rating[]
   reviews          Review[]
   readingListItems ReadingListItem[]
   readingHistory   ReadingHistory[]
@@ -387,27 +385,14 @@ model ReadingListItem {
   @@map("reading_list_items")
 }
 
-model Rating {
-  id        String   @id @default(cuid())
-  userId    String
-  seriesId  String
-  score     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  series Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, seriesId])
-  @@map("ratings")
-}
 
 model Review {
   id         String   @id @default(cuid())
   userId     String
   seriesId   String
-  title      String
-  content    String   @db.Text
+  rating     Int
+  content    String?  @db.Text
   isSpoiler  Boolean  @default(false)
   likesCount Int      @default(0)
   createdAt  DateTime @default(now())

@@ -40,7 +40,7 @@ async function getProfileData(userId: string) {
           updatedAt: 'desc'
         }
       },
-      ratings: true,
+      reviews: true,
     }
   });
   

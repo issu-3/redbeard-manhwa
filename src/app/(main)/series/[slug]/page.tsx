@@ -19,6 +19,7 @@ import type { SeriesCardData } from '@/types';
 import type { Series, Genre, Chapter } from '@prisma/client';
 import { auth } from '@/auth';
 import { DescriptionClient } from './description-client';
+import { ReviewsSection } from '@/components/series/ReviewsSection';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdSlot } from '@/components/ads/AdSlot';
@@ -34,6 +35,10 @@ async function getSeriesData(slug: string) {
       chapters: {
         orderBy: { number: 'desc' },
       },
+      reviews: {
+        include: { user: true },
+        orderBy: { createdAt: 'desc' },
+      }
     },
   });
   return series;
@@ -114,6 +119,14 @@ export default async function SeriesDetailPage({
   if (!series) {
     notFound();
   }
+
+  // Calculate rating distribution
+  const ratingDistribution: { [key: number]: number } = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  series.reviews.forEach((r) => {
+    if (r.rating >= 1 && r.rating <= 5) {
+      ratingDistribution[r.rating] = (ratingDistribution[r.rating] || 0) + 1;
+    }
+  });
 
   const session = await auth();
   let isBookmarked = false;
@@ -360,6 +373,15 @@ export default async function SeriesDetailPage({
             seriesSlug={series.slug}
           />
         </section>
+
+        {/* ── Reviews ────────────────────────────────────────── */}
+        <ReviewsSection 
+          seriesId={series.id}
+          averageRating={series.averageRating}
+          ratingCount={series.ratingCount}
+          initialReviews={series.reviews}
+          ratingDistribution={ratingDistribution}
+        />
 
         {/* ── Recommendations ────────────────────────────────── */}
         <section className="mt-20 space-y-16">

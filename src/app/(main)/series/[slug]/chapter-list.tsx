@@ -7,7 +7,6 @@ import {
   ArrowUp,
   ArrowDown,
   Search,
-  Eye,
   Calendar,
   CheckCircle2,
   Link as LinkIcon,
@@ -143,10 +142,6 @@ export function ChapterListSection({
                     
                     <div className="flex items-center justify-between text-[11px] font-medium text-text-muted mt-auto pt-3 border-t border-border/50">
                       <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          {formatNumber(chapter.totalViews)}
-                        </span>
                         {chapter.publishedAt && (
                           <span className="flex items-center gap-1" suppressHydrationWarning>
                             <Calendar className="h-3 w-3" />

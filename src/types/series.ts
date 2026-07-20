@@ -8,6 +8,7 @@ export interface SeriesCardData {
   averageRating: number;
   totalViews: number;
   totalBookmarks: number;
+  ratingCount: number;
   chapterCount: number;
   latestChapterNumber?: number;
   genres: { name: string; slug: string }[];
@@ -25,7 +26,6 @@ export interface SeriesDetail extends SeriesCardData {
   isFeatured: boolean;
   isEditorChoice: boolean;
   isHiddenGem: boolean;
-  ratingCount: number;
   tags: { name: string; slug: string }[];
   authors: { name: string; slug: string }[];
   artists: { name: string; slug: string }[];

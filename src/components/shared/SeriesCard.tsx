@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Star, Eye, BookOpen } from 'lucide-react';
+import { Star, MessageSquare, BookOpen } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 import type { SeriesCardData } from '@/types';
 
@@ -61,12 +61,12 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
                 {series.averageRating.toFixed(1)}
               </span>
               <span className="flex items-center gap-1">
-                <BookOpen className="h-3 w-3" />
-                Ch. {series.chapterCount}
+                <MessageSquare className="h-3 w-3" />
+                {formatNumber(series.ratingCount)}
               </span>
               <span className="flex items-center gap-1">
-                <Eye className="h-3 w-3" />
-                {formatNumber(series.totalViews)}
+                <BookOpen className="h-3 w-3" />
+                Ch. {series.chapterCount}
               </span>
             </div>
           </div>
@@ -110,9 +110,9 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
                 <Star className="h-3 w-3 fill-warning text-warning" />
                 {series.averageRating.toFixed(1)}
               </span>
-              <span className="flex items-center gap-0.5">
-                <Eye className="h-3 w-3" />
-                {formatNumber(series.totalViews)}
+              <span className="flex items-center gap-0.5 ml-1">
+                <MessageSquare className="h-3 w-3" />
+                {formatNumber(series.ratingCount)}
               </span>
             </div>
           </div>

@@ -32,10 +32,10 @@ export const getWebsiteStatistics = unstable_cache(
       const totalViews = viewsAggregation._sum.totalViews || 0;
 
       // 4. Average Rating
-      const ratingAggregation = await prisma.rating.aggregate({
-        _avg: { score: true }
+      const ratingAggregation = await prisma.review.aggregate({
+        _avg: { rating: true }
       });
-      const averageRating = ratingAggregation._avg.score || null;
+      const averageRating = ratingAggregation._avg.rating || null;
 
       return {
         activeSeries,

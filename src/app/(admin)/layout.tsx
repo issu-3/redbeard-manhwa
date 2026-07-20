@@ -11,7 +11,8 @@ import {
   Settings,
   ArrowLeft,
   BarChart3,
-  Search
+  Search,
+  Star
 } from 'lucide-react';
 import { auth } from '@/auth';
 const navigation = [
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Genres & Tags', href: '/admin/metadata', icon: Tags },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Comments', href: '/admin/comments', icon: MessageSquare },
+  { name: 'Reviews', href: '/admin/reviews', icon: Star },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 

@@ -33,6 +33,7 @@ async function getBookmarks(userId: string) {
     type: b.series.type as SeriesCardData['type'],
     status: b.series.status as SeriesCardData['status'],
     averageRating: b.series.averageRating,
+    ratingCount: b.series.ratingCount,
     totalViews: b.series.totalViews,
     totalBookmarks: b.series.totalBookmarks,
     chapterCount: b.series.chapterCount,
