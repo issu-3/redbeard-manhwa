@@ -1,5 +1,5 @@
 import Script from 'next/script';
-import DOMPurify from 'isomorphic-dompurify';
+
 
 export function AdScriptInjector({ html, provider, placement }: { html: string, provider: string, placement: string }) {
   if (!html) return null;
@@ -20,14 +20,8 @@ export function AdScriptInjector({ html, provider, placement }: { html: string, 
   // Extract non-script HTML for elements like <div> or <iframe>
   let nonScriptHtml = html.replace(scriptRegex, '').trim();
   
-  // Sanitize the HTML before injecting
-  if (nonScriptHtml) {
-    // We allow iframes for ads
-    nonScriptHtml = DOMPurify.sanitize(nonScriptHtml, {
-      ADD_TAGS: ['iframe'],
-      ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling'],
-    });
-  }
+  // We trust the admin-provided ad HTML.
+  // The non-script HTML is injected directly.
 
   return (
     <>
