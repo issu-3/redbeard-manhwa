@@ -11,11 +11,11 @@
   --color-border: var(--border);
   --color-border-subtle: var(--border-subtle);
 
-  --color-primary: #E53935;
-  --color-primary-hover: #F44336;
-  --color-primary-dark: #C62828;
-  --color-accent: #FF6B6B;
-  --color-accent-hover: #FF8A80;
+  --color-primary: #D32F2F;
+  --color-primary-hover: #C62828;
+  --color-primary-dark: #B71C1C;
+  --color-accent: #EF5350;
+  --color-accent-hover: #E53935;
 
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);

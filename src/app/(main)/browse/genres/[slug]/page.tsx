@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BrowseGrid } from '@/components/shared/BrowseGrid';
@@ -7,7 +8,7 @@ import { toSeriesCardData } from '@/lib/data-mappers';
 type Params = { slug: string };
 
 import { APP_URL } from '@/lib/constants';
-import { getCachedSettings } from '@/app/actions/admin/settings';
+import { getCachedSettings } from '@/app/actions/public/settings';
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { slug } = await params;

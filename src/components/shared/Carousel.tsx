@@ -104,7 +104,7 @@ export function Carousel({ title, subtitle, href, children, className = '' }: Ca
         <div
           ref={scrollRef}
           onScroll={checkScroll}
-          className="no-scrollbar flex gap-4 overflow-x-auto scroll-smooth pb-2"
+          className="no-scrollbar flex gap-4 overflow-x-auto scroll-smooth pb-2 snap-x snap-mandatory [&>div]:snap-start"
         >
           {children}
         </div>

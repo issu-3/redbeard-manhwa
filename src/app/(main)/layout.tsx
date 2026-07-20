@@ -40,7 +40,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       />
       <Header />
       <AdSlot placement="header" />
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      <main id="main-content" className="flex-1 pb-20 md:pb-0">{children}</main>
       <AdSlot placement="footer" />
       <Footer />
       <MobileNav />

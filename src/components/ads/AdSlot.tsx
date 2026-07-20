@@ -1,5 +1,5 @@
 import Script from 'next/script';
-import { getCachedSettings } from '@/app/actions/admin/settings';
+import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdScriptInjector } from './AdScriptInjector';
 
 type Placement = 'header' | 'footer' | 'sidebar' | 'reader' | 'in_feed';

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { SettingsForm } from '@/components/admin/SettingsForm';
-import { getSettings } from '@/app/actions/admin/settings';
+import { getSettings } from '@/app/actions/public/settings';
 
 export const metadata: Metadata = {
   title: 'Settings - Admin',

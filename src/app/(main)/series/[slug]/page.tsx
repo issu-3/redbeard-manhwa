@@ -1,4 +1,5 @@
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -19,7 +20,7 @@ import type { Series, Genre, Chapter } from '@prisma/client';
 import { auth } from '@/auth';
 import { DescriptionClient } from './description-client';
 import { APP_URL } from '@/lib/constants';
-import { getCachedSettings } from '@/app/actions/admin/settings';
+import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdSlot } from '@/components/ads/AdSlot';
 
 async function getSeriesData(slug: string) {

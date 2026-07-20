@@ -141,7 +141,7 @@ export function Header() {
             {/* Search Button */}
             <Link
               href="/search"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary"
               aria-label="Search"
             >
               <Search className="h-[18px] w-[18px]" />
@@ -151,7 +151,7 @@ export function Header() {
             {isLoggedIn && (
               <Link
                 href="/user/notifications"
-                className="relative flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary"
+                className="relative flex h-11 w-11 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary"
                 aria-label="Notifications"
               >
                 <Bell className="h-[18px] w-[18px]" />
@@ -168,6 +168,9 @@ export function Header() {
                       e.stopPropagation();
                       setUserMenuOpen(!userMenuOpen);
                     }}
+                    aria-expanded={userMenuOpen}
+                    aria-haspopup="menu"
+                    aria-controls="user-menu"
                     className="flex items-center gap-3"
                   >
                     {user?.image ? (
@@ -198,6 +201,8 @@ export function Header() {
                   <AnimatePresence>
                     {userMenuOpen && (
                       <motion.div
+                        id="user-menu"
+                        role="menu"
                         initial={{ opacity: 0, scale: 0.95, y: -4 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -4 }}
@@ -218,6 +223,7 @@ export function Header() {
                           <Link
                             key={href}
                             href={href}
+                            role="menuitem"
                             className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary"
                           >
                             <Icon className="h-4 w-4" />
@@ -228,6 +234,7 @@ export function Header() {
                         <div className="mt-1.5 border-t border-border pt-1.5">
                           <button
                             type="button"
+                            role="menuitem"
                             onClick={() => signOut()}
                             className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-danger transition-colors hover:bg-danger/10"
                           >
@@ -253,7 +260,7 @@ export function Header() {
             {/* Mobile Hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary md:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary md:hidden"
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
               <AnimatePresence mode="wait">

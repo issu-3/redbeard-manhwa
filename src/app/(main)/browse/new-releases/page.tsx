@@ -1,4 +1,5 @@
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+
 import { Metadata } from 'next';
 import { Sparkles } from 'lucide-react';
 import { BrowseGrid } from '@/components/shared/BrowseGrid';

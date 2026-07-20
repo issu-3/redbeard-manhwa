@@ -1,9 +1,18 @@
+export const dynamic = 'force-dynamic';
 import { Metadata } from 'next';
 import { HomepageClient } from './homepage-client';
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData } from '@/lib/data-mappers';
 import { auth } from '@/auth';
+import { getCachedSettings } from '@/app/actions/public/settings';
 
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getCachedSettings();
+  return {
+    title: settings.seo_site_title || 'REDBEARD - The Ultimate Reading Experience',
+    description: settings.seo_site_description || 'Read the best manhwa and webtoons online.',
+  };
+}
 
 export default async function HomePage() {
   const session = await auth();
@@ -161,10 +170,13 @@ export default async function HomePage() {
   }
 
   return (
-    <HomepageClient
-      sections={activeSections}
-      sectionData={sectionData}
-      isLoggedIn={!!userId}
-    />
+    <>
+      <h1 className="sr-only">REDBEARD - The Ultimate Reading Experience</h1>
+      <HomepageClient
+        sections={activeSections}
+        sectionData={sectionData}
+        isLoggedIn={!!userId}
+      />
+    </>
   );
 }

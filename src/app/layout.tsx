@@ -5,7 +5,7 @@ import { ThemeProvider } from 'next-themes';
 import { SessionProvider } from '@/providers/session-provider';
 import { Toaster } from 'sonner';
 import { APP_URL } from '@/lib/constants';
-import { getCachedSettings } from '@/app/actions/admin/settings';
+import { getCachedSettings } from '@/app/actions/public/settings';
 import './globals.css';
 
 const inter = Inter({
@@ -75,7 +75,7 @@ export async function generateMetadata(): Promise<Metadata> {
       google: settings.seo_gsc_verification || undefined,
     },
     icons: {
-      icon: "/favicon.ico",
+      icon: "/logo.png",
       apple: "/apple-icon.png",
     },
     manifest: '/manifest.json',
@@ -141,11 +141,14 @@ export default async function RootLayout({
           crossOrigin="anonymous"
         />
       )}
-      <body className="min-h-screen bg-background font-sans antialiased">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <body className="flex min-h-screen flex-col bg-background font-inter text-text-primary antialiased selection:bg-primary/30 selection:text-white">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-primary focus:text-white">
+          Skip to main content
+        </a>
         <SessionProvider>
           <ThemeProvider
             attribute="class"

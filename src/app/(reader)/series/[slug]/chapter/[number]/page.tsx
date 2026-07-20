@@ -5,7 +5,7 @@ import { ChapterReader } from '@/components/reader/ChapterReader';
 import type { ChapterData } from '@/types';
 import { auth } from '@/auth';
 import { APP_URL } from '@/lib/constants';
-import { getCachedSettings } from '@/app/actions/admin/settings';
+import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdSlot } from '@/components/ads/AdSlot';
 
 // ─── Data Fetching ───────────────────────────────────────────────
