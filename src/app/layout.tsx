@@ -56,7 +56,7 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: settings.siteName || 'REDBEARD',
       title: siteTitle,
       description: siteDescription,
-      images: [{ url: ogImage, width: 1200, height: 630 }],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: siteTitle }],
     },
     twitter: {
       card: 'summary_large_image',
@@ -135,10 +135,10 @@ export default async function RootLayout({
       className={`${inter.variable} ${plusJakarta.variable} ${poppins.variable}`}
     >
       {settings.adsenseId && (
-        <script
-          async
+        <Script
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${settings.adsenseId}`}
           crossOrigin="anonymous"
+          strategy="lazyOnload"
         />
       )}
       <script

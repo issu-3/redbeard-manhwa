@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { Library, Users, BookOpen, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default async function AdminDashboard() {
   const [
@@ -83,8 +84,15 @@ export default async function AdminDashboard() {
               ) : (
                 recentSeries.map(series => (
                   <div key={series.id} className="flex items-center gap-4">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={series.coverImage} alt={series.title} className="h-12 w-12 rounded object-cover" />
+                    <div className="relative h-12 w-12 flex-shrink-0">
+                      <Image 
+                        src={series.coverImage} 
+                        alt={series.title} 
+                        fill
+                        className="rounded object-cover" 
+                        sizes="48px"
+                      />
+                    </div>
                     <div>
                       <p className="text-sm font-semibold text-text-primary">{series.title}</p>
                       <p className="text-xs text-text-secondary">{series.status} • {series.type}</p>

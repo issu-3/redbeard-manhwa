@@ -1,6 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { getPersonalizedSections } from '@/app/actions/public/homepage';
 import { HeroSlider } from '@/components/shared/HeroSlider';
 import { SeriesCard } from '@/components/shared/SeriesCard';
 import { Carousel } from '@/components/shared/Carousel';
@@ -12,27 +14,39 @@ import { Sparkles, Heart } from 'lucide-react';
 interface HomepageClientProps {
   sections: any[];
   sectionData: Record<string, any[]>;
-  isLoggedIn: boolean;
+  isLoggedIn: boolean; // We keep the prop for signature compatibility, but determine actual status via useSession
 }
 
 export function HomepageClient({
   sections,
   sectionData,
-  isLoggedIn
 }: HomepageClientProps) {
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === 'authenticated';
+  
+  const [personalizedData, setPersonalizedData] = useState<{ continueReading: any[], recommended: any[] } | null>(null);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      const crSection = sections.find(s => s.type === 'CONTINUE_READING');
+      const recSection = sections.find(s => s.type === 'RECOMMENDED');
+      
+      const limit = Math.max(crSection?.limit || 10, recSection?.limit || 10);
+      getPersonalizedSections(limit).then(data => {
+        if (data) setPersonalizedData(data);
+      });
+    }
+  }, [isLoggedIn, sections]);
 
   return (
     <div className="space-y-12 pb-16 md:space-y-16">
       {sections.map(sec => {
-        const data = sectionData[sec.type] || [];
-        if (data.length === 0) return null;
-
-        if (sec.type === 'HERO_BANNER') {
-          return <HeroSlider key={sec.id} slides={data} />;
-        }
-
+        let data = sectionData[sec.type] || [];
+        
         if (sec.type === 'CONTINUE_READING') {
           if (!isLoggedIn) return null;
+          data = personalizedData?.continueReading || [];
+          if (data.length === 0) return null;
           return (
             <div key={sec.id} className="px-4 md:px-8 lg:px-16 xl:px-20">
               <ContinueReadingCarousel items={data} />
@@ -40,10 +54,20 @@ export function HomepageClient({
           );
         }
 
+        if (sec.type === 'RECOMMENDED' && isLoggedIn && !sec.isManual) {
+          data = personalizedData?.recommended || sectionData[sec.type] || [];
+        }
+
+        if (data.length === 0 && sec.type !== 'HERO_BANNER') return null;
+
+        if (sec.type === 'HERO_BANNER') {
+          if (data.length === 0) return null;
+          return <HeroSlider key={sec.id} slides={data} />;
+        }
+
         if (sec.type === 'TRENDING') {
           return (
             <div key={sec.id} className="px-4 md:px-8 lg:px-16 xl:px-20">
-              {/* Optional: We could pass sec.title to TrendingCarousel if it supported it, but it handles its own UI. For now, we wrap it or let it use its defaults */}
               <TrendingCarousel series={data} />
             </div>
           );

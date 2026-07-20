@@ -21,10 +21,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file received.' }, { status: 400 });
     }
 
-    // C4 FIX: Validate file type
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    // M5 FIX: Validate both MIME type and file extension to prevent spoofing
+    const extension = file.name.split('.').pop()?.toLowerCase() || '';
+    const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    
+    if (!ALLOWED_TYPES.includes(file.type) || !validExtensions.includes(extension)) {
       return NextResponse.json(
-        { error: `Invalid file type "${file.type}". Allowed: ${ALLOWED_TYPES.join(', ')}` },
+        { error: `Invalid file type. Allowed extensions: ${validExtensions.join(', ')}` },
         { status: 400 }
       );
     }
