@@ -63,7 +63,7 @@ export function ReviewsSection({
   const handleDelete = async (reviewId: string) => {
     if (!confirm('Are you sure you want to delete this review?')) return;
 
-    const res = await deleteReview(reviewId, seriesId);
+    const res = await deleteReview(reviewId);
     if (res.success) {
       toast.success('Review deleted');
       window.location.reload();

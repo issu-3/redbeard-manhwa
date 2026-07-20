@@ -18,9 +18,11 @@ export async function forgotPassword(email: string) {
 
     const resetToken = await generatePasswordResetToken(email);
 
-    // TODO: Send email
-    // await sendResetEmail(user.email, resetToken.token);
-    console.log(`[DEV MODE] Password reset link: http://localhost:3000/reset-password?token=${resetToken.token}`);
+    // C4 FIX: Only log reset link in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[DEV MODE] Password reset link: http://localhost:3000/reset-password?token=${resetToken.token}`);
+    }
+    // TODO: Send reset email in production using Resend/SendGrid
 
     return { success: true };
   } catch (error) {

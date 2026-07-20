@@ -10,6 +10,17 @@ export async function submitReview(
   content: string | null,
   isSpoiler: boolean
 ) {
+  // C2 FIX: Validate inputs
+  if (!seriesId || typeof seriesId !== 'string') {
+    return { success: false, error: 'Invalid series ID' };
+  }
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return { success: false, error: 'Rating must be an integer between 1 and 5' };
+  }
+  if (content && content.length > 5000) {
+    return { success: false, error: 'Review content must be at most 5000 characters' };
+  }
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized' };
@@ -54,7 +65,7 @@ export async function submitReview(
   }
 }
 
-export async function deleteReview(reviewId: string, seriesId: string) {
+export async function deleteReview(reviewId: string) {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized' };
@@ -65,6 +76,9 @@ export async function deleteReview(reviewId: string, seriesId: string) {
     if (!review || review.userId !== session.user.id) {
       return { success: false, error: 'Unauthorized or review not found' };
     }
+
+    // M4 FIX: Use the seriesId from the DB record, not from the client
+    const seriesId = review.seriesId;
 
     await prisma.review.delete({ where: { id: reviewId } });
     await updateSeriesRating(seriesId);

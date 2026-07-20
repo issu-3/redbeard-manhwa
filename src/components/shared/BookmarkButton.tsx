@@ -25,7 +25,10 @@ export function BookmarkButton({ seriesId, initialBookmarked, bookmarkCount = 0 
 
     try {
       const result = await toggleBookmark(seriesId);
-      setIsBookmarked(result.bookmarked);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      setIsBookmarked(result.bookmarked as boolean);
       if (result.bookmarked) {
         toast.success('Added to bookmarks');
       } else {

@@ -3,16 +3,19 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { commentSchema } from '@/lib/validators';
 
 export async function postComment(chapterId: string, content: string) {
   const session = await auth();
   
   if (!session?.user?.id) {
-    throw new Error('You must be logged in to comment');
+    return { success: false, error: 'You must be logged in to comment' };
   }
 
-  if (!content || content.trim().length === 0) {
-    throw new Error('Comment cannot be empty');
+  // H7 FIX: Validate comment content
+  const parsed = commentSchema.safeParse({ content: content.trim() });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message || 'Invalid comment' };
   }
 
   const comment = await prisma.comment.create({
@@ -31,11 +34,13 @@ export async function replyToComment(commentId: string, content: string, parentR
   const session = await auth();
   
   if (!session?.user?.id) {
-    throw new Error('You must be logged in to reply');
+    return { success: false, error: 'You must be logged in to reply' };
   }
 
-  if (!content || content.trim().length === 0) {
-    throw new Error('Reply cannot be empty');
+  // H7 FIX: Validate reply content
+  const parsed = commentSchema.safeParse({ content: content.trim() });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message || 'Invalid reply' };
   }
 
   const reply = await prisma.commentReply.create({
@@ -73,35 +78,48 @@ export async function likeComment(id: string, isReply: boolean = false) {
   const session = await auth();
   
   if (!session?.user?.id) {
-    throw new Error('You must be logged in to like');
+    return { success: false, error: 'You must be logged in to like' };
   }
 
   const userId = session.user.id;
 
-  if (isReply) {
-    const existing = await prisma.commentLike.findUnique({
-      where: { userId_replyId: { userId, replyId: id } }
-    });
+  try {
+    if (isReply) {
+      // M10 FIX: Verify existence
+      const target = await prisma.commentReply.findUnique({ where: { id } });
+      if (!target) return { success: false, error: 'Reply not found' };
 
-    if (existing) {
-      await prisma.commentLike.delete({ where: { id: existing.id } });
-      await prisma.commentReply.update({ where: { id }, data: { likesCount: { decrement: 1 } } });
-    } else {
-      await prisma.commentLike.create({ data: { userId, replyId: id } });
-      await prisma.commentReply.update({ where: { id }, data: { likesCount: { increment: 1 } } });
-    }
-  } else {
-    const existing = await prisma.commentLike.findUnique({
-      where: { userId_commentId: { userId, commentId: id } }
-    });
+      const existing = await prisma.commentLike.findUnique({
+        where: { userId_replyId: { userId, replyId: id } }
+      });
 
-    if (existing) {
-      await prisma.commentLike.delete({ where: { id: existing.id } });
-      await prisma.comment.update({ where: { id }, data: { likesCount: { decrement: 1 } } });
+      if (existing) {
+        await prisma.commentLike.delete({ where: { id: existing.id } });
+        await prisma.commentReply.update({ where: { id }, data: { likesCount: { decrement: 1 } } });
+      } else {
+        await prisma.commentLike.create({ data: { userId, replyId: id } });
+        await prisma.commentReply.update({ where: { id }, data: { likesCount: { increment: 1 } } });
+      }
     } else {
-      await prisma.commentLike.create({ data: { userId, commentId: id } });
-      await prisma.comment.update({ where: { id }, data: { likesCount: { increment: 1 } } });
+      // M10 FIX: Verify existence
+      const target = await prisma.comment.findUnique({ where: { id } });
+      if (!target) return { success: false, error: 'Comment not found' };
+
+      const existing = await prisma.commentLike.findUnique({
+        where: { userId_commentId: { userId, commentId: id } }
+      });
+
+      if (existing) {
+        await prisma.commentLike.delete({ where: { id: existing.id } });
+        await prisma.comment.update({ where: { id }, data: { likesCount: { decrement: 1 } } });
+      } else {
+        await prisma.commentLike.create({ data: { userId, commentId: id } });
+        await prisma.comment.update({ where: { id }, data: { likesCount: { increment: 1 } } });
+      }
     }
+  } catch (error) {
+    console.error('Failed to toggle like:', error);
+    return { success: false, error: 'Failed to toggle like' };
   }
 
   revalidatePath('/series/[slug]/chapter/[number]', 'page');

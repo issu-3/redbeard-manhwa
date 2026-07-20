@@ -38,6 +38,7 @@ async function getSeriesData(slug: string) {
       reviews: {
         include: { user: true },
         orderBy: { createdAt: 'desc' },
+        take: 20, // H10 FIX: Paginate reviews to prevent memory/performance issues
       }
     },
   });

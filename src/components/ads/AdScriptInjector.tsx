@@ -1,5 +1,5 @@
 import Script from 'next/script';
-
+import sanitizeHtml from 'sanitize-html';
 
 export function AdScriptInjector({ html, provider, placement }: { html: string, provider: string, placement: string }) {
   if (!html) return null;
@@ -20,8 +20,20 @@ export function AdScriptInjector({ html, provider, placement }: { html: string, 
   // Extract non-script HTML for elements like <div> or <iframe>
   let nonScriptHtml = html.replace(scriptRegex, '').trim();
   
-  // We trust the admin-provided ad HTML.
-  // The non-script HTML is injected directly.
+  // H2 FIX: Sanitize the remaining HTML to prevent XSS
+  if (nonScriptHtml) {
+    nonScriptHtml = sanitizeHtml(nonScriptHtml, {
+      allowedTags: ['div', 'span', 'iframe', 'a', 'img', 'ins'],
+      allowedAttributes: {
+        '*': ['style', 'class', 'id', 'data-*'],
+        'iframe': ['src', 'width', 'height', 'frameborder', 'scrolling', 'marginwidth', 'marginheight'],
+        'a': ['href', 'target', 'rel'],
+        'img': ['src', 'alt', 'width', 'height'],
+        'ins': ['class', 'style', 'data-ad-client', 'data-ad-slot', 'data-ad-format', 'data-full-width-responsive']
+      },
+      allowedIframeHostnames: ['pagead2.googlesyndication.com', 'www.google.com'],
+    });
+  }
 
   return (
     <>

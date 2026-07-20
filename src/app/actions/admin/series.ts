@@ -5,6 +5,7 @@ import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { slugify } from '@/lib/utils';
+import { seriesSchema } from '@/lib/validators';
 
 async function checkAdmin() {
   const session = await auth();
@@ -30,60 +31,73 @@ export async function deleteSeries(id: string) {
 export async function createSeries(formData: FormData) {
   await checkAdmin();
 
-  const title = formData.get('title') as string;
-  const description = formData.get('description') as string;
-  const synopsis = formData.get('synopsis') as string;
-  const type = formData.get('type') as any;
-  const status = formData.get('status') as any;
-  const readingDirection = formData.get('readingDirection') as any;
-  const coverImage = formData.get('coverImage') as string;
-  const bannerImage = formData.get('bannerImage') as string;
+  // H9 FIX: Parse form data with seriesSchema instead of `as any`
+  const rawData = {
+    title: formData.get('title') as string,
+    description: formData.get('description') as string,
+    synopsis: formData.get('synopsis') as string || undefined,
+    type: formData.get('type') as string,
+    status: formData.get('status') as string,
+    readingDirection: formData.get('readingDirection') as string || undefined,
+    coverImage: formData.get('coverImage') as string || '/placeholder-cover.jpg',
+    bannerImage: formData.get('bannerImage') as string || undefined,
+    genreIds: formData.getAll('genres') as string[],
+    tagIds: formData.getAll('tags') as string[],
+  };
+
+  const parsed = seriesSchema.safeParse(rawData);
   
-  const genreIds = formData.getAll('genres') as string[];
-  const tagIds = formData.getAll('tags') as string[];
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message || 'Invalid form data');
+  }
+
+  const {
+    title, description, synopsis, type, status, readingDirection,
+    coverImage, bannerImage, genreIds, tagIds
+  } = parsed.data;
 
   const slug = slugify(title);
 
-  const seoTitle = formData.get('seoTitle') as string;
-  const seoDescription = formData.get('seoDescription') as string;
-  const seoFocusKeyword = formData.get('seoFocusKeyword') as string;
-  const seoKeywords = formData.get('seoKeywords') as string;
-  const seoCanonicalUrl = formData.get('seoCanonicalUrl') as string;
-  const seoRobots = formData.get('seoRobots') as string;
-  const seoOgImage = formData.get('seoOgImage') as string;
-  const seoTwitterImage = formData.get('seoTwitterImage') as string;
-
   const seo = {
-    title: seoTitle || undefined,
-    description: seoDescription || undefined,
-    focusKeyword: seoFocusKeyword || undefined,
-    keywords: seoKeywords || undefined,
-    canonicalUrl: seoCanonicalUrl || undefined,
-    robots: seoRobots || undefined,
-    ogImage: seoOgImage || undefined,
-    twitterImage: seoTwitterImage || undefined,
+    title: (formData.get('seoTitle') as string) || undefined,
+    description: (formData.get('seoDescription') as string) || undefined,
+    focusKeyword: (formData.get('seoFocusKeyword') as string) || undefined,
+    keywords: (formData.get('seoKeywords') as string) || undefined,
+    canonicalUrl: (formData.get('seoCanonicalUrl') as string) || undefined,
+    robots: (formData.get('seoRobots') as string) || undefined,
+    ogImage: (formData.get('seoOgImage') as string) || undefined,
+    twitterImage: (formData.get('seoTwitterImage') as string) || undefined,
   };
 
-  await prisma.series.create({
-    data: {
-      title,
-      slug,
-      description,
-      synopsis,
-      type,
-      status,
-      readingDirection,
-      coverImage: coverImage || '/placeholder-cover.jpg',
-      bannerImage: bannerImage || null,
-      seo,
-      genres: {
-        connect: genreIds.map(id => ({ id }))
-      },
-      tags: {
-        connect: tagIds.map(id => ({ id }))
+  // C5 FIX: Wrap in try/catch for proper error handling
+  try {
+    await prisma.series.create({
+      data: {
+        title,
+        slug,
+        description,
+        synopsis,
+        type,
+        status,
+        readingDirection,
+        coverImage: coverImage || '/placeholder-cover.jpg',
+        bannerImage: bannerImage || null,
+        seo,
+        genres: {
+          connect: genreIds.map(id => ({ id }))
+        },
+        tags: {
+          connect: (tagIds || []).map(id => ({ id }))
+        }
       }
+    });
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      throw new Error(`A series with the slug "${slug}" already exists. Please use a different title.`);
     }
-  });
+    console.error('Failed to create series:', error);
+    throw new Error('Failed to create series. Please try again.');
+  }
 
   revalidatePath('/admin/series');
   updateTag('homepage_data');
@@ -94,61 +108,75 @@ export async function updateSeries(formData: FormData) {
   await checkAdmin();
 
   const id = formData.get('id') as string;
-  const title = formData.get('title') as string;
-  const description = formData.get('description') as string;
-  const synopsis = formData.get('synopsis') as string;
-  const type = formData.get('type') as any;
-  const status = formData.get('status') as any;
-  const readingDirection = formData.get('readingDirection') as any;
-  const coverImage = formData.get('coverImage') as string;
-  const bannerImage = formData.get('bannerImage') as string;
+
+  // H9 FIX: Parse form data with seriesSchema instead of `as any`
+  const rawData = {
+    title: formData.get('title') as string,
+    description: formData.get('description') as string,
+    synopsis: formData.get('synopsis') as string || undefined,
+    type: formData.get('type') as string,
+    status: formData.get('status') as string,
+    readingDirection: formData.get('readingDirection') as string || undefined,
+    coverImage: formData.get('coverImage') as string || '/placeholder-cover.jpg',
+    bannerImage: formData.get('bannerImage') as string || undefined,
+    genreIds: formData.getAll('genres') as string[],
+    tagIds: formData.getAll('tags') as string[],
+  };
+
+  const parsed = seriesSchema.safeParse(rawData);
   
-  const genreIds = formData.getAll('genres') as string[];
-  const tagIds = formData.getAll('tags') as string[];
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message || 'Invalid form data');
+  }
+
+  const {
+    title, description, synopsis, type, status, readingDirection,
+    coverImage, bannerImage, genreIds, tagIds
+  } = parsed.data;
 
   const slug = slugify(title);
 
-  const seoTitle = formData.get('seoTitle') as string;
-  const seoDescription = formData.get('seoDescription') as string;
-  const seoFocusKeyword = formData.get('seoFocusKeyword') as string;
-  const seoKeywords = formData.get('seoKeywords') as string;
-  const seoCanonicalUrl = formData.get('seoCanonicalUrl') as string;
-  const seoRobots = formData.get('seoRobots') as string;
-  const seoOgImage = formData.get('seoOgImage') as string;
-  const seoTwitterImage = formData.get('seoTwitterImage') as string;
-
   const seo = {
-    title: seoTitle || undefined,
-    description: seoDescription || undefined,
-    focusKeyword: seoFocusKeyword || undefined,
-    keywords: seoKeywords || undefined,
-    canonicalUrl: seoCanonicalUrl || undefined,
-    robots: seoRobots || undefined,
-    ogImage: seoOgImage || undefined,
-    twitterImage: seoTwitterImage || undefined,
+    title: (formData.get('seoTitle') as string) || undefined,
+    description: (formData.get('seoDescription') as string) || undefined,
+    focusKeyword: (formData.get('seoFocusKeyword') as string) || undefined,
+    keywords: (formData.get('seoKeywords') as string) || undefined,
+    canonicalUrl: (formData.get('seoCanonicalUrl') as string) || undefined,
+    robots: (formData.get('seoRobots') as string) || undefined,
+    ogImage: (formData.get('seoOgImage') as string) || undefined,
+    twitterImage: (formData.get('seoTwitterImage') as string) || undefined,
   };
 
-  await prisma.series.update({
-    where: { id },
-    data: {
-      title,
-      slug,
-      description,
-      synopsis,
-      type,
-      status,
-      readingDirection,
-      coverImage: coverImage || '/placeholder-cover.jpg',
-      bannerImage: bannerImage || null,
-      seo,
-      genres: {
-        set: genreIds.map(genreId => ({ id: genreId }))
-      },
-      tags: {
-        set: tagIds.map(tagId => ({ id: tagId }))
+  // C5 FIX: Wrap in try/catch for proper error handling
+  try {
+    await prisma.series.update({
+      where: { id },
+      data: {
+        title,
+        slug,
+        description,
+        synopsis,
+        type,
+        status,
+        readingDirection,
+        coverImage: coverImage || '/placeholder-cover.jpg',
+        bannerImage: bannerImage || null,
+        seo,
+        genres: {
+          set: genreIds.map(genreId => ({ id: genreId }))
+        },
+        tags: {
+          set: (tagIds || []).map(tagId => ({ id: tagId }))
+        }
       }
+    });
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      throw new Error(`A series with the slug "${slug}" already exists. Please use a different title.`);
     }
-  });
+    console.error('Failed to update series:', error);
+    throw new Error('Failed to update series. Please try again.');
+  }
 
   revalidatePath('/admin/series');
   revalidatePath(`/series/${slug}`);

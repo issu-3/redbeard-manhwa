@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { deleteSeries } from '@/app/actions/admin/series';
@@ -44,8 +45,9 @@ export default async function AdminSeriesPage() {
                 <tr key={series.id} className="hover:bg-surface/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={series.coverImage} alt={series.title} className="h-10 w-10 rounded object-cover" />
+                      <div className="relative h-10 w-10 rounded overflow-hidden">
+                        <Image src={series.coverImage} alt={series.title} fill className="object-cover" sizes="40px" />
+                      </div>
                       <div>
                         <div className="font-semibold text-text-primary">{series.title}</div>
                         <div className="text-xs text-text-secondary">{series.slug}</div>
