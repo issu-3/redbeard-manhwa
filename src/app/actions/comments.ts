@@ -70,25 +70,38 @@ export async function replyToComment(commentId: string, content: string, parentR
 }
 
 export async function likeComment(id: string, isReply: boolean = false) {
-  // A real implementation would require a CommentLike model to prevent multiple likes.
-  // Since we only have a likesCount field, this is a simplified version (vulnerable to multi-liking).
-  // We'll just increment it for demonstration.
   const session = await auth();
   
   if (!session?.user?.id) {
     throw new Error('You must be logged in to like');
   }
 
+  const userId = session.user.id;
+
   if (isReply) {
-    await prisma.commentReply.update({
-      where: { id },
-      data: { likesCount: { increment: 1 } },
+    const existing = await prisma.commentLike.findUnique({
+      where: { userId_replyId: { userId, replyId: id } }
     });
+
+    if (existing) {
+      await prisma.commentLike.delete({ where: { id: existing.id } });
+      await prisma.commentReply.update({ where: { id }, data: { likesCount: { decrement: 1 } } });
+    } else {
+      await prisma.commentLike.create({ data: { userId, replyId: id } });
+      await prisma.commentReply.update({ where: { id }, data: { likesCount: { increment: 1 } } });
+    }
   } else {
-    await prisma.comment.update({
-      where: { id },
-      data: { likesCount: { increment: 1 } },
+    const existing = await prisma.commentLike.findUnique({
+      where: { userId_commentId: { userId, commentId: id } }
     });
+
+    if (existing) {
+      await prisma.commentLike.delete({ where: { id: existing.id } });
+      await prisma.comment.update({ where: { id }, data: { likesCount: { decrement: 1 } } });
+    } else {
+      await prisma.commentLike.create({ data: { userId, commentId: id } });
+      await prisma.comment.update({ where: { id }, data: { likesCount: { increment: 1 } } });
+    }
   }
 
   revalidatePath('/series/[slug]/chapter/[number]', 'page');

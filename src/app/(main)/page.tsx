@@ -28,10 +28,11 @@ export default async function HomePage() {
   // 2. Fetch data for each active section
   const sectionData: Record<string, any[]> = {};
 
-  for (const sec of activeSections) {
+  const sectionPromises = activeSections.map(async (sec) => {
+    let data: any[] = [];
     if (sec.type === 'HERO_BANNER') {
       const banners = await prisma.heroBanner.findMany({ orderBy: { order: 'asc' } });
-      sectionData[sec.type] = banners.map(b => ({
+      data = banners.map(b => ({
         id: b.id,
         title: b.title || '',
         slug: '#',
@@ -51,7 +52,7 @@ export default async function HomePage() {
       });
       // Maintain manual order
       const ordered = sec.manualSeriesId.map(id => seriesList.find(s => s.id === id)).filter((s): s is typeof seriesList[0] => Boolean(s));
-      sectionData[sec.type] = ordered.map(toSeriesCardData);
+      data = ordered.map(toSeriesCardData);
     } else if (sec.type === 'CONTINUE_READING') {
       if (userId) {
         const history = await prisma.readingHistory.findMany({
@@ -60,13 +61,11 @@ export default async function HomePage() {
           take: sec.limit,
           include: { series: { include: { genres: true } }, chapter: true }
         });
-        sectionData[sec.type] = history.map(h => ({
+        data = history.map(h => ({
           series: toSeriesCardData(h.series),
           chapterNumber: h.chapter?.number || h.pageNumber || 1,
           progress: Math.min(100, Math.max(5, (h.pageNumber / Math.max(1, h.chapter?.totalPages || 1)) * 100))
         }));
-      } else {
-        sectionData[sec.type] = [];
       }
     } else if (sec.type === 'RECOMMENDED' && !sec.isManual) {
       if (userId) {
@@ -87,7 +86,7 @@ export default async function HomePage() {
             take: sec.limit,
             include: { genres: true }
           });
-          sectionData[sec.type] = recommendedSeries.map(toSeriesCardData);
+          data = recommendedSeries.map(toSeriesCardData);
         } else {
           // Fallback to Editors Choice if no bookmarks
           const fallback = await prisma.series.findMany({
@@ -95,7 +94,7 @@ export default async function HomePage() {
             take: sec.limit,
             include: { genres: true }
           });
-          sectionData[sec.type] = fallback.map(toSeriesCardData);
+          data = fallback.map(toSeriesCardData);
         }
       } else {
         // Fallback for guests
@@ -104,7 +103,7 @@ export default async function HomePage() {
           take: sec.limit,
           include: { genres: true }
         });
-        sectionData[sec.type] = fallback.map(toSeriesCardData);
+        data = fallback.map(toSeriesCardData);
       }
     } else if (sec.type === 'RECENTLY_UPDATED' && !sec.isManual) {
       const chapters = await prisma.chapter.findMany({
@@ -117,7 +116,7 @@ export default async function HomePage() {
       for (const ch of chapters) {
         if (!unique.has(ch.seriesId)) unique.set(ch.seriesId, ch);
       }
-      sectionData[sec.type] = Array.from(unique.values()).slice(0, sec.limit).map((ch: any) => ({
+      data = Array.from(unique.values()).slice(0, sec.limit).map((ch: any) => ({
         series: toSeriesCardData(ch.series),
         chapterNumber: ch.number,
         publishedAt: ch.publishedAt?.toISOString() || ch.createdAt.toISOString()
@@ -147,7 +146,17 @@ export default async function HomePage() {
       } else if (sec.type === 'FEATURED') {
         automated = await prisma.series.findMany({ where: { isFeatured: true }, include: { genres: true }, take: sec.limit });
       }
-      sectionData[sec.type] = automated.map(toSeriesCardData);
+      data = automated.map(toSeriesCardData);
+    }
+    return { type: sec.type, data };
+  });
+
+  const results = await Promise.allSettled(sectionPromises);
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      sectionData[result.value.type] = result.value.data;
+    } else {
+      console.error('Failed to load homepage section:', result.reason);
     }
   }
 

@@ -111,6 +111,7 @@ model User {
   reviews        Review[]
   comments       Comment[]
   commentReplies CommentReply[]
+  commentLikes   CommentLike[]
   readingLists   ReadingList[]
   notifications  Notification[]
   reportsFiled   Report[]          @relation("ReportsFiled")
@@ -439,6 +440,7 @@ model Comment {
   chapter Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   replies CommentReply[]
   reports Report[]
+  likes   CommentLike[]
 
   @@index([chapterId])
   @@map("comments")
@@ -459,8 +461,25 @@ model CommentReply {
   comment      Comment        @relation(fields: [commentId], references: [id], onDelete: Cascade)
   parentReply  CommentReply?  @relation("ReplyToReply", fields: [parentReplyId], references: [id], onDelete: SetNull)
   childReplies CommentReply[] @relation("ReplyToReply")
+  likes        CommentLike[]
 
   @@map("comment_replies")
+}
+
+model CommentLike {
+  id        String   @id @default(cuid())
+  userId    String
+  commentId String?
+  replyId   String?
+  createdAt DateTime @default(now())
+
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment Comment?      @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reply   CommentReply? @relation(fields: [replyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+  @@unique([userId, replyId])
+  @@map("comment_likes")
 }
 
 // ============================================================================

@@ -293,8 +293,12 @@ export function Header() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              role="button"
+              tabIndex={0}
+              aria-label="Close menu"
               className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
               onClick={() => setMobileMenuOpen(false)}
+              onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => e.key === 'Escape' && setMobileMenuOpen(false)}
             />
 
             {/* Panel */}

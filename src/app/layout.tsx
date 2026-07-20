@@ -49,9 +49,6 @@ export async function generateMetadata(): Promise<Metadata> {
     authors: [{ name: `${settings.siteName || 'REDBEARD'} Team` }],
     creator: settings.siteName || 'REDBEARD',
     metadataBase: new URL(APP_URL || 'http://localhost:3000'),
-    alternates: {
-      canonical: '/',
-    },
     openGraph: {
       type: 'website',
       locale: 'en_US',
