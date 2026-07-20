@@ -1,8 +1,19 @@
 import Script from 'next/script';
 import sanitizeHtml from 'sanitize-html';
 
-export function AdScriptInjector({ html, provider, placement }: { html: string, provider: string, placement: string }) {
+export function AdScriptInjector({ html, provider }: { html: string, provider: string }) {
   if (!html) return null;
+
+  // Simple string hashing for inline scripts
+  const hashString = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit int
+    }
+    return Math.abs(hash).toString(16);
+  };
 
   // Parse scripts using regex
   const scriptRegex = /<script\b[^>]*>([\s\S]*?)<\/script>/gi;
@@ -43,19 +54,24 @@ export function AdScriptInjector({ html, provider, placement }: { html: string, 
       
       {scripts.map((script, index) => {
         if (script.src) {
+          // External scripts can use their URL as a unique ID for deduplication
+          const srcHash = hashString(script.src);
           return (
             <Script
-              key={`${provider}-${placement}-${index}-src`}
+              key={`${provider}-src-${srcHash}`}
+              id={`${provider}-src-${srcHash}`}
               src={script.src}
               strategy="afterInteractive"
               crossOrigin="anonymous"
             />
           );
         } else if (script.innerHTML.trim()) {
+          // Inline scripts use the hash of their content as a unique ID
+          const contentHash = hashString(script.innerHTML.trim());
           return (
             <Script
-              key={`${provider}-${placement}-${index}-inline`}
-              id={`${provider}-${placement}-${index}-inline`}
+              key={`${provider}-inline-${contentHash}`}
+              id={`${provider}-inline-${contentHash}`}
               strategy="afterInteractive"
             >
               {script.innerHTML}
