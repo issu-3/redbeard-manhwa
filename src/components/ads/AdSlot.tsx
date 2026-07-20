@@ -60,6 +60,12 @@ export async function AdSlot({ placement }: { placement: Placement }) {
     }
   }
 
+  // Debug: Log what data is flowing through (remove after verification)
+  console.log(`[AdSlot:${placement}] placementSetting=${placementSetting}, provider=${providerToUse}, html=${specificScriptToInject ? `"${specificScriptToInject.substring(0, 80)}..."` : 'null'}, adsenseClientId=${adsenseClientId}`);
+  if (providerToUse === 'adsterra') {
+    console.log(`[AdSlot:${placement}] ads_enabled_adsterra=${settings.ads_enabled_adsterra}, ads_adsterra_banner=${settings.ads_adsterra_banner ? 'SET' : 'EMPTY'}, ads_adsterra_native_banner=${settings.ads_adsterra_native_banner ? 'SET' : 'EMPTY'}`);
+  }
+
   return (
     <LazyAdSlot 
       placement={placement}
