@@ -21,20 +21,38 @@ export async function AdSlot({ placement }: { placement: Placement }) {
   
   let providerToUse = placementSetting;
   
+  const getProviderConfig = (p: string) => {
+    if (settings[`ads_enabled_${p}`] !== 'true') return null;
+    if (p === 'adsense' && settings.adsenseId) return 'adsense';
+    if (p === 'monetag' && settings.ads_monetag_script) return settings.ads_monetag_script;
+    if (p === 'propeller' && settings.ads_propeller_script) return settings.ads_propeller_script;
+    if (p === 'adsterra') {
+      const isNative = placement === 'sidebar' || placement === 'reader' || placement === 'in_feed';
+      const script = isNative ? settings.ads_adsterra_native_banner : settings.ads_adsterra_banner;
+      return script || null;
+    }
+    return null;
+  };
+
+  let specificScriptToInject: string | null = null;
+
   if (placementSetting === 'auto') {
     const priority = (settings.ads_provider_priority || 'adsense,monetag,adsterra,propeller').split(',');
     for (const p of priority) {
-      const codeKey = p === 'adsense' ? 'adsenseId' : p === 'propeller' ? 'propellerAdsCode' : `${p}Code`;
-      if (settings[`ads_enabled_${p}`] === 'true' && settings[codeKey]) {
+      const config = getProviderConfig(p);
+      if (config) {
         providerToUse = p;
+        if (typeof config === 'string' && config !== 'adsense') {
+          specificScriptToInject = config;
+        }
         break;
       }
     }
   } else {
-    // If explicitly set, ensure it's enabled
-    const codeKey = providerToUse === 'adsense' ? 'adsenseId' : providerToUse === 'propeller' ? 'propellerAdsCode' : `${providerToUse}Code`;
-    if (settings[`ads_enabled_${providerToUse}`] !== 'true' || !settings[codeKey]) {
-      return null;
+    const config = getProviderConfig(providerToUse);
+    if (!config) return null;
+    if (typeof config === 'string' && config !== 'adsense') {
+      specificScriptToInject = config;
     }
   }
   
@@ -46,6 +64,18 @@ export async function AdSlot({ placement }: { placement: Placement }) {
   // Render specific provider
   if (providerToUse === 'adsense') {
     const clientId = settings.adsenseId;
+    
+    // Check if there is a manual ad unit override
+    if (settings.ads_adsense_manual_unit) {
+      return (
+        <div className={containerClass} data-provider="adsense">
+          <FallbackPlaceholder />
+          <AdScriptInjector html={settings.ads_adsense_manual_unit} provider="adsense" />
+        </div>
+      );
+    }
+    
+    // Otherwise use default responsive ad unit
     return (
       <div className={containerClass} data-provider="adsense">
         <FallbackPlaceholder />
@@ -62,29 +92,11 @@ export async function AdSlot({ placement }: { placement: Placement }) {
     );
   }
   
-  if (providerToUse === 'monetag') {
+  if (specificScriptToInject) {
     return (
-      <div className={containerClass} data-provider="monetag">
+      <div className={containerClass} data-provider={providerToUse}>
         <FallbackPlaceholder />
-        <AdScriptInjector html={settings.monetagCode || ''} provider="monetag" />
-      </div>
-    );
-  }
-  
-  if (providerToUse === 'adsterra') {
-    return (
-      <div className={containerClass} data-provider="adsterra">
-        <FallbackPlaceholder />
-        <AdScriptInjector html={settings.adsterraCode || ''} provider="adsterra" />
-      </div>
-    );
-  }
-
-  if (providerToUse === 'propeller') {
-    return (
-      <div className={containerClass} data-provider="propeller">
-        <FallbackPlaceholder />
-        <AdScriptInjector html={settings.propellerAdsCode || ''} provider="propeller" />
+        <AdScriptInjector html={specificScriptToInject} provider={providerToUse} />
       </div>
     );
   }

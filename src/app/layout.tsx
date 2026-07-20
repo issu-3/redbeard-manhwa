@@ -6,6 +6,7 @@ import { SessionProvider } from '@/providers/session-provider';
 import { Toaster } from 'sonner';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
+import { AdScriptInjector } from '@/components/ads/AdScriptInjector';
 import './globals.css';
 
 const inter = Inter({
@@ -134,12 +135,19 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${plusJakarta.variable} ${poppins.variable}`}
     >
-      {settings.adsenseId && (
+      {settings.ads_enabled_adsense === 'true' && settings.adsenseId && (
         <Script
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${settings.adsenseId}`}
           crossOrigin="anonymous"
           strategy="lazyOnload"
         />
+      )}
+      
+      {settings.ads_enabled_adsterra === 'true' && settings.ads_adsterra_popunder && (
+        <AdScriptInjector html={settings.ads_adsterra_popunder} provider="adsterra-popunder" />
+      )}
+      {settings.ads_enabled_adsterra === 'true' && settings.ads_adsterra_social_bar && (
+        <AdScriptInjector html={settings.ads_adsterra_social_bar} provider="adsterra-socialbar" />
       )}
       <script
         type="application/ld+json"

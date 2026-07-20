@@ -270,110 +270,162 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                 <div className="bg-background/50 border border-border/50 rounded-lg p-4 space-y-6">
                   <h3 className="text-lg font-semibold text-text-primary border-b border-border/50 pb-2">Ad Networks Configuration</h3>
                   
-                  {/* AdSense */}
-                  <div className="space-y-2 pb-4 border-b border-border/20">
+                  {/* Google AdSense */}
+                  <div className="space-y-4 pb-4 border-b border-border/20">
                     <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-text-primary">Google AdSense</label>
-                      <div className="flex items-center space-x-2">
-                        <label className="relative inline-flex items-center cursor-pointer mr-2">
-                          <input type="hidden" name="ads_enabled_adsense" value="false" />
-                          <input type="checkbox" name="ads_enabled_adsense" value="true" defaultChecked={initialSettings.ads_enabled_adsense === 'true'} className="sr-only peer" />
-                          <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                        </label>
-                        <button type="button" onClick={() => {
-                          const id = (document.querySelector('input[name="adsenseId"]') as HTMLInputElement)?.value;
-                          if (!id) return alert('Enter AdSense ID first');
-                          alert(`AdSense ID: ${id}\nTest integration: Place a generic <ins> tag with client ID.`);
-                        }} className="px-2 py-1 text-xs bg-primary/20 text-primary hover:bg-primary/30 rounded">Test</button>
-                      </div>
+                      <h4 className="font-semibold text-text-primary text-base">Google AdSense</h4>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="hidden" name="ads_enabled_adsense" value="false" />
+                        <input type="checkbox" name="ads_enabled_adsense" value="true" defaultChecked={initialSettings.ads_enabled_adsense === 'true'} className="sr-only peer" />
+                        <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                      </label>
                     </div>
-                    <input
-                      name="adsenseId"
-                      defaultValue={initialSettings.adsenseId || ''}
-                      placeholder="ca-pub-XXXXXXXXXXXXXXXX"
-                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-1">Publisher ID</label>
+                      <input
+                        name="adsenseId"
+                        defaultValue={initialSettings.adsenseId || ''}
+                        placeholder="ca-pub-XXXXXXXXXXXXXXXX"
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
 
-                  {/* Monetag */}
-                  <div className="space-y-2 pb-4 border-b border-border/20">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-text-primary">Monetag</label>
-                      <div className="flex items-center space-x-2">
-                        <label className="relative inline-flex items-center cursor-pointer mr-2">
-                          <input type="hidden" name="ads_enabled_monetag" value="false" />
-                          <input type="checkbox" name="ads_enabled_monetag" value="true" defaultChecked={initialSettings.ads_enabled_monetag === 'true'} className="sr-only peer" />
-                          <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-sm font-medium text-text-primary">Auto Ads (Global)</label>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="hidden" name="ads_adsense_auto_ads" value="false" />
+                          <input type="checkbox" name="ads_adsense_auto_ads" value="true" defaultChecked={initialSettings.ads_adsense_auto_ads === 'true'} className="sr-only peer" />
+                          <div className="w-8 h-4 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500"></div>
                         </label>
-                        <button type="button" onClick={() => {
-                          const code = (document.querySelector('textarea[name="monetagCode"]') as HTMLTextAreaElement)?.value;
-                          if (!code) return alert('Enter code first');
-                          const w = window.open('', '_blank', 'width=400,height=300');
-                          if (w) { w.document.write(`<html><body><h3>Monetag Preview</h3>${code}</body></html>`); w.document.close(); }
-                        }} className="px-2 py-1 text-xs bg-primary/20 text-primary hover:bg-primary/30 rounded">Test Preview</button>
                       </div>
+                      <p className="text-xs text-text-muted">Automatically place ads across the site based on Google's AI.</p>
                     </div>
-                    <textarea
-                      name="monetagCode"
-                      defaultValue={initialSettings.monetagCode || ''}
-                      rows={2}
-                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
-                      placeholder="<script>...</script>"
-                    />
+
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-1">Manual Ad Units</label>
+                      <textarea
+                        name="ads_adsense_manual_unit"
+                        defaultValue={initialSettings.ads_adsense_manual_unit || ''}
+                        rows={2}
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
+                        placeholder="<ins class='adsbygoogle' ...></ins>"
+                      />
+                      <p className="text-xs text-text-muted mt-1">Provide standard manual `ins` tag to be rendered inside specific AdSlots.</p>
+                    </div>
                   </div>
 
                   {/* Adsterra */}
-                  <div className="space-y-2 pb-4 border-b border-border/20">
+                  <div className="space-y-4 pb-4 border-b border-border/20">
                     <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-text-primary">Adsterra</label>
-                      <div className="flex items-center space-x-2">
-                        <label className="relative inline-flex items-center cursor-pointer mr-2">
-                          <input type="hidden" name="ads_enabled_adsterra" value="false" />
-                          <input type="checkbox" name="ads_enabled_adsterra" value="true" defaultChecked={initialSettings.ads_enabled_adsterra === 'true'} className="sr-only peer" />
-                          <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                        </label>
-                        <button type="button" onClick={() => {
-                          const code = (document.querySelector('textarea[name="adsterraCode"]') as HTMLTextAreaElement)?.value;
-                          if (!code) return alert('Enter code first');
-                          const w = window.open('', '_blank', 'width=400,height=300');
-                          if (w) { w.document.write(`<html><body><h3>Adsterra Preview</h3>${code}</body></html>`); w.document.close(); }
-                        }} className="px-2 py-1 text-xs bg-primary/20 text-primary hover:bg-primary/30 rounded">Test Preview</button>
+                      <h4 className="font-semibold text-text-primary text-base">Adsterra</h4>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="hidden" name="ads_enabled_adsterra" value="false" />
+                        <input type="checkbox" name="ads_enabled_adsterra" value="true" defaultChecked={initialSettings.ads_enabled_adsterra === 'true'} className="sr-only peer" />
+                        <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-text-primary mb-1">Native Banner Script</label>
+                        <textarea
+                          name="ads_adsterra_native_banner"
+                          defaultValue={initialSettings.ads_adsterra_native_banner || ''}
+                          rows={2}
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
+                          placeholder="<script>...</script>"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-text-primary mb-1">Banner Script</label>
+                        <textarea
+                          name="ads_adsterra_banner"
+                          defaultValue={initialSettings.ads_adsterra_banner || ''}
+                          rows={2}
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
+                          placeholder="<script>...</script>"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-text-primary mb-1">Popunder Script (Global)</label>
+                        <textarea
+                          name="ads_adsterra_popunder"
+                          defaultValue={initialSettings.ads_adsterra_popunder || ''}
+                          rows={2}
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
+                          placeholder="<script>...</script>"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-text-primary mb-1">Social Bar Script (Global)</label>
+                        <textarea
+                          name="ads_adsterra_social_bar"
+                          defaultValue={initialSettings.ads_adsterra_social_bar || ''}
+                          rows={2}
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
+                          placeholder="<script>...</script>"
+                        />
+                      </div>
+                      
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-text-primary mb-1">Smartlink URL</label>
+                        <input
+                          name="ads_adsterra_smartlink"
+                          defaultValue={initialSettings.ads_adsterra_smartlink || ''}
+                          placeholder="https://..."
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
                       </div>
                     </div>
-                    <textarea
-                      name="adsterraCode"
-                      defaultValue={initialSettings.adsterraCode || ''}
-                      rows={2}
-                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
-                      placeholder="<script>...</script>"
-                    />
+                  </div>
+
+                  {/* Monetag */}
+                  <div className="space-y-4 pb-4 border-b border-border/20">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-text-primary text-base">Monetag</h4>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="hidden" name="ads_enabled_monetag" value="false" />
+                        <input type="checkbox" name="ads_enabled_monetag" value="true" defaultChecked={initialSettings.ads_enabled_monetag === 'true'} className="sr-only peer" />
+                        <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                      </label>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-1">Script</label>
+                      <textarea
+                        name="ads_monetag_script"
+                        defaultValue={initialSettings.ads_monetag_script || initialSettings.monetagCode || ''}
+                        rows={3}
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
+                        placeholder="<script>...</script>"
+                      />
+                    </div>
                   </div>
 
                   {/* PropellerAds */}
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-text-primary">PropellerAds</label>
-                      <div className="flex items-center space-x-2">
-                        <label className="relative inline-flex items-center cursor-pointer mr-2">
-                          <input type="hidden" name="ads_enabled_propeller" value="false" />
-                          <input type="checkbox" name="ads_enabled_propeller" value="true" defaultChecked={initialSettings.ads_enabled_propeller === 'true'} className="sr-only peer" />
-                          <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                        </label>
-                        <button type="button" onClick={() => {
-                          const code = (document.querySelector('textarea[name="propellerAdsCode"]') as HTMLTextAreaElement)?.value;
-                          if (!code) return alert('Enter code first');
-                          const w = window.open('', '_blank', 'width=400,height=300');
-                          if (w) { w.document.write(`<html><body><h3>PropellerAds Preview</h3>${code}</body></html>`); w.document.close(); }
-                        }} className="px-2 py-1 text-xs bg-primary/20 text-primary hover:bg-primary/30 rounded">Test Preview</button>
-                      </div>
+                      <h4 className="font-semibold text-text-primary text-base">PropellerAds</h4>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="hidden" name="ads_enabled_propeller" value="false" />
+                        <input type="checkbox" name="ads_enabled_propeller" value="true" defaultChecked={initialSettings.ads_enabled_propeller === 'true'} className="sr-only peer" />
+                        <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                      </label>
                     </div>
-                    <textarea
-                      name="propellerAdsCode"
-                      defaultValue={initialSettings.propellerAdsCode || ''}
-                      rows={2}
-                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
-                      placeholder="<script>...</script>"
-                    />
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-1">Script</label>
+                      <textarea
+                        name="ads_propeller_script"
+                        defaultValue={initialSettings.ads_propeller_script || initialSettings.propellerAdsCode || ''}
+                        rows={3}
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
+                        placeholder="<script>...</script>"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
