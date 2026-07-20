@@ -30,7 +30,7 @@ export async function saveSettings(formData: FormData) {
       )
     );
 
-    // @ts-ignore - Next.js canary type expects 2 arguments for revalidateTag but at runtime works with 1
+    // @ts-expect-error - Next.js canary type expects 2 arguments for revalidateTag but at runtime works with 1
     revalidateTag('settings'); // IMPORTANT: Invalidates getCachedSettings cache
     revalidatePath('/', 'layout'); // Revalidate everything so new settings take effect
     return { success: true };
