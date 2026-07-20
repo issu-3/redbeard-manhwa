@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { 
   LayoutDashboard, 
   Library, 
@@ -29,6 +30,16 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const session = await auth();
+
+  // C2 FIX: Block unauthenticated users
+  if (!session?.user) {
+    redirect('/login');
+  }
+
+  // C2 FIX: Block non-admin/moderator users
+  if (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR') {
+    redirect('/');
+  }
 
   return (
     <div className="flex min-h-screen bg-background">

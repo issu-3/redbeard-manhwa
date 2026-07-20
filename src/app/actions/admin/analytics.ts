@@ -13,6 +13,9 @@ async function checkAdmin() {
 }
 
 export async function fetchAnalyticsData(range: string) {
+  // C5 FIX: This exported server action must verify admin access
+  await checkAdmin();
+
   const now = new Date();
   let startDate = new Date();
   let prevStartDate = new Date();
