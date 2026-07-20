@@ -4,6 +4,7 @@ import { Inter, Plus_Jakarta_Sans, Poppins } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { SessionProvider } from '@/providers/session-provider';
 import { Toaster } from 'sonner';
+import { Analytics } from '@vercel/analytics/next';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import './globals.css';
@@ -161,6 +162,7 @@ export default async function RootLayout({
             <Toaster position="bottom-right" />
           </ThemeProvider>
         </SessionProvider>
+        <Analytics />
       </body>
     </html>
   );
