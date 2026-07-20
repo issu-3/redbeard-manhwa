@@ -43,7 +43,7 @@ export const commentSchema = z.object({
 
 export const reviewSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
-  content: z.string().min(50, 'Review must be at least 50 characters').max(5000),
+  content: z.string().max(5000).optional().nullable(),
   isSpoiler: z.boolean().default(false),
 });
 

@@ -123,7 +123,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      images: ogImage ? [{ url: ogImage, width: 800, height: 1200 }] : [],
+      images: ogImage ? [{ url: ogImage, width: 800, height: 1200, alt: title }] : [],
       url: canonical,
       type: 'article',
     },

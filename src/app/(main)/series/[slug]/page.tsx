@@ -85,7 +85,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      images: [{ url: ogImage, width: 800, height: 1200 }],
+      images: [{ url: ogImage, width: 800, height: 1200, alt: title }],
       type: 'book',
       url: canonical,
     },

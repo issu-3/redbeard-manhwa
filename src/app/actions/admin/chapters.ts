@@ -80,7 +80,7 @@ export async function createChapter(seriesId: string, formData: FormData) {
     updateTag('homepage_data');
   } catch (error: any) {
     if (error?.code === 'P2002') {
-      return { error: 'A chapter with this number already exists for this series.' };
+      return { success: false, error: 'A chapter with this number already exists for this series.' };
     }
     throw error;
   }
@@ -141,7 +141,7 @@ export async function updateChapter(chapterId: string, seriesId: string, formDat
     updateTag('homepage_data');
   } catch (error: any) {
     if (error?.code === 'P2002') {
-      return { error: 'A chapter with this number already exists for this series.' };
+      return { success: false, error: 'A chapter with this number already exists for this series.' };
     }
     throw error;
   }
