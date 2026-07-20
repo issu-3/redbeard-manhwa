@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { generateVerificationToken } from '@/lib/tokens';
 import { registerSchema } from '@/lib/validators';
 
+import { sendVerificationEmail } from '@/lib/mail';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -51,11 +53,7 @@ export async function POST(request: Request) {
 
     const verificationToken = await generateVerificationToken(user.email);
 
-    // C4 FIX: Only log verification link in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEV MODE] Email verification link: http://localhost:3000/verify-email?token=${verificationToken.token}`);
-    }
-    // TODO: Send verification email in production using Resend/SendGrid
+    await sendVerificationEmail(user.email, verificationToken.token);
 
     return NextResponse.json(
       { message: 'User created successfully', id: user.id },

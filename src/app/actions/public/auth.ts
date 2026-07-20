@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { generatePasswordResetToken, generateVerificationToken } from '@/lib/tokens';
-// In a real app, you would import a mailer here: import { sendResetEmail } from '@/lib/mail';
+import { sendResetEmail } from '@/lib/mail';
 
 export async function forgotPassword(email: string) {
   try {
@@ -18,11 +18,7 @@ export async function forgotPassword(email: string) {
 
     const resetToken = await generatePasswordResetToken(email);
 
-    // C4 FIX: Only log reset link in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEV MODE] Password reset link: http://localhost:3000/reset-password?token=${resetToken.token}`);
-    }
-    // TODO: Send reset email in production using Resend/SendGrid
+    await sendResetEmail(email, resetToken.token);
 
     return { success: true };
   } catch (error) {
