@@ -21,8 +21,10 @@ export async function AdSlot({ placement }: { placement: Placement }) {
     if (p === 'propeller' && settings.ads_propeller_script) return settings.ads_propeller_script;
     if (p === 'adsterra') {
       const isNative = placement === 'sidebar' || placement === 'reader' || placement === 'in_feed';
-      const script = isNative ? settings.ads_adsterra_native_banner : settings.ads_adsterra_banner;
-      return script || null;
+      // Prefer the appropriate format but fall back to the other if empty
+      const primaryScript = isNative ? settings.ads_adsterra_native_banner : settings.ads_adsterra_banner;
+      const fallbackScript = isNative ? settings.ads_adsterra_banner : settings.ads_adsterra_native_banner;
+      return primaryScript || fallbackScript || null;
     }
     return null;
   };
