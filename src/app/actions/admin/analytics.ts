@@ -15,7 +15,10 @@ async function checkAdmin() {
 export async function fetchAnalyticsData(range: string) {
   // C5 FIX: This exported server action must verify admin access
   await checkAdmin();
+  return fetchAnalyticsDataInternal(range);
+}
 
+async function fetchAnalyticsDataInternal(range: string) {
   const now = new Date();
   let startDate = new Date();
   let prevStartDate = new Date();
@@ -261,7 +264,7 @@ export async function getAnalyticsData(range: string) {
   await checkAdmin();
   
   const getCachedData = unstable_cache(
-    async (r: string) => fetchAnalyticsData(r),
+    async (r: string) => fetchAnalyticsDataInternal(r),
     [`analytics_data_${range}`],
     { revalidate: 300, tags: [`analytics_${range}`] }
   );
