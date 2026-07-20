@@ -37,6 +37,18 @@ export default function Error({
         <p className="max-w-md text-text-secondary">
           An unexpected error occurred. Please try again.
         </p>
+        {process.env.NODE_ENV === 'development' || true ? (
+          <div className="max-w-xl w-full p-4 mt-4 bg-surface/50 border border-border/50 rounded-lg text-left overflow-auto">
+            <p className="font-mono text-sm text-danger/90 whitespace-pre-wrap">
+              {error.message || 'Unknown Error'}
+            </p>
+            {error.digest && (
+              <p className="font-mono text-xs text-text-muted mt-2">
+                Digest: {error.digest}
+              </p>
+            )}
+          </div>
+        ) : null}
         <button
           onClick={reset}
           className="inline-flex items-center gap-2 rounded-xl px-6 py-3 font-medium text-white gradient-primary transition-all hover:opacity-90 hover:shadow-lg hover:shadow-primary/25"

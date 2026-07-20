@@ -3,20 +3,26 @@ import { HomepageClient } from './homepage-client';
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData } from '@/lib/data-mappers';
 import { auth } from '@/auth';
-import { getSections, getAutomatedSeries, getBanners } from '@/app/actions/admin/homepage';
 
-export const metadata: Metadata = {
-  title: 'REDBEARD — Premium Manga & Manhwa',
-  description:
-    'Discover and read the best manhwa, manga, and webtoons. Premium reading experience and vibrant community.',
-};
 
 export default async function HomePage() {
   const session = await auth();
   const userId = session?.user?.id;
   
   // 1. Fetch active sections sorted by order
-  const allSections = await getSections();
+  let allSections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
+  
+  // If no sections exist (e.g. fresh DB), fallback to default
+  if (allSections.length === 0) {
+    allSections = [
+      { id: '1', type: 'HERO_BANNER', isActive: true, order: 0, limit: 10, isManual: false, title: null, subtitle: null, showViewAll: false, manualSeriesId: [] as string[] },
+      { id: '2', type: 'CONTINUE_READING', isActive: true, order: 1, limit: 10, isManual: false, title: '📚 Continue Reading', subtitle: 'Pick up where you left off', showViewAll: true, manualSeriesId: [] as string[] },
+      { id: '3', type: 'TRENDING', isActive: true, order: 2, limit: 10, isManual: false, title: '🔥 Trending', subtitle: 'Top 10 most viewed this week', showViewAll: true, manualSeriesId: [] as string[] },
+      { id: '4', type: 'RECENTLY_UPDATED', isActive: true, order: 3, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true, manualSeriesId: [] as string[] },
+      { id: '5', type: 'RECOMMENDED', isActive: true, order: 4, limit: 10, isManual: false, title: 'Recommended For You', subtitle: 'Based on your reading history', showViewAll: true, manualSeriesId: [] as string[] },
+      { id: '6', type: 'FEATURED', isActive: true, order: 5, limit: 10, isManual: false, title: '⭐ Featured Series', subtitle: 'Handpicked by our staff', showViewAll: true, manualSeriesId: [] as string[] }
+    ] as any;
+  }
   const activeSections = allSections.filter(s => s.isActive).sort((a, b) => a.order - b.order);
 
   // 2. Fetch data for each active section
@@ -24,7 +30,7 @@ export default async function HomePage() {
 
   for (const sec of activeSections) {
     if (sec.type === 'HERO_BANNER') {
-      const banners = await getBanners();
+      const banners = await prisma.heroBanner.findMany({ orderBy: { order: 'asc' } });
       sectionData[sec.type] = banners.map(b => ({
         id: b.id,
         title: b.title || '',
@@ -118,7 +124,29 @@ export default async function HomePage() {
       }));
     } else if (!sec.isManual) {
       // General fallback using the automated query
-      const automated = await getAutomatedSeries(sec.type, sec.limit);
+      let automated: any[] = [];
+      if (sec.type === 'TRENDING') {
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const topReads = await prisma.readingHistory.groupBy({
+          by: ['seriesId'],
+          where: { updatedAt: { gte: yesterday } },
+          _count: { seriesId: true },
+          orderBy: { _count: { seriesId: 'desc' } },
+          take: sec.limit
+        });
+        if (topReads.length > 0) {
+          const seriesIds = topReads.map(t => t.seriesId);
+          const foundSeries = await prisma.series.findMany({
+            where: { id: { in: seriesIds } },
+            include: { genres: true }
+          });
+          automated = seriesIds.map(id => foundSeries.find(s => s.id === id)).filter(Boolean);
+        } else {
+          automated = await prisma.series.findMany({ orderBy: { totalViews: 'desc' }, include: { genres: true }, take: sec.limit });
+        }
+      } else if (sec.type === 'FEATURED') {
+        automated = await prisma.series.findMany({ where: { isFeatured: true }, include: { genres: true }, take: sec.limit });
+      }
       sectionData[sec.type] = automated.map(toSeriesCardData);
     }
   }

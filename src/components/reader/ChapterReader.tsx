@@ -46,16 +46,21 @@ interface ChapterReaderProps {
   comments: CommentData[];
   currentUserId?: string;
   adSlot?: React.ReactNode;
+  userPreferences?: Record<string, any>;
+  defaultReadingMode?: string;
 }
 
 // ─── Main Component ────────────────────────────────────────────
 
-export function ChapterReader({ chapter, comments, currentUserId, adSlot }: ChapterReaderProps) {
+import { saveUserPreferences } from '@/app/actions/preferences';
+
+export function ChapterReader({ chapter, comments, currentUserId, adSlot, userPreferences, defaultReadingMode }: ChapterReaderProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoScrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const uiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInitializedRef = useRef(false);
 
   // Reader store
   const {
@@ -102,7 +107,46 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlot }: Chap
   useEffect(() => {
     setTotalPages(chapter.images.length);
     setCurrentPage(1);
-  }, [chapter.id, chapter.images.length, setTotalPages, setCurrentPage]);
+
+    if (!isInitializedRef.current) {
+      if (userPreferences && Object.keys(userPreferences).length > 0) {
+        if (userPreferences.mode) setMode(userPreferences.mode);
+        if (userPreferences.direction) setDirection(userPreferences.direction);
+        if (userPreferences.fitMode) setFitMode(userPreferences.fitMode);
+        if (userPreferences.brightness !== undefined) setBrightness(userPreferences.brightness);
+        if (userPreferences.contrast !== undefined) setContrast(userPreferences.contrast);
+        if (userPreferences.sepia !== undefined) setSepia(userPreferences.sepia);
+        if (userPreferences.autoScrollSpeed !== undefined) setAutoScrollSpeed(userPreferences.autoScrollSpeed);
+        if (userPreferences.autoNextChapter !== undefined) {
+           if (userPreferences.autoNextChapter !== useReaderStore.getState().autoNextChapter) {
+             toggleAutoNextChapter();
+           }
+        }
+      } else if (defaultReadingMode && !localStorage.getItem('redbeard-reader-preferences')) {
+         // Only apply default if they don't have local preferences and no server preferences
+         setMode(defaultReadingMode as ReaderMode);
+      }
+      isInitializedRef.current = true;
+    }
+  }, [chapter.id, chapter.images.length, setTotalPages, setCurrentPage, userPreferences, defaultReadingMode, setMode, setDirection, setFitMode, setBrightness, setContrast, setSepia, setAutoScrollSpeed, toggleAutoNextChapter]);
+
+  // Sync back to server
+  useEffect(() => {
+    if (!isInitializedRef.current || !currentUserId) return;
+    const timeout = setTimeout(() => {
+      saveUserPreferences({
+        mode,
+        direction,
+        fitMode,
+        brightness,
+        contrast,
+        sepia,
+        autoScrollSpeed,
+        autoNextChapter,
+      });
+    }, 1000);
+    return () => clearTimeout(timeout);
+  }, [mode, direction, fitMode, brightness, contrast, sepia, autoScrollSpeed, autoNextChapter, currentUserId]);
 
   // ─── UI Auto-hide ──────────────────────────────────────────
 

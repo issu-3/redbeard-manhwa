@@ -37,23 +37,6 @@ export const READER_MODES = [
   { id: 'doublePage', label: 'Double Page', icon: 'Columns2' },
 ] as const;
 
-export const GENRES = [
-  { name: 'Action', slug: 'action', icon: 'Sword', color: '#E53935' },
-  { name: 'Adventure', slug: 'adventure', icon: 'Compass', color: '#43A047' },
-  { name: 'Comedy', slug: 'comedy', icon: 'Laugh', color: '#FDD835' },
-  { name: 'Drama', slug: 'drama', icon: 'Theater', color: '#8E24AA' },
-  { name: 'Fantasy', slug: 'fantasy', icon: 'Wand2', color: '#5C6BC0' },
-  { name: 'Horror', slug: 'horror', icon: 'Skull', color: '#424242' },
-  { name: 'Isekai', slug: 'isekai', icon: 'Globe', color: '#00ACC1' },
-  { name: 'Martial Arts', slug: 'martial-arts', icon: 'Shield', color: '#F4511E' },
-  { name: 'Mystery', slug: 'mystery', icon: 'Search', color: '#6D4C41' },
-  { name: 'Romance', slug: 'romance', icon: 'Heart', color: '#EC407A' },
-  { name: 'School Life', slug: 'school-life', icon: 'GraduationCap', color: '#26A69A' },
-  { name: 'Sci-Fi', slug: 'sci-fi', icon: 'Rocket', color: '#7E57C2' },
-  { name: 'Slice of Life', slug: 'slice-of-life', icon: 'Coffee', color: '#8D6E63' },
-  { name: 'Sports', slug: 'sports', icon: 'Trophy', color: '#FFB300' },
-  { name: 'Thriller', slug: 'thriller', icon: 'AlertTriangle', color: '#D32F2F' },
-] as const;
 
 export const SORT_OPTIONS = [
   { value: 'latest', label: 'Latest' },

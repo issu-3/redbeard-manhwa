@@ -254,12 +254,28 @@ export default async function ChapterPage({
     orderBy: { createdAt: 'desc' }
   });
 
+  // Fetch User Preferences
+  let userPreferences = {};
+  if (session?.user?.id) {
+    const userRecord = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { preferences: true }
+    });
+    if (userRecord?.preferences) {
+      userPreferences = userRecord.preferences as Record<string, any>;
+    }
+  }
+
+  const settings = await getCachedSettings();
+
   return (
     <ChapterReader 
       chapter={chapter} 
       comments={commentsData} 
       currentUserId={session?.user?.id} 
       adSlot={<AdSlot placement="reader" />}
+      userPreferences={userPreferences}
+      defaultReadingMode={settings.defaultReadingMode || 'vertical'}
     />
   );
 }

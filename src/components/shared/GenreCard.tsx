@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Sword, Compass, Laugh, Drama, Wand2, Skull, Globe, Shield,
-  Search, Heart, GraduationCap, Rocket, Coffee, Trophy, AlertTriangle,
+  Search, Heart, GraduationCap, Rocket, Coffee, Trophy, AlertTriangle, Hash
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 const iconMap: Record<string, LucideIcon> = {
   Sword, Compass, Laugh, Drama, Wand2, Skull, Globe, Shield,
-  Search, Heart, GraduationCap, Rocket, Coffee, Trophy, AlertTriangle,
+  Search, Heart, GraduationCap, Rocket, Coffee, Trophy, AlertTriangle, Hash
 };
 
 interface GenreCardProps {
