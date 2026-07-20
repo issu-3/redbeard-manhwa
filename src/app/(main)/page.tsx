@@ -4,6 +4,7 @@ import { HomepageClient } from './homepage-client';
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData } from '@/lib/data-mappers';
 import { getCachedSettings } from '@/app/actions/public/settings';
+import { AdSlot } from '@/components/ads/AdSlot';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getCachedSettings();
@@ -136,6 +137,7 @@ export default async function HomePage() {
   return (
     <>
       <h1 className="sr-only">REDBEARD - The Ultimate Reading Experience</h1>
+      <AdSlot placement="homepage" />
       <HomepageClient
         sections={activeSections}
         sectionData={sectionData}

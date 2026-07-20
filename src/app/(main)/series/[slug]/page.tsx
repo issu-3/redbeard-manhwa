@@ -266,7 +266,8 @@ export default async function SeriesDetailPage({
 
       {/* ── Main Content (overlapping banner) ─────────────── */}
       <div className="relative -mt-64 z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
+        <AdSlot placement="series" />
+        <div className="flex flex-col md:flex-row gap-8 lg:gap-12 mt-8">
           {/* ── Cover Image ─────────────────────────────── */}
           <div className="shrink-0 flex flex-col items-center md:items-start md:w-[280px] lg:w-[320px]">
             <div className="relative w-[220px] md:w-full aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-border/50">

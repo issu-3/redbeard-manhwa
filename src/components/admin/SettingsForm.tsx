@@ -246,7 +246,7 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                 <div className="bg-background/50 border border-border/50 rounded-lg p-4 space-y-4">
                   <h3 className="text-lg font-semibold text-text-primary border-b border-border/50 pb-2">Placement Manager</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {['header', 'footer', 'sidebar', 'reader'].map(placement => (
+                    {['homepage', 'reader', 'search', 'series', 'sidebar', 'footer'].map(placement => (
                       <div key={placement}>
                         <label className="block text-sm font-medium text-text-primary mb-1 capitalize">{placement} Placement</label>
                         <select

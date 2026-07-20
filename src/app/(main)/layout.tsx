@@ -8,7 +8,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <div className="flex min-h-screen flex-col">
       {/* H3 FIX: JSON-LD removed — already defined in root layout.tsx */}
       <Header />
-      <AdSlot placement="header" />
       <main id="main-content" className="flex-1 pb-20 md:pb-0">{children}</main>
       <AdSlot placement="footer" />
       <Footer />
