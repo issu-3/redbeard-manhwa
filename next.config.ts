@@ -23,12 +23,19 @@ const nextConfig: NextConfig = {
   ],
   images: {
     remotePatterns: [
-      // M7 FIX: Removed picsum.photos
       {
         protocol: 'https',
         hostname: '*.public.blob.vercel-storage.com',
       }
     ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/sitemap.xml',
+        destination: '/sitemap_index.xml',
+      },
+    ];
   },
 };
 
