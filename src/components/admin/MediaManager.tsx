@@ -80,7 +80,9 @@ export function MediaManager({ name, label, recommendedDimensions, defaultValue 
 
       // Upload to API
       const formData = new FormData();
-      formData.append('file', compressedFile);
+      // Ensure we provide a filename, especially if compressedFile is a Blob
+      const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".webp";
+      formData.append('file', compressedFile, newFileName);
 
       const response = await fetch('/api/upload', {
         method: 'POST',
