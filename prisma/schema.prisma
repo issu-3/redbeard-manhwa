@@ -222,7 +222,7 @@ model Series {
 model Chapter {
   id          String    @id @default(cuid())
   seriesId    String
-  number      Float
+  number      Float?
   title       String?
   label       String?
   slug        String
@@ -244,7 +244,7 @@ model Chapter {
   readingHistory ReadingHistory[]
   comments       Comment[]
 
-  @@unique([seriesId, number])
+  @@unique([seriesId, slug])
   @@index([seriesId])
   @@index([publishedAt])
   @@map("chapters")

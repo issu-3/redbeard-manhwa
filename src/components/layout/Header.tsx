@@ -92,9 +92,8 @@ export function Header() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 lg:px-6">
           {/* Logo */}
           <Link href="/" className="group flex shrink-0 items-center gap-2.5">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/25">
-              <BookOpen className="h-5 w-5 text-text-primary" strokeWidth={2.5} />
-              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary to-accent opacity-0 blur-md transition-opacity group-hover:opacity-60" />
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-lg overflow-hidden shadow-lg shadow-primary/25">
+              <Image src="/images/logo.jpg" alt="REDBEARD Logo" fill className="object-cover" />
             </div>
             <span className="bg-gradient-to-r from-text-primary via-white to-text-secondary bg-clip-text text-xl font-extrabold tracking-tight text-transparent">
               {APP_NAME}

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { BookOpen } from 'lucide-react';
 import { APP_NAME, APP_TAGLINE } from '@/lib/constants';
 
@@ -9,8 +10,8 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 lg:px-6">
         <div className="py-12 flex flex-col items-center justify-center text-center">
           <Link href="/" className="group inline-flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/20">
-              <BookOpen className="h-5 w-5 text-text-primary" strokeWidth={2.5} />
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-lg shadow-primary/20">
+              <Image src="/images/logo.jpg" alt="REDBEARD Logo" fill className="object-cover" />
             </div>
             <span className="bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">
               {APP_NAME}
