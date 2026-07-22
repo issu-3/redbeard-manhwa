@@ -15,7 +15,12 @@ export function AdGlobalScripts({
 
   const injectScript = useCallback((html: string) => {
     const temp = document.createElement('div');
-    temp.innerHTML = html;
+    try {
+      temp.innerHTML = atob(html);
+    } catch (e) {
+      console.error('Failed to decode global advertisement payload');
+      return;
+    }
 
     const childNodes = Array.from(temp.childNodes);
     childNodes.forEach(node => {

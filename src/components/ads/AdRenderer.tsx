@@ -52,12 +52,15 @@ export async function AdRenderer({ placement }: { placement: Placement }) {
     return null;
   }
 
+  // Base64 encode the script to prevent WAF/XSS filters from stripping or breaking the Next.js Flight payload
+  const encodedScript = Buffer.from(specificScriptToInject).toString('base64');
+
   if (providerToUse === 'adsterra') {
-    return <AdsterraRenderer placement={placement} html={specificScriptToInject} />;
+    return <AdsterraRenderer placement={placement} html={encodedScript} />;
   }
 
   if (providerToUse === 'monetag') {
-    return <MonetagRenderer placement={placement} html={specificScriptToInject} />;
+    return <MonetagRenderer placement={placement} html={encodedScript} />;
   }
 
   return null;

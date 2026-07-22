@@ -43,7 +43,13 @@ export function MonetagRenderer({ placement, html }: MonetagRendererProps) {
 
     const container = adContentRef.current;
     const temp = document.createElement('div');
-    temp.innerHTML = html;
+    
+    try {
+      temp.innerHTML = atob(html);
+    } catch (e) {
+      console.error('Failed to decode advertisement payload');
+      return;
+    }
 
     const childNodes = Array.from(temp.childNodes);
     childNodes.forEach(node => {

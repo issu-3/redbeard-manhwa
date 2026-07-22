@@ -136,9 +136,9 @@ export default async function RootLayout({
       className={`${inter.variable} ${plusJakarta.variable} ${poppins.variable}`}
     >
       <AdGlobalScripts 
-        adsterraPopunder={settings.ads_enabled_adsterra === 'true' ? settings.ads_adsterra_popunder : null}
-        adsterraSocialBar={settings.ads_enabled_adsterra === 'true' ? settings.ads_adsterra_social_bar : null}
-        monetagGlobal={settings.ads_enabled_monetag === 'true' ? settings.ads_monetag_global_script : null}
+        adsterraPopunder={settings.ads_enabled_adsterra === 'true' && settings.ads_adsterra_popunder ? Buffer.from(settings.ads_adsterra_popunder).toString('base64') : null}
+        adsterraSocialBar={settings.ads_enabled_adsterra === 'true' && settings.ads_adsterra_social_bar ? Buffer.from(settings.ads_adsterra_social_bar).toString('base64') : null}
+        monetagGlobal={settings.ads_enabled_monetag === 'true' && settings.ads_monetag_global_script ? Buffer.from(settings.ads_monetag_global_script).toString('base64') : null}
       />
       <script
         type="application/ld+json"
