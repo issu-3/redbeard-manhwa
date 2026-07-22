@@ -49,14 +49,18 @@ export function MonetagRenderer({ placement, html }: MonetagRendererProps) {
 
   const iframeContent = `
     <!DOCTYPE html>
-    <html style="background: transparent !important;">
+    <html style="background: transparent !important; color-scheme: dark;">
       <head>
         <meta charset="utf-8">
         <style>
+          :root {
+            color-scheme: dark;
+            background: transparent !important;
+          }
           html, body { 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            overflow: hidden !important; 
             background: transparent !important; 
             background-color: transparent !important;
           }
@@ -64,7 +68,13 @@ export function MonetagRenderer({ placement, html }: MonetagRendererProps) {
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            min-height: 100vh; 
+            width: 100%;
+            height: 100%;
+          }
+          /* Force any injected wrapper to be transparent */
+          body > div, body > iframe {
+            background: transparent !important;
+            background-color: transparent !important;
           }
         </style>
       </head>
