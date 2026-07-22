@@ -3,7 +3,7 @@ import { auth } from '@/auth';
 import { put } from '@vercel/blob';
 
 // C4 FIX: Allowed file types and max size
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function POST(req: NextRequest) {
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     // M5 FIX: Validate both MIME type and file extension to prevent spoofing
     const extension = file.name.split('.').pop()?.toLowerCase() || '';
-    const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'];
     
     if (!ALLOWED_TYPES.includes(file.type) || !validExtensions.includes(extension)) {
       return NextResponse.json(
