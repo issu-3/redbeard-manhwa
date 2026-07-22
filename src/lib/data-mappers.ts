@@ -49,12 +49,16 @@ export function toSeriesDetail(series: FullSeries): SeriesDetail {
       .map((c) => ({
         id: c.id,
         number: c.number,
+        label: c.label || undefined,
         title: c.title || undefined,
         slug: c.slug,
         totalPages: c.totalPages,
         totalViews: c.totalViews,
         publishedAt: c.publishedAt?.toISOString(),
         isRead: false,
+        sourceType: c.sourceType || 'UPLOAD',
+        externalUrl: c.externalUrl || undefined,
+        externalProvider: c.externalProvider || undefined,
       })),
     createdAt: series.createdAt.toISOString(),
   };

@@ -20,7 +20,7 @@ export async function getPersonalizedSections(limit: number) {
   const continueReading = history.map(h => ({
     series: toSeriesCardData(h.series),
     chapterNumber: h.chapter?.number || h.pageNumber || 1,
-    chapterLabel: h.chapter?.label,
+    chapterLabel: h.chapter?.sourceType === 'EXTERNAL' ? h.chapter?.label : null,
     progress: Math.min(100, Math.max(5, (h.pageNumber / Math.max(1, h.chapter?.totalPages || 1)) * 100))
   }));
 

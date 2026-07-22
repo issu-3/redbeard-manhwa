@@ -357,6 +357,7 @@ export default async function SeriesDetailPage({
             chapters={series.chapters.map((c: Chapter) => ({
               id: c.id,
               number: c.number,
+              label: c.label || undefined,
               title: c.title || undefined,
               slug: c.slug,
               totalPages: c.totalPages,
