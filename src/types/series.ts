@@ -35,7 +35,7 @@ export interface SeriesDetail extends SeriesCardData {
 
 export interface ChapterListItem {
   id: string;
-  number: number;
+  number: number | null;
   label?: string | null;
   title?: string;
   slug: string;
@@ -53,7 +53,7 @@ export interface ChapterData {
   seriesId: string;
   seriesTitle: string;
   seriesSlug: string;
-  number: number;
+  number: number | null;
   label?: string | null;
   title?: string;
   slug: string;
@@ -62,8 +62,8 @@ export interface ChapterData {
   externalUrl?: string;
   externalProvider?: string;
   images: ChapterImageData[];
-  prevChapter?: { number: number; slug: string };
-  nextChapter?: { number: number; slug: string };
+  prevChapter?: { number: number | null; slug: string };
+  nextChapter?: { number: number | null; slug: string };
   seo?: Record<string, string>;
 }
 

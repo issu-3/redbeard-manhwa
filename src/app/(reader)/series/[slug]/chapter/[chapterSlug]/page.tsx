@@ -10,7 +10,7 @@ import { AdRenderer } from '@/components/ads/AdRenderer';
 
 // ─── Data Fetching ───────────────────────────────────────────────
 
-async function getChapterData(slug: string, number: number): Promise<ChapterData | null> {
+async function getChapterData(slug: string, chapterSlug: string): Promise<ChapterData | null> {
   const series = await prisma.series.findUnique({
     where: { slug },
     select: { id: true, title: true, slug: true },
@@ -20,9 +20,9 @@ async function getChapterData(slug: string, number: number): Promise<ChapterData
 
   const chapter = await prisma.chapter.findUnique({
     where: {
-      seriesId_number: {
+      seriesId_slug: {
         seriesId: series.id,
-        number,
+        slug: chapterSlug,
       },
     },
     include: {
@@ -35,26 +35,32 @@ async function getChapterData(slug: string, number: number): Promise<ChapterData
   if (!chapter) return null;
 
   // Find previous chapter
-  const prevChapter = await prisma.chapter.findFirst({
-    where: {
-      seriesId: series.id,
-      number: { lt: number },
-      isPublished: true,
-    },
-    orderBy: { number: 'desc' },
-    select: { number: true, slug: true },
-  });
+  let prevChapter = null;
+  if (chapter.number !== null) {
+    prevChapter = await prisma.chapter.findFirst({
+      where: {
+        seriesId: series.id,
+        number: { lt: chapter.number },
+        isPublished: true,
+      },
+      orderBy: { number: 'desc' },
+      select: { number: true, slug: true },
+    });
+  }
 
   // Find next chapter
-  const nextChapter = await prisma.chapter.findFirst({
-    where: {
-      seriesId: series.id,
-      number: { gt: number },
-      isPublished: true,
-    },
-    orderBy: { number: 'asc' },
-    select: { number: true, slug: true },
-  });
+  let nextChapter = null;
+  if (chapter.number !== null) {
+    nextChapter = await prisma.chapter.findFirst({
+      where: {
+        seriesId: series.id,
+        number: { gt: chapter.number },
+        isPublished: true,
+      },
+      orderBy: { number: 'asc' },
+      select: { number: true, slug: true },
+    });
+  }
 
   return {
     id: chapter.id,
@@ -68,14 +74,14 @@ async function getChapterData(slug: string, number: number): Promise<ChapterData
     sourceType: chapter.sourceType || 'UPLOAD',
     externalUrl: chapter.externalUrl || undefined,
     externalProvider: chapter.externalProvider || undefined,
-    images: chapter.images.map((img) => ({
+    images: chapter.images?.map((img: any) => ({
       id: img.id,
       pageNumber: img.pageNumber,
       imageUrl: img.imageUrl,
       width: img.width || undefined,
       height: img.height || undefined,
       blurHash: img.blurHash || undefined,
-    })),
+    })) || [],
     prevChapter: prevChapter ? { number: prevChapter.number, slug: prevChapter.slug } : undefined,
     nextChapter: nextChapter ? { number: nextChapter.number, slug: nextChapter.slug } : undefined,
     seo: chapter.seo as Record<string, string> | undefined,
@@ -87,14 +93,11 @@ async function getChapterData(slug: string, number: number): Promise<ChapterData
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string; number: string }>;
+  params: Promise<{ slug: string; chapterSlug: string }>;
 }): Promise<Metadata> {
-  const { slug, number } = await params;
-  const chapterNum = parseFloat(number);
+  const { slug, chapterSlug } = await params;
   
-  if (isNaN(chapterNum)) return { title: 'Chapter Not Found' };
-  
-  const chapter = await getChapterData(slug, chapterNum);
+  const chapter = await getChapterData(slug, chapterSlug);
   const settings = await getCachedSettings();
   
   if (!chapter) return { title: 'Chapter Not Found' };
@@ -102,9 +105,9 @@ export async function generateMetadata({
   const seo = chapter.seo || {};
   const siteTitle = settings.seo_site_title || 'REDBEARD';
   
-  const defaultTitle = `${chapter.seriesTitle} Chapter ${chapter.number} - Read Online | ${settings.siteName || 'REDBEARD'}`;
-  const defaultDesc = `Read ${chapter.seriesTitle} Chapter ${chapter.number}${chapter.title ? ` - ${chapter.title}` : ''} online on ${settings.siteName || 'REDBEARD'}. High quality manhwa reading experience.`;
-  const defaultUrl = `${APP_URL}/series/${slug}/chapter/${number}`;
+  const defaultTitle = `${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`} - Read Online | ${settings.siteName || 'REDBEARD'}`;
+  const defaultDesc = `Read ${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} online on ${settings.siteName || 'REDBEARD'}. High quality manhwa reading experience.`;
+  const defaultUrl = `${APP_URL}/series/${slug}/chapter/${chapterSlug}`;
   const defaultImage = chapter.images.length > 0 ? chapter.images[0].imageUrl : undefined;
 
   const title = seo.title || defaultTitle;
@@ -144,16 +147,11 @@ export async function generateMetadata({
 export default async function ChapterPage({
   params,
 }: {
-  params: Promise<{ slug: string; number: string }>;
+  params: Promise<{ slug: string; chapterSlug: string }>;
 }) {
-  const { slug, number } = await params;
-  const chapterNum = parseFloat(number);
+  const { slug, chapterSlug } = await params;
   
-  if (isNaN(chapterNum)) {
-    notFound();
-  }
-
-  const chapter = await getChapterData(slug, chapterNum);
+  const chapter = await getChapterData(slug, chapterSlug);
   if (!chapter) {
     notFound();
   }

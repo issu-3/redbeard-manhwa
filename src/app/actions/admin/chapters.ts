@@ -45,15 +45,20 @@ export async function createChapter(seriesId: string, formData: FormData) {
   const externalProvider = formData.get('externalProvider') as string;
   const externalUrl = formData.get('externalUrl') as string;
   let label = formData.get('label') as string | null;
-  let number = parseFloat(formData.get('number') as string);
+  let numberStr = formData.get('number') as string;
+  let number: number | null = numberStr ? parseFloat(numberStr) : null;
   
-  if (isNaN(number)) {
-    throw new Error('Chapter number is required and must be a valid number for sorting.');
+  if (sourceType === 'EXTERNAL') {
+    number = null; // Enforce null number for external links
+    if (!label) throw new Error('Chapter label is required for external links.');
+  } else {
+    label = null;
+    if (number === null || isNaN(number)) {
+      throw new Error('Chapter number is required and must be a valid number for sorting.');
+    }
   }
 
-  if (sourceType !== 'EXTERNAL') {
-    label = null;
-  }
+  const slug = sourceType === 'EXTERNAL' ? `chapter-${label!.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : `chapter-${number}`;
 
   try {
     await prisma.chapter.create({
@@ -62,7 +67,7 @@ export async function createChapter(seriesId: string, formData: FormData) {
         number,
         label,
         title: title || undefined,
-        slug: `chapter-${number}`,
+        slug,
         totalPages: sourceType === 'EXTERNAL' ? 0 : imageUrls.length,
         isPublished,
         publishedAt: isPublished ? new Date() : null,
@@ -112,15 +117,20 @@ export async function updateChapter(chapterId: string, seriesId: string, formDat
   const externalProvider = formData.get('externalProvider') as string;
   const externalUrl = formData.get('externalUrl') as string;
   let label = formData.get('label') as string | null;
-  let number = parseFloat(formData.get('number') as string);
+  let numberStr = formData.get('number') as string;
+  let number: number | null = numberStr ? parseFloat(numberStr) : null;
   
-  if (isNaN(number)) {
-    throw new Error('Chapter number is required and must be a valid number for sorting.');
+  if (sourceType === 'EXTERNAL') {
+    number = null; // Enforce null number for external links
+    if (!label) throw new Error('Chapter label is required for external links.');
+  } else {
+    label = null;
+    if (number === null || isNaN(number)) {
+      throw new Error('Chapter number is required and must be a valid number for sorting.');
+    }
   }
 
-  if (sourceType !== 'EXTERNAL') {
-    label = null;
-  }
+  const slug = sourceType === 'EXTERNAL' ? `chapter-${label!.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : `chapter-${number}`;
 
   try {
     await prisma.$transaction([
@@ -131,7 +141,7 @@ export async function updateChapter(chapterId: string, seriesId: string, formDat
           number,
           label,
           title: title || undefined,
-          slug: `chapter-${number}`,
+          slug,
           totalPages: sourceType === 'EXTERNAL' ? 0 : imageUrls.length,
           isPublished,
           publishedAt: isPublished ? new Date() : null,

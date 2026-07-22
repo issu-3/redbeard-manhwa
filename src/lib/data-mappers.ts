@@ -45,7 +45,7 @@ export function toSeriesDetail(series: FullSeries): SeriesDetail {
     authors: series.authors.map((a) => ({ name: a.name, slug: a.slug })),
     artists: series.artists.map((a) => ({ name: a.name, slug: a.slug })),
     chapters: series.chapters
-      .sort((a, b) => b.number - a.number)
+      .sort((a, b) => (b.number ?? 0) - (a.number ?? 0))
       .map((c) => ({
         id: c.id,
         number: c.number,

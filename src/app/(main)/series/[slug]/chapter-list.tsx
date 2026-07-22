@@ -33,20 +33,21 @@ export function ChapterListSection({
       const q = searchQuery.trim().toLowerCase();
       filtered = filtered.filter(
         (ch) =>
-          ch.number.toString().includes(q) ||
-          ch.title?.toLowerCase().includes(q)
+          ch.number?.toString().includes(q) ||
+          ch.title?.toLowerCase().includes(q) ||
+          ch.label?.toLowerCase().includes(q)
       );
     }
 
     filtered.sort((a, b) =>
-      sortAsc ? a.number - b.number : b.number - a.number
+      sortAsc ? (a.number ?? 0) - (b.number ?? 0) : (b.number ?? 0) - (a.number ?? 0)
     );
 
     return filtered;
   }, [chapters, sortAsc, searchQuery]);
 
   // Identify the latest chapter globally to highlight it
-  const latestChapterNumber = chapters.length > 0 ? Math.max(...chapters.map(c => c.number)) : null;
+  const latestChapterNumber = chapters.length > 0 ? Math.max(...chapters.map(c => c.number ?? 0)) : null;
 
   return (
     <div>
@@ -103,7 +104,7 @@ export function ChapterListSection({
                   transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.2) }}
                 >
                   <Link
-                    href={chapter.sourceType === 'EXTERNAL' && chapter.externalUrl ? chapter.externalUrl : `/series/${seriesSlug}/chapter/${chapter.number}`}
+                    href={chapter.sourceType === 'EXTERNAL' && chapter.externalUrl ? chapter.externalUrl : `/series/${seriesSlug}/chapter/${chapter.slug}`}
                     target={chapter.sourceType === 'EXTERNAL' ? '_blank' : undefined}
                     rel={chapter.sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
                     className={cn(
