@@ -25,7 +25,9 @@ export async function POST(req: NextRequest) {
     const extension = file.name.split('.').pop()?.toLowerCase() || '';
     const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'];
     
-    if (!ALLOWED_TYPES.includes(file.type) || !validExtensions.includes(extension)) {
+    const isAllowedMime = ALLOWED_TYPES.includes(file.type) || file.type === 'application/octet-stream' || !file.type;
+    
+    if (!isAllowedMime || !validExtensions.includes(extension)) {
       return NextResponse.json(
         { error: `Invalid file type. Allowed extensions: ${validExtensions.join(', ')}` },
         { status: 400 }
