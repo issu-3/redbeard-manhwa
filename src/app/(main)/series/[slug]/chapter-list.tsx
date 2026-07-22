@@ -126,7 +126,7 @@ export function ChapterListSection({
                           "font-bold truncate transition-colors",
                           isLatest ? "text-primary" : "text-text-primary group-hover:text-primary"
                         )}>
-                          Chapter {chapter.number}
+                          {chapter.label ? chapter.label : `Chapter ${chapter.number}`}
                         </h3>
                         {chapter.title && (
                           <p className="text-xs text-text-secondary truncate mt-0.5">

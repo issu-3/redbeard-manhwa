@@ -224,6 +224,7 @@ model Chapter {
   seriesId    String
   number      Float
   title       String?
+  label       String?
   slug        String
   totalPages  Int       @default(0)
   totalViews  Int       @default(0)

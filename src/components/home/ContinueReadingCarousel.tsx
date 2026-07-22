@@ -9,6 +9,7 @@ import type { SeriesCardData } from '@/types';
 export interface ContinueReadingItem {
   series: SeriesCardData;
   chapterNumber: number;
+  chapterLabel?: string | null;
   progress: number;
 }
 
@@ -38,7 +39,7 @@ export function ContinueReadingCarousel({ items }: { items: ContinueReadingItem[
                   {item.series.title}
                 </h3>
                 <span className="text-xs font-medium text-text-muted">
-                  Chapter {item.chapterNumber}
+                  {item.chapterLabel || `Chapter ${item.chapterNumber}`}
                 </span>
               </div>
             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface MonetagRendererProps {
   placement: string;
@@ -15,9 +15,16 @@ const FallbackPlaceholder = () => (
 
 export function MonetagRenderer({ placement, html }: MonetagRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const adContentRef = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
-  const injectedRef = useRef(false);
+  const [decodedHtml, setDecodedHtml] = useState('');
+
+  useEffect(() => {
+    try {
+      setDecodedHtml(atob(html));
+    } catch (e) {
+      console.error('Failed to decode ad payload');
+    }
+  }, [html]);
 
   useEffect(() => {
     const currentRef = containerRef.current;
@@ -37,61 +44,36 @@ export function MonetagRenderer({ placement, html }: MonetagRendererProps) {
     return () => observer.disconnect();
   }, []);
 
-  const injectAdScripts = useCallback(() => {
-    if (injectedRef.current || !adContentRef.current || !html) return;
-    injectedRef.current = true;
-
-    const container = adContentRef.current;
-    const temp = document.createElement('div');
-    
-    try {
-      temp.innerHTML = atob(html);
-    } catch (e) {
-      console.error('Failed to decode advertisement payload');
-      return;
-    }
-
-    const childNodes = Array.from(temp.childNodes);
-    childNodes.forEach(node => {
-      if (node.nodeName.toLowerCase() !== 'script') {
-        container.appendChild(node.cloneNode(true));
-      }
-    });
-
-    const scriptElements = temp.querySelectorAll('script');
-    scriptElements.forEach(originalScript => {
-      const executableScript = document.createElement('script');
-      
-      Array.from(originalScript.attributes).forEach(attr => {
-        executableScript.setAttribute(attr.name, attr.value);
-      });
-
-      if (originalScript.textContent) {
-        executableScript.textContent = originalScript.textContent;
-      }
-
-      container.appendChild(executableScript);
-    });
-  }, [html]);
-
-  useEffect(() => {
-    if (!isInView || !html) return;
-    const timer = requestAnimationFrame(() => injectAdScripts());
-    return () => cancelAnimationFrame(timer);
-  }, [isInView, html, injectAdScripts]);
-
   const minHeightClass = 'min-h-[90px]';
   const containerClass = `w-full overflow-hidden flex justify-center my-4 ad-container relative ${minHeightClass} items-center`;
+
+  const iframeContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { margin: 0; padding: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; background: transparent; }
+        </style>
+      </head>
+      <body>
+        ${decodedHtml}
+      </body>
+    </html>
+  `;
 
   return (
     <div ref={containerRef} className={containerClass} data-provider="monetag">
       <FallbackPlaceholder />
-      {isInView && html ? (
-        <div
-          ref={adContentRef}
-          className="relative z-10 w-full flex justify-center"
-          data-ad-placement={placement}
-        />
+      {isInView && decodedHtml ? (
+        <div className="relative z-10 w-full flex justify-center" data-ad-placement={placement}>
+          <iframe
+            srcDoc={iframeContent}
+            style={{ width: '100%', minHeight: '90px', border: 'none', overflow: 'hidden', background: 'transparent' }}
+            scrolling="no"
+            title="Advertisement"
+          />
+        </div>
       ) : null}
     </div>
   );

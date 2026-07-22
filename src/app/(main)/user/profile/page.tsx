@@ -206,7 +206,7 @@ export default async function ProfilePage() {
                     <div className="flex flex-col justify-center">
                       <h3 className="font-semibold line-clamp-1">{item.series.title}</h3>
                       <p className="text-sm text-primary mb-1">
-                        Chapter {item.chapter.number} {item.chapter.title ? `- ${item.chapter.title}` : ''}
+                        {item.chapter.label || `Chapter ${item.chapter.number}`} {item.chapter.title ? `- ${item.chapter.title}` : ''}
                       </p>
                       <div className="flex items-center text-xs text-muted-foreground">
                         <Clock className="w-3 h-3 mr-1" />

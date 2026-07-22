@@ -170,17 +170,34 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="text-sm font-semibold">Chapter Number *</label>
-          <input 
-            name="number" 
-            type="number"
-            step="0.1"
-            defaultValue={chapter?.number}
-            required 
-            className="w-full rounded-lg border border-border bg-card px-4 py-2" 
-            placeholder="e.g. 1 or 1.5" 
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-semibold">Chapter Number *</label>
+            <input 
+              name="number" 
+              type="number" 
+              step="any" 
+              required 
+              defaultValue={chapter?.number}
+              className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25"
+              placeholder="e.g. 1" 
+            />
+            <p className="text-xs text-text-muted">Used for sorting chapters</p>
+          </div>
+
+          {sourceType === 'EXTERNAL' && (
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-semibold">Chapter Label (Optional)</label>
+              <input 
+                name="label" 
+                type="text" 
+                defaultValue={chapter?.label || ''}
+                className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25"
+                placeholder="e.g. Prologue, 1-7, Extra" 
+              />
+              <p className="text-xs text-text-muted">This will be shown to users instead of the number</p>
+            </div>
+          )}
         </div>
         
         <div className="space-y-2">

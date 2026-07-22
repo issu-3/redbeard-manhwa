@@ -50,7 +50,7 @@ export default async function AdminChaptersPage({ params }: { params: Promise<{ 
               {series.chapters.map((chapter) => (
                 <tr key={chapter.id} className="hover:bg-surface/50 transition-colors">
                   <td className="px-6 py-4 font-bold text-text-primary flex items-center gap-2">
-                    Chapter {chapter.number}
+                    {chapter.label || `Chapter ${chapter.number}`}
                     {chapter.sourceType === 'EXTERNAL' && <span title={`External Link: ${chapter.externalProvider}`}><LinkIcon className="h-4 w-4 text-primary" /></span>}
                   </td>
                   <td className="px-6 py-4 text-text-secondary">{chapter.title || '-'}</td>

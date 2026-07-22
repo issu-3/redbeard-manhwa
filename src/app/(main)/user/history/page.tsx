@@ -73,10 +73,10 @@ export default async function HistoryPage() {
                   <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1 font-medium text-foreground">
                       <BookOpen className="w-3.5 h-3.5" />
-                      Chapter {item.chapter.number}
+                      {item.chapter.label || `Chapter ${item.chapter.number}`}
                     </span>
                     <span>•</span>
-                    <span className="line-clamp-1">{item.chapter.title || `Chapter ${item.chapter.number}`}</span>
+                    <span className="line-clamp-1">{item.chapter.title || item.chapter.label || `Chapter ${item.chapter.number}`}</span>
                   </div>
                 </div>
                 

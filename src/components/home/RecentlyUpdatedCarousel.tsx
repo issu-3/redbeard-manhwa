@@ -10,6 +10,7 @@ import type { SeriesCardData } from '@/types';
 export interface RecentUpdate {
   series: SeriesCardData;
   chapterNumber: number;
+  chapterLabel?: string | null;
   publishedAt: string;
 }
 
@@ -35,12 +36,12 @@ export function RecentlyUpdatedCarousel({ updates }: { updates: RecentUpdate[] }
               <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-60 transition-opacity group-hover:opacity-80" />
               
               <div className="absolute bottom-3 left-3 right-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="rounded bg-primary px-2 py-0.5 text-xs font-bold text-white shadow-sm">
-                    Ch. {update.chapterNumber}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 text-[10px] font-medium text-white/80">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="truncate rounded bg-primary px-2 py-0.5 text-xs font-bold text-white shadow-sm">
+                      {update.chapterLabel || `Ch. ${update.chapterNumber}`}
+                    </span>
+                  </div>
+                <div className="flex items-center gap-1 text-[10px] font-medium text-white/80 mt-2">
                   <Clock className="h-3 w-3" />
                   <span suppressHydrationWarning>{formatRelativeTime(update.publishedAt)}</span>
                 </div>

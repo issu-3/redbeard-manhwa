@@ -36,6 +36,7 @@ export interface SeriesDetail extends SeriesCardData {
 export interface ChapterListItem {
   id: string;
   number: number;
+  label?: string | null;
   title?: string;
   slug: string;
   totalPages: number;
@@ -53,6 +54,7 @@ export interface ChapterData {
   seriesTitle: string;
   seriesSlug: string;
   number: number;
+  label?: string | null;
   title?: string;
   slug: string;
   totalPages: number;

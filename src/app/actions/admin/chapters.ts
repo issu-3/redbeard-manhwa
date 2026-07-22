@@ -33,7 +33,6 @@ export async function deleteChapter(chapterId: string, seriesId: string) {
 export async function createChapter(seriesId: string, formData: FormData) {
   await checkAdmin();
 
-  const number = parseFloat(formData.get('number') as string);
   const title = formData.get('title') as string;
   const isPublished = formData.get('isPublished') === 'on' || formData.get('isPublished') === 'true';
   const sourceType = (formData.get('sourceType') as string) || 'UPLOAD';
@@ -45,12 +44,23 @@ export async function createChapter(seriesId: string, formData: FormData) {
   // External logic
   const externalProvider = formData.get('externalProvider') as string;
   const externalUrl = formData.get('externalUrl') as string;
+  let label = formData.get('label') as string | null;
+  let number = parseFloat(formData.get('number') as string);
+  
+  if (isNaN(number)) {
+    throw new Error('Chapter number is required and must be a valid number for sorting.');
+  }
+
+  if (sourceType !== 'EXTERNAL') {
+    label = null;
+  }
 
   try {
     await prisma.chapter.create({
       data: {
         seriesId,
         number,
+        label,
         title: title || undefined,
         slug: `chapter-${number}`,
         totalPages: sourceType === 'EXTERNAL' ? 0 : imageUrls.length,
@@ -90,7 +100,6 @@ export async function createChapter(seriesId: string, formData: FormData) {
 export async function updateChapter(chapterId: string, seriesId: string, formData: FormData) {
   await checkAdmin();
 
-  const number = parseFloat(formData.get('number') as string);
   const title = formData.get('title') as string;
   const isPublished = formData.get('isPublished') === 'on' || formData.get('isPublished') === 'true';
   const sourceType = (formData.get('sourceType') as string) || 'UPLOAD';
@@ -102,6 +111,16 @@ export async function updateChapter(chapterId: string, seriesId: string, formDat
   // External logic
   const externalProvider = formData.get('externalProvider') as string;
   const externalUrl = formData.get('externalUrl') as string;
+  let label = formData.get('label') as string | null;
+  let number = parseFloat(formData.get('number') as string);
+  
+  if (isNaN(number)) {
+    throw new Error('Chapter number is required and must be a valid number for sorting.');
+  }
+
+  if (sourceType !== 'EXTERNAL') {
+    label = null;
+  }
 
   try {
     await prisma.$transaction([
@@ -110,6 +129,7 @@ export async function updateChapter(chapterId: string, seriesId: string, formDat
         where: { id: chapterId },
         data: {
           number,
+          label,
           title: title || undefined,
           slug: `chapter-${number}`,
           totalPages: sourceType === 'EXTERNAL' ? 0 : imageUrls.length,

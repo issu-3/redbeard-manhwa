@@ -89,6 +89,7 @@ export default async function HomePage() {
         data = Array.from(unique.values()).slice(0, sec.limit).map((ch: any) => ({
           series: toSeriesCardData(ch.series),
           chapterNumber: ch.number,
+          chapterLabel: ch.label,
           publishedAt: ch.publishedAt?.toISOString() || ch.createdAt.toISOString()
         }));
       } else if (!sec.isManual) {
