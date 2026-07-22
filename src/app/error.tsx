@@ -37,7 +37,7 @@ export default function Error({
         <p className="max-w-md text-text-secondary">
           An unexpected error occurred. Please try again.
         </p>
-        {process.env.NODE_ENV === 'development' || true ? (
+        {process.env.NODE_ENV === 'development' ? (
           <div className="max-w-xl w-full p-4 mt-4 bg-surface/50 border border-border/50 rounded-lg text-left overflow-auto">
             <p className="font-mono text-sm text-danger/90 whitespace-pre-wrap">
               {error.message || 'Unknown Error'}

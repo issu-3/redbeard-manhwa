@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { UploadCloud, Image as ImageIcon, Link as LinkIcon, X, Check, Copy, ExternalLink, Download, RefreshCw, AlertCircle } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 
@@ -170,14 +171,14 @@ export function MediaManager({ name, label, recommendedDimensions, defaultValue 
       )}
 
       {finalUrl ? (
-        <div className="relative group rounded-xl border border-border overflow-hidden bg-surface">
-          <img 
+        <div className="relative group rounded-xl border border-border overflow-hidden bg-surface aspect-video">
+          <Image 
             src={finalUrl} 
-            alt="Preview" 
-            className="w-full h-48 object-cover opacity-90 group-hover:opacity-100 transition-opacity" 
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x400?text=Invalid+Image+URL';
-            }}
+            alt="Preview"
+            fill
+            className="object-cover opacity-90 group-hover:opacity-100 transition-opacity" 
+            sizes="(max-width: 768px) 100vw, 33vw"
+            unoptimized
           />
           
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-4">

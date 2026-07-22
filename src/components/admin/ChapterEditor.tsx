@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 import { useState, useTransition } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -39,7 +41,7 @@ function SortableImage({ id, url, pageNumber, onRemove, onReplace }: any) {
 
   return (
     <div ref={setNodeRef} style={style} className={`relative group rounded-lg overflow-hidden border-2 ${isDragging ? 'border-primary shadow-xl opacity-80' : 'border-border'} bg-card aspect-[2/3]`}>
-      <img src={url} alt={`Page ${pageNumber}`} className="w-full h-full object-cover pointer-events-none" />
+      <Image src={url} alt={`Page ${pageNumber}`} fill className="object-cover pointer-events-none" sizes="(max-width: 768px) 33vw, 16vw" unoptimized />
       
       <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-mono px-2 py-1 rounded">
         {pageNumber}

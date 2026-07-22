@@ -128,9 +128,20 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
          // Only apply default if they don't have local preferences and no server preferences
          setMode(defaultReadingMode as ReaderMode);
       }
+      
+      // Fire and forget view tracking to avoid blocking server-side rendering
+      fetch('/api/tracking/view', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chapterId: chapter.id,
+          seriesId: chapter.seriesId
+        })
+      }).catch(err => console.error('Failed to track view:', err));
+
       isInitializedRef.current = true;
     }
-  }, [chapter.id, chapter.images.length, setTotalPages, setCurrentPage, userPreferences, defaultReadingMode, setMode, setDirection, setFitMode, setBrightness, setContrast, setSepia, setAutoScrollSpeed, toggleAutoNextChapter]);
+  }, [chapter.id, chapter.images.length, setTotalPages, setCurrentPage, userPreferences, defaultReadingMode, setMode, setDirection, setFitMode, setBrightness, setContrast, setSepia, setAutoScrollSpeed, toggleAutoNextChapter, chapter.seriesId]);
 
   // Sync back to server
   useEffect(() => {

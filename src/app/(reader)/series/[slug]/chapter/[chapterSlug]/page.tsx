@@ -184,54 +184,8 @@ export default async function ChapterPage({
     redirect(chapter.externalUrl);
   }
 
-  // Record reading history in the background for regular chapters
-  const session = await auth();
-  if (session?.user?.id) {
-    try {
-      await prisma.readingHistory.upsert({
-        where: {
-          userId_chapterId: {
-            userId: session.user.id,
-            chapterId: chapter.id,
-          },
-        },
-        create: {
-          userId: session.user.id,
-          chapterId: chapter.id,
-          seriesId: chapter.seriesId,
-          pageNumber: 1,
-        },
-        update: {
-          updatedAt: new Date(),
-          // We don't overwrite pageNumber here, as they might have been further along.
-          // Tracking actual scroll position requires a client-side API call.
-        },
-      });
-      
-      // Update lastReadAt on user
-      await prisma.user.update({
-        where: { id: session.user.id },
-        data: { lastReadAt: new Date() }
-      });
-    } catch (e) {
-      console.error('Failed to update reading history:', e);
-    }
-  }
-  
-  // Increment chapter view count
-  try {
-    await prisma.chapter.update({
-      where: { id: chapter.id },
-      data: { totalViews: { increment: 1 } }
-    });
-    // Also increment series view count
-    await prisma.series.update({
-      where: { id: chapter.seriesId },
-      data: { totalViews: { increment: 1 } }
-    });
-  } catch (e) {
-    console.error('Failed to increment view count:', e);
-  }
+  // Reading history and view tracking is now handled asynchronously via client-side API call
+  // to prevent blocking the server render thread (TTFB optimization).
 
   // Fetch comments
   const commentsData = await prisma.comment.findMany({
@@ -252,6 +206,8 @@ export default async function ChapterPage({
     orderBy: { createdAt: 'desc' }
   });
 
+  const session = await auth();
+  
   // Fetch User Preferences
   let userPreferences = {};
   if (session?.user?.id) {

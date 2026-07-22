@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Camera, Save, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -131,10 +132,13 @@ export function ProfileForm({ user }: ProfileFormProps) {
               onClick={handleAvatarClick}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
+              <Image 
                 src={avatarPreview || user.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${user.id}`} 
                 alt="Avatar" 
-                className="w-full h-full object-cover"
+                fill
+                sizes="128px"
+                unoptimized
+                className="object-cover"
               />
               <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera className="w-6 h-6 text-white mb-1" />

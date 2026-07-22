@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft } from 'lucide-react';
 
 export default async function PreviewChapterPage({ params }: { params: Promise<{ id: string; chapterId: string }> }) {
@@ -49,12 +50,14 @@ export default async function PreviewChapterPage({ params }: { params: Promise<{
         ) : (
           <div className="w-full flex flex-col max-w-[800px] mx-auto gap-1 bg-black">
             {chapter.images.map((img) => (
-              <img 
+              <Image 
                 key={img.id} 
                 src={img.imageUrl} 
-                alt={`Page ${img.pageNumber}`} 
-                className="w-full object-contain pointer-events-none select-none"
-                loading="lazy"
+                alt={`Page ${img.pageNumber}`}
+                width={800}
+                height={1200} 
+                className="w-full h-auto object-contain pointer-events-none select-none"
+                unoptimized
               />
             ))}
           </div>

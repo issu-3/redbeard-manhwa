@@ -1,41 +1,32 @@
-import NextAuth from 'next-auth';
-import { authConfig } from './auth.config';
-import { NextResponse } from 'next/server';
-
-// Initialize NextAuth with Edge-compatible config
-const { auth } = NextAuth(authConfig);
+import { auth } from '@/auth';
 
 export default auth((req) => {
-  const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
-  const role = req.auth?.user?.role;
-  const isAuthRoute = nextUrl.pathname.startsWith('/api/auth');
-  const isAdminRoute = nextUrl.pathname.startsWith('/admin');
+  const isApiAuthRoute = req.nextUrl.pathname.startsWith('/api/auth');
+  const isAdminRoute = req.nextUrl.pathname.startsWith('/admin');
+  const isAdminApiRoute = req.nextUrl.pathname.startsWith('/api/admin');
 
-  // Allow auth routes to always process
-  if (isAuthRoute) {
-    return NextResponse.next();
+  if (isApiAuthRoute) {
+    return;
   }
 
-  // Protect Admin routes
-  if (isAdminRoute) {
+  if (isAdminRoute || isAdminApiRoute) {
     if (!isLoggedIn) {
-      return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(nextUrl.pathname)}`, req.url));
+      let callbackUrl = req.nextUrl.pathname;
+      if (req.nextUrl.search) {
+        callbackUrl += req.nextUrl.search;
+      }
+      return Response.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`, req.nextUrl));
     }
 
-    if (role === 'USER') {
-      // Forbidden: redirect to home or an unauthorized page
-      return NextResponse.redirect(new URL('/', req.url));
+    if (req.auth?.user?.role !== 'ADMIN') {
+      return Response.redirect(new URL('/', req.nextUrl));
     }
   }
 
-  const response = NextResponse.next();
-  // Security headers are set in next.config.ts — no duplication here (L1 fix)
-  
-  return response;
+  return;
 });
 
-// C1 FIX: Corrected matcher regex — was using quadruple-escaped backslashes
 export const config = {
-  matcher: ['/((?!.+\\.[\\w]+$|_next).*)' , '/', '/(api|trpc)(.*)'],
+  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
 };

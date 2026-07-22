@@ -1,8 +1,10 @@
 export const revalidate = 3600;
 import { Metadata } from 'next';
 import { HomepageClient } from './homepage-client';
-import { prisma } from '@/lib/prisma';
 import { toSeriesCardData } from '@/lib/data-mappers';
+import { Prisma, HomepageSection } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import type { SeriesCardData } from '@/types';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdRenderer } from '@/components/ads/AdRenderer';
 
@@ -16,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   // 1. Fetch active sections sorted by order
-  let allSections: any[] = [];
+  let allSections: HomepageSection[] = [];
   try {
     allSections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
   } catch (error) {
@@ -35,11 +37,10 @@ export default async function HomePage() {
   }
   const activeSections = allSections.filter(s => s.isActive).sort((a, b) => a.order - b.order);
 
-  // 2. Fetch static data for each active section
-  const sectionData: Record<string, any[]> = {};
+  const sectionData: Record<string, unknown[]> = {};
 
   const sectionPromises = activeSections.map(async (sec) => {
-    let data: any[] = [];
+    let data: unknown[] = [];
     try {
       if (sec.type === 'HERO_BANNER') {
         const banners = await prisma.heroBanner.findMany({ orderBy: { order: 'asc' } });
@@ -62,8 +63,8 @@ export default async function HomePage() {
           include: { genres: true }
         });
         const seriesMap = new Map(seriesList.map(s => [s.id, s]));
-        const ordered = (sec.manualSeriesId as string[]).map((id: string) => seriesMap.get(id)).filter(Boolean);
-        data = ordered.map((s: any) => toSeriesCardData(s));
+        const ordered = (sec.manualSeriesId as string[]).map((id: string) => seriesMap.get(id)).filter((s): s is Prisma.SeriesGetPayload<{ include: { genres: true } }> => Boolean(s));
+        data = ordered.map(s => toSeriesCardData(s));
       } else if (sec.type === 'CONTINUE_READING') {
         // Dynamic data fetched client-side via getPersonalizedSections
         data = [];
@@ -82,11 +83,11 @@ export default async function HomePage() {
           take: sec.limit * 2,
           include: { series: { include: { genres: true } } }
         });
-        const unique = new Map();
+        const unique = new Map<string, typeof chapters[0]>();
         for (const ch of chapters) {
           if (!unique.has(ch.seriesId)) unique.set(ch.seriesId, ch);
         }
-        data = Array.from(unique.values()).slice(0, sec.limit).map((ch: any) => ({
+        data = Array.from(unique.values()).slice(0, sec.limit).map((ch) => ({
           series: toSeriesCardData(ch.series),
           chapterNumber: ch.number,
           chapterLabel: ch.sourceType === 'EXTERNAL' ? ch.label : null,
@@ -94,7 +95,7 @@ export default async function HomePage() {
         }));
       } else if (!sec.isManual) {
         // General fallback using the automated query
-        let automated: any[] = [];
+        let automated: Prisma.SeriesGetPayload<{ include: { genres: true } }>[] = [];
         if (sec.type === 'TRENDING') {
           const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
           const topReads = await prisma.readingHistory.groupBy({
@@ -104,21 +105,20 @@ export default async function HomePage() {
             orderBy: { _count: { seriesId: 'desc' } },
             take: sec.limit
           });
-          if (topReads.length > 0) {
-            const seriesIds = topReads.map((t: any) => t.seriesId);
-            const foundSeries = await prisma.series.findMany({
-              where: { id: { in: seriesIds } },
-              include: { genres: true }
-            });
-            const seriesMap = new Map(foundSeries.map(s => [s.id, s]));
-            automated = seriesIds.map((id: string) => seriesMap.get(id)).filter(Boolean);
-          } else {
+            if (topReads.length > 0) {
+              const seriesIds = topReads.map((t) => t.seriesId);
+              const foundSeries = await prisma.series.findMany({
+                where: { id: { in: seriesIds } },
+                include: { genres: true }
+              });
+              const seriesMap = new Map(foundSeries.map(s => [s.id, s]));
+              automated = seriesIds.map((id: string) => seriesMap.get(id)).filter((s): s is Prisma.SeriesGetPayload<{ include: { genres: true } }> => Boolean(s));
+            } else {
             automated = await prisma.series.findMany({ orderBy: { totalViews: 'desc' }, include: { genres: true }, take: sec.limit });
           }
-        } else if (sec.type === 'FEATURED') {
           automated = await prisma.series.findMany({ where: { isFeatured: true }, include: { genres: true }, take: sec.limit });
         }
-        data = automated.map((s: any) => toSeriesCardData(s));
+        data = automated.map(s => toSeriesCardData(s));
       }
     } catch (e) {
       console.warn(`Database unreachable during static generation for section ${sec.type}`);

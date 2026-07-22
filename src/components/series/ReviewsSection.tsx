@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { Star, MessageSquare, Trash2, Edit2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -253,11 +254,14 @@ export function ReviewsSection({
               <div key={review.id} className="p-5 rounded-xl border border-border bg-card">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-muted">
-                      <img
+                    <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted">
+                      <Image
                         src={review.user.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${review.user.id}`}
                         alt={review.user.displayName || review.user.username || 'User'}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="40px"
+                        unoptimized
+                        className="object-cover"
                       />
                     </div>
                     <div>

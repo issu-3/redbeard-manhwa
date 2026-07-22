@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition, useMemo } from 'react';
+import Image from 'next/image';
 import { Settings, Plus, Trash2, Search, GripVertical, Eye, EyeOff } from 'lucide-react';
 import { SortableList } from './SortableList';
 import { 
@@ -378,7 +379,9 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                     renderItem={(series) => (
                       <div className="flex items-center justify-between w-full pr-2 py-1">
                         <div className="flex items-center gap-3">
-                          <img src={series.coverImage} className="w-8 h-12 object-cover rounded" alt="cover"/>
+                          <div className="relative w-8 h-12">
+                            <Image src={series.coverImage} fill className="object-cover rounded" alt="cover" sizes="32px" unoptimized />
+                          </div>
                           <span className="text-sm font-medium">{series.title}</span>
                         </div>
                         <button onClick={() => handleRemoveManual(activeSection.type, series.id)} className="text-error hover:bg-error/10 p-1.5 rounded">
@@ -401,7 +404,9 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                   renderItem={(banner) => (
                     <div className="flex items-center justify-between w-full pr-2 py-1">
                       <div className="flex items-center gap-4">
-                        <img src={banner.desktopImage} className="w-20 h-10 object-cover rounded-md border border-border" alt="banner" />
+                        <div className="relative w-20 h-10">
+                          <Image src={banner.desktopImage} fill className="object-cover rounded-md border border-border" alt="banner" sizes="80px" unoptimized />
+                        </div>
                         <div>
                           <h4 className="font-semibold text-xs">{banner.title || 'Untitled'}</h4>
                         </div>

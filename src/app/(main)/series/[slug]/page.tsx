@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 import type { Metadata } from 'next';
 import Image from 'next/image';
@@ -17,7 +17,7 @@ import { ChapterListSection } from './chapter-list';
 import { prisma } from '@/lib/prisma';
 import type { SeriesCardData } from '@/types';
 import type { Series, Genre, Chapter } from '@prisma/client';
-import { auth } from '@/auth';
+import { SeriesActionsClient } from '@/components/series/SeriesActionsClient';
 import { DescriptionClient } from './description-client';
 import { ReviewsSection } from '@/components/series/ReviewsSection';
 import { APP_URL } from '@/lib/constants';
@@ -129,38 +129,7 @@ export default async function SeriesDetailPage({
     }
   });
 
-  const session = await auth();
-  let isBookmarked = false;
-  let continueReadingChapter: number | null = null;
-  
-  if (session?.user?.id) {
-    const bookmark = await prisma.bookmark.findUnique({
-      where: {
-        userId_seriesId: {
-          userId: session.user.id,
-          seriesId: series.id
-        }
-      }
-    });
-    isBookmarked = !!bookmark;
-
-    const history = await prisma.readingHistory.findFirst({
-      where: {
-        userId: session.user.id,
-        seriesId: series.id,
-      },
-      orderBy: {
-        updatedAt: 'desc'
-      },
-      include: {
-        chapter: true
-      }
-    });
-    
-    if (history?.chapter) {
-      continueReadingChapter = history.chapter.number;
-    }
-  }
+  // User data is now fetched client-side in SeriesActionsClient
 
   const relatedSeries = await prisma.series.findMany({
     where: { 
@@ -235,15 +204,12 @@ export default async function SeriesDetailPage({
     ? (firstChapter.sourceType === 'EXTERNAL' && firstChapter.externalUrl ? firstChapter.externalUrl : `/series/${series.slug}/chapter/${firstChapter.number}`) 
     : '#';
 
-  const continueChapterObj = continueReadingChapter 
-    ? series.chapters.find((c: Chapter) => c.number === continueReadingChapter)
-    : null;
-
-  const continueLink = continueChapterObj
-    ? (continueChapterObj.sourceType === 'EXTERNAL' && continueChapterObj.externalUrl ? continueChapterObj.externalUrl : `/series/${series.slug}/chapter/${continueChapterObj.number}`)
-    : firstChapterLink;
-
-  const hasHistory = !!continueChapterObj;
+  const chaptersList = series.chapters.map((c: Chapter) => ({
+    number: c.number,
+    label: c.label,
+    sourceType: c.sourceType,
+    externalUrl: c.externalUrl,
+  }));
 
   return (
     <div className="min-h-screen bg-background pb-24 md:pb-0">
@@ -318,23 +284,12 @@ export default async function SeriesDetailPage({
 
             {/* Action Buttons (Desktop) */}
             <div className="hidden md:flex flex-wrap gap-4">
-              {firstChapter && (
-                <Link
-                  href={hasHistory ? continueLink : firstChapterLink}
-                  target={firstChapter.sourceType === 'EXTERNAL' ? '_blank' : undefined}
-                  rel={firstChapter.sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
-                  className="flex items-center gap-2 rounded-xl bg-primary px-10 py-4 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
-                >
-                  <BookOpen className="h-5 w-5" />
-                  {hasHistory ? `Continue Ch. ${continueReadingChapter}` : 'Read First Chapter'}
-                </Link>
-              )}
-              
-              <BookmarkButton seriesId={series.id} initialBookmarked={isBookmarked} />
-              
-              <button className="flex items-center justify-center rounded-xl border-2 border-border bg-card/50 backdrop-blur-sm w-[56px] text-text-primary transition-all hover:border-primary/50 hover:bg-card-hover hover:text-primary">
-                <Share2 className="h-5 w-5" />
-              </button>
+              <SeriesActionsClient
+                seriesId={series.id}
+                seriesSlug={series.slug}
+                firstChapterLink={firstChapterLink}
+                chapters={chaptersList}
+              />
             </div>
           </div>
         </div>
@@ -428,18 +383,13 @@ export default async function SeriesDetailPage({
       {/* ── Mobile Sticky Action Bar ──────────────────────── */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-lg border-t border-border p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
         <div className="flex gap-3 max-w-7xl mx-auto">
-          {firstChapter && (
-            <Link
-              href={hasHistory ? continueLink : firstChapterLink}
-              target={firstChapter.sourceType === 'EXTERNAL' ? '_blank' : undefined}
-              rel={firstChapter.sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 font-bold text-white active:scale-95 transition-transform shadow-lg shadow-primary/25"
-            >
-              <BookOpen className="h-5 w-5" />
-              {hasHistory ? `Continue Ch. ${continueReadingChapter}` : 'Read First Chapter'}
-            </Link>
-          )}
-          <BookmarkButton seriesId={series.id} initialBookmarked={isBookmarked} />
+          <SeriesActionsClient
+            seriesId={series.id}
+            seriesSlug={series.slug}
+            firstChapterLink={firstChapterLink}
+            chapters={chaptersList}
+            isMobile={true}
+          />
         </div>
       </div>
     </div>
