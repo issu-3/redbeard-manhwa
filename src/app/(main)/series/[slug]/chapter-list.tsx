@@ -23,7 +23,7 @@ export function ChapterListSection({
   chapters,
   seriesSlug,
 }: ChapterListSectionProps) {
-  const [sortAsc, setSortAsc] = useState(false);
+  const [sortAsc, setSortAsc] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredChapters = useMemo(() => {
@@ -39,9 +39,14 @@ export function ChapterListSection({
       );
     }
 
-    filtered.sort((a, b) =>
-      sortAsc ? (a.number ?? 0) - (b.number ?? 0) : (b.number ?? 0) - (a.number ?? 0)
-    );
+    filtered.sort((a, b) => {
+      if (a.number !== null && b.number !== null) {
+        return sortAsc ? (a.number) - (b.number) : (b.number) - (a.number);
+      }
+      const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+      const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+      return sortAsc ? dateA - dateB : dateB - dateA;
+    });
 
     return filtered;
   }, [chapters, sortAsc, searchQuery]);

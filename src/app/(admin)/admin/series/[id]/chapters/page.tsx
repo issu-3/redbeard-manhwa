@@ -10,7 +10,7 @@ export default async function AdminChaptersPage({ params }: { params: Promise<{ 
     where: { id },
     include: {
       chapters: {
-        orderBy: { number: 'desc' }
+        orderBy: [{ number: 'asc' }, { createdAt: 'asc' }]
       }
     }
   });

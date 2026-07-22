@@ -33,7 +33,7 @@ async function getSeriesData(slug: string) {
       authors: true,
       artists: true,
       chapters: {
-        orderBy: { number: 'desc' },
+        orderBy: [{ number: 'asc' }, { createdAt: 'asc' }],
       },
       reviews: {
         include: { user: true },
