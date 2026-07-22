@@ -7,11 +7,7 @@ interface MonetagRendererProps {
   html: string;
 }
 
-const FallbackPlaceholder = () => (
-  <div className="absolute inset-0 flex items-center justify-center bg-surface border border-border/20 text-text-muted text-sm -z-10 rounded-lg pointer-events-none">
-    <span className="opacity-50 tracking-widest uppercase text-xs font-semibold">Advertisement</span>
-  </div>
-);
+
 
 export function MonetagRenderer({ placement, html }: MonetagRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -86,7 +82,6 @@ export function MonetagRenderer({ placement, html }: MonetagRendererProps) {
 
   return (
     <div ref={containerRef} className={containerClass} data-provider="monetag">
-      <FallbackPlaceholder />
       {isInView && decodedHtml ? (
         <div className="relative z-10 w-full flex justify-center" data-ad-placement={placement}>
           <iframe

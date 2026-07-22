@@ -7,11 +7,7 @@ interface AdsterraRendererProps {
   html: string;
 }
 
-const FallbackPlaceholder = () => (
-  <div className="absolute inset-0 flex items-center justify-center bg-surface border border-border/20 text-text-muted text-sm -z-10 rounded-lg pointer-events-none">
-    <span className="opacity-50 tracking-widest uppercase text-xs font-semibold">Advertisement</span>
-  </div>
-);
+
 
 export function AdsterraRenderer({ placement, html }: AdsterraRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -86,7 +82,6 @@ export function AdsterraRenderer({ placement, html }: AdsterraRendererProps) {
 
   return (
     <div ref={containerRef} className={containerClass} data-provider="adsterra">
-      <FallbackPlaceholder />
       {isInView && decodedHtml ? (
         <div className="relative z-10 w-full flex justify-center" data-ad-placement={placement}>
           <iframe
