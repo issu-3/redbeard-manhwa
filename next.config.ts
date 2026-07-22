@@ -18,8 +18,6 @@ const nextConfig: NextConfig = {
         { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
         { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-        // CSP: Allow ad networks (AdSense, Adsterra, Monetag, PropellerAds)
-        { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://*.adsterra.com https://*.adstera.com https://*.monetag.com https://*.propellerads.com https://*.propellerclick.com https://*.surfe.pro https://*.outbrain.com https://*.bidgear.com blob:; img-src 'self' https://*.blob.vercel-storage.com https://*.adsterra.com https://*.adstera.com data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://*.blob.vercel-storage.com https://*.adsterra.com https://*.adstera.com https://*.monetag.com https://*.propellerads.com; frame-src 'self' https://*.adsterra.com https://*.adstera.com https://pagead2.googlesyndication.com https://*.monetag.com https://*.propellerads.com;" },
       ],
     },
   ],
