@@ -234,8 +234,8 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                     <label className="block text-sm font-medium text-text-primary mb-1">Ad Provider Priority (Fallback Order)</label>
                     <input
                       name="ads_provider_priority"
-                      defaultValue={initialSettings.ads_provider_priority || 'adsense,monetag,adsterra,propeller'}
-                      placeholder="e.g. adsense,monetag,adsterra,propeller"
+                      defaultValue={initialSettings.ads_provider_priority || 'adsterra,monetag'}
+                      placeholder="e.g. adsterra,monetag"
                       className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                     <p className="text-xs text-text-muted mt-1">Comma-separated list of providers to use for 'Auto' placement.</p>
@@ -246,20 +246,25 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                 <div className="bg-background/50 border border-border/50 rounded-lg p-4 space-y-4">
                   <h3 className="text-lg font-semibold text-text-primary border-b border-border/50 pb-2">Placement Manager</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {['homepage', 'reader', 'search', 'series', 'sidebar', 'footer'].map(placement => (
-                      <div key={placement}>
-                        <label className="block text-sm font-medium text-text-primary mb-1 capitalize">{placement} Placement</label>
+                    {[
+                      { id: 'homepage', label: 'Homepage' },
+                      { id: 'series_detail', label: 'Series Detail' },
+                      { id: 'reader_top', label: 'Reader Top' },
+                      { id: 'reader_middle', label: 'Reader Middle' },
+                      { id: 'reader_bottom', label: 'Reader Bottom' },
+                      { id: 'footer', label: 'Footer' }
+                    ].map(placement => (
+                      <div key={placement.id}>
+                        <label className="block text-sm font-medium text-text-primary mb-1">{placement.label} Placement</label>
                         <select
-                          name={`ads_placement_${placement}`}
-                          defaultValue={initialSettings[`ads_placement_${placement}`] || 'none'}
+                          name={`ads_placement_${placement.id}`}
+                          defaultValue={initialSettings[`ads_placement_${placement.id}`] || 'none'}
                           className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         >
                           <option value="none">None</option>
                           <option value="auto">Auto (Priority Based)</option>
-                          <option value="adsense">AdSense</option>
-                          <option value="monetag">Monetag</option>
                           <option value="adsterra">Adsterra</option>
-                          <option value="propeller">PropellerAds</option>
+                          <option value="monetag">Monetag</option>
                         </select>
                       </div>
                     ))}
@@ -270,52 +275,6 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                 <div className="bg-background/50 border border-border/50 rounded-lg p-4 space-y-6">
                   <h3 className="text-lg font-semibold text-text-primary border-b border-border/50 pb-2">Ad Networks Configuration</h3>
                   
-                  {/* Google AdSense */}
-                  <div className="space-y-4 pb-4 border-b border-border/20">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-text-primary text-base">Google AdSense</h4>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="hidden" name="ads_enabled_adsense" value="false" />
-                        <input type="checkbox" name="ads_enabled_adsense" value="true" defaultChecked={initialSettings.ads_enabled_adsense === 'true'} className="sr-only peer" />
-                        <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                      </label>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-text-primary mb-1">Publisher ID</label>
-                      <input
-                        name="adsenseId"
-                        defaultValue={initialSettings.adsenseId || ''}
-                        placeholder="ca-pub-XXXXXXXXXXXXXXXX"
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-sm font-medium text-text-primary">Auto Ads (Global)</label>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="hidden" name="ads_adsense_auto_ads" value="false" />
-                          <input type="checkbox" name="ads_adsense_auto_ads" value="true" defaultChecked={initialSettings.ads_adsense_auto_ads === 'true'} className="sr-only peer" />
-                          <div className="w-8 h-4 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500"></div>
-                        </label>
-                      </div>
-                      <p className="text-xs text-text-muted">Automatically place ads across the site based on Google's AI.</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-text-primary mb-1">Manual Ad Units</label>
-                      <textarea
-                        name="ads_adsense_manual_unit"
-                        defaultValue={initialSettings.ads_adsense_manual_unit || ''}
-                        rows={2}
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
-                        placeholder="<ins class='adsbygoogle' ...></ins>"
-                      />
-                      <p className="text-xs text-text-muted mt-1">Provide standard manual `ins` tag to be rendered inside specific AdSlots.</p>
-                    </div>
-                  </div>
-
                   {/* Adsterra */}
                   <div className="space-y-4 pb-4 border-b border-border/20">
                     <div className="flex items-center justify-between">
@@ -351,7 +310,7 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium text-text-primary mb-1">Popunder Script (Global)</label>
+                        <label className="block text-sm font-medium text-text-primary mb-1">Popunder Script</label>
                         <textarea
                           name="ads_adsterra_popunder"
                           defaultValue={initialSettings.ads_adsterra_popunder || ''}
@@ -362,7 +321,7 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium text-text-primary mb-1">Social Bar Script (Global)</label>
+                        <label className="block text-sm font-medium text-text-primary mb-1">Social Bar Script</label>
                         <textarea
                           name="ads_adsterra_social_bar"
                           defaultValue={initialSettings.ads_adsterra_social_bar || ''}
@@ -373,7 +332,7 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                       </div>
                       
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-text-primary mb-1">Smartlink URL</label>
+                        <label className="block text-sm font-medium text-text-primary mb-1">SmartLink URL</label>
                         <input
                           name="ads_adsterra_smartlink"
                           defaultValue={initialSettings.ads_adsterra_smartlink || ''}
@@ -385,7 +344,7 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                   </div>
 
                   {/* Monetag */}
-                  <div className="space-y-4 pb-4 border-b border-border/20">
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-text-primary text-base">Monetag</h4>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -394,39 +353,42 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                         <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
                       </label>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-primary mb-1">Script</label>
-                      <textarea
-                        name="ads_monetag_script"
-                        defaultValue={initialSettings.ads_monetag_script || initialSettings.monetagCode || ''}
-                        rows={3}
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
-                        placeholder="<script>...</script>"
-                      />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-text-primary mb-1">Global Script</label>
+                        <textarea
+                          name="ads_monetag_global_script"
+                          defaultValue={initialSettings.ads_monetag_global_script || ''}
+                          rows={3}
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
+                          placeholder="<script>...</script>"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-text-primary mb-1">Banner Script</label>
+                        <textarea
+                          name="ads_monetag_banner_script"
+                          defaultValue={initialSettings.ads_monetag_banner_script || ''}
+                          rows={3}
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
+                          placeholder="<script>...</script>"
+                        />
+                      </div>
+                      
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-text-primary mb-1">SmartLink</label>
+                        <input
+                          name="ads_monetag_smartlink"
+                          defaultValue={initialSettings.ads_monetag_smartlink || ''}
+                          placeholder="https://..."
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* PropellerAds */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-text-primary text-base">PropellerAds</h4>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="hidden" name="ads_enabled_propeller" value="false" />
-                        <input type="checkbox" name="ads_enabled_propeller" value="true" defaultChecked={initialSettings.ads_enabled_propeller === 'true'} className="sr-only peer" />
-                        <div className="w-9 h-5 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                      </label>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-primary mb-1">Script</label>
-                      <textarea
-                        name="ads_propeller_script"
-                        defaultValue={initialSettings.ads_propeller_script || initialSettings.propellerAdsCode || ''}
-                        rows={3}
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono text-xs"
-                        placeholder="<script>...</script>"
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
             )}

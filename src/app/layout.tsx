@@ -6,7 +6,7 @@ import { SessionProvider } from '@/providers/session-provider';
 import { Toaster } from 'sonner';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
-import { AdScriptInjector } from '@/components/ads/AdScriptInjector';
+import { AdGlobalScripts } from '@/components/ads/AdGlobalScripts';
 import './globals.css';
 
 const inter = Inter({
@@ -135,20 +135,11 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${plusJakarta.variable} ${poppins.variable}`}
     >
-      {settings.ads_enabled_adsense === 'true' && settings.adsenseId && (
-        <Script
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${settings.adsenseId}`}
-          crossOrigin="anonymous"
-          strategy="lazyOnload"
-        />
-      )}
-      
-      {settings.ads_enabled_adsterra === 'true' && settings.ads_adsterra_popunder && (
-        <AdScriptInjector html={settings.ads_adsterra_popunder} provider="adsterra-popunder" />
-      )}
-      {settings.ads_enabled_adsterra === 'true' && settings.ads_adsterra_social_bar && (
-        <AdScriptInjector html={settings.ads_adsterra_social_bar} provider="adsterra-socialbar" />
-      )}
+      <AdGlobalScripts 
+        adsterraPopunder={settings.ads_enabled_adsterra === 'true' ? settings.ads_adsterra_popunder : null}
+        adsterraSocialBar={settings.ads_enabled_adsterra === 'true' ? settings.ads_adsterra_social_bar : null}
+        monetagGlobal={settings.ads_enabled_monetag === 'true' ? settings.ads_monetag_global_script : null}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

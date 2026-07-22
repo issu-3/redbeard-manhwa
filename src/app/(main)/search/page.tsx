@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic';
 import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import SearchClient from './SearchClient';
-import { AdSlot } from '@/components/ads/AdSlot';
 
 export const metadata: Metadata = { title: 'Search' };
 
@@ -24,7 +23,6 @@ export default async function SearchPage() {
 
   return (
     <div className="flex flex-col w-full">
-      <AdSlot placement="search" />
       <SearchClient dynamicGenres={genres} dynamicTrending={trendingSearches} />
     </div>
   );

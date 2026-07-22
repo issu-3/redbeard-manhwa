@@ -6,7 +6,7 @@ import type { ChapterData } from '@/types';
 import { auth } from '@/auth';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
-import { AdSlot } from '@/components/ads/AdSlot';
+import { AdRenderer } from '@/components/ads/AdRenderer';
 
 // ─── Data Fetching ───────────────────────────────────────────────
 
@@ -273,7 +273,9 @@ export default async function ChapterPage({
       chapter={chapter} 
       comments={commentsData} 
       currentUserId={session?.user?.id} 
-      adSlot={<AdSlot placement="reader" />}
+      adSlotTop={<AdRenderer placement="reader_top" />}
+      adSlotMiddle={<AdRenderer placement="reader_middle" />}
+      adSlotBottom={<AdRenderer placement="reader_bottom" />}
       userPreferences={userPreferences}
       defaultReadingMode={settings.defaultReadingMode || 'vertical'}
     />

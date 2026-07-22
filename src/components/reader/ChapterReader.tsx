@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -45,7 +45,9 @@ interface ChapterReaderProps {
   chapter: ChapterData;
   comments: CommentData[];
   currentUserId?: string;
-  adSlot?: React.ReactNode;
+  adSlotTop?: React.ReactNode;
+  adSlotMiddle?: React.ReactNode;
+  adSlotBottom?: React.ReactNode;
   userPreferences?: Record<string, any>;
   defaultReadingMode?: string;
 }
@@ -54,7 +56,7 @@ interface ChapterReaderProps {
 
 import { saveUserPreferences } from '@/app/actions/preferences';
 
-export function ChapterReader({ chapter, comments, currentUserId, adSlot, userPreferences, defaultReadingMode }: ChapterReaderProps) {
+export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adSlotMiddle, adSlotBottom, userPreferences, defaultReadingMode }: ChapterReaderProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -464,12 +466,22 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlot, userPr
               )}
               style={filterStyle}
             >
-              {chapter.images.map((img) => (
-                <div
-                  key={img.id}
-                  data-page={img.pageNumber}
-                  className="relative w-full"
-                >
+              {adSlotTop && (
+                <div className="max-w-[900px] mx-auto px-4 mb-8" onClick={e => e.stopPropagation()}>
+                  {adSlotTop}
+                </div>
+              )}
+              {chapter.images.map((img, index) => (
+                <React.Fragment key={img.id}>
+                  {index === Math.floor(chapter.images.length / 2) && adSlotMiddle && (
+                    <div className="max-w-[900px] mx-auto px-4 my-8" onClick={e => e.stopPropagation()}>
+                      {adSlotMiddle}
+                    </div>
+                  )}
+                  <div
+                    data-page={img.pageNumber}
+                    className="relative w-full"
+                  >
                   {/* Loading skeleton */}
                   {!loadedImages.has(img.pageNumber) && (
                     <div
@@ -500,12 +512,14 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlot, userPr
                     sizes="(max-width: 900px) 100vw, 900px"
                   />
                 </div>
+                </React.Fragment>
               ))}
 
-              {/* Reader Ad Slot */}
-              <div className="max-w-[900px] mx-auto px-4" onClick={e => e.stopPropagation()}>
-                {adSlot}
-              </div>
+              {adSlotBottom && (
+                <div className="max-w-[900px] mx-auto px-4 mt-8" onClick={e => e.stopPropagation()}>
+                  {adSlotBottom}
+                </div>
+              )}
 
               {/* End of chapter */}
               <div className="py-16 px-4 text-center">

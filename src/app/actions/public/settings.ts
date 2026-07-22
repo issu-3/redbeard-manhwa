@@ -42,15 +42,15 @@ export async function getSettings() {
         { key: 'seo_og_image', value: '/images/og-default.png' },
         { key: 'seo_twitter_handle', value: '@redbeard' },
         // Ad Settings
-        { key: 'ads_enabled_adsense', value: 'false' },
         { key: 'ads_enabled_monetag', value: 'false' },
         { key: 'ads_enabled_adsterra', value: 'false' },
-        { key: 'ads_enabled_propeller', value: 'false' },
-        { key: 'ads_provider_priority', value: 'adsense,monetag,adsterra,propeller' },
-        { key: 'ads_placement_header', value: 'none' },
-        { key: 'ads_placement_footer', value: 'none' },
-        { key: 'ads_placement_sidebar', value: 'none' },
-        { key: 'ads_placement_reader', value: 'none' }
+        { key: 'ads_provider_priority', value: 'adsterra,monetag' },
+        { key: 'ads_placement_homepage', value: 'none' },
+        { key: 'ads_placement_series_detail', value: 'none' },
+        { key: 'ads_placement_reader_top', value: 'none' },
+        { key: 'ads_placement_reader_middle', value: 'none' },
+        { key: 'ads_placement_reader_bottom', value: 'none' },
+        { key: 'ads_placement_footer', value: 'none' }
       ];
 
       // Perform upserts in a transaction to safely seed

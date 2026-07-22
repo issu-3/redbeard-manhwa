@@ -22,7 +22,7 @@ import { DescriptionClient } from './description-client';
 import { ReviewsSection } from '@/components/series/ReviewsSection';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
-import { AdSlot } from '@/components/ads/AdSlot';
+import { AdRenderer } from '@/components/ads/AdRenderer';
 
 async function getSeriesData(slug: string) {
   const series = await prisma.series.findUnique({
@@ -266,7 +266,7 @@ export default async function SeriesDetailPage({
 
       {/* ── Main Content (overlapping banner) ─────────────── */}
       <div className="relative -mt-64 z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
-        <AdSlot placement="series" />
+        <AdRenderer placement="series_detail" />
         <div className="flex flex-col md:flex-row gap-8 lg:gap-12 mt-8">
           {/* ── Cover Image ─────────────────────────────── */}
           <div className="shrink-0 flex flex-col items-center md:items-start md:w-[280px] lg:w-[320px]">
@@ -349,11 +349,6 @@ export default async function SeriesDetailPage({
             <MetaItem label="Direction" value={series.readingDirection === 'VERTICAL' ? 'Vertical' : series.readingDirection} />
             <MetaItem label="Alt Names" value={series.alternativeTitles[0] || 'None'} />
           </div>
-        </div>
-
-        {/* ── Ad Slot ──────────────────────────────────────── */}
-        <div className="my-8 w-full">
-          <AdSlot placement="sidebar" />
         </div>
 
         {/* ── Chapter List ──────────────────────────────────── */}
