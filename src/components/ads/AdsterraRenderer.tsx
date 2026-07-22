@@ -49,11 +49,23 @@ export function AdsterraRenderer({ placement, html }: AdsterraRendererProps) {
 
   const iframeContent = `
     <!DOCTYPE html>
-    <html>
+    <html style="background: transparent !important;">
       <head>
         <meta charset="utf-8">
         <style>
-          body { margin: 0; padding: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; background: transparent; }
+          html, body { 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: transparent !important; 
+            background-color: transparent !important;
+          }
+          body { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+          }
         </style>
       </head>
       <body>
@@ -72,6 +84,7 @@ export function AdsterraRenderer({ placement, html }: AdsterraRendererProps) {
             style={{ width: '100%', minHeight: '90px', border: 'none', overflow: 'hidden', background: 'transparent' }}
             scrolling="no"
             title="Advertisement"
+            allowTransparency={true}
           />
         </div>
       ) : null}
