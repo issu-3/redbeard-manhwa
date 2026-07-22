@@ -3,6 +3,11 @@ import "./src/env";
 
 const nextConfig: NextConfig = {
   compress: true,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
   // H1 FIX: Security headers
   headers: async () => [
     {
