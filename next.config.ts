@@ -33,14 +33,6 @@ const nextConfig: NextConfig = {
       }
     ],
   },
-  async rewrites() {
-    return [
-      {
-        source: '/sitemap.xml',
-        destination: '/sitemap_index.xml',
-      },
-    ];
-  },
 };
 
 export default nextConfig;

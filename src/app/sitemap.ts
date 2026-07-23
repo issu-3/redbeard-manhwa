@@ -12,7 +12,7 @@ export async function generateSitemaps() {
   }
 }
 
-export default async function sitemap({ id }: { id: number }): Promise<MetadataRoute.Sitemap> {
+export default async function sitemap(props: { id: Promise<string> } | { id: string }): Promise<MetadataRoute.Sitemap> {
   const baseUrl = APP_URL || 'http://localhost:3000';
   const PAGE_SIZE = 20000;
 
@@ -50,19 +50,24 @@ export default async function sitemap({ id }: { id: number }): Promise<MetadataR
       routes.push(...staticRoutes, ...seriesRoutes, ...genreRoutes);
     }
 
-    const parsedId = Number(id) || 0;
+    let parsedId = 0;
+    if (props.id) {
+      // In Next.js 16+, id might be a Promise. In <16, it might be a string or number
+      const resolvedId = props.id instanceof Promise ? await props.id : props.id;
+      parsedId = Number(resolvedId) || 0;
+    }
 
     // Paginate chapters across sitemaps
     const chapters = await prisma.chapter.findMany({ 
       where: { isPublished: true },
-      select: { number: true, updatedAt: true, series: { select: { slug: true } } },
+      select: { slug: true, updatedAt: true, series: { select: { slug: true } } },
       skip: parsedId * PAGE_SIZE,
       take: PAGE_SIZE,
       orderBy: { updatedAt: 'desc' }
     });
     
     const chapterRoutes = chapters.map((c) => ({
-      url: `${baseUrl}/series/${c.series.slug}/chapter/${c.number}`,
+      url: `${baseUrl}/series/${c.series.slug}/chapter/${c.slug}`,
       lastModified: c.updatedAt,
       changeFrequency: 'never' as const,
       priority: 0.6,
