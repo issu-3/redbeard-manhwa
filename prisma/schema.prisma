@@ -648,3 +648,21 @@ model HomepageSection {
   @@map("homepage_sections")
 }
 
+// ============================================================================
+// ANALYTICS MODELS
+// ============================================================================
+
+model ViewLog {
+  id        String   @id @default(cuid())
+  seriesId  String
+  chapterId String
+  userId    String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([seriesId])
+  @@index([chapterId])
+  @@map("view_logs")
+}
+

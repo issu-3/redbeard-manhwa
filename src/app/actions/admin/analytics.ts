@@ -63,18 +63,18 @@ async function fetchAnalyticsDataInternal(range: string) {
     prisma.chapter.count({ where: { createdAt: { gte: startDate } } }),
     prisma.comment.count({ where: { createdAt: { gte: startDate } } }),
     prisma.bookmark.count({ where: { createdAt: { gte: startDate } } }),
-    prisma.readingHistory.count({ where: { createdAt: { gte: startDate } } }),
+    prisma.viewLog.count({ where: { createdAt: { gte: startDate } } }),
     prisma.user.count({ where: { lastReadAt: { gte: startDate } } }),
-    prisma.readingHistory.groupBy({ by: ['userId'], where: { createdAt: { gte: startDate } } }),
+    prisma.viewLog.groupBy({ by: ['ipAddress'], where: { createdAt: { gte: startDate }, ipAddress: { not: null } } }),
     
     isAllTime ? 0 : prisma.user.count({ where: { createdAt: { gte: prevStartDate, lt: prevEndDate } } }),
     isAllTime ? 0 : prisma.series.count({ where: { createdAt: { gte: prevStartDate, lt: prevEndDate } } }),
     isAllTime ? 0 : prisma.chapter.count({ where: { createdAt: { gte: prevStartDate, lt: prevEndDate } } }),
     isAllTime ? 0 : prisma.comment.count({ where: { createdAt: { gte: prevStartDate, lt: prevEndDate } } }),
     isAllTime ? 0 : prisma.bookmark.count({ where: { createdAt: { gte: prevStartDate, lt: prevEndDate } } }),
-    isAllTime ? 0 : prisma.readingHistory.count({ where: { createdAt: { gte: prevStartDate, lt: prevEndDate } } }),
+    isAllTime ? 0 : prisma.viewLog.count({ where: { createdAt: { gte: prevStartDate, lt: prevEndDate } } }),
     isAllTime ? 0 : prisma.user.count({ where: { lastReadAt: { gte: prevStartDate, lt: prevEndDate } } }),
-    isAllTime ? [] : prisma.readingHistory.groupBy({ by: ['userId'], where: { createdAt: { gte: prevStartDate, lt: prevEndDate } } })
+    isAllTime ? [] : prisma.viewLog.groupBy({ by: ['ipAddress'], where: { createdAt: { gte: prevStartDate, lt: prevEndDate }, ipAddress: { not: null } } })
   ]);
 
   const uniqueVisitorsCount = uniqueVisitorsData.length;
@@ -98,7 +98,7 @@ async function fetchAnalyticsDataInternal(range: string) {
     prisma.chapter.findMany({ where: { createdAt: { gte: sparklineStart } }, select: { createdAt: true } }),
     prisma.comment.findMany({ where: { createdAt: { gte: sparklineStart } }, select: { createdAt: true } }),
     prisma.bookmark.findMany({ where: { createdAt: { gte: sparklineStart } }, select: { createdAt: true } }),
-    prisma.readingHistory.findMany({ where: { createdAt: { gte: sparklineStart } }, select: { createdAt: true, userId: true } })
+    prisma.viewLog.findMany({ where: { createdAt: { gte: sparklineStart } }, select: { createdAt: true, ipAddress: true } })
   ]);
 
   const generateSparkline = (records: { createdAt: Date, userId?: string }[], countUniqueUsers = false) => {
@@ -111,8 +111,8 @@ async function fetchAnalyticsDataInternal(range: string) {
     records.forEach(r => {
       const day = r.createdAt.toISOString().split('T')[0];
       if (days[day] !== undefined) {
-        if (countUniqueUsers && r.userId) {
-          (days[day] as Set<string>).add(r.userId);
+        if (countUniqueUsers && ('ipAddress' in r) && r.ipAddress) {
+          (days[day] as Set<string>).add(r.ipAddress as string);
         } else {
           (days[day] as number) += 1;
         }
@@ -141,7 +141,7 @@ async function fetchAnalyticsDataInternal(range: string) {
     chartViews, chartUsers, chartSeries, chartChapters,
     topSeriesRaw, mostReadChaptersRaw, topGenresRaw, sessionsRaw
   ] = await Promise.all([
-    prisma.readingHistory.findMany({ where: { createdAt: { gte: chartStart } }, select: { createdAt: true } }),
+    prisma.viewLog.findMany({ where: { createdAt: { gte: chartStart } }, select: { createdAt: true } }),
     prisma.user.findMany({ where: { createdAt: { gte: chartStart } }, select: { createdAt: true } }),
     prisma.series.findMany({ where: { createdAt: { gte: chartStart } }, select: { createdAt: true } }),
     prisma.chapter.findMany({ where: { createdAt: { gte: chartStart } }, select: { createdAt: true } }),

@@ -46,6 +46,8 @@ export async function POST(request: Request) {
 
     // 2. Increment view counts
     try {
+      const ipAddress = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || null;
+      
       await prisma.chapter.update({
         where: { id: chapterId },
         data: { totalViews: { increment: 1 } },
@@ -53,6 +55,15 @@ export async function POST(request: Request) {
       await prisma.series.update({
         where: { id: seriesId },
         data: { totalViews: { increment: 1 } },
+      });
+      
+      await prisma.viewLog.create({
+        data: {
+          seriesId: seriesId,
+          chapterId: chapterId,
+          userId: session?.user?.id || null,
+          ipAddress: ipAddress ? ipAddress.split(',')[0].trim() : null,
+        }
       });
     } catch (e) {
       console.error('Failed to increment view count:', e);
