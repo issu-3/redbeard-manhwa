@@ -75,12 +75,15 @@ interface GenreCardProps {
 }
 
 export function GenreCard({ genre, variant = 'default', index = 0 }: GenreCardProps) {
-  const style = genreStyleMap[genre.name] || genreStyleMap['Default'];
+  const toTitleCase = (str: string) => str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  const normalizedName = toTitleCase(genre.name);
+  
+  const style = genreStyleMap[genre.name] || genreStyleMap[normalizedName] || genreStyleMap['Default'];
   const Icon = style.icon;
   const color = genre.color && genre.color !== '#E53935' ? genre.color : style.color;
   
   // Custom gradient if a specific hex color is used from DB instead of our map
-  const isCustomColor = genre.color && genre.color !== '#E53935' && !genreStyleMap[genre.name];
+  const isCustomColor = genre.color && genre.color !== '#E53935' && !genreStyleMap[genre.name] && !genreStyleMap[normalizedName];
   const customGradientStyle = isCustomColor ? { background: `linear-gradient(135deg, ${color}, ${color}80)` } : {};
 
   if (variant === 'compact') {
