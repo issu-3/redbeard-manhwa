@@ -39,7 +39,7 @@ export function MetricCard({ title, value, subtitle, trend, sparkline, icon: Ico
       {sparkline && sparkline.length > 0 && (
         <div className="h-12 w-full mt-4 -mx-2 -mb-2 opacity-60 group-hover:opacity-100 transition-opacity">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={sparkline}>
+            <LineChart data={sparkline} id={title}>
               <Line 
                 type="monotone" 
                 dataKey="value" 

@@ -55,8 +55,8 @@ async function fetchAnalyticsDataInternal(range: string) {
 
   // --- 1. OVERVIEW COUNTS ---
   const [
-    usersCount, seriesCount, chaptersCount, commentsCount, bookmarksCount, viewsCount, activeUsersData,
-    prevUsersCount, prevSeriesCount, prevChaptersCount, prevCommentsCount, prevBookmarksCount, prevViewsCount, prevActiveUsersData
+    usersCount, seriesCount, chaptersCount, commentsCount, bookmarksCount, viewsCount, activeUsersCount, uniqueVisitorsData,
+    prevUsersCount, prevSeriesCount, prevChaptersCount, prevCommentsCount, prevBookmarksCount, prevViewsCount, prevActiveUsersCount, prevUniqueVisitorsData
   ] = await Promise.all([
     prisma.user.count({ where: { createdAt: { gte: startDate } } }),
     prisma.series.count({ where: { createdAt: { gte: startDate } } }),
@@ -64,6 +64,7 @@ async function fetchAnalyticsDataInternal(range: string) {
     prisma.comment.count({ where: { createdAt: { gte: startDate } } }),
     prisma.bookmark.count({ where: { createdAt: { gte: startDate } } }),
     prisma.readingHistory.count({ where: { createdAt: { gte: startDate } } }),
+    prisma.user.count({ where: { lastReadAt: { gte: startDate } } }),
     prisma.readingHistory.groupBy({ by: ['userId'], where: { createdAt: { gte: startDate } } }),
     
     isAllTime ? 0 : prisma.user.count({ where: { createdAt: { gte: prevStartDate, lt: prevEndDate } } }),
@@ -72,11 +73,12 @@ async function fetchAnalyticsDataInternal(range: string) {
     isAllTime ? 0 : prisma.comment.count({ where: { createdAt: { gte: prevStartDate, lt: prevEndDate } } }),
     isAllTime ? 0 : prisma.bookmark.count({ where: { createdAt: { gte: prevStartDate, lt: prevEndDate } } }),
     isAllTime ? 0 : prisma.readingHistory.count({ where: { createdAt: { gte: prevStartDate, lt: prevEndDate } } }),
+    isAllTime ? 0 : prisma.user.count({ where: { lastReadAt: { gte: prevStartDate, lt: prevEndDate } } }),
     isAllTime ? [] : prisma.readingHistory.groupBy({ by: ['userId'], where: { createdAt: { gte: prevStartDate, lt: prevEndDate } } })
   ]);
 
-  const activeUsersCount = activeUsersData.length;
-  const prevActiveUsersCount = isAllTime ? 0 : prevActiveUsersData.length;
+  const uniqueVisitorsCount = uniqueVisitorsData.length;
+  const prevUniqueVisitorsCount = isAllTime ? 0 : prevUniqueVisitorsData.length;
 
   const calcTrend = (current: number, prev: number) => {
     if (isAllTime || prev === 0) return current > 0 ? 100 : 0;
@@ -239,7 +241,7 @@ async function fetchAnalyticsDataInternal(range: string) {
       series: { value: seriesCount, trend: calcTrend(seriesCount, prevSeriesCount), sparkline: sparklines.series },
       chapters: { value: chaptersCount, trend: calcTrend(chaptersCount, prevChaptersCount), sparkline: sparklines.chapters },
       views: { value: viewsCount, trend: calcTrend(viewsCount, prevViewsCount), sparkline: sparklines.views },
-      uniqueVisitors: { value: activeUsersCount, trend: calcTrend(activeUsersCount, prevActiveUsersCount), sparkline: sparklines.activeUsers },
+      uniqueVisitors: { value: uniqueVisitorsCount, trend: calcTrend(uniqueVisitorsCount, prevUniqueVisitorsCount), sparkline: sparklines.activeUsers },
       bookmarks: { value: bookmarksCount, trend: calcTrend(bookmarksCount, prevBookmarksCount), sparkline: sparklines.bookmarks },
       comments: { value: commentsCount, trend: calcTrend(commentsCount, prevCommentsCount), sparkline: sparklines.comments },
     },
