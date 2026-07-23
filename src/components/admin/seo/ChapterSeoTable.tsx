@@ -6,7 +6,9 @@ import { ExternalLink, Edit, CheckCircle2, XCircle } from 'lucide-react';
 interface ChapterSeo {
   id: string;
   seriesTitle: string;
-  number: number;
+  number: number | null;
+  title: string | null;
+  label: string | null;
   slug: string;
   seriesId: string;
   seoTitle: string | null;
@@ -55,8 +57,11 @@ export function ChapterSeoTable({ chapters }: { chapters: ChapterSeo[] }) {
               return (
                 <tr key={chapter.id} className="hover:bg-surface/30 transition-colors">
                   <td className="px-6 py-4">
-                    <div className="font-medium text-text-primary flex items-center gap-2">
-                      {chapter.seriesTitle} - Ch. {chapter.number}
+                    <div className="font-medium text-text-primary flex flex-col">
+                      <span>{chapter.seriesTitle}</span>
+                      <span className="text-xs text-text-muted mt-0.5">
+                        {chapter.label ? chapter.label : (chapter.number !== null ? `Ch. ${chapter.number}` : (chapter.title || 'Oneshot'))}
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4">

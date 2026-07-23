@@ -13,7 +13,7 @@ export async function fetchSeoDashboardData() {
 
   const [seriesRaw, chaptersRaw, viewLogs, totalViewsData] = await Promise.all([
     prisma.series.findMany({ select: { id: true, title: true, slug: true, seo: true, description: true, chapterCount: true, totalViews: true } }),
-    prisma.chapter.findMany({ select: { id: true, number: true, slug: true, seriesId: true, series: { select: { title: true } }, seo: true, totalViews: true } }),
+    prisma.chapter.findMany({ select: { id: true, number: true, title: true, label: true, slug: true, seriesId: true, series: { select: { title: true } }, seo: true, totalViews: true } }),
     prisma.viewLog.findMany({ 
       where: { createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
       select: { createdAt: true, ipAddress: true }
@@ -73,6 +73,8 @@ export async function fetchSeoDashboardData() {
       id: c.id,
       seriesTitle: c.series.title,
       number: c.number,
+      title: c.title,
+      label: c.label,
       slug: c.slug,
       seriesId: c.seriesId,
       seoTitle: seo.title || null,
