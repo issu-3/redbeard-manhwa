@@ -119,6 +119,7 @@ export default async function EditSeriesPage({ params }: { params: Promise<{ id:
           <textarea 
             name="description" 
             required 
+            minLength={10}
             defaultValue={series.description}
             rows={5}
             className="w-full rounded-lg border border-border bg-card px-4 py-2" 

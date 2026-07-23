@@ -108,7 +108,8 @@ export default async function NewSeriesPage() {
           <label className="text-sm font-semibold">Description *</label>
           <textarea 
             name="description" 
-            required 
+            required
+            minLength={10} 
             rows={5}
             className="w-full rounded-lg border border-border bg-card px-4 py-2" 
             placeholder="Full description..." 
