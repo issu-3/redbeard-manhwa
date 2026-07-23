@@ -12,8 +12,12 @@ export async function generateMissingSeoData() {
     throw new Error('Unauthorized');
   }
 
+  if (!process.env.GEMINI_API_KEY) {
+    return { success: false, message: 'GEMINI_API_KEY is not configured in environment variables.' };
+  }
+
   // Find Series missing SEO
-  const series = await prisma.series.findMany({ select: { id: true, title: true, synopsis: true, seo: true } });
+  const series = await prisma.series.findMany({ select: { id: true, title: true, synopsis: true, slug: true, coverImage: true, seo: true } });
   
   const hasSeo = (record: { seo: any }) => {
     if (!record.seo) return false;
@@ -39,7 +43,9 @@ export async function generateMissingSeoData() {
             seo: JSON.stringify({
               ...existingSeo,
               title: aiSeo.title,
-              description: aiSeo.description
+              description: aiSeo.description,
+              ogImage: existingSeo.ogImage || s.coverImage,
+              canonical: existingSeo.canonical || `https://redbeard-manhwa.vercel.app/series/${s.slug}`
             })
           }
         });
@@ -52,7 +58,7 @@ export async function generateMissingSeoData() {
 
   // Find Chapters missing SEO (limit to 20 per request to avoid hitting rate limits instantly)
   const chapters = await prisma.chapter.findMany({ 
-    select: { id: true, title: true, number: true, seo: true, series: { select: { title: true } } },
+    select: { id: true, title: true, number: true, slug: true, seo: true, series: { select: { title: true, slug: true, coverImage: true } } },
     take: 20
   });
 
@@ -72,7 +78,9 @@ export async function generateMissingSeoData() {
             seo: JSON.stringify({
               ...existingSeo,
               title: aiSeo.title,
-              description: aiSeo.description
+              description: aiSeo.description,
+              ogImage: existingSeo.ogImage || c.series.coverImage,
+              canonical: existingSeo.canonical || `https://redbeard-manhwa.vercel.app/series/${c.series.slug}/chapter/${c.slug}`
             })
           }
         });
