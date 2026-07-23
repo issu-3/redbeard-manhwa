@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { UploadCloud, Link as LinkIcon, X, Check, Copy, ExternalLink, Download, RefreshCw, AlertCircle } from 'lucide-react';
-import imageCompression from 'browser-image-compression';
 
 type Mode = 'upload' | 'url';
 
@@ -75,6 +74,7 @@ export function MediaManager({ name, label, recommendedDimensions, defaultValue 
         fileType: 'image/webp'
       };
       
+      const { default: imageCompression } = await import('browser-image-compression');
       const compressedFile = await imageCompression(file, options);
       setProgress(50);
 

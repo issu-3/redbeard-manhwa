@@ -6,10 +6,30 @@ import { MultiSelectField } from '@/components/admin/MultiSelectField';
 import { SeoFormFields } from '@/components/admin/SeoFormFields';
 
 export default async function NewSeriesPage() {
-  const [genres, tags] = await Promise.all([
-    prisma.genre.findMany({ orderBy: { name: 'asc' } }),
-    prisma.tag.findMany({ orderBy: { name: 'asc' } })
-  ]);
+  let genres: any[] = [];
+  let tags: any[] = [];
+  let errorMsg = null;
+
+  try {
+    const [fetchedGenres, fetchedTags] = await Promise.all([
+      prisma.genre.findMany({ orderBy: { name: 'asc' } }),
+      prisma.tag.findMany({ orderBy: { name: 'asc' } })
+    ]);
+    genres = fetchedGenres;
+    tags = fetchedTags;
+  } catch (err: any) {
+    console.error('Error fetching data in NewSeriesPage:', err);
+    errorMsg = err.message || String(err);
+  }
+
+  if (errorMsg) {
+    return (
+      <div className="p-8 text-red-500 bg-red-100/10 rounded-xl">
+        <h1 className="text-2xl font-bold mb-4">Error loading page</h1>
+        <p className="font-mono">{errorMsg}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
