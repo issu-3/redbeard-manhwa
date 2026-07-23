@@ -5,7 +5,8 @@ import { MediaManager } from '@/components/admin/MediaManager';
 import { MultiSelectField } from '@/components/admin/MultiSelectField';
 import { SeoFormFields } from '@/components/admin/SeoFormFields';
 
-export default async function NewSeriesPage() {
+export default async function NewSeriesPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error } = await searchParams;
   let genres: any[] = [];
   let tags: any[] = [];
 
@@ -27,6 +28,12 @@ export default async function NewSeriesPage() {
         <h1 className="text-3xl font-black tracking-tight">Add New Series</h1>
         <p className="text-text-secondary">Create a new manhwa/manga entry.</p>
       </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-500">
+          <span className="font-semibold">Error:</span> {error}
+        </div>
+      )}
 
       <form action={createSeries} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

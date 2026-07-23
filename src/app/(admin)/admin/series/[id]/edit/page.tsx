@@ -6,8 +6,15 @@ import { MediaManager } from '@/components/admin/MediaManager';
 import { MultiSelectField } from '@/components/admin/MultiSelectField';
 import { SeoFormFields } from '@/components/admin/SeoFormFields';
 
-export default async function EditSeriesPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditSeriesPage({ 
+  params, 
+  searchParams 
+}: { 
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
   const { id } = await params;
+  const { error } = await searchParams;
   
   const [series, genres, tags] = await Promise.all([
     prisma.series.findUnique({
@@ -31,6 +38,12 @@ export default async function EditSeriesPage({ params }: { params: Promise<{ id:
         <h1 className="text-3xl font-black tracking-tight">Edit Series</h1>
         <p className="text-text-secondary">Update details for {series.title}.</p>
       </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-500">
+          <span className="font-semibold">Error:</span> {error}
+        </div>
+      )}
 
       <form action={updateSeries} className="space-y-6">
         <input type="hidden" name="id" value={series.id} />

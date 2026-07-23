@@ -48,7 +48,8 @@ export async function createSeries(formData: FormData) {
   const parsed = seriesSchema.safeParse(rawData);
   
   if (!parsed.success) {
-    throw new Error(parsed.error.issues[0]?.message || 'Invalid form data');
+    const errorMsg = parsed.error.issues[0]?.message || 'Invalid form data';
+    redirect(`/admin/series/new?error=${encodeURIComponent(errorMsg)}`);
   }
 
   const {
@@ -70,6 +71,7 @@ export async function createSeries(formData: FormData) {
   };
 
   // C5 FIX: Wrap in try/catch for proper error handling
+  let dbError = '';
   try {
     await prisma.series.create({
       data: {
@@ -93,10 +95,15 @@ export async function createSeries(formData: FormData) {
     });
   } catch (error: any) {
     if (error.code === 'P2002') {
-      throw new Error(`A series with the slug "${slug}" already exists. Please use a different title.`);
+      dbError = `A series with the slug "${slug}" already exists. Please use a different title.`;
+    } else {
+      console.error('Failed to create series:', error);
+      dbError = 'Failed to create series. Please try again.';
     }
-    console.error('Failed to create series:', error);
-    throw new Error('Failed to create series. Please try again.');
+  }
+
+  if (dbError) {
+    redirect(`/admin/series/new?error=${encodeURIComponent(dbError)}`);
   }
 
   revalidatePath('/admin/series');
@@ -126,7 +133,8 @@ export async function updateSeries(formData: FormData) {
   const parsed = seriesSchema.safeParse(rawData);
   
   if (!parsed.success) {
-    throw new Error(parsed.error.issues[0]?.message || 'Invalid form data');
+    const errorMsg = parsed.error.issues[0]?.message || 'Invalid form data';
+    redirect(`/admin/series/${id}/edit?error=${encodeURIComponent(errorMsg)}`);
   }
 
   const {
@@ -148,6 +156,7 @@ export async function updateSeries(formData: FormData) {
   };
 
   // C5 FIX: Wrap in try/catch for proper error handling
+  let dbError = '';
   try {
     await prisma.series.update({
       where: { id },
@@ -172,10 +181,15 @@ export async function updateSeries(formData: FormData) {
     });
   } catch (error: any) {
     if (error.code === 'P2002') {
-      throw new Error(`A series with the slug "${slug}" already exists. Please use a different title.`);
+      dbError = `A series with the slug "${slug}" already exists. Please use a different title.`;
+    } else {
+      console.error('Failed to update series:', error);
+      dbError = 'Failed to update series. Please try again.';
     }
-    console.error('Failed to update series:', error);
-    throw new Error('Failed to update series. Please try again.');
+  }
+
+  if (dbError) {
+    redirect(`/admin/series/${id}/edit?error=${encodeURIComponent(dbError)}`);
   }
 
   revalidatePath('/admin/series');
