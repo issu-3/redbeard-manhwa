@@ -7,7 +7,7 @@ export default async function AdminCommentsPage() {
     orderBy: { createdAt: 'desc' },
     include: {
       user: { select: { displayName: true, username: true, email: true } },
-      chapter: { select: { number: true, series: { select: { title: true } } } }
+      chapter: { select: { number: true, title: true, label: true, series: { select: { title: true } } } }
     },
     take: 50 // Just show recent 50 for MVP
   });
@@ -32,9 +32,9 @@ export default async function AdminCommentsPage() {
                     <span className="font-semibold text-text-primary">
                       {comment.user.displayName || comment.user.username || 'Anonymous'}
                     </span>
-                    <span className="text-xs text-text-secondary">
-                      on {comment.chapter.series.title} Ch. {comment.chapter.number}
-                    </span>
+                    <p className="text-xs text-text-muted mt-1">
+                      on {comment.chapter.series.title} - {comment.chapter.number !== null ? `Ch. ${comment.chapter.number}` : (comment.chapter.label || comment.chapter.title || 'Oneshot')}
+                    </p>
                   </div>
                   <div className="mt-1 text-sm text-text-secondary">
                     {formatDate(comment.createdAt)}

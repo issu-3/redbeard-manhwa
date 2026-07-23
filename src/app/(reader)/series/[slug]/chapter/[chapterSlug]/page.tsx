@@ -214,8 +214,14 @@ export default async function ChapterPage({
       console.error('Failed to increment view count for external chapter:', e);
     }
 
+    // Ensure the external URL is absolute to prevent relative redirect bugs
+    let targetUrl = chapter.externalUrl;
+    if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+      targetUrl = `https://${targetUrl}`;
+    }
+
     // Redirect to the external URL
-    redirect(chapter.externalUrl);
+    redirect(targetUrl);
   }
 
   // Reading history and view tracking is now handled asynchronously via client-side API call

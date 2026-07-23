@@ -146,7 +146,7 @@ async function fetchAnalyticsDataInternal(range: string) {
     prisma.series.findMany({ where: { createdAt: { gte: chartStart } }, select: { createdAt: true } }),
     prisma.chapter.findMany({ where: { createdAt: { gte: chartStart } }, select: { createdAt: true } }),
     prisma.series.findMany({ orderBy: { totalViews: 'desc' }, take: 10, select: { title: true, totalViews: true, totalBookmarks: true } }),
-    prisma.chapter.findMany({ orderBy: { totalViews: 'desc' }, take: 10, select: { series: { select: { title: true } }, number: true, totalViews: true } }),
+    prisma.chapter.findMany({ orderBy: { totalViews: 'desc' }, take: 10, select: { series: { select: { title: true } }, number: true, title: true, label: true, totalViews: true } }),
     prisma.genre.findMany({ orderBy: { seriesCount: 'desc' }, take: 10, select: { name: true, seriesCount: true } }),
     prisma.session.findMany({ orderBy: { expires: 'desc' }, take: 1000, select: { userAgent: true, ipAddress: true } })
   ]);
@@ -186,7 +186,10 @@ async function fetchAnalyticsDataInternal(range: string) {
   const publishingData = timelineDates.map(date => ({ date, series: seriesByDay[date] || 0, chapters: chaptersByDay[date] || 0 }));
 
   const topSeries = topSeriesRaw.map(s => ({ name: s.title, views: s.totalViews, bookmarks: s.totalBookmarks }));
-  const mostReadChapters = mostReadChaptersRaw.map(c => ({ name: `${c.series.title} - Ch ${c.number}`, views: c.totalViews }));
+  const mostReadChapters = mostReadChaptersRaw.map(c => {
+    const chLabel = c.label ? c.label : (c.number !== null ? `Ch ${c.number}` : (c.title || 'Latest'));
+    return { name: `${c.series.title} - ${chLabel}`, views: c.totalViews };
+  });
   const topGenres = topGenresRaw.map(g => ({ name: g.name, count: g.seriesCount }));
 
   const deviceStatsMap = { Mobile: 0, Desktop: 0, Tablet: 0 };

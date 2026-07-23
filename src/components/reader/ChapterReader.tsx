@@ -411,8 +411,8 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                     {chapter.seriesTitle}
                   </p>
                   <p className="text-xs text-white/50 truncate">
-                    Ch. {chapter.number}
-                    {chapter.title && ` — ${chapter.title}`}
+                    {chapter.number !== null ? `Ch. ${chapter.number}` : (chapter.title || 'Oneshot')}
+                    {chapter.number !== null && chapter.title && ` — ${chapter.title}`}
                   </p>
                 </div>
               </div>
@@ -542,7 +542,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
               {/* End of chapter */}
               <div className="py-16 px-4 text-center">
                 <p className="text-white/30 text-sm mb-6">
-                  End of Chapter {chapter.number}
+                  End of {chapter.number !== null ? `Chapter ${chapter.number}` : (chapter.title || 'Oneshot')}
                 </p>
                 <div className="flex items-center justify-center gap-4">
                   {chapter.prevChapter && (
