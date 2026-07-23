@@ -4,16 +4,11 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import fs from 'fs';
 import path from 'path';
-import { generateSeoMetadata } from '@/lib/ai/seo-generator';
 
 export async function generateMissingSeoData() {
   const session = await auth();
   if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     throw new Error('Unauthorized');
-  }
-
-  if (!process.env.GEMINI_API_KEY) {
-    return { success: false, message: 'GEMINI_API_KEY is not configured in environment variables.' };
   }
 
   // Find Series missing SEO
@@ -34,16 +29,18 @@ export async function generateMissingSeoData() {
   for (const s of series) {
     if (!hasSeo(s)) {
       try {
-        const aiSeo = await generateSeoMetadata('series', { title: s.title, synopsis: s.synopsis || undefined });
         const existingSeo = s.seo && typeof s.seo === 'string' ? JSON.parse(s.seo) : (s.seo || {});
+        const title = `Read ${s.title} Manhwa | REDBEARD`;
+        let desc = s.synopsis ? s.synopsis.substring(0, 150) : `Read the latest chapters of ${s.title} on REDBEARD. High quality manhwa and webtoons.`;
+        if (desc.length === 150) desc += '...';
         
         await prisma.series.update({
           where: { id: s.id },
           data: {
             seo: JSON.stringify({
               ...existingSeo,
-              title: aiSeo.title,
-              description: aiSeo.description,
+              title: existingSeo.title || title,
+              description: existingSeo.description || desc,
               ogImage: existingSeo.ogImage || s.coverImage,
               canonical: existingSeo.canonical || `https://redbeard-manhwa.vercel.app/series/${s.slug}`
             })
@@ -56,29 +53,27 @@ export async function generateMissingSeoData() {
     }
   }
 
-  // Find Chapters missing SEO (limit to 20 per request to avoid hitting rate limits instantly)
+  // Find Chapters missing SEO (limit to 50 per request to avoid slow responses)
   const chapters = await prisma.chapter.findMany({ 
     select: { id: true, title: true, number: true, slug: true, seo: true, series: { select: { title: true, slug: true, coverImage: true } } },
-    take: 20
+    take: 50
   });
 
   for (const c of chapters) {
     if (!hasSeo(c)) {
       try {
-        const aiSeo = await generateSeoMetadata('chapter', { 
-          title: c.title || '', 
-          chapterNumber: c.number,
-          seriesTitle: c.series.title
-        });
         const existingSeo = c.seo && typeof c.seo === 'string' ? JSON.parse(c.seo) : (c.seo || {});
+        const chLabel = c.number !== null ? `Chapter ${c.number}` : (c.title || 'Latest Chapter');
+        const title = `Read ${c.series.title} - ${chLabel} | REDBEARD`;
+        const desc = `Read ${c.series.title} ${chLabel} online. High quality manhwa and webtoons available at REDBEARD.`;
         
         await prisma.chapter.update({
           where: { id: c.id },
           data: {
             seo: JSON.stringify({
               ...existingSeo,
-              title: aiSeo.title,
-              description: aiSeo.description,
+              title: existingSeo.title || title,
+              description: existingSeo.description || desc,
               ogImage: existingSeo.ogImage || c.series.coverImage,
               canonical: existingSeo.canonical || `https://redbeard-manhwa.vercel.app/series/${c.series.slug}/chapter/${c.slug}`
             })

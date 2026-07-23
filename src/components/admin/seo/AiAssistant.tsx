@@ -13,14 +13,14 @@ export function AiAssistant({ suggestions }: { suggestions: { title: string, des
 
   const handleGenerate = async () => {
     setIsGenerating(true);
-    const toastId = toast.loading('Generating AI SEO data...', {
+    const toastId = toast.loading('Auto-filling SEO data...', {
       description: 'This might take a minute depending on how many items need SEO.'
     });
 
     try {
       const result = await generateMissingSeoData();
       if (result.success) {
-        toast.success('AI SEO Generation Complete', {
+        toast.success('Auto SEO Generation Complete', {
           id: toastId,
           description: result.message
         });
@@ -29,9 +29,9 @@ export function AiAssistant({ suggestions }: { suggestions: { title: string, des
         throw new Error('Failed to generate SEO');
       }
     } catch (error) {
-      toast.error('AI Generation Failed', {
+      toast.error('SEO Generation Failed', {
         id: toastId,
-        description: 'Make sure your GEMINI_API_KEY is configured correctly.'
+        description: 'An error occurred while generating SEO metadata.'
       });
     } finally {
       setIsGenerating(false);
@@ -46,8 +46,8 @@ export function AiAssistant({ suggestions }: { suggestions: { title: string, des
             <Sparkles className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-text-primary">AI SEO Assistant</h2>
-            <p className="text-sm text-text-secondary">Smart insights & automated optimization</p>
+            <h2 className="text-lg font-bold text-text-primary">Auto SEO Assistant</h2>
+            <p className="text-sm text-text-secondary">Smart programmatic optimization</p>
           </div>
         </div>
       </div>
@@ -78,7 +78,7 @@ export function AiAssistant({ suggestions }: { suggestions: { title: string, des
           ) : (
             <Sparkles className="h-4 w-4" />
           )}
-          {isGenerating ? 'Generating...' : 'Generate AI SEO Data'}
+          {isGenerating ? 'Auto-filling...' : 'Auto-fill SEO Data'}
         </button>
       </div>
     </div>
