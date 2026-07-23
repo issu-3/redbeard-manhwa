@@ -8,27 +8,17 @@ import { SeoFormFields } from '@/components/admin/SeoFormFields';
 export default async function NewSeriesPage() {
   let genres: any[] = [];
   let tags: any[] = [];
-  let errorMsg = null;
 
   try {
     const [fetchedGenres, fetchedTags] = await Promise.all([
       prisma.genre.findMany({ orderBy: { name: 'asc' } }),
       prisma.tag.findMany({ orderBy: { name: 'asc' } })
     ]);
-    genres = fetchedGenres;
-    tags = fetchedTags;
+    genres = Array.isArray(fetchedGenres) ? fetchedGenres : [];
+    tags = Array.isArray(fetchedTags) ? fetchedTags : [];
   } catch (err: any) {
     console.error('Error fetching data in NewSeriesPage:', err);
-    errorMsg = err.message || String(err);
-  }
-
-  if (errorMsg) {
-    return (
-      <div className="p-8 text-red-500 bg-red-100/10 rounded-xl">
-        <h1 className="text-2xl font-bold mb-4">Error loading page</h1>
-        <p className="font-mono">{errorMsg}</p>
-      </div>
-    );
+    // Ignore error so the form still renders even if DB is empty or unreachable
   }
 
   return (
@@ -101,7 +91,7 @@ export default async function NewSeriesPage() {
             <MultiSelectField 
               name="genres"
               placeholder="Search genres..."
-              options={genres.map(g => ({ id: g.id, name: g.name }))}
+              options={genres?.map(g => ({ id: g.id, name: g.name })) || []}
             />
           </div>
           <div className="space-y-2">
@@ -109,7 +99,7 @@ export default async function NewSeriesPage() {
             <MultiSelectField 
               name="tags"
               placeholder="Search tags..."
-              options={tags.map(t => ({ id: t.id, name: t.name }))}
+              options={tags?.map(t => ({ id: t.id, name: t.name })) || []}
             />
           </div>
         </div>
