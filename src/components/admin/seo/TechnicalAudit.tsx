@@ -8,7 +8,7 @@ interface AuditItem {
 }
 
 export function TechnicalAudit({ auditData }: { auditData: AuditItem[] }) {
-  const passed = auditData.filter(i => i.status === 'pass').length;
+  const _passed = auditData.filter(i => i.status === 'pass').length;
   const warnings = auditData.filter(i => i.status === 'warning').length;
   const failed = auditData.filter(i => i.status === 'fail').length;
 

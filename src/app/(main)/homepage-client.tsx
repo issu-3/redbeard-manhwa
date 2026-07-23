@@ -21,7 +21,7 @@ export function HomepageClient({
   sections,
   sectionData,
 }: HomepageClientProps) {
-  const { data: session, status } = useSession();
+  const { data: _session, status } = useSession();
   const isLoggedIn = status === 'authenticated';
   
   const [personalizedData, setPersonalizedData] = useState<{ continueReading: any[], recommended: any[] } | null>(null);

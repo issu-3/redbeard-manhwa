@@ -103,7 +103,7 @@ export async function generateMetadata({
   if (!chapter) return { title: 'Chapter Not Found' };
 
   const seo = chapter.seo || {};
-  const siteTitle = settings.seo_site_title || 'REDBEARD';
+  const _siteTitle = settings.seo_site_title || 'REDBEARD';
   
   const defaultTitle = `${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`} - Read Online | ${settings.siteName || 'REDBEARD'}`;
   const defaultDesc = `Read ${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} online on ${settings.siteName || 'REDBEARD'}. High quality manhwa reading experience.`;

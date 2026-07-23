@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { generatePasswordResetToken, generateVerificationToken } from '@/lib/tokens';
+import { generatePasswordResetToken } from '@/lib/tokens';
 import { sendResetEmail } from '@/lib/mail';
 
 export async function forgotPassword(email: string) {

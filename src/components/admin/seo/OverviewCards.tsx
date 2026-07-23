@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, TrendingDown, Search, SearchCode, Zap, FileText, Layers } from 'lucide-react';
+import { TrendingUp, TrendingDown, Search, SearchCode, FileText, Layers } from 'lucide-react';
 
 interface Props {
   overview: {

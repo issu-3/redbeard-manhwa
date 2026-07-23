@@ -29,7 +29,7 @@ export function ReviewsSection({
   ratingDistribution,
 }: ReviewsSectionProps) {
   const { data: session } = useSession();
-  const [reviews, setReviews] = useState(initialReviews);
+  const [reviews, _setReviews] = useState(initialReviews);
   const [sortOrder, setSortOrder] = useState<'newest' | 'highest'>('newest');
 
   const userReview = reviews.find((r) => r.userId === session?.user?.id);

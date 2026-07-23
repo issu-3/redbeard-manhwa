@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { UploadCloud, Image as ImageIcon, Link as LinkIcon, X, Check, Copy, ExternalLink, Download, RefreshCw, AlertCircle } from 'lucide-react';
+import { UploadCloud, Link as LinkIcon, X, Check, Copy, ExternalLink, Download, RefreshCw, AlertCircle } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 
 type Mode = 'upload' | 'url';

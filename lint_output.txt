@@ -1,0 +1,149 @@
+
+> redbeard@0.1.0 lint
+> eslint
+
+(node:23860) ESLintIgnoreWarning: The ".eslintignore" file is no longer supported. Switch to using the "ignores" property in "eslint.config.js": https://eslint.org/docs/latest/use/configure/migration-guide#ignoring-files
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\check-ads.js
+  1:19  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\get_data.js
+  1:26  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\(admin)\layout.tsx
+  7:3  warning  'BookOpen' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\(auth)\forgot-password\page.tsx
+  30:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\(auth)\reset-password\page.tsx
+  48:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\(auth)\verify-email\page.tsx
+   4:10  warning  'useRouter' is defined but never used  @typescript-eslint/no-unused-vars
+  37:16  warning  'error' is defined but never used      @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\(main)\browse\genres\[slug]\page.tsx
+  20:9  warning  'siteTitle' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\(main)\homepage-client.tsx
+  24:17  warning  'session' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\(main)\page.tsx
+    7:15  warning  'SeriesCardData' is defined but never used  @typescript-eslint/no-unused-vars
+   26:12  warning  'error' is defined but never used           @typescript-eslint/no-unused-vars
+  125:14  warning  'e' is defined but never used               @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\(main)\series\[slug]\chapter-list.tsx
+  14:10  warning  'formatNumber' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\(main)\series\[slug]\page.tsx
+   8:3   warning  'BookOpen' is defined but never used        @typescript-eslint/no-unused-vars
+   9:3   warning  'Share2' is defined but never used          @typescript-eslint/no-unused-vars
+  10:3   warning  'ArrowRight' is defined but never used      @typescript-eslint/no-unused-vars
+  11:3   warning  'ChevronRight' is defined but never used    @typescript-eslint/no-unused-vars
+  15:10  warning  'BookmarkButton' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\(main)\user\settings\ProfileForm.tsx
+  134:16  warning  Unused eslint-disable directive (no problems were reported from '@next/next/no-img-element')
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\(reader)\series\[slug]\chapter\[chapterSlug]\page.tsx
+  106:9  warning  'siteTitle' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\actions\admin\seo.ts
+   23:14  warning  'e' is defined but never used          @typescript-eslint/no-unused-vars
+   28:46  warning  'isChapter' is defined but never used  @typescript-eslint/no-unused-vars
+  142:14  warning  'e' is defined but never used          @typescript-eslint/no-unused-vars
+  151:14  warning  'e' is defined but never used          @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\actions\admin\settings.ts
+  4:41  warning  'unstable_cache' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\actions\admin\system.ts
+   84:14  warning  'e' is defined but never used    @typescript-eslint/no-unused-vars
+   87:12  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+  101:12  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+  128:12  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\actions\preferences.ts
+  5:10  warning  'revalidatePath' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\actions\public\auth.ts
+  5:38  warning  'generateVerificationToken' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\layout.tsx
+  2:8  warning  'Script' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\app\sitemap.ts
+  10:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\admin\ChapterEditor.tsx
+  141:16  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\admin\MediaManager.tsx
+  5:32  warning  'ImageIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\admin\SettingsForm.tsx
+  38:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\admin\analytics\AnalyticsCharts.tsx
+  187:44  warning  'xKey' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\admin\analytics\AnalyticsDashboard.tsx
+  12:3  warning  'PublishingActivityChart' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\admin\analytics\SystemHealthPanel.tsx
+  51:16  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\admin\homepage\HomepageManager.tsx
+   3:35  warning  'useMemo' is defined but never used        @typescript-eslint/no-unused-vars
+   5:34  warning  'Search' is defined but never used         @typescript-eslint/no-unused-vars
+   5:42  warning  'GripVertical' is defined but never used   @typescript-eslint/no-unused-vars
+  24:87  warning  'featuredCount' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\admin\seo\AiAssistant.tsx
+  31:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\admin\seo\ChapterSeoTable.tsx
+  4:10  warning  'ExternalLink' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\admin\seo\OverviewCards.tsx
+  3:56  warning  'Zap' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\admin\seo\PerformanceMetrics.tsx
+  3:15  warning  'Activity' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\admin\seo\TechnicalAudit.tsx
+  11:9  warning  'passed' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\ads\AdGlobalScripts.tsx
+  20:14  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\ads\AdsterraRenderer.tsx
+  20:14  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\ads\MonetagRenderer.tsx
+  20:14  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\home\ContinueReadingCarousel.tsx
+  21:25  warning  'i' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\home\RecentlyUpdatedCarousel.tsx
+  22:29  warning  'i' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\series\ReviewsSection.tsx
+  32:19  warning  'setReviews' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\series\SeriesActionsClient.tsx
+  7:10  warning  'Chapter' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\shared\GenreCard.tsx
+  6:54  warning  'Shield' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\hp\.gemini\antigravity\scratch\redbeard\src\components\shared\HeroSlider.tsx
+  7:47  warning  'Bookmark' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 57 problems (2 errors, 55 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

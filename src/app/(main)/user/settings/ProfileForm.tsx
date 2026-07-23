@@ -131,7 +131,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
               className="w-32 h-32 rounded-full border-2 border-border overflow-hidden bg-muted relative group cursor-pointer"
               onClick={handleAvatarClick}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+              { }
               <Image 
                 src={avatarPreview || user.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${user.id}`} 
                 alt="Avatar" 

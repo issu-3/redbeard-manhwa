@@ -9,7 +9,6 @@ import { MetricCard } from './MetricCard';
 import { 
   DailyTrafficChart, 
   UserGrowthChart, 
-  PublishingActivityChart, 
   ReadingDistributionChart,
   HorizontalBarChart,
   RetentionChart,

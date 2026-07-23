@@ -1,6 +1,6 @@
 'use client';
 
-import { Zap, Activity } from 'lucide-react';
+import { Zap } from 'lucide-react';
 
 interface PerformanceData {
   lcp: string;

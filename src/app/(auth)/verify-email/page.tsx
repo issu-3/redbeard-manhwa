@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { verifyEmail } from '@/app/actions/public/auth';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';

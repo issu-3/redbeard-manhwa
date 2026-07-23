@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   
   if (!genre) return { title: 'Genre Not Found' };
   
-  const siteTitle = settings.seo_site_title || 'REDBEARD';
+  const _siteTitle = settings.seo_site_title || 'REDBEARD';
   const title = `Best ${genre.name} Manhwa | ${settings.siteName || 'REDBEARD'}`;
   const description = `Read the best ${genre.name} manhwa, manga, and webtoons online on ${settings.siteName || 'REDBEARD'}. ${genre.description || ''}`;
   const url = `${APP_URL}/browse/genres/${slug}`;

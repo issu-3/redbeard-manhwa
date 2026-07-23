@@ -4,15 +4,10 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import {
-  BookOpen,
-  Share2,
-  ArrowRight,
-  ChevronRight,
-} from 'lucide-react';
+
+
 import { Badge } from '@/components/shared/Badge';
 import { SeriesCard } from '@/components/shared/SeriesCard';
-import { BookmarkButton } from '@/components/shared/BookmarkButton';
 import { ChapterListSection } from './chapter-list';
 import { prisma } from '@/lib/prisma';
 import type { SeriesCardData } from '@/types';

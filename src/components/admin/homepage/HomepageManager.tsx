@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useTransition, useMemo } from 'react';
+import { useState, useTransition } from 'react';
 import Image from 'next/image';
-import { Settings, Plus, Trash2, Search, GripVertical, Eye, EyeOff } from 'lucide-react';
+import { Settings, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
 import { SortableList } from './SortableList';
 import { 
   upsertBanner, deleteBanner, reorderBanners, 

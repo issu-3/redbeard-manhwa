@@ -2,7 +2,6 @@
 
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
 
 export async function saveUserPreferences(preferences: Record<string, any>) {
   const session = await auth();

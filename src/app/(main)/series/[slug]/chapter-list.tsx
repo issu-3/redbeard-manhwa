@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   Link as LinkIcon,
 } from 'lucide-react';
-import { formatNumber, formatRelativeTime, cn } from '@/lib/utils';
+import { formatRelativeTime, cn } from '@/lib/utils';
 import type { ChapterListItem } from '@/types';
 
 interface ChapterListSectionProps {

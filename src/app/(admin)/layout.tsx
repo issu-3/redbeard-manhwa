@@ -4,7 +4,6 @@ import { redirect } from 'next/navigation';
 import { 
   LayoutDashboard, 
   Library, 
-  BookOpen, 
   Users, 
   MessageSquare, 
   Tags,

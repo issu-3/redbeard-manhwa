@@ -4,7 +4,6 @@ import { HomepageClient } from './homepage-client';
 import { toSeriesCardData } from '@/lib/data-mappers';
 import { Prisma, HomepageSection } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import type { SeriesCardData } from '@/types';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdRenderer } from '@/components/ads/AdRenderer';
 import { SubscribeCard } from '@/components/shared/SubscribeCard';

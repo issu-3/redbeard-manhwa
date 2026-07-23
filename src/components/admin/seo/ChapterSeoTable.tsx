@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ExternalLink, Edit, CheckCircle2, XCircle } from 'lucide-react';
+import { Edit, CheckCircle2, XCircle } from 'lucide-react';
 
 interface ChapterSeo {
   id: string;

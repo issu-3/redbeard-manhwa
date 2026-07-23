@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
-  Sword, Compass, Laugh, Drama, Wand2, Skull, Globe, Shield,
+  Sword, Compass, Laugh, Drama, Wand2, Skull, Globe,
   Search, Heart, GraduationCap, Rocket, Coffee, Trophy, AlertTriangle,
   Hash, Flame, Castle, Ghost, Sparkles, Crown, Brain,
   Activity, BookOpen, Star, Eye, ChefHat, Palette, Users,

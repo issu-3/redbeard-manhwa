@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BookOpen, Share2 } from 'lucide-react';
 import { BookmarkButton } from '@/components/shared/BookmarkButton';
-import { Chapter } from '@prisma/client';
 
 interface SeriesActionsProps {
   seriesId: string;
