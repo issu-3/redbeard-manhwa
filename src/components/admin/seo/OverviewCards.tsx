@@ -50,7 +50,6 @@ export function OverviewCards({ overview }: Props) {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <BreakdownItem label="Metadata" score={overview.breakdown.metadata} icon={<Search className="h-4 w-4" />} />
             <BreakdownItem label="Technical SEO" score={overview.breakdown.technical} icon={<SearchCode className="h-4 w-4" />} />
-            <BreakdownItem label="Performance" score={overview.breakdown.performance} icon={<Zap className="h-4 w-4" />} />
             <BreakdownItem label="Content SEO" score={overview.breakdown.content} icon={<FileText className="h-4 w-4" />} />
             <BreakdownItem label="Chapter SEO" score={overview.breakdown.chapter} icon={<Layers className="h-4 w-4" />} />
           </div>

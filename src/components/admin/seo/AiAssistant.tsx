@@ -3,16 +3,10 @@
 import { Sparkles, ArrowRight, Lightbulb } from 'lucide-react';
 import { toast } from 'sonner';
 
-export function AiAssistant() {
-  const suggestions = [
-    { title: 'Add missing alt text', desc: '45 images are missing alt attributes in chapter bodies.' },
-    { title: 'Improve short titles', desc: '12 series have titles that are too short for optimal CTR.' },
-    { title: 'Duplicate descriptions', desc: 'Found 3 series using the same meta description.' },
-  ];
-
+export function AiAssistant({ suggestions }: { suggestions: { title: string, desc: string }[] }) {
   const handleGenerate = () => {
     toast.info('Generating AI SEO suggestions...', {
-      description: 'This is a mock action for the redesign.'
+      description: 'This feature will be available in a future update.'
     });
   };
 

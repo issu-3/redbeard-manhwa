@@ -19,6 +19,7 @@ interface SeoData {
   performance: any;
   gsc: any;
   timelineData: any[];
+  aiSuggestions: any[];
 }
 
 export function SeoDashboard({ data }: { data: SeoData }) {
@@ -54,8 +55,10 @@ export function SeoDashboard({ data }: { data: SeoData }) {
 
       {/* Next Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PerformanceMetrics performance={data.performance} />
-        <AiAssistant />
+        {data.performance && <PerformanceMetrics performance={data.performance} />}
+        <div className={data.performance ? "" : "lg:col-span-2"}>
+          <AiAssistant suggestions={data.aiSuggestions} />
+        </div>
       </div>
 
       {/* Content Tables */}
