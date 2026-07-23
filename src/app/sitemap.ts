@@ -19,8 +19,15 @@ export default async function sitemap(props: { id: Promise<string> } | { id: str
   try {
     const routes: MetadataRoute.Sitemap = [];
 
+    let parsedId = 0;
+    if (props.id) {
+      // In Next.js 16+, id might be a Promise. In <16, it might be a string or number
+      const resolvedId = props.id instanceof Promise ? await props.id : props.id;
+      parsedId = Number(resolvedId) || 0;
+    }
+
     // Only include static, series, and genres in the first sitemap
-    if (id === 0) {
+    if (parsedId === 0) {
       const staticRoutes: MetadataRoute.Sitemap = [
         { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
         { url: `${baseUrl}/browse/trending`, lastModified: new Date(), changeFrequency: 'hourly', priority: 0.9 },
@@ -50,12 +57,7 @@ export default async function sitemap(props: { id: Promise<string> } | { id: str
       routes.push(...staticRoutes, ...seriesRoutes, ...genreRoutes);
     }
 
-    let parsedId = 0;
-    if (props.id) {
-      // In Next.js 16+, id might be a Promise. In <16, it might be a string or number
-      const resolvedId = props.id instanceof Promise ? await props.id : props.id;
-      parsedId = Number(resolvedId) || 0;
-    }
+
 
     // Paginate chapters across sitemaps
     const chapters = await prisma.chapter.findMany({ 
