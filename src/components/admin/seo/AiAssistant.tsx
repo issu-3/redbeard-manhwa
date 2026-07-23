@@ -3,11 +3,39 @@
 import { Sparkles, ArrowRight, Lightbulb } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { useState } from 'react';
+import { generateMissingSeoData } from '@/app/actions/admin/seo';
+import { useRouter } from 'next/navigation';
+
 export function AiAssistant({ suggestions }: { suggestions: { title: string, desc: string }[] }) {
-  const handleGenerate = () => {
-    toast.info('Generating AI SEO suggestions...', {
-      description: 'This feature will be available in a future update.'
+  const [isGenerating, setIsGenerating] = useState(false);
+  const router = useRouter();
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    const toastId = toast.loading('Generating AI SEO data...', {
+      description: 'This might take a minute depending on how many items need SEO.'
     });
+
+    try {
+      const result = await generateMissingSeoData();
+      if (result.success) {
+        toast.success('AI SEO Generation Complete', {
+          id: toastId,
+          description: result.message
+        });
+        router.refresh();
+      } else {
+        throw new Error('Failed to generate SEO');
+      }
+    } catch (error) {
+      toast.error('AI Generation Failed', {
+        id: toastId,
+        description: 'Make sure your GEMINI_API_KEY is configured correctly.'
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -42,10 +70,15 @@ export function AiAssistant({ suggestions }: { suggestions: { title: string, des
       <div className="p-6 pt-0 mt-auto">
         <button 
           onClick={handleGenerate}
-          className="w-full py-2.5 bg-primary text-primary-foreground font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-primary-hover transition-colors"
+          disabled={isGenerating}
+          className="w-full py-2.5 bg-primary text-primary-foreground font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-primary-hover transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          <Sparkles className="h-4 w-4" />
-          Generate AI SEO Data
+          {isGenerating ? (
+            <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <Sparkles className="h-4 w-4" />
+          )}
+          {isGenerating ? 'Generating...' : 'Generate AI SEO Data'}
         </button>
       </div>
     </div>

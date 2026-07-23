@@ -4,6 +4,91 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import fs from 'fs';
 import path from 'path';
+import { generateSeoMetadata } from '@/lib/ai/seo-generator';
+
+export async function generateMissingSeoData() {
+  const session = await auth();
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
+    throw new Error('Unauthorized');
+  }
+
+  // Find Series missing SEO
+  const series = await prisma.series.findMany({ select: { id: true, title: true, synopsis: true, seo: true } });
+  
+  const hasSeo = (record: { seo: any }) => {
+    if (!record.seo) return false;
+    try {
+      const seo = typeof record.seo === 'string' ? JSON.parse(record.seo) : record.seo;
+      return !!(seo.title && seo.description);
+    } catch (e) {
+      return false;
+    }
+  };
+
+  let generatedCount = 0;
+
+  for (const s of series) {
+    if (!hasSeo(s)) {
+      try {
+        const aiSeo = await generateSeoMetadata('series', { title: s.title, synopsis: s.synopsis || undefined });
+        const existingSeo = s.seo && typeof s.seo === 'string' ? JSON.parse(s.seo) : (s.seo || {});
+        
+        await prisma.series.update({
+          where: { id: s.id },
+          data: {
+            seo: JSON.stringify({
+              ...existingSeo,
+              title: aiSeo.title,
+              description: aiSeo.description
+            })
+          }
+        });
+        generatedCount++;
+      } catch (err) {
+        console.error(`Failed to generate SEO for series ${s.id}`, err);
+      }
+    }
+  }
+
+  // Find Chapters missing SEO (limit to 20 per request to avoid hitting rate limits instantly)
+  const chapters = await prisma.chapter.findMany({ 
+    select: { id: true, title: true, number: true, seo: true, series: { select: { title: true } } },
+    take: 20
+  });
+
+  for (const c of chapters) {
+    if (!hasSeo(c)) {
+      try {
+        const aiSeo = await generateSeoMetadata('chapter', { 
+          title: c.title || '', 
+          chapterNumber: c.number,
+          seriesTitle: c.series.title
+        });
+        const existingSeo = c.seo && typeof c.seo === 'string' ? JSON.parse(c.seo) : (c.seo || {});
+        
+        await prisma.chapter.update({
+          where: { id: c.id },
+          data: {
+            seo: JSON.stringify({
+              ...existingSeo,
+              title: aiSeo.title,
+              description: aiSeo.description
+            })
+          }
+        });
+        generatedCount++;
+      } catch (err) {
+        console.error(`Failed to generate SEO for chapter ${c.id}`, err);
+      }
+    }
+  }
+
+  if (generatedCount === 0) {
+    return { success: true, message: 'All series and chapters already have SEO metadata.' };
+  }
+  
+  return { success: true, message: `Successfully generated AI SEO data for ${generatedCount} items.` };
+}
 
 export async function fetchSeoDashboardData() {
   const session = await auth();
