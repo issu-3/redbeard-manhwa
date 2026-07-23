@@ -105,6 +105,11 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
   const [showUI, setShowUI] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // ─── Initialize ────────────────────────────────────────────
 
@@ -380,6 +385,14 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
 
   // Determine UI visibility
   const uiVisible = showUI && !isUIHidden;
+
+  if (!mounted) {
+    return (
+      <div className="h-screen w-screen bg-black flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div
