@@ -88,3 +88,30 @@ function revalidatePaths() {
   revalidatePath('/search');
   revalidatePath('/browse', 'layout');
 }
+
+export async function seedDefaultGenres() {
+  await checkAdmin();
+  const genres = [
+    'Action', 'Adaptation', 'Adventure', 'Comedy', 'Cooking', 'Demons', 
+    'Doujinshi', 'Drama', 'Ecchi', 'Fantasy', 'Full Color', 'Gender Bender', 
+    'Harem', 'Historical', 'Horror', 'Isekai', 'Josei', 'Long Strip', 
+    'Magic', 'Manga', 'Martial Arts', 'Monster', 'Mystery', 'Office Workers', 
+    'Psychological', 'Reincarnation', 'School Life', 'Sci Fi', 'Seinen', 
+    'Shoujo', 'Shoujo Ai', 'Shounen', 'Shounen Ai', 'Slice Of Life', 
+    'Sports', 'Supernatural', 'Thriller', 'Time Travel', 'Tragedy', 
+    'Villainess', 'Web Comic', 'Webtoons', 'Yaoi', 'Yuri', 'Zombies'
+  ];
+
+  for (const name of genres) {
+    const slug = slugify(name);
+    await prisma.genre.upsert({
+      where: { name: name.toUpperCase() },
+      update: {},
+      create: {
+        name: name.toUpperCase(),
+        slug: slug,
+      },
+    });
+  }
+  revalidatePaths();
+}

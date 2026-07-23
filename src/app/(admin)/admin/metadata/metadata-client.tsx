@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
-import { createGenre, updateGenre, deleteGenre, createTag, updateTag, deleteTag } from '@/app/actions/admin/metadata';
+import { createGenre, updateGenre, deleteGenre, createTag, updateTag, deleteTag, seedDefaultGenres } from '@/app/actions/admin/metadata';
 import type { Genre, Tag } from '@prisma/client';
 
 export function MetadataClient({ genres, tags }: { genres: Genre[]; tags: Tag[] }) {
@@ -44,6 +44,20 @@ export function MetadataClient({ genres, tags }: { genres: Genre[]; tags: Tag[] 
     } catch (err) {
       console.error(err);
       alert('Failed to delete genre');
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const handleSeedGenres = async () => {
+    if (!confirm('Are you sure you want to seed 40+ default genres? This will not delete your existing ones.')) return;
+    setIsPending(true);
+    try {
+      await seedDefaultGenres();
+      alert('Successfully seeded genres!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to seed genres');
     } finally {
       setIsPending(false);
     }
@@ -108,13 +122,22 @@ export function MetadataClient({ genres, tags }: { genres: Genre[]; tags: Tag[] 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold">Genres ({genres.length})</h2>
-            <button
-              onClick={openNewGenre}
-              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              Create Genre
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSeedGenres}
+                disabled={isPending}
+                className="flex items-center gap-2 rounded-lg bg-surface border border-border px-4 py-2 text-sm font-semibold text-text-primary hover:bg-surface/70 transition-colors disabled:opacity-50"
+              >
+                Seed Defaults
+              </button>
+              <button
+                onClick={openNewGenre}
+                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                Create Genre
+              </button>
+            </div>
           </div>
           
           <div className="rounded-xl border border-border bg-card overflow-hidden">
