@@ -170,6 +170,7 @@ export default async function ChapterPage({
         },
         update: {
           pageNumber: 1,
+          updatedAt: new Date(),
         },
         create: {
           userId: session.user.id,
@@ -178,6 +179,39 @@ export default async function ChapterPage({
           pageNumber: 1,
         },
       });
+
+      // Update lastReadAt on user
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { lastReadAt: new Date() },
+      });
+    }
+
+    // Record view counts for external chapters
+    try {
+      const { headers } = await import('next/headers');
+      const headersList = await headers();
+      const ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
+      
+      await prisma.chapter.update({
+        where: { id: chapter.id },
+        data: { totalViews: { increment: 1 } },
+      });
+      await prisma.series.update({
+        where: { id: chapter.seriesId },
+        data: { totalViews: { increment: 1 } },
+      });
+      
+      await prisma.viewLog.create({
+        data: {
+          seriesId: chapter.seriesId,
+          chapterId: chapter.id,
+          userId: session?.user?.id || null,
+          ipAddress: ipAddress ? ipAddress.split(',')[0].trim() : null,
+        }
+      });
+    } catch (e) {
+      console.error('Failed to increment view count for external chapter:', e);
     }
 
     // Redirect to the external URL
