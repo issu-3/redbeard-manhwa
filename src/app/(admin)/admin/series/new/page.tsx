@@ -92,6 +92,7 @@ export default async function NewSeriesPage() {
               name="genres"
               placeholder="Search genres..."
               options={genres?.map(g => ({ id: g.id, name: g.name })) || []}
+              required
             />
           </div>
           <div className="space-y-2">

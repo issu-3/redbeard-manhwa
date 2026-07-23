@@ -8,9 +8,10 @@ interface MultiSelectFieldProps {
   name: string;
   placeholder?: string;
   initialSelectedIds?: string[];
+  required?: boolean;
 }
 
-export function MultiSelectField({ options, name, placeholder, initialSelectedIds = [] }: MultiSelectFieldProps) {
+export function MultiSelectField({ options, name, placeholder, initialSelectedIds = [], required }: MultiSelectFieldProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>(initialSelectedIds);
 
   return (
@@ -20,6 +21,7 @@ export function MultiSelectField({ options, name, placeholder, initialSelectedId
       onChange={setSelectedIds}
       name={name}
       placeholder={placeholder}
+      required={required}
     />
   );
 }

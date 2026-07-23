@@ -15,9 +15,10 @@ interface MultiSelectProps {
   onChange: (ids: string[]) => void;
   placeholder?: string;
   name?: string;
+  required?: boolean;
 }
 
-export function MultiSelect({ options, selectedIds, onChange, placeholder = 'Select items...', name }: MultiSelectProps) {
+export function MultiSelect({ options, selectedIds, onChange, placeholder = 'Select items...', name, required }: MultiSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,6 +58,18 @@ export function MultiSelect({ options, selectedIds, onChange, placeholder = 'Sel
       {name && selectedIds.map(id => (
         <input key={id} type="hidden" name={name} value={id} />
       ))}
+      
+      {required && (
+        <input
+          type="text"
+          required
+          value={selectedIds.length > 0 ? 'selected' : ''}
+          onChange={() => {}}
+          className="absolute opacity-0 w-0 h-0 border-0 p-0 -z-10"
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+      )}
       
       <div
         className={cn(

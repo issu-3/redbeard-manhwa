@@ -101,6 +101,7 @@ export default async function EditSeriesPage({ params }: { params: Promise<{ id:
               placeholder="Search genres..."
               options={genres.map((g: any) => ({ id: g.id, name: g.name }))}
               initialSelectedIds={selectedGenreIds}
+              required
             />
           </div>
           <div className="space-y-2">
