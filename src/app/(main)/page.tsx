@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import type { SeriesCardData } from '@/types';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdRenderer } from '@/components/ads/AdRenderer';
+import { SubscribeCard } from '@/components/shared/SubscribeCard';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getCachedSettings();
@@ -17,6 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
+  const settings = await getCachedSettings();
   // 1. Fetch active sections sorted by order
   let allSections: HomepageSection[] = [];
   try {
@@ -144,6 +146,9 @@ export default async function HomePage() {
         sectionData={sectionData}
         isLoggedIn={false} // Managed internally by HomepageClient via next-auth
       />
+      <div className="px-4 md:px-8 lg:px-16 xl:px-20 pb-16">
+        <SubscribeCard youtubeUrl={settings.youtubeUrl || null} />
+      </div>
     </>
   );
 }

@@ -38,6 +38,7 @@ import type { ChapterData } from '@/types';
 
 import { CommentSection } from '@/components/shared/CommentSection';
 import type { CommentData } from '@/components/shared/CommentItem';
+import { SubscribeCard } from '@/components/shared/SubscribeCard';
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -50,13 +51,14 @@ interface ChapterReaderProps {
   adSlotBottom?: React.ReactNode;
   userPreferences?: Record<string, any>;
   defaultReadingMode?: string;
+  youtubeUrl?: string | null;
 }
 
 // ─── Main Component ────────────────────────────────────────────
 
 import { saveUserPreferences } from '@/app/actions/preferences';
 
-export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adSlotMiddle, adSlotBottom, userPreferences, defaultReadingMode }: ChapterReaderProps) {
+export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adSlotMiddle, adSlotBottom, userPreferences, defaultReadingMode, youtubeUrl }: ChapterReaderProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -531,6 +533,11 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                   {adSlotBottom}
                 </div>
               )}
+
+              {/* Subscribe Card */}
+              <div className="max-w-[900px] mx-auto px-4 mt-12" onClick={e => e.stopPropagation()}>
+                <SubscribeCard youtubeUrl={youtubeUrl || null} />
+              </div>
 
               {/* End of chapter */}
               <div className="py-16 px-4 text-center">

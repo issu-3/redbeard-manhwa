@@ -32,6 +32,9 @@ export async function getSettings() {
         { key: 'emailVerificationRequired', value: 'false' },
         { key: 'maintenanceMode', value: 'false' },
         { key: 'youtubeUrl', value: 'https://www.youtube.com/@RedBeardShort' },
+        { key: 'telegramUrl', value: '' },
+        { key: 'instagramUrl', value: '' },
+        { key: 'tiktokUrl', value: '' },
         // SEO Defaults
         { key: 'seo_site_title', value: 'REDBEARD - The Ultimate Reading Experience' },
         { key: 'seo_site_description', value: 'Premium manhwa reading platform offering the best reading experience.' },

@@ -232,6 +232,7 @@ export default async function ChapterPage({
       adSlotBottom={<AdRenderer placement="reader_bottom" />}
       userPreferences={userPreferences}
       defaultReadingMode={settings.defaultReadingMode || 'vertical'}
+      youtubeUrl={settings.youtubeUrl || null}
     />
   );
 }

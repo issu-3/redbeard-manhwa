@@ -109,6 +109,8 @@ const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'info' | 
   UPCOMING: 'primary',
 };
 
+import { SubscribeCard } from '@/components/shared/SubscribeCard';
+
 export default async function SeriesDetailPage({
   params,
 }: {
@@ -116,6 +118,7 @@ export default async function SeriesDetailPage({
 }) {
   const { slug } = await params;
   const series = await getSeriesData(slug);
+  const settings = await getCachedSettings();
   
   if (!series) {
     notFound();
@@ -326,6 +329,11 @@ export default async function SeriesDetailPage({
             seriesSlug={series.slug}
           />
         </section>
+
+        {/* ── Subscribe Card ──────────────────────────────────── */}
+        <div className="mt-12">
+          <SubscribeCard youtubeUrl={settings.youtubeUrl || null} />
+        </div>
 
         {/* ── Reviews ────────────────────────────────────────── */}
         <ReviewsSection 

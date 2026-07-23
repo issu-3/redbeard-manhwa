@@ -474,7 +474,43 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   <p className="mt-1 text-xs text-text-muted">
-                    Leave blank to hide the YouTube subscription section in the footer.
+                    Leave blank to hide the YouTube subscription section in the footer and pages.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">Telegram URL</label>
+                  <input
+                    name="telegramUrl"
+                    defaultValue={initialSettings.telegramUrl || ''}
+                    placeholder="https://t.me/yourchannel"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="mt-1 text-xs text-text-muted">
+                    Leave blank to hide the Telegram icon in the footer.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">Instagram URL</label>
+                  <input
+                    name="instagramUrl"
+                    defaultValue={initialSettings.instagramUrl || ''}
+                    placeholder="https://instagram.com/yourprofile"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="mt-1 text-xs text-text-muted">
+                    Leave blank to hide the Instagram icon in the footer.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">TikTok URL</label>
+                  <input
+                    name="tiktokUrl"
+                    defaultValue={initialSettings.tiktokUrl || ''}
+                    placeholder="https://tiktok.com/@yourprofile"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="mt-1 text-xs text-text-muted">
+                    Leave blank to hide the TikTok icon in the footer.
                   </p>
                 </div>
               </div>
