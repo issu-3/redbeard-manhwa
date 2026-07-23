@@ -11,38 +11,55 @@ export async function generateMissingSeoData() {
     throw new Error('Unauthorized');
   }
 
-  // Find Series missing SEO
   const series = await prisma.series.findMany({ select: { id: true, title: true, synopsis: true, slug: true, coverImage: true, seo: true } });
-  
-  const hasSeo = (record: { seo: any }) => {
-    if (!record.seo) return false;
+  const chapters = await prisma.chapter.findMany({ 
+    select: { id: true, title: true, number: true, slug: true, seo: true, series: { select: { title: true, slug: true, coverImage: true } } }
+  });
+
+  const getSeoData = (record: { seo: any }) => {
+    if (!record.seo) return {};
     try {
-      const seo = typeof record.seo === 'string' ? JSON.parse(record.seo) : record.seo;
-      return !!(seo.title && seo.description);
+      return typeof record.seo === 'string' ? JSON.parse(record.seo) : record.seo;
     } catch (e) {
-      return false;
+      return {};
     }
   };
+  
+  const hasValidSeo = (record: { seo: any }, isChapter: boolean) => {
+    const seo = getSeoData(record);
+    if (!seo.title || !seo.description || !seo.ogImage) return false;
+    return true;
+  };
 
+  const titles = new Set<string>();
+  const descriptions = new Set<string>();
   let generatedCount = 0;
 
   for (const s of series) {
-    if (!hasSeo(s)) {
+    const seo = getSeoData(s);
+    const needsUpdate = !hasValidSeo(s, false) || titles.has(seo.title) || descriptions.has(seo.description);
+    
+    if (needsUpdate) {
       try {
-        const existingSeo = s.seo && typeof s.seo === 'string' ? JSON.parse(s.seo) : (s.seo || {});
-        const title = `Read ${s.title} Manhwa | REDBEARD`;
-        let desc = s.synopsis ? s.synopsis.substring(0, 150) : `Read the latest chapters of ${s.title} on REDBEARD. High quality manhwa and webtoons.`;
+        let title = seo.title || `Read ${s.title} Manhwa | REDBEARD`;
+        let desc = seo.description || (s.synopsis ? s.synopsis.substring(0, 150) : `Read the latest chapters of ${s.title} on REDBEARD. High quality manhwa and webtoons.`);
         if (desc.length === 150) desc += '...';
+        
+        if (titles.has(title)) title = `${title} - ${s.id.substring(0, 4)}`;
+        if (descriptions.has(desc)) desc = `${desc} - ${s.id.substring(0, 4)}`;
+        
+        titles.add(title);
+        descriptions.add(desc);
         
         await prisma.series.update({
           where: { id: s.id },
           data: {
             seo: JSON.stringify({
-              ...existingSeo,
-              title: existingSeo.title || title,
-              description: existingSeo.description || desc,
-              ogImage: existingSeo.ogImage || s.coverImage,
-              canonical: existingSeo.canonical || `https://redbeard-manhwa.vercel.app/series/${s.slug}`
+              ...seo,
+              title: title,
+              description: desc,
+              ogImage: seo.ogImage || s.coverImage,
+              canonical: seo.canonical || `https://redbeard-manhwa.vercel.app/series/${s.slug}`
             })
           }
         });
@@ -50,32 +67,37 @@ export async function generateMissingSeoData() {
       } catch (err) {
         console.error(`Failed to generate SEO for series ${s.id}`, err);
       }
+    } else {
+      titles.add(seo.title);
+      descriptions.add(seo.description);
     }
   }
 
-  // Find Chapters missing SEO (limit to 50 per request to avoid slow responses)
-  const chapters = await prisma.chapter.findMany({ 
-    select: { id: true, title: true, number: true, slug: true, seo: true, series: { select: { title: true, slug: true, coverImage: true } } },
-    take: 50
-  });
-
   for (const c of chapters) {
-    if (!hasSeo(c)) {
+    const seo = getSeoData(c);
+    const needsUpdate = !hasValidSeo(c, true) || titles.has(seo.title) || descriptions.has(seo.description);
+    
+    if (needsUpdate) {
       try {
-        const existingSeo = c.seo && typeof c.seo === 'string' ? JSON.parse(c.seo) : (c.seo || {});
-        const chLabel = c.number !== null ? `Chapter ${c.number}` : (c.title || 'Latest Chapter');
-        const title = `Read ${c.series.title} - ${chLabel} | REDBEARD`;
-        const desc = `Read ${c.series.title} ${chLabel} online. High quality manhwa and webtoons available at REDBEARD.`;
+        const chLabel = c.number !== null ? `Chapter ${c.number}` : (c.title || c.slug || 'Latest Chapter');
+        let title = seo.title || `Read ${c.series.title} - ${chLabel} | REDBEARD`;
+        let desc = seo.description || `Read ${c.series.title} ${chLabel} online. High quality manhwa and webtoons available at REDBEARD.`;
+        
+        if (titles.has(title)) title = `${title} - ${c.id.substring(0, 4)}`;
+        if (descriptions.has(desc)) desc = `${desc} - ${c.id.substring(0, 4)}`;
+        
+        titles.add(title);
+        descriptions.add(desc);
         
         await prisma.chapter.update({
           where: { id: c.id },
           data: {
             seo: JSON.stringify({
-              ...existingSeo,
-              title: existingSeo.title || title,
-              description: existingSeo.description || desc,
-              ogImage: existingSeo.ogImage || c.series.coverImage,
-              canonical: existingSeo.canonical || `https://redbeard-manhwa.vercel.app/series/${c.series.slug}/chapter/${c.slug}`
+              ...seo,
+              title: title,
+              description: desc,
+              ogImage: seo.ogImage || c.series.coverImage,
+              canonical: seo.canonical || `https://redbeard-manhwa.vercel.app/series/${c.series.slug}/chapter/${c.slug}`
             })
           }
         });
@@ -83,14 +105,17 @@ export async function generateMissingSeoData() {
       } catch (err) {
         console.error(`Failed to generate SEO for chapter ${c.id}`, err);
       }
+    } else {
+      titles.add(seo.title);
+      descriptions.add(seo.description);
     }
   }
 
   if (generatedCount === 0) {
-    return { success: true, message: 'All series and chapters already have SEO metadata.' };
+    return { success: true, message: 'All series and chapters already have optimized SEO metadata.' };
   }
   
-  return { success: true, message: `Successfully generated AI SEO data for ${generatedCount} items.` };
+  return { success: true, message: `Successfully optimized SEO data and fixed duplicates for ${generatedCount} items.` };
 }
 
 export async function fetchSeoDashboardData() {
