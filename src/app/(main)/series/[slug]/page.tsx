@@ -197,14 +197,15 @@ export default async function SeriesDetailPage({
     ]
   };
 
-  const firstChapter = series.chapters.length > 0 ? series.chapters[series.chapters.length - 1] : null;
+  const firstChapter = series.chapters.length > 0 ? series.chapters[0] : null;
   const firstChapterLink = firstChapter 
-    ? (firstChapter.sourceType === 'EXTERNAL' && firstChapter.externalUrl ? firstChapter.externalUrl : `/series/${series.slug}/chapter/${firstChapter.number}`) 
+    ? (firstChapter.sourceType === 'EXTERNAL' && firstChapter.externalUrl ? firstChapter.externalUrl : `/series/${series.slug}/chapter/${firstChapter.slug || firstChapter.number || 1}`) 
     : '#';
 
   const chaptersList = series.chapters.map((c: Chapter) => ({
     number: c.number,
     label: c.label,
+    slug: c.slug,
     sourceType: c.sourceType,
     externalUrl: c.externalUrl,
   }));

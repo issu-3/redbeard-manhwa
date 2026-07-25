@@ -219,7 +219,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
           if (scrollTop + clientHeight >= scrollHeight - 10) {
             if (autoNextChapter && chapter.nextChapter) {
               router.push(
-                `/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.number}`
+                `/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug || chapter.nextChapter.number}`
               );
             }
           }
@@ -280,7 +280,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
       if (currentPage < chapter.images.length) {
         nextPage();
       } else if (autoNextChapter && chapter.nextChapter) {
-        router.push(`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.number}`);
+        router.push(`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug || chapter.nextChapter.number}`);
       }
     }
   }, [mode, currentPage, chapter.images.length, chapter.nextChapter, chapter.seriesSlug, autoNextChapter, nextPage, router]);
@@ -290,7 +290,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
       if (currentPage > 1) {
         prevPage();
       } else if (chapter.prevChapter) {
-        router.push(`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.number}`);
+        router.push(`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug || chapter.prevChapter.number}`);
       }
     }
   }, [mode, currentPage, chapter.prevChapter, chapter.seriesSlug, prevPage, router]);
@@ -560,7 +560,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                 <div className="flex items-center justify-center gap-4">
                   {chapter.prevChapter && (
                     <Link
-                      href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.number}`}
+                      href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug || chapter.prevChapter.number}`}
                       className="flex items-center gap-2 rounded-xl bg-foreground/5 px-6 py-3 text-sm font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -570,7 +570,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                   )}
                   {chapter.nextChapter && (
                     <Link
-                      href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.number}`}
+                      href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug || chapter.nextChapter.number}`}
                       className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white hover:bg-primary-hover transition-all"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -684,7 +684,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
               <div className="flex items-center gap-2">
                 {chapter.prevChapter ? (
                   <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.number}`}
+                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug || chapter.prevChapter.number}`}
                     className="flex items-center gap-1.5 rounded-lg bg-foreground/5 px-3 py-2 text-xs font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -710,7 +710,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
               <div className="flex items-center gap-2">
                 {chapter.nextChapter ? (
                   <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.number}`}
+                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug || chapter.nextChapter.number}`}
                     className="flex items-center gap-1.5 rounded-lg bg-foreground/5 px-3 py-2 text-xs font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                     onClick={(e) => e.stopPropagation()}
                   >

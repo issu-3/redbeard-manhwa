@@ -9,7 +9,7 @@ interface SeriesActionsProps {
   seriesId: string;
   seriesSlug: string;
   firstChapterLink: string;
-  chapters: { number: number | null; label?: string | null; sourceType: string | null; externalUrl: string | null }[];
+  chapters: { number: number | null; label?: string | null; slug?: string; sourceType: string | null; externalUrl: string | null }[];
   isMobile?: boolean;
 }
 
@@ -35,7 +35,7 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
     : null;
 
   const continueLink = continueChapterObj
-    ? (continueChapterObj.sourceType === 'EXTERNAL' && continueChapterObj.externalUrl ? continueChapterObj.externalUrl : `/series/${seriesSlug}/chapter/${continueChapterObj.number || continueChapterObj.label}`)
+    ? (continueChapterObj.sourceType === 'EXTERNAL' && continueChapterObj.externalUrl ? continueChapterObj.externalUrl : `/series/${seriesSlug}/chapter/${continueChapterObj.slug || continueChapterObj.number || continueChapterObj.label || 1}`)
     : firstChapterLink;
 
   const hasHistory = !!continueChapterObj;

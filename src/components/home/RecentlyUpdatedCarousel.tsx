@@ -10,6 +10,7 @@ import type { SeriesCardData } from '@/types';
 export interface RecentUpdate {
   series: SeriesCardData;
   chapterNumber: number;
+  chapterSlug?: string;
   chapterLabel?: string | null;
   publishedAt: string;
 }
@@ -22,7 +23,7 @@ export function RecentlyUpdatedCarousel({ updates }: { updates: RecentUpdate[] }
       {updates.map((update, i) => (
         <div key={`${update.series.id}-${update.chapterNumber}`} className="w-[160px] shrink-0 md:w-[190px]">
           <Link 
-            href={`/series/${update.series.slug}/chapter/${update.chapterNumber}`}
+            href={`/series/${update.series.slug}/chapter/${update.chapterSlug || update.chapterNumber}`}
             className="group block overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/40 hover:bg-card-hover"
           >
             <div className="relative aspect-[2/3] w-full overflow-hidden bg-surface">

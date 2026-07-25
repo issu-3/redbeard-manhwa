@@ -18,19 +18,55 @@ async function getChapterData(slug: string, chapterSlug: string): Promise<Chapte
 
   if (!series) return null;
 
-  const chapter = await prisma.chapter.findUnique({
-    where: {
-      seriesId_slug: {
-        seriesId: series.id,
-        slug: chapterSlug,
+  let chapter = null;
+  if (chapterSlug && chapterSlug !== 'null' && chapterSlug !== 'undefined') {
+    chapter = await prisma.chapter.findUnique({
+      where: {
+        seriesId_slug: {
+          seriesId: series.id,
+          slug: chapterSlug,
+        },
       },
-    },
-    include: {
-      images: {
-        orderBy: { pageNumber: 'asc' },
+      include: {
+        images: {
+          orderBy: { pageNumber: 'asc' },
+        },
       },
-    },
-  });
+    });
+
+    if (!chapter) {
+      const numericSlug = Number(chapterSlug);
+      chapter = await prisma.chapter.findFirst({
+        where: {
+          seriesId: series.id,
+          isPublished: true,
+          OR: [
+            ...(!isNaN(numericSlug) ? [{ number: numericSlug }] : []),
+            { slug: `chapter-${chapterSlug}` },
+            { slug: { equals: chapterSlug, mode: 'insensitive' as const } },
+            { label: { equals: chapterSlug, mode: 'insensitive' as const } },
+          ],
+        },
+        include: {
+          images: {
+            orderBy: { pageNumber: 'asc' },
+          },
+        },
+      });
+    }
+  }
+
+  if (!chapter) {
+    chapter = await prisma.chapter.findFirst({
+      where: { seriesId: series.id, isPublished: true },
+      orderBy: [{ number: 'asc' }, { createdAt: 'asc' }],
+      include: {
+        images: {
+          orderBy: { pageNumber: 'asc' },
+        },
+      },
+    });
+  }
 
   if (!chapter) return null;
 
@@ -154,6 +190,10 @@ export default async function ChapterPage({
   const chapter = await getChapterData(slug, chapterSlug);
   if (!chapter) {
     notFound();
+  }
+
+  if (chapter.slug !== chapterSlug) {
+    redirect(`/series/${slug}/chapter/${chapter.slug}`);
   }
 
   // Handle external redirect

@@ -26,7 +26,7 @@ export async function deleteChapter(chapterId: string, seriesId: string) {
 
   revalidatePath(`/admin/series/${seriesId}/chapters`);
   revalidatePath(`/series/[slug]`, 'page');
-  revalidatePath(`/series/[slug]/chapter/[number]`, 'page');
+  revalidatePath(`/series/[slug]/chapter/[chapterSlug]`, 'page');
   updateTag('homepage_data');
 }
 
@@ -167,7 +167,7 @@ export async function updateChapter(chapterId: string, seriesId: string, formDat
 
     revalidatePath(`/admin/series/${seriesId}/chapters`);
     revalidatePath(`/series/[slug]`, 'page');
-    revalidatePath(`/series/[slug]/chapter/[number]`, 'page');
+    revalidatePath(`/series/[slug]/chapter/[chapterSlug]`, 'page');
     updateTag('homepage_data');
   } catch (error: any) {
     if (error?.code === 'P2002') {

@@ -26,7 +26,7 @@ export async function postComment(chapterId: string, content: string) {
     },
   });
 
-  revalidatePath('/series/[slug]/chapter/[number]', 'page');
+  revalidatePath('/series/[slug]/chapter/[chapterSlug]', 'page');
   return { success: true, commentId: comment.id };
 }
 
@@ -70,7 +70,7 @@ export async function replyToComment(commentId: string, content: string, parentR
     });
   }
 
-  revalidatePath('/series/[slug]/chapter/[number]', 'page');
+  revalidatePath('/series/[slug]/chapter/[chapterSlug]', 'page');
   return { success: true, replyId: reply.id };
 }
 
@@ -122,6 +122,6 @@ export async function likeComment(id: string, isReply: boolean = false) {
     return { success: false, error: 'Failed to toggle like' };
   }
 
-  revalidatePath('/series/[slug]/chapter/[number]', 'page');
+  revalidatePath('/series/[slug]/chapter/[chapterSlug]', 'page');
   return { success: true };
 }

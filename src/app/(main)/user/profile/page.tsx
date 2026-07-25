@@ -191,7 +191,7 @@ export default async function ProfilePage() {
               <div className="space-y-4">
                 {recentlyRead.map((item) => (
                   <Link 
-                    href={`/series/${item.series.slug}/chapter/${item.chapter.number}`} 
+                    href={item.chapter.sourceType === 'EXTERNAL' && item.chapter.externalUrl ? item.chapter.externalUrl : `/series/${item.series.slug}/chapter/${item.chapter.slug || item.chapter.number || 1}`} 
                     key={item.id}
                     className="flex gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-border"
                   >

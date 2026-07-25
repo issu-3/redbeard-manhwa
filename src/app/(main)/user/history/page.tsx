@@ -52,7 +52,7 @@ export default async function HistoryPage() {
           {history.map((item) => (
             <Link 
               key={item.id} 
-              href={`/series/${item.series.slug}/chapter/${item.chapter.number}`}
+              href={item.chapter.sourceType === 'EXTERNAL' && item.chapter.externalUrl ? item.chapter.externalUrl : `/series/${item.series.slug}/chapter/${item.chapter.slug || item.chapter.number || 1}`}
               className="group flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors"
             >
               <div className="relative w-full sm:w-24 h-32 shrink-0 rounded-lg overflow-hidden border border-border bg-muted">

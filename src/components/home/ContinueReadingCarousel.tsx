@@ -9,6 +9,7 @@ import type { SeriesCardData } from '@/types';
 export interface ContinueReadingItem {
   series: SeriesCardData;
   chapterNumber: number;
+  chapterSlug?: string;
   chapterLabel?: string | null;
   progress: number;
 }
@@ -21,7 +22,7 @@ export function ContinueReadingCarousel({ items }: { items: ContinueReadingItem[
       {items.map((item, i) => (
         <div key={item.series.id} className="w-[180px] shrink-0 md:w-[220px]">
           <Link 
-            href={`/series/${item.series.slug}/chapter/${item.chapterNumber}`}
+            href={`/series/${item.series.slug}/chapter/${item.chapterSlug || item.chapterNumber}`}
             className="group block overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/40 hover:bg-card-hover"
           >
             <div className="flex p-3 gap-3">
