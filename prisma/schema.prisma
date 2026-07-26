@@ -35,6 +35,8 @@ enum SeriesType {
   MANGA
   MANHUA
   WEBTOON
+  PORNHWA
+  DOUJINSHI
 }
 
 enum ReadingDirection {

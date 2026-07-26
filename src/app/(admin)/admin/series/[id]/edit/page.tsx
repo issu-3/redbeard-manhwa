@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { MediaManager } from '@/components/admin/MediaManager';
 import { MultiSelectField } from '@/components/admin/MultiSelectField';
 import { SeoFormFields } from '@/components/admin/SeoFormFields';
+import { SeriesInfoCard } from '@/components/admin/SeriesInfoCard';
 
 export default async function EditSeriesPage({ 
   params, 
@@ -19,7 +20,7 @@ export default async function EditSeriesPage({
   const [series, genres, tags] = await Promise.all([
     prisma.series.findUnique({
       where: { id },
-      include: { genres: true, tags: true }
+      include: { genres: true, tags: true, authors: true, artists: true }
     }),
     prisma.genre.findMany({ orderBy: { name: 'asc' } }),
     prisma.tag.findMany({ orderBy: { name: 'asc' } })
@@ -59,27 +60,8 @@ export default async function EditSeriesPage({
             />
           </div>
           
-          <div className="space-y-2 md:col-span-2">
-            <MediaManager 
-              name="coverImage" 
-              label="Cover Image *" 
-              recommendedDimensions="600x900" 
-              defaultValue={series.coverImage}
-            />
-          </div>
-
           <div className="space-y-2">
-            <label className="text-sm font-semibold">Type</label>
-            <select name="type" defaultValue={series.type} className="w-full rounded-lg border border-border bg-card px-4 py-2">
-              <option value="MANHWA">Manhwa</option>
-              <option value="MANGA">Manga</option>
-              <option value="MANHUA">Manhua</option>
-              <option value="WEBTOON">Webtoon</option>
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-semibold">Status</label>
+            <label className="text-sm font-semibold">Status *</label>
             <select name="status" defaultValue={series.status} className="w-full rounded-lg border border-border bg-card px-4 py-2">
               <option value="ONGOING">Ongoing</option>
               <option value="COMPLETED">Completed</option>
@@ -87,13 +69,13 @@ export default async function EditSeriesPage({
             </select>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-semibold">Reading Direction</label>
-            <select name="readingDirection" defaultValue={series.readingDirection} className="w-full rounded-lg border border-border bg-card px-4 py-2">
-              <option value="VERTICAL">Vertical (Webtoon)</option>
-              <option value="RTL">Right to Left (Manga)</option>
-              <option value="LTR">Left to Right (Comic)</option>
-            </select>
+          <div className="space-y-2 md:col-span-2">
+            <MediaManager 
+              name="coverImage" 
+              label="Cover Image *" 
+              recommendedDimensions="600x900" 
+              defaultValue={series.coverImage}
+            />
           </div>
 
           <div className="space-y-2 md:col-span-2">
@@ -108,7 +90,7 @@ export default async function EditSeriesPage({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-sm font-semibold">Genres</label>
+            <label className="text-sm font-semibold">Genres *</label>
             <MultiSelectField 
               name="genres"
               placeholder="Search genres..."
@@ -149,6 +131,17 @@ export default async function EditSeriesPage({
             className="w-full rounded-lg border border-border bg-card px-4 py-2" 
           />
         </div>
+
+        <SeriesInfoCard 
+          defaultValues={{
+            type: series.type,
+            releaseYear: series.releaseYear,
+            authors: (series as any).authors?.map((a: any) => a.name).join(', ') || '',
+            artists: (series as any).artists?.map((a: any) => a.name).join(', ') || '',
+            readingDirection: series.readingDirection,
+            alternativeTitles: series.alternativeTitles || []
+          }}
+        />
 
         <SeoFormFields defaultValues={series.seo as any} />
 

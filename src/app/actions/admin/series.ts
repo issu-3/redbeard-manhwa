@@ -32,7 +32,24 @@ export async function deleteSeries(id: string) {
 export async function createSeries(formData: FormData) {
   await checkAdmin();
 
-  // H9 FIX: Parse form data with seriesSchema instead of `as any`
+  const releaseYearStr = formData.get('releaseYear') as string;
+  const releaseYearVal = releaseYearStr && releaseYearStr.trim() !== '' ? parseInt(releaseYearStr, 10) : null;
+
+  const authorNames = (formData.get('authors') as string || '')
+    .split(/[,;\n]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const artistNames = (formData.get('artists') as string || '')
+    .split(/[,;\n]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const alternativeTitles = (formData.get('alternativeNames') as string || formData.get('alternativeTitles') as string || '')
+    .split(/[,;\n]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
   const rawData = {
     title: formData.get('title') as string,
     description: formData.get('description') as string,
@@ -40,10 +57,12 @@ export async function createSeries(formData: FormData) {
     type: formData.get('type') as string,
     status: formData.get('status') as string,
     readingDirection: formData.get('readingDirection') as string || undefined,
+    releaseYear: releaseYearVal !== null && !isNaN(releaseYearVal) ? releaseYearVal : null,
     coverImage: formData.get('coverImage') as string || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==',
     bannerImage: formData.get('bannerImage') as string || undefined,
     genreIds: formData.getAll('genres') as string[],
     tagIds: formData.getAll('tags') as string[],
+    alternativeTitles,
   };
 
   const parsed = seriesSchema.safeParse(rawData);
@@ -55,7 +74,7 @@ export async function createSeries(formData: FormData) {
 
   const {
     title, description, synopsis, type, status, readingDirection,
-    coverImage, bannerImage, genreIds, tagIds
+    coverImage, bannerImage, genreIds, tagIds, releaseYear
   } = parsed.data;
 
   const slug = slugify(title);
@@ -89,6 +108,36 @@ export async function createSeries(formData: FormData) {
     tags: tagNames,
   }, seo, false);
 
+  const authorIds: string[] = [];
+  for (const name of authorNames) {
+    const authorSlug = slugify(name) || `author-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    try {
+      const author = await prisma.author.upsert({
+        where: { slug: authorSlug },
+        update: { name },
+        create: { name, slug: authorSlug }
+      });
+      authorIds.push(author.id);
+    } catch (e) {
+      console.error('Failed to upsert author:', name, e);
+    }
+  }
+
+  const artistIds: string[] = [];
+  for (const name of artistNames) {
+    const artistSlug = slugify(name) || `artist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    try {
+      const artist = await prisma.artist.upsert({
+        where: { slug: artistSlug },
+        update: { name },
+        create: { name, slug: artistSlug }
+      });
+      artistIds.push(artist.id);
+    } catch (e) {
+      console.error('Failed to upsert artist:', name, e);
+    }
+  }
+
   // C5 FIX: Wrap in try/catch for proper error handling
   let dbError = '';
   try {
@@ -101,6 +150,8 @@ export async function createSeries(formData: FormData) {
         type,
         status,
         readingDirection,
+        releaseYear: releaseYear !== null && releaseYear !== undefined && !isNaN(releaseYear) ? releaseYear : null,
+        alternativeTitles: alternativeTitles || [],
         coverImage: coverImage || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==',
         bannerImage: bannerImage || null,
         seo: autoSeo,
@@ -109,6 +160,12 @@ export async function createSeries(formData: FormData) {
         },
         tags: {
           connect: (tagIds || []).map(id => ({ id }))
+        },
+        authors: {
+          connect: authorIds.map(id => ({ id }))
+        },
+        artists: {
+          connect: artistIds.map(id => ({ id }))
         }
       }
     });
@@ -135,7 +192,24 @@ export async function updateSeries(formData: FormData) {
 
   const id = formData.get('id') as string;
 
-  // H9 FIX: Parse form data with seriesSchema instead of `as any`
+  const releaseYearStr = formData.get('releaseYear') as string;
+  const releaseYearVal = releaseYearStr && releaseYearStr.trim() !== '' ? parseInt(releaseYearStr, 10) : null;
+
+  const authorNames = (formData.get('authors') as string || '')
+    .split(/[,;\n]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const artistNames = (formData.get('artists') as string || '')
+    .split(/[,;\n]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const alternativeTitles = (formData.get('alternativeNames') as string || formData.get('alternativeTitles') as string || '')
+    .split(/[,;\n]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
   const rawData = {
     title: formData.get('title') as string,
     description: formData.get('description') as string,
@@ -143,10 +217,12 @@ export async function updateSeries(formData: FormData) {
     type: formData.get('type') as string,
     status: formData.get('status') as string,
     readingDirection: formData.get('readingDirection') as string || undefined,
+    releaseYear: releaseYearVal !== null && !isNaN(releaseYearVal) ? releaseYearVal : null,
     coverImage: formData.get('coverImage') as string || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==',
     bannerImage: formData.get('bannerImage') as string || undefined,
     genreIds: formData.getAll('genres') as string[],
     tagIds: formData.getAll('tags') as string[],
+    alternativeTitles,
   };
 
   const parsed = seriesSchema.safeParse(rawData);
@@ -158,7 +234,7 @@ export async function updateSeries(formData: FormData) {
 
   const {
     title, description, synopsis, type, status, readingDirection,
-    coverImage, bannerImage, genreIds, tagIds
+    coverImage, bannerImage, genreIds, tagIds, releaseYear
   } = parsed.data;
 
   const slug = slugify(title);
@@ -192,6 +268,36 @@ export async function updateSeries(formData: FormData) {
     tags: tagNames,
   }, seo, false);
 
+  const authorIds: string[] = [];
+  for (const name of authorNames) {
+    const authorSlug = slugify(name) || `author-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    try {
+      const author = await prisma.author.upsert({
+        where: { slug: authorSlug },
+        update: { name },
+        create: { name, slug: authorSlug }
+      });
+      authorIds.push(author.id);
+    } catch (e) {
+      console.error('Failed to upsert author:', name, e);
+    }
+  }
+
+  const artistIds: string[] = [];
+  for (const name of artistNames) {
+    const artistSlug = slugify(name) || `artist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    try {
+      const artist = await prisma.artist.upsert({
+        where: { slug: artistSlug },
+        update: { name },
+        create: { name, slug: artistSlug }
+      });
+      artistIds.push(artist.id);
+    } catch (e) {
+      console.error('Failed to upsert artist:', name, e);
+    }
+  }
+
   // C5 FIX: Wrap in try/catch for proper error handling
   let dbError = '';
   try {
@@ -205,6 +311,8 @@ export async function updateSeries(formData: FormData) {
         type,
         status,
         readingDirection,
+        releaseYear: releaseYear !== null && releaseYear !== undefined && !isNaN(releaseYear) ? releaseYear : null,
+        alternativeTitles: alternativeTitles || [],
         coverImage: coverImage || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==',
         bannerImage: bannerImage || null,
         seo: autoSeo,
@@ -213,6 +321,12 @@ export async function updateSeries(formData: FormData) {
         },
         tags: {
           set: (tagIds || []).map(tagId => ({ id: tagId }))
+        },
+        authors: {
+          set: authorIds.map(id => ({ id }))
+        },
+        artists: {
+          set: artistIds.map(id => ({ id }))
         }
       }
     });
