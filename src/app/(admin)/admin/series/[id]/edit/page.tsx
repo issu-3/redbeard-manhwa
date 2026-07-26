@@ -136,8 +136,6 @@ export default async function EditSeriesPage({
           defaultValues={{
             type: series.type,
             releaseYear: series.releaseYear,
-            authors: (series as any).authors?.map((a: any) => a.name).join(', ') || '',
-            artists: (series as any).artists?.map((a: any) => a.name).join(', ') || '',
             readingDirection: series.readingDirection,
             alternativeTitles: series.alternativeTitles || []
           }}

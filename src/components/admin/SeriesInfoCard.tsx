@@ -6,8 +6,6 @@ import { BookOpen, AlertCircle, Eye } from 'lucide-react';
 export interface SeriesInfoDefaultValues {
   type?: string;
   releaseYear?: number | null;
-  authors?: { name: string }[] | string;
-  artists?: { name: string }[] | string;
   readingDirection?: string;
   alternativeTitles?: string[] | string;
 }
@@ -17,22 +15,12 @@ interface SeriesInfoCardProps {
 }
 
 export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
-  const initialAuthors = Array.isArray(defaultValues.authors)
-    ? defaultValues.authors.map(a => typeof a === 'string' ? a : a.name).join(', ')
-    : (defaultValues.authors || '');
-
-  const initialArtists = Array.isArray(defaultValues.artists)
-    ? defaultValues.artists.map(a => typeof a === 'string' ? a : a.name).join(', ')
-    : (defaultValues.artists || '');
-
   const initialAltNames = Array.isArray(defaultValues.alternativeTitles)
     ? defaultValues.alternativeTitles.join('\n')
     : (defaultValues.alternativeTitles || '');
 
   const [type, setType] = useState(defaultValues.type || 'MANHWA');
   const [releaseYear, setReleaseYear] = useState(defaultValues.releaseYear ? defaultValues.releaseYear.toString() : '');
-  const [authors, setAuthors] = useState(initialAuthors);
-  const [artists, setArtists] = useState(initialArtists);
   const [readingDirection, setReadingDirection] = useState(defaultValues.readingDirection || 'VERTICAL');
   const [alternativeNames, setAlternativeNames] = useState(initialAltNames);
 
@@ -63,8 +51,6 @@ export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
   };
 
   const previewYear = !releaseYear || releaseYear.trim() === '' || isYearInvalid ? 'N/A' : releaseYear.trim();
-  const previewAuthor = !authors || authors.trim() === '' ? 'Unknown' : authors.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean).join(', ') || 'Unknown';
-  const previewArtist = !artists || artists.trim() === '' ? 'Unknown' : artists.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean).join(', ') || 'Unknown';
   const previewAltNames = !alternativeNames || alternativeNames.trim() === '' ? 'None' : alternativeNames.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean).join(', ') || 'None';
 
   return (
@@ -87,18 +73,16 @@ export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
           <Eye className="h-3.5 w-3.5" />
           Frontend Preview: Public Series Card Display
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-1">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
           <MetaItem label="Type" value={formatPreviewType(type)} />
           <MetaItem label="Release Year" value={previewYear} />
-          <MetaItem label="Author" value={previewAuthor} />
-          <MetaItem label="Artist" value={previewArtist} />
           <MetaItem label="Direction" value={formatPreviewDirection(readingDirection)} />
           <MetaItem label="Alt Names" value={previewAltNames} />
         </div>
       </div>
 
-      {/* ── Responsive Form Grid (2-col desktop, 1-col mobile) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+      {/* ── Responsive Form Grid (3-col desktop, 1-col mobile) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
         <div className="space-y-2">
           <label className="text-sm font-semibold text-text-primary flex items-center justify-between">
             <span>Type *</span>
@@ -146,38 +130,6 @@ export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
 
         <div className="space-y-2">
           <label className="text-sm font-semibold text-text-primary flex items-center justify-between">
-            <span>Author(s)</span>
-            <span className="text-xs text-text-muted font-normal">Multiple supported</span>
-          </label>
-          <input 
-            name="authors" 
-            type="text"
-            value={authors}
-            onChange={(e) => setAuthors(e.target.value)}
-            placeholder="e.g. Chugong, DUBU (comma or newline separated)"
-            className="w-full rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
-          />
-          <p className="text-xs text-text-muted">Separate multiple author names with a comma or new line.</p>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-text-primary flex items-center justify-between">
-            <span>Artist(s)</span>
-            <span className="text-xs text-text-muted font-normal">Multiple supported</span>
-          </label>
-          <input 
-            name="artists" 
-            type="text"
-            value={artists}
-            onChange={(e) => setArtists(e.target.value)}
-            placeholder="e.g. REDICE STUDIO (comma or newline separated)"
-            className="w-full rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
-          />
-          <p className="text-xs text-text-muted">Separate multiple artist names with a comma or new line.</p>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-text-primary flex items-center justify-between">
             <span>Reading Direction *</span>
             <span className="text-xs text-text-muted font-normal">Reader orientation</span>
           </label>
@@ -193,7 +145,7 @@ export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
           </select>
         </div>
 
-        <div className="space-y-2 md:col-span-2">
+        <div className="space-y-2 md:col-span-3">
           <label className="text-sm font-semibold text-text-primary flex items-center justify-between">
             <span>Alternative Names</span>
             <span className="text-xs text-text-muted font-normal">One per line or comma separated</span>

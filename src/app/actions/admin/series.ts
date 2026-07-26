@@ -35,16 +35,6 @@ export async function createSeries(formData: FormData) {
   const releaseYearStr = formData.get('releaseYear') as string;
   const releaseYearVal = releaseYearStr && releaseYearStr.trim() !== '' ? parseInt(releaseYearStr, 10) : null;
 
-  const authorNames = (formData.get('authors') as string || '')
-    .split(/[,;\n]+/)
-    .map(s => s.trim())
-    .filter(Boolean);
-
-  const artistNames = (formData.get('artists') as string || '')
-    .split(/[,;\n]+/)
-    .map(s => s.trim())
-    .filter(Boolean);
-
   const alternativeTitles = (formData.get('alternativeNames') as string || formData.get('alternativeTitles') as string || '')
     .split(/[,;\n]+/)
     .map(s => s.trim())
@@ -108,36 +98,6 @@ export async function createSeries(formData: FormData) {
     tags: tagNames,
   }, seo, false);
 
-  const authorIds: string[] = [];
-  for (const name of authorNames) {
-    const authorSlug = slugify(name) || `author-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    try {
-      const author = await prisma.author.upsert({
-        where: { slug: authorSlug },
-        update: { name },
-        create: { name, slug: authorSlug }
-      });
-      authorIds.push(author.id);
-    } catch (e) {
-      console.error('Failed to upsert author:', name, e);
-    }
-  }
-
-  const artistIds: string[] = [];
-  for (const name of artistNames) {
-    const artistSlug = slugify(name) || `artist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    try {
-      const artist = await prisma.artist.upsert({
-        where: { slug: artistSlug },
-        update: { name },
-        create: { name, slug: artistSlug }
-      });
-      artistIds.push(artist.id);
-    } catch (e) {
-      console.error('Failed to upsert artist:', name, e);
-    }
-  }
-
   // C5 FIX: Wrap in try/catch for proper error handling
   let dbError = '';
   try {
@@ -160,12 +120,6 @@ export async function createSeries(formData: FormData) {
         },
         tags: {
           connect: (tagIds || []).map(id => ({ id }))
-        },
-        authors: {
-          connect: authorIds.map(id => ({ id }))
-        },
-        artists: {
-          connect: artistIds.map(id => ({ id }))
         }
       }
     });
@@ -194,16 +148,6 @@ export async function updateSeries(formData: FormData) {
 
   const releaseYearStr = formData.get('releaseYear') as string;
   const releaseYearVal = releaseYearStr && releaseYearStr.trim() !== '' ? parseInt(releaseYearStr, 10) : null;
-
-  const authorNames = (formData.get('authors') as string || '')
-    .split(/[,;\n]+/)
-    .map(s => s.trim())
-    .filter(Boolean);
-
-  const artistNames = (formData.get('artists') as string || '')
-    .split(/[,;\n]+/)
-    .map(s => s.trim())
-    .filter(Boolean);
 
   const alternativeTitles = (formData.get('alternativeNames') as string || formData.get('alternativeTitles') as string || '')
     .split(/[,;\n]+/)
@@ -268,36 +212,6 @@ export async function updateSeries(formData: FormData) {
     tags: tagNames,
   }, seo, false);
 
-  const authorIds: string[] = [];
-  for (const name of authorNames) {
-    const authorSlug = slugify(name) || `author-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    try {
-      const author = await prisma.author.upsert({
-        where: { slug: authorSlug },
-        update: { name },
-        create: { name, slug: authorSlug }
-      });
-      authorIds.push(author.id);
-    } catch (e) {
-      console.error('Failed to upsert author:', name, e);
-    }
-  }
-
-  const artistIds: string[] = [];
-  for (const name of artistNames) {
-    const artistSlug = slugify(name) || `artist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    try {
-      const artist = await prisma.artist.upsert({
-        where: { slug: artistSlug },
-        update: { name },
-        create: { name, slug: artistSlug }
-      });
-      artistIds.push(artist.id);
-    } catch (e) {
-      console.error('Failed to upsert artist:', name, e);
-    }
-  }
-
   // C5 FIX: Wrap in try/catch for proper error handling
   let dbError = '';
   try {
@@ -321,12 +235,6 @@ export async function updateSeries(formData: FormData) {
         },
         tags: {
           set: (tagIds || []).map(tagId => ({ id: tagId }))
-        },
-        authors: {
-          set: authorIds.map(id => ({ id }))
-        },
-        artists: {
-          set: artistIds.map(id => ({ id }))
         }
       }
     });
