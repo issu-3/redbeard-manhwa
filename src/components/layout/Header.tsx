@@ -35,6 +35,12 @@ const USER_MENU_ITEMS = USER_NAV_ITEMS.map((item) => {
   return { ...item, Icon: iconMap[item.icon] || User };
 });
 
+function getUserRoleLabel(role?: string) {
+  if (role === 'ADMIN') return 'System Admin';
+  if (role === 'MODERATOR') return 'Moderator';
+  return 'Member';
+}
+
 export function Header() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -187,7 +193,7 @@ export function Header() {
                     )}
                     <div className="flex flex-col text-left">
                       <span className="text-sm font-semibold">{user?.name || 'User'}</span>
-                      <span className="text-xs text-muted-foreground">{user?.email || 'Premium Member'}</span>
+                      <span className="text-xs text-muted-foreground">{getUserRoleLabel(user?.role)}</span>
                     </div>
                     <ChevronDown
                       className={cn(
@@ -214,7 +220,7 @@ export function Header() {
                             {user?.name || 'User'}
                           </p>
                           <p className="text-xs text-text-muted">
-                            {user?.email}
+                            {getUserRoleLabel(user?.role)}
                           </p>
                         </div>
 

@@ -31,7 +31,11 @@ async function getSeriesData(slug: string) {
         orderBy: [{ number: 'asc' }, { createdAt: 'asc' }],
       },
       reviews: {
-        include: { user: true },
+        include: {
+          user: {
+            select: { id: true, displayName: true, username: true, avatarUrl: true, role: true }
+          }
+        },
         orderBy: { createdAt: 'desc' },
         take: 20, // H10 FIX: Paginate reviews to prevent memory/performance issues
       }

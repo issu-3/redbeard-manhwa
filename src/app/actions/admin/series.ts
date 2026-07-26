@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { slugify } from '@/lib/utils';
 import { seriesSchema } from '@/lib/validators';
+import { generateSeriesSeo } from '@/lib/seo-generator';
 
 async function checkAdmin() {
   const session = await auth();
@@ -70,6 +71,24 @@ export async function createSeries(formData: FormData) {
     twitterImage: (formData.get('seoTwitterImage') as string) || undefined,
   };
 
+  const [genresData, tagsData] = await Promise.all([
+    prisma.genre.findMany({ where: { id: { in: genreIds } }, select: { name: true } }),
+    prisma.tag.findMany({ where: { id: { in: (tagIds || []) } }, select: { name: true } })
+  ]);
+  const genreNames = genresData.map(g => g.name);
+  const tagNames = tagsData.map(t => t.name);
+
+  const autoSeo = generateSeriesSeo({
+    title,
+    slug,
+    synopsis,
+    description,
+    coverImage,
+    bannerImage,
+    genres: genreNames,
+    tags: tagNames,
+  }, seo, false);
+
   // C5 FIX: Wrap in try/catch for proper error handling
   let dbError = '';
   try {
@@ -84,7 +103,7 @@ export async function createSeries(formData: FormData) {
         readingDirection,
         coverImage: coverImage || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==',
         bannerImage: bannerImage || null,
-        seo,
+        seo: autoSeo,
         genres: {
           connect: genreIds.map(id => ({ id }))
         },
@@ -155,6 +174,24 @@ export async function updateSeries(formData: FormData) {
     twitterImage: (formData.get('seoTwitterImage') as string) || undefined,
   };
 
+  const [genresData, tagsData] = await Promise.all([
+    prisma.genre.findMany({ where: { id: { in: genreIds } }, select: { name: true } }),
+    prisma.tag.findMany({ where: { id: { in: (tagIds || []) } }, select: { name: true } })
+  ]);
+  const genreNames = genresData.map(g => g.name);
+  const tagNames = tagsData.map(t => t.name);
+
+  const autoSeo = generateSeriesSeo({
+    title,
+    slug,
+    synopsis,
+    description,
+    coverImage,
+    bannerImage,
+    genres: genreNames,
+    tags: tagNames,
+  }, seo, false);
+
   // C5 FIX: Wrap in try/catch for proper error handling
   let dbError = '';
   try {
@@ -170,7 +207,7 @@ export async function updateSeries(formData: FormData) {
         readingDirection,
         coverImage: coverImage || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==',
         bannerImage: bannerImage || null,
-        seo,
+        seo: autoSeo,
         genres: {
           set: genreIds.map(genreId => ({ id: genreId }))
         },

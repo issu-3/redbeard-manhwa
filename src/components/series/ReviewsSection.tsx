@@ -11,7 +11,15 @@ import { submitReview, deleteReview } from '@/app/actions/public/reviews';
 import { toast } from 'sonner';
 import type { Review, User } from '@prisma/client';
 
-type ReviewWithUser = Review & { user: User };
+type ReviewWithUser = Review & {
+  user: {
+    id: string;
+    displayName: string | null;
+    username: string | null;
+    avatarUrl: string | null;
+    role?: string;
+  };
+};
 
 interface ReviewsSectionProps {
   seriesId: string;

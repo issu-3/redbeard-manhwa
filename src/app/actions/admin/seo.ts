@@ -4,118 +4,153 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import fs from 'fs';
 import path from 'path';
+import { generateSeriesSeo, calculateSeriesSeoScore } from '@/lib/seo-generator';
+import { APP_URL } from '@/lib/constants';
 
-export async function generateMissingSeoData() {
+export async function generateMissingSeoData(forceRegenerate: boolean = false) {
   const session = await auth();
   if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     throw new Error('Unauthorized');
   }
 
-  const series = await prisma.series.findMany({ select: { id: true, title: true, synopsis: true, slug: true, coverImage: true, seo: true } });
+  const series = await prisma.series.findMany({ 
+    select: { 
+      id: true, 
+      title: true, 
+      synopsis: true, 
+      description: true, 
+      slug: true, 
+      coverImage: true, 
+      bannerImage: true, 
+      seo: true, 
+      genres: { select: { name: true } }, 
+      tags: { select: { name: true } } 
+    } 
+  });
+  
   const chapters = await prisma.chapter.findMany({ 
-    select: { id: true, title: true, number: true, slug: true, seo: true, series: { select: { title: true, slug: true, coverImage: true } } }
+    select: { 
+      id: true, 
+      title: true, 
+      number: true, 
+      slug: true, 
+      seo: true, 
+      series: { select: { title: true, slug: true, coverImage: true, bannerImage: true } } 
+    }
   });
 
-  const getSeoData = (record: { seo: any }) => {
-    if (!record.seo) return {};
-    try {
-      return typeof record.seo === 'string' ? JSON.parse(record.seo) : record.seo;
-    } catch (e) {
-      return {};
-    }
-  };
-  
-  const hasValidSeo = (record: { seo: any }, isChapter: boolean) => {
-    const seo = getSeoData(record);
-    if (!seo.title || !seo.description || !seo.ogImage) return false;
-    return true;
-  };
-
-  const titles = new Set<string>();
-  const descriptions = new Set<string>();
-  let generatedCount = 0;
+  let titlesGenerated = 0;
+  let descriptionsGenerated = 0;
+  let keywordsGenerated = 0;
+  let canonicalsGenerated = 0;
+  let socialImagesAssigned = 0;
+  let totalUpdated = 0;
 
   for (const s of series) {
-    const seo = getSeoData(s);
-    const needsUpdate = !hasValidSeo(s, false) || titles.has(seo.title) || descriptions.has(seo.description);
+    const existingSeo = typeof s.seo === 'string' ? (tryParseJson(s.seo) || {}) : (s.seo || {});
     
-    if (needsUpdate) {
+    const hadTitle = !!(existingSeo.title && existingSeo.title.trim());
+    const hadDesc = !!(existingSeo.description && existingSeo.description.trim());
+    const hadKw = !!(existingSeo.keywords && existingSeo.keywords.trim());
+    const hadCan = !!(existingSeo.canonical || existingSeo.canonicalUrl);
+    const hadImg = !!(existingSeo.ogImage || existingSeo.twitterImage);
+
+    const newSeo = generateSeriesSeo({
+      title: s.title,
+      slug: s.slug,
+      synopsis: s.synopsis,
+      description: s.description,
+      coverImage: s.coverImage,
+      bannerImage: s.bannerImage,
+      genres: s.genres.map(g => g.name),
+      tags: s.tags.map(t => t.name)
+    }, existingSeo, forceRegenerate);
+
+    const changed = forceRegenerate || JSON.stringify(existingSeo) !== JSON.stringify(newSeo);
+    
+    if (changed) {
+      if (!hadTitle || forceRegenerate) titlesGenerated++;
+      if (!hadDesc || forceRegenerate) descriptionsGenerated++;
+      if (!hadKw || forceRegenerate) keywordsGenerated++;
+      if (!hadCan || forceRegenerate) canonicalsGenerated++;
+      if (!hadImg || forceRegenerate) socialImagesAssigned++;
+
       try {
-        let title = seo.title || `Read ${s.title} Manhwa | REDBEARD`;
-        let desc = seo.description || (s.synopsis ? s.synopsis.substring(0, 150) : `Read the latest chapters of ${s.title} on REDBEARD. High quality manhwa and webtoons.`);
-        if (desc.length === 150) desc += '...';
-        
-        if (titles.has(title)) title = `${title} - ${s.id.substring(0, 4)}`;
-        if (descriptions.has(desc)) desc = `${desc} - ${s.id.substring(0, 4)}`;
-        
-        titles.add(title);
-        descriptions.add(desc);
-        
         await prisma.series.update({
           where: { id: s.id },
-          data: {
-            seo: JSON.stringify({
-              ...seo,
-              title: title,
-              description: desc,
-              ogImage: seo.ogImage || s.coverImage,
-              canonical: seo.canonical || `https://redbeard-manhwa.vercel.app/series/${s.slug}`
-            })
-          }
+          data: { seo: newSeo }
         });
-        generatedCount++;
+        totalUpdated++;
       } catch (err) {
-        console.error(`Failed to generate SEO for series ${s.id}`, err);
+        console.error(`Failed to update SEO for series ${s.id}`, err);
       }
-    } else {
-      titles.add(seo.title);
-      descriptions.add(seo.description);
     }
   }
 
   for (const c of chapters) {
-    const seo = getSeoData(c);
-    const needsUpdate = !hasValidSeo(c, true) || titles.has(seo.title) || descriptions.has(seo.description);
+    const existingSeo = typeof c.seo === 'string' ? (tryParseJson(c.seo) || {}) : (c.seo || {});
     
-    if (needsUpdate) {
+    const hadTitle = !!(existingSeo.title && existingSeo.title.trim());
+    const hadDesc = !!(existingSeo.description && existingSeo.description.trim());
+    const hadCan = !!(existingSeo.canonical || existingSeo.canonicalUrl);
+    const hadImg = !!(existingSeo.ogImage || existingSeo.twitterImage);
+
+    const chLabel = c.number !== null ? `Chapter ${c.number}` : (c.title || c.slug || 'Latest Chapter');
+    const autoTitle = `${c.series.title} - ${chLabel} | REDBEARD`;
+    const autoDesc = `Read ${c.series.title} ${chLabel} online. High quality manhwa and webtoons available at REDBEARD.`;
+    const baseUrl = APP_URL.startsWith('http') ? APP_URL : 'https://redbeard-manhwa.vercel.app';
+    const autoCanonical = `${baseUrl}/series/${c.series.slug}/chapter/${c.slug}`;
+    const autoImg = existingSeo.ogImage || c.series.bannerImage || c.series.coverImage || '/images/og-default.png';
+
+    const newTitle = (!forceRegenerate && existingSeo.title && existingSeo.title.trim()) ? existingSeo.title.trim() : autoTitle;
+    const newDesc = (!forceRegenerate && existingSeo.description && existingSeo.description.trim()) ? existingSeo.description.trim() : autoDesc;
+    const newCanonical = (!forceRegenerate && (existingSeo.canonical || existingSeo.canonicalUrl)) ? (existingSeo.canonical || existingSeo.canonicalUrl) : autoCanonical;
+    const newImg = (!forceRegenerate && existingSeo.ogImage) ? existingSeo.ogImage : autoImg;
+
+    const newSeo = {
+      ...existingSeo,
+      title: newTitle,
+      description: newDesc,
+      canonical: newCanonical,
+      canonicalUrl: newCanonical,
+      ogImage: newImg,
+      twitterImage: existingSeo.twitterImage || newImg,
+      robots: existingSeo.robots || 'index, follow'
+    };
+
+    const changed = forceRegenerate || JSON.stringify(existingSeo) !== JSON.stringify(newSeo);
+    if (changed) {
+      if (!hadTitle || forceRegenerate) titlesGenerated++;
+      if (!hadDesc || forceRegenerate) descriptionsGenerated++;
+      if (!hadCan || forceRegenerate) canonicalsGenerated++;
+      if (!hadImg || forceRegenerate) socialImagesAssigned++;
+
       try {
-        const chLabel = c.number !== null ? `Chapter ${c.number}` : (c.title || c.slug || 'Latest Chapter');
-        let title = seo.title || `Read ${c.series.title} - ${chLabel} | REDBEARD`;
-        let desc = seo.description || `Read ${c.series.title} ${chLabel} online. High quality manhwa and webtoons available at REDBEARD.`;
-        
-        if (titles.has(title)) title = `${title} - ${c.id.substring(0, 4)}`;
-        if (descriptions.has(desc)) desc = `${desc} - ${c.id.substring(0, 4)}`;
-        
-        titles.add(title);
-        descriptions.add(desc);
-        
         await prisma.chapter.update({
           where: { id: c.id },
-          data: {
-            seo: JSON.stringify({
-              ...seo,
-              title: title,
-              description: desc,
-              ogImage: seo.ogImage || c.series.coverImage,
-              canonical: seo.canonical || `https://redbeard-manhwa.vercel.app/series/${c.series.slug}/chapter/${c.slug}`
-            })
-          }
+          data: { seo: newSeo }
         });
-        generatedCount++;
+        totalUpdated++;
       } catch (err) {
-        console.error(`Failed to generate SEO for chapter ${c.id}`, err);
+        console.error(`Failed to update SEO for chapter ${c.id}`, err);
       }
-    } else {
-      titles.add(seo.title);
-      descriptions.add(seo.description);
     }
   }
 
-  if (generatedCount === 0) {
-    return { success: true, message: 'All series and chapters already have optimized SEO metadata.' };
-  }
-  
-  return { success: true, message: `Successfully optimized SEO data and fixed duplicates for ${generatedCount} items.` };
+  return { 
+    success: true, 
+    message: forceRegenerate 
+      ? `Force regenerated SEO metadata for ${totalUpdated} items.` 
+      : `Auto-filled empty SEO fields for ${totalUpdated} items without overwriting manual values.`,
+    summary: {
+      titlesGenerated,
+      descriptionsGenerated,
+      keywordsGenerated,
+      canonicalsGenerated,
+      socialImagesAssigned,
+      totalUpdated
+    }
+  };
 }
 
 export async function fetchSeoDashboardData() {
@@ -134,6 +169,46 @@ export async function fetchSeoDashboardData() {
     prisma.series.aggregate({ _sum: { totalViews: true } })
   ]);
 
+  const getSeoData = (record: { seo: any }) => {
+    if (!record.seo) return {};
+    try {
+      return typeof record.seo === 'string' ? JSON.parse(record.seo) : record.seo;
+    } catch (e) {
+      return {};
+    }
+  };
+
+  const allTitles = new Set<string>();
+  const allDescs = new Set<string>();
+  seriesRaw.forEach(s => {
+    const seo = getSeoData(s);
+    if (seo.title && seo.title.trim()) allTitles.add(seo.title.trim());
+    if (seo.description && seo.description.trim()) allDescs.add(seo.description.trim());
+  });
+
+  const seriesList = seriesRaw.map(s => {
+    const seo = getSeoData(s);
+    const scoreData = calculateSeriesSeoScore(seo, s.slug, allTitles, allDescs);
+    return {
+      id: s.id,
+      title: s.title,
+      slug: s.slug,
+      seoTitle: seo.title || null,
+      metaDescription: seo.description || null,
+      ogImage: seo.ogImage || null,
+      canonical: seo.canonical || seo.canonicalUrl || null,
+      wordCount: s.description ? s.description.split(/\s+/).length : 0,
+      isIndexable: seo.noindex !== true && seo.robots !== 'noindex, nofollow',
+      optimized: scoreData.score >= 80,
+      seoScore: scoreData.score,
+      missingFields: scoreData.missingFields,
+      warnings: scoreData.warnings,
+      isDuplicateTitle: scoreData.isDuplicateTitle,
+      isDuplicateDesc: scoreData.isDuplicateDesc,
+      isInvalidCanonical: scoreData.isInvalidCanonical
+    };
+  });
+
   const hasSeo = (record: { seo: any }) => {
     if (!record.seo) return false;
     try {
@@ -144,41 +219,14 @@ export async function fetchSeoDashboardData() {
     }
   };
 
-  const getSeoData = (record: { seo: any }) => {
-    if (!record.seo) return {};
-    try {
-      return typeof record.seo === 'string' ? JSON.parse(record.seo) : record.seo;
-    } catch (e) {
-      return {};
-    }
-  };
-
-  const seriesWithSeoCount = seriesRaw.filter(hasSeo).length;
   const chaptersWithSeoCount = chaptersRaw.filter(hasSeo).length;
-
-  const seriesScore = seriesRaw.length > 0 ? Math.round((seriesWithSeoCount / seriesRaw.length) * 100) : 100;
+  const seriesScore = seriesList.length > 0 ? Math.round(seriesList.reduce((acc, s) => acc + (s.seoScore || 0), 0) / seriesList.length) : 100;
   const chapterScore = chaptersRaw.length > 0 ? Math.round((chaptersWithSeoCount / chaptersRaw.length) * 100) : 100;
   
   const metadataScore = Math.round((seriesScore + chapterScore) / 2);
   const technicalScore = 90;
   const contentScore = 85;
   const overallScore = Math.round((metadataScore + technicalScore + contentScore) / 3);
-
-  const seriesList = seriesRaw.map(s => {
-    const seo = getSeoData(s);
-    return {
-      id: s.id,
-      title: s.title,
-      slug: s.slug,
-      seoTitle: seo.title || null,
-      metaDescription: seo.description || null,
-      ogImage: seo.ogImage || null,
-      canonical: seo.canonical || null,
-      wordCount: s.description ? s.description.split(/\s+/).length : 0,
-      isIndexable: seo.noindex !== true,
-      optimized: hasSeo(s)
-    };
-  });
 
   const chapterList = chaptersRaw.map(c => {
     const seo = getSeoData(c);
@@ -199,29 +247,29 @@ export async function fetchSeoDashboardData() {
     };
   });
 
-  // Calculate real technical audit
   const hasRobots = fs.existsSync(path.join(process.cwd(), 'public', 'robots.txt')) || fs.existsSync(path.join(process.cwd(), 'src', 'app', 'robots.ts'));
   const hasSitemap = fs.existsSync(path.join(process.cwd(), 'public', 'sitemap.xml')) || fs.existsSync(path.join(process.cwd(), 'src', 'app', 'sitemap.ts'));
   
   let duplicateTitles = 0;
   let duplicateDescriptions = 0;
-  const titles = new Set();
-  const descriptions = new Set();
+  const tSet = new Set();
+  const dSet = new Set();
 
   [...seriesList, ...chapterList].forEach(item => {
     if (item.seoTitle) {
-      if (titles.has(item.seoTitle)) duplicateTitles++;
-      else titles.add(item.seoTitle);
+      if (tSet.has(item.seoTitle)) duplicateTitles++;
+      else tSet.add(item.seoTitle);
     }
     if (item.metaDescription) {
-      if (descriptions.has(item.metaDescription)) duplicateDescriptions++;
-      else descriptions.add(item.metaDescription);
+      if (dSet.has(item.metaDescription)) duplicateDescriptions++;
+      else dSet.add(item.metaDescription);
     }
   });
 
   const missingOgTags = [...seriesList, ...chapterList].filter(i => !i.ogImage).length;
   const nonIndexable = [...seriesList, ...chapterList].filter(i => !i.isIndexable).length;
   const seriesWithoutChapters = seriesRaw.filter(s => s.chapterCount === 0).length;
+  const invalidCanonicals = seriesList.filter(s => s.isInvalidCanonical).length;
 
   const technicalAudit = [
     { name: 'robots.txt', status: hasRobots ? 'pass' : 'fail' },
@@ -229,11 +277,11 @@ export async function fetchSeoDashboardData() {
     { name: 'Open Graph Tags', status: missingOgTags > 0 ? 'warning' : 'pass' },
     { name: 'Duplicate Titles', status: duplicateTitles > 0 ? 'warning' : 'pass' },
     { name: 'Duplicate Descriptions', status: duplicateDescriptions > 0 ? 'warning' : 'pass' },
+    { name: 'Canonical URLs Valid', status: invalidCanonicals > 0 ? 'warning' : 'pass' },
     { name: 'Empty Series (Orphan Pages)', status: seriesWithoutChapters > 0 ? 'warning' : 'pass' },
     { name: 'Indexability', status: nonIndexable > 0 ? 'warning' : 'pass' },
   ];
 
-  // Map GSC to internal views data since real GSC needs OAuth
   const totalImpressions = totalViewsData._sum.totalViews || 0;
   const uniqueIps = new Set(viewLogs.filter(v => v.ipAddress).map(v => v.ipAddress)).size;
   const ctr = totalImpressions > 0 ? ((uniqueIps / totalImpressions) * 100).toFixed(1) : '0';
@@ -247,7 +295,6 @@ export async function fetchSeoDashboardData() {
     crawlErrors: 0
   };
 
-  // Process timeline data from real viewLogs
   const days = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
@@ -265,7 +312,7 @@ export async function fetchSeoDashboardData() {
 
   const timelineData = days.map(d => ({
     date: new Date(d).toLocaleDateString('en-US', { weekday: 'short' }),
-    score: overallScore, // Keep score flat since we don't have historical score tracking
+    score: overallScore,
     traffic: trafficByDay[d]
   }));
 
@@ -277,9 +324,9 @@ export async function fetchSeoDashboardData() {
   if (duplicateDescriptions > 0) {
     aiSuggestions.push({ title: 'Duplicate descriptions', desc: `Found ${duplicateDescriptions} pages using duplicate meta descriptions.` });
   }
-  const missingSeo = seriesRaw.length + chaptersRaw.length - seriesWithSeoCount - chaptersWithSeoCount;
+  const missingSeo = seriesList.filter(s => s.missingFields && s.missingFields.length > 0).length;
   if (missingSeo > 0) {
-    aiSuggestions.push({ title: 'Missing SEO Metadata', desc: `${missingSeo} pages are missing custom SEO titles or descriptions.` });
+    aiSuggestions.push({ title: 'Incomplete SEO Metadata', desc: `${missingSeo} series pages have missing SEO fields or recommendations.` });
   }
 
   return {
@@ -302,4 +349,12 @@ export async function fetchSeoDashboardData() {
     timelineData,
     aiSuggestions
   };
+}
+
+function tryParseJson(str: string): any {
+  try {
+    return JSON.parse(str);
+  } catch {
+    return null;
+  }
 }

@@ -87,7 +87,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <div className="flex-1" />
           <div className="flex items-center gap-4">
             <div className="text-sm text-text-secondary">
-              Logged in as <span className="font-semibold text-text-primary">{session?.user?.name || session?.user?.email}</span>
+              Logged in as <span className="font-semibold text-text-primary">{session?.user?.name || (session?.user?.role === 'ADMIN' ? 'Administrator' : 'Moderator')}</span>
             </div>
           </div>
         </header>

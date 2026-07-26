@@ -1,6 +1,6 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { Search, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { OverviewCards } from './OverviewCards';
 import { TechnicalAudit } from './TechnicalAudit';
 import { PerformanceMetrics } from './PerformanceMetrics';
@@ -23,6 +23,11 @@ interface SeoData {
 }
 
 export function SeoDashboard({ data }: { data: SeoData }) {
+  const missingFieldsCount = data.series.filter(s => s.missingFields && s.missingFields.length > 0).length;
+  const duplicatesCount = data.series.filter(s => s.isDuplicateTitle || s.isDuplicateDesc).length;
+  const missingImagesCount = data.series.filter(s => !s.ogImage).length;
+  const invalidCanonicalsCount = data.series.filter(s => s.isInvalidCanonical).length;
+
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       {/* Header */}
@@ -33,7 +38,7 @@ export function SeoDashboard({ data }: { data: SeoData }) {
             SEO Health Dashboard
           </h1>
           <p className="text-text-secondary mt-1">
-            Professional SEO monitoring and optimization platform.
+            Production-grade local SEO monitoring, validation, and automated generation engine.
           </p>
         </div>
         <QuickActions />
@@ -41,6 +46,46 @@ export function SeoDashboard({ data }: { data: SeoData }) {
 
       {/* Main Scores */}
       <OverviewCards overview={data.overview} />
+
+      {/* Quick KPI Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="rounded-xl border border-border bg-card p-4 flex items-center justify-between shadow-sm">
+          <div>
+            <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Missing SEO Fields</div>
+            <div className={`text-2xl font-black mt-1 flex items-center gap-1.5 ${missingFieldsCount > 0 ? 'text-warning' : 'text-success'}`}>
+              {missingFieldsCount} series
+              {missingFieldsCount === 0 && <CheckCircle2 className="h-5 w-5 text-success" />}
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4 flex items-center justify-between shadow-sm">
+          <div>
+            <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Duplicate Metadata</div>
+            <div className={`text-2xl font-black mt-1 flex items-center gap-1.5 ${duplicatesCount > 0 ? 'text-danger' : 'text-success'}`}>
+              {duplicatesCount} detected
+              {duplicatesCount === 0 && <CheckCircle2 className="h-5 w-5 text-success" />}
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4 flex items-center justify-between shadow-sm">
+          <div>
+            <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Missing Social Images</div>
+            <div className={`text-2xl font-black mt-1 flex items-center gap-1.5 ${missingImagesCount > 0 ? 'text-warning' : 'text-success'}`}>
+              {missingImagesCount} pages
+              {missingImagesCount === 0 && <CheckCircle2 className="h-5 w-5 text-success" />}
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4 flex items-center justify-between shadow-sm">
+          <div>
+            <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Invalid Canonicals</div>
+            <div className={`text-2xl font-black mt-1 flex items-center gap-1.5 ${invalidCanonicalsCount > 0 ? 'text-danger' : 'text-success'}`}>
+              {invalidCanonicalsCount} URLs
+              {invalidCanonicalsCount === 0 && <CheckCircle2 className="h-5 w-5 text-success" />}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Analytics Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

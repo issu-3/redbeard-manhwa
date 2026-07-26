@@ -77,9 +77,13 @@ export function ChapterSeoTable({ chapters }: { chapters: ChapterSeo[] }) {
                   </td>
                   <td className="px-6 py-4">
                     {chapter.isIndexable ? (
-                      <CheckCircle2 className="h-5 w-5 text-success" />
+                      <span title="Indexable by search engines" className="inline-block">
+                        <CheckCircle2 className="h-5 w-5 text-success" />
+                      </span>
                     ) : (
-                      <XCircle className="h-5 w-5 text-danger" />
+                      <span title="Noindex applied" className="inline-block">
+                        <XCircle className="h-5 w-5 text-danger" />
+                      </span>
                     )}
                   </td>
                   <td className="px-6 py-4 text-xs text-text-muted">
