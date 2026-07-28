@@ -12,11 +12,11 @@ if (connectionString?.includes('prisma_migration')) {
   }
 }
 const prismaClientSingleton = () => {
-  // We configure a shared Pool to prevent exhausting connections in serverless environments.
-  // This uses the pooled connection string (DATABASE_URL).
+  // We configure a shared Pool optimized for Neon serverless Postgres with PgBouncer.
+  // Using max: 5 in production allows concurrent queries (e.g. in Promise.all) without socket starvation.
   const pool = new Pool({
     connectionString,
-    max: process.env.NODE_ENV === 'production' ? 1 : 1,
+    max: process.env.NODE_ENV === 'production' ? 5 : 2,
     idleTimeoutMillis: 15000,
     allowExitOnIdle: true,
   });
@@ -33,12 +33,10 @@ declare global {
   var prismaGlobal: undefined | ReturnType<typeof prismaClientSingleton>;
 }
 
-// In development, the global object ensures we don't spawn multiple PrismaClient 
-// or pg Pool instances across Hot Module Replacements.
+// Ensure global object caches the PrismaClient and pg Pool across both development HMR
+// and production serverless Lambda container reuses.
 export const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
 
 export default prisma;
 
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.prismaGlobal = prisma;
-}
+globalThis.prismaGlobal = prisma;
