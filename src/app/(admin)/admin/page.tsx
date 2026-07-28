@@ -2,18 +2,11 @@ import { prisma } from '@/lib/prisma';
 import { Library, Users, BookOpen, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { unstable_cache } from 'next/cache';
 
-export default async function AdminDashboard() {
-  let totalSeries = 0;
-  let totalUsers = 0;
-  let totalChapters = 0;
-  let pendingReports = 0;
-  let recentUsers: any[] = [];
-  let recentSeries: any[] = [];
-  let dbError: string | null = null;
-
-  try {
-    [
+const getCachedAdminDashboardData = unstable_cache(
+  async () => {
+    const [
       totalSeries,
       totalUsers,
       totalChapters,
@@ -26,8 +19,35 @@ export default async function AdminDashboard() {
       prisma.chapter.count(),
       prisma.report.count({ where: { status: 'PENDING' } }),
       prisma.user.findMany({ take: 5, orderBy: { createdAt: 'desc' } }),
-      prisma.series.findMany({ take: 5, orderBy: { createdAt: 'desc' } })
+      prisma.series.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, title: true, slug: true, coverImage: true, type: true, status: true, totalViews: true, chapterCount: true, createdAt: true }
+      })
     ]);
+    return { totalSeries, totalUsers, totalChapters, pendingReports, recentUsers, recentSeries };
+  },
+  ['admin-dashboard-stats'],
+  { tags: ['admin-dashboard-stats'], revalidate: 60 }
+);
+
+export default async function AdminDashboard() {
+  let totalSeries = 0;
+  let totalUsers = 0;
+  let totalChapters = 0;
+  let pendingReports = 0;
+  let recentUsers: any[] = [];
+  let recentSeries: any[] = [];
+  let dbError: string | null = null;
+
+  try {
+    const data = await getCachedAdminDashboardData();
+    totalSeries = data.totalSeries;
+    totalUsers = data.totalUsers;
+    totalChapters = data.totalChapters;
+    pendingReports = data.pendingReports;
+    recentUsers = data.recentUsers;
+    recentSeries = data.recentSeries;
   } catch (err: any) {
     console.error('Failed to fetch admin dashboard stats:', err);
     dbError = err?.message || 'Database connection unreachable or plan limit reached.';

@@ -1,8 +1,29 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { toSeriesCardData } from '@/lib/data-mappers';
+import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
 import { auth } from '@/auth';
+
+declare global {
+  var _searchLogBuffer: any[] | undefined;
+}
+
+const searchBuffer = globalThis._searchLogBuffer ?? [];
+if (!globalThis._searchLogBuffer) globalThis._searchLogBuffer = searchBuffer;
+
+async function flushSearchBuffer() {
+  if (searchBuffer.length === 0) return;
+  const items = [...searchBuffer];
+  searchBuffer.length = 0;
+  try {
+    await prisma.auditLog.createMany({
+      data: items,
+      skipDuplicates: true
+    });
+  } catch (e) {
+    console.error('Failed to flush search logs:', e);
+  }
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -40,26 +61,22 @@ export async function GET(request: NextRequest) {
 
     const results = await prisma.series.findMany({
       where: whereClause,
-      include: {
-        genres: true,
-      },
+      select: SERIES_CARD_SELECT,
       take: limit,
     });
 
-    if (query) {
-      // M8 FIX: Include user ID in audit log if authenticated
+    if (query && query.length >= 3) {
       const session = await auth();
-      
-      // Log search analytics asynchronously so we don't block the request
-      prisma.auditLog.create({
-        data: {
-          action: 'SEARCH',
-          targetType: 'SearchQuery',
-          targetId: 'public',
-          userId: session?.user?.id || undefined,
-          metadata: { query: query.toLowerCase() }
-        }
-      }).catch(err => console.error('Failed to log search:', err));
+      searchBuffer.push({
+        action: 'SEARCH',
+        targetType: 'SearchQuery',
+        targetId: 'public',
+        userId: session?.user?.id || undefined,
+        metadata: { query: query.toLowerCase() }
+      });
+      if (searchBuffer.length >= 10) {
+        flushSearchBuffer().catch(err => console.error('Failed to log search:', err));
+      }
     }
 
     return NextResponse.json({

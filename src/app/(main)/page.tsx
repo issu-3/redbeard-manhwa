@@ -1,9 +1,6 @@
 export const revalidate = 3600;
 import { Metadata } from 'next';
 import { HomepageClient } from './homepage-client';
-import { toSeriesCardData } from '@/lib/data-mappers';
-import { Prisma, HomepageSection } from '@prisma/client';
-import { prisma } from '@/lib/prisma';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdRenderer } from '@/components/ads/AdRenderer';
 import { SubscribeCard } from '@/components/shared/SubscribeCard';
@@ -16,113 +13,27 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+import { getCachedHomepageSections, getCachedHeroBanners, getCachedSectionSeries } from '@/app/actions/public/homepage';
+
 export default async function HomePage() {
   const settings = await getCachedSettings();
-  // 1. Fetch active sections sorted by order
-  let allSections: HomepageSection[] = [];
-  try {
-    allSections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
-  } catch (error) {
-    console.warn('Database unreachable during static generation, falling back to defaults.');
-  }
-  
-  if (allSections.length === 0) {
-    allSections = [
-      { id: '1', type: 'HERO_BANNER', isActive: true, order: 0, limit: 10, isManual: false, title: null, subtitle: null, showViewAll: false, manualSeriesId: [] as string[] },
-      { id: '2', type: 'CONTINUE_READING', isActive: true, order: 1, limit: 10, isManual: false, title: '📚 Continue Reading', subtitle: 'Pick up where you left off', showViewAll: true, manualSeriesId: [] as string[] },
-      { id: '3', type: 'TRENDING', isActive: true, order: 2, limit: 10, isManual: false, title: '🔥 Trending', subtitle: 'Top 10 most viewed this week', showViewAll: true, manualSeriesId: [] as string[] },
-      { id: '4', type: 'RECENTLY_UPDATED', isActive: true, order: 3, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true, manualSeriesId: [] as string[] },
-      { id: '5', type: 'RECOMMENDED', isActive: true, order: 4, limit: 10, isManual: false, title: 'Recommended For You', subtitle: 'Based on your reading history', showViewAll: true, manualSeriesId: [] as string[] },
-      { id: '6', type: 'FEATURED', isActive: true, order: 5, limit: 10, isManual: false, title: '⭐ Featured Series', subtitle: 'Handpicked by our staff', showViewAll: true, manualSeriesId: [] as string[] }
-    ] as any;
-  }
-  const activeSections = allSections.filter(s => s.isActive).sort((a, b) => a.order - b.order);
+  const allSections = await getCachedHomepageSections();
+  const activeSections = allSections.filter((s: any) => s.isActive).sort((a: any, b: any) => a.order - b.order);
 
   const sectionData: Record<string, unknown[]> = {};
 
-  const sectionPromises = activeSections.map(async (sec) => {
+  const sectionPromises = activeSections.map(async (sec: any) => {
     let data: unknown[] = [];
     try {
       if (sec.type === 'HERO_BANNER') {
-        const banners = await prisma.heroBanner.findMany({ orderBy: { order: 'asc' } });
-        data = banners.map(b => ({
-          id: b.id,
-          title: b.title || '',
-          slug: '#',
-          coverImage: b.desktopImage,
-          bannerImage: b.desktopImage,
-          description: b.buttonText || '',
-          genres: [],
-          averageRating: 0,
-          chapterCount: 0,
-          totalViews: 0,
-          status: 'ONGOING'
-        }));
-      } else if (sec.isManual && sec.manualSeriesId.length > 0) {
-        const seriesList = await prisma.series.findMany({
-          where: { id: { in: sec.manualSeriesId } },
-          include: { genres: true }
-        });
-        const seriesMap = new Map(seriesList.map(s => [s.id, s]));
-        const ordered = (sec.manualSeriesId as string[]).map((id: string) => seriesMap.get(id)).filter((s): s is Prisma.SeriesGetPayload<{ include: { genres: true } }> => Boolean(s));
-        data = ordered.map(s => toSeriesCardData(s));
+        data = await getCachedHeroBanners();
       } else if (sec.type === 'CONTINUE_READING') {
-        // Dynamic data fetched client-side via getPersonalizedSections
         data = [];
-      } else if (sec.type === 'RECOMMENDED' && !sec.isManual) {
-        // Fallback for guests and static shell (personalized data fetched client-side)
-        const fallback = await prisma.series.findMany({
-          where: { isEditorChoice: true },
-          take: sec.limit,
-          include: { genres: true }
-        });
-        data = fallback.map(toSeriesCardData);
-      } else if (sec.type === 'RECENTLY_UPDATED' && !sec.isManual) {
-        const chapters = await prisma.chapter.findMany({
-          where: { isPublished: true },
-          orderBy: { publishedAt: 'desc' },
-          take: sec.limit * 2,
-          include: { series: { include: { genres: true } } }
-        });
-        const unique = new Map<string, typeof chapters[0]>();
-        for (const ch of chapters) {
-          if (!unique.has(ch.seriesId)) unique.set(ch.seriesId, ch);
-        }
-        data = Array.from(unique.values()).slice(0, sec.limit).map((ch) => ({
-          series: toSeriesCardData(ch.series),
-          chapterNumber: ch.number,
-          chapterLabel: ch.sourceType === 'EXTERNAL' ? ch.label : null,
-          publishedAt: ch.publishedAt?.toISOString() || ch.createdAt.toISOString()
-        }));
-      } else if (!sec.isManual) {
-        // General fallback using the automated query
-        let automated: Prisma.SeriesGetPayload<{ include: { genres: true } }>[] = [];
-        if (sec.type === 'TRENDING') {
-          const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-          const topReads = await prisma.readingHistory.groupBy({
-            by: ['seriesId'],
-            where: { updatedAt: { gte: yesterday } },
-            _count: { seriesId: true },
-            orderBy: { _count: { seriesId: 'desc' } },
-            take: sec.limit
-          });
-            if (topReads.length > 0) {
-              const seriesIds = topReads.map((t) => t.seriesId);
-              const foundSeries = await prisma.series.findMany({
-                where: { id: { in: seriesIds } },
-                include: { genres: true }
-              });
-              const seriesMap = new Map(foundSeries.map(s => [s.id, s]));
-              automated = seriesIds.map((id: string) => seriesMap.get(id)).filter((s): s is Prisma.SeriesGetPayload<{ include: { genres: true } }> => Boolean(s));
-            } else {
-            automated = await prisma.series.findMany({ orderBy: { totalViews: 'desc' }, include: { genres: true }, take: sec.limit });
-          }
-          automated = await prisma.series.findMany({ where: { isFeatured: true }, include: { genres: true }, take: sec.limit });
-        }
-        data = automated.map(s => toSeriesCardData(s));
+      } else {
+        data = await getCachedSectionSeries(sec.type, sec.limit, sec.isManual || false, sec.manualSeriesId || []);
       }
     } catch (e) {
-      console.warn(`Database unreachable during static generation for section ${sec.type}`);
+      console.warn(`Error loading homepage section ${sec.type}:`, e);
     }
     return { type: sec.type, data };
   });

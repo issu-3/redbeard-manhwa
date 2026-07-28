@@ -12,10 +12,18 @@ async function checkAdmin() {
   }
 }
 
+const getCachedAnalyticsData = unstable_cache(
+  async (range: string) => {
+    return fetchAnalyticsDataInternal(range);
+  },
+  ['admin-analytics-data'],
+  { tags: ['admin-analytics'], revalidate: 60 }
+);
+
 export async function fetchAnalyticsData(range: string) {
   // C5 FIX: This exported server action must verify admin access
   await checkAdmin();
-  return fetchAnalyticsDataInternal(range);
+  return getCachedAnalyticsData(range);
 }
 
 async function fetchAnalyticsDataInternal(range: string) {

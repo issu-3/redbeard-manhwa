@@ -11,12 +11,14 @@ import {
   ArrowLeft,
   BarChart3,
   Search,
-  Star
+  Star,
+  Database
 } from 'lucide-react';
 import { auth } from '@/auth';
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+  { name: 'Backups & DR', href: '/admin/backups', icon: Database },
   { name: 'SEO Health', href: '/admin/seo', icon: Search },
   { name: 'Homepage', href: '/admin/homepage', icon: LayoutDashboard },
   { name: 'Series', href: '/admin/series', icon: Library },

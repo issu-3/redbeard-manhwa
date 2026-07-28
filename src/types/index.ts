@@ -26,5 +26,11 @@ export type {
   ReviewData,
   NotificationData,
   AchievementData,
-  LeaderboardEntry,
 } from './social';
+
+export type {
+  BlobVerificationReport,
+  BackupVerificationResult,
+  BackupLogData,
+  BackupScheduleConfig,
+} from './backup';

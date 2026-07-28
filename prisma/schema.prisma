@@ -79,6 +79,28 @@ enum AchievementCategory {
   SPECIAL
 }
 
+enum BackupFormat {
+  SQL
+  JSON
+}
+
+enum BackupType {
+  MANUAL
+  DAILY
+  WEEKLY
+  MONTHLY
+  PRE_DEPLOY
+  RECOVERY_TEST
+}
+
+enum BackupStatus {
+  SUCCESS
+  FAILED
+  IN_PROGRESS
+  VERIFIED
+  RESTORED
+}
+
 // ============================================================================
 // AUTH MODELS
 // ============================================================================
@@ -218,6 +240,8 @@ model Series {
   @@index([averageRating])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([isFeatured, totalViews(sort: Desc)])
+  @@index([isEditorChoice])
   @@map("series")
 }
 
@@ -249,6 +273,8 @@ model Chapter {
   @@unique([seriesId, slug])
   @@index([seriesId])
   @@index([publishedAt])
+  @@index([seriesId, isPublished, number(sort: Desc)])
+  @@index([isPublished, publishedAt(sort: Desc)])
   @@map("chapters")
 }
 
@@ -335,6 +361,7 @@ model Bookmark {
   series Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
 
   @@unique([userId, seriesId])
+  @@index([userId, createdAt(sort: Desc)])
   @@map("bookmarks")
 }
 
@@ -355,6 +382,7 @@ model ReadingHistory {
 
   @@unique([userId, chapterId])
   @@index([userId, seriesId])
+  @@index([userId, updatedAt(sort: Desc)])
   @@map("reading_history")
 }
 
@@ -665,6 +693,32 @@ model ViewLog {
   @@index([createdAt])
   @@index([seriesId])
   @@index([chapterId])
+  @@index([seriesId, createdAt(sort: Desc)])
   @@map("view_logs")
+}
+
+// ============================================================================
+// DISASTER RECOVERY & BACKUP MODELS
+// ============================================================================
+
+model BackupLog {
+  id           String       @id @default(cuid())
+  fileName     String
+  format       BackupFormat
+  type         BackupType
+  sizeBytes    Int
+  recordCount  Int
+  status       BackupStatus @default(IN_PROGRESS)
+  content      String?      @db.Text
+  driveFileId  String?
+  driveUrl     String?
+  errorMessage String?      @db.Text
+  metadata     Json?
+  createdAt    DateTime     @default(now())
+  completedAt  DateTime?
+
+  @@index([createdAt(sort: Desc)])
+  @@index([type, status])
+  @@map("backup_logs")
 }
 

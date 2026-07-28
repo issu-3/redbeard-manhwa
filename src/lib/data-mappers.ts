@@ -2,6 +2,21 @@ import type { SeriesCardData, SeriesDetail } from '@/types';
 import type { Series, Genre, Tag, Author, Artist, Chapter } from '@prisma/client';
 
 type SeriesWithGenres = Series & { genres: Genre[] };
+type SeriesCardInput = {
+  id: string;
+  title: string;
+  slug: string;
+  coverImage: string | null;
+  type: string;
+  status: string;
+  averageRating: number;
+  ratingCount: number;
+  totalViews: number;
+  totalBookmarks: number;
+  chapterCount: number;
+  updatedAt: Date;
+  genres: Array<{ name: string; slug: string }>;
+};
 type FullSeries = Series & {
   genres: Genre[];
   tags: Tag[];
@@ -10,12 +25,33 @@ type FullSeries = Series & {
   chapters: Chapter[];
 };
 
-export function toSeriesCardData(series: SeriesWithGenres): SeriesCardData {
+export const SERIES_CARD_SELECT = {
+  id: true,
+  title: true,
+  slug: true,
+  coverImage: true,
+  type: true,
+  status: true,
+  averageRating: true,
+  ratingCount: true,
+  totalViews: true,
+  totalBookmarks: true,
+  chapterCount: true,
+  updatedAt: true,
+  genres: {
+    select: {
+      name: true,
+      slug: true,
+    },
+  },
+} as const;
+
+export function toSeriesCardData(series: SeriesCardInput | SeriesWithGenres): SeriesCardData {
   return {
     id: series.id,
     title: series.title,
     slug: series.slug,
-    coverImage: series.coverImage,
+    coverImage: series.coverImage || '',
     type: series.type as SeriesCardData['type'],
     status: series.status as SeriesCardData['status'],
     averageRating: series.averageRating,

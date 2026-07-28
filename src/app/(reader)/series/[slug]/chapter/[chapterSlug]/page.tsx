@@ -7,45 +7,28 @@ import { auth } from '@/auth';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdRenderer } from '@/components/ads/AdRenderer';
+import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 
 // ─── Data Fetching ───────────────────────────────────────────────
 
-async function getChapterData(slug: string, chapterSlug: string): Promise<ChapterData | null> {
-  const series = await prisma.series.findUnique({
-    where: { slug },
-    select: { id: true, title: true, slug: true },
-  });
-
-  if (!series) return null;
-
-  let chapter = null;
-  if (chapterSlug && chapterSlug !== 'null' && chapterSlug !== 'undefined') {
-    chapter = await prisma.chapter.findUnique({
-      where: {
-        seriesId_slug: {
-          seriesId: series.id,
-          slug: chapterSlug,
-        },
-      },
-      include: {
-        images: {
-          orderBy: { pageNumber: 'asc' },
-        },
-      },
+const getCachedChapterDataInternal = unstable_cache(
+  async (slug: string, chapterSlug: string): Promise<ChapterData | null> => {
+    const series = await prisma.series.findUnique({
+      where: { slug },
+      select: { id: true, title: true, slug: true },
     });
 
-    if (!chapter) {
-      const numericSlug = Number(chapterSlug);
-      chapter = await prisma.chapter.findFirst({
+    if (!series) return null;
+
+    let chapter = null;
+    if (chapterSlug && chapterSlug !== 'null' && chapterSlug !== 'undefined') {
+      chapter = await prisma.chapter.findUnique({
         where: {
-          seriesId: series.id,
-          isPublished: true,
-          OR: [
-            ...(!isNaN(numericSlug) ? [{ number: numericSlug }] : []),
-            { slug: `chapter-${chapterSlug}` },
-            { slug: { equals: chapterSlug, mode: 'insensitive' as const } },
-            { label: { equals: chapterSlug, mode: 'insensitive' as const } },
-          ],
+          seriesId_slug: {
+            seriesId: series.id,
+            slug: chapterSlug,
+          },
         },
         include: {
           images: {
@@ -53,76 +36,101 @@ async function getChapterData(slug: string, chapterSlug: string): Promise<Chapte
           },
         },
       });
+
+      if (!chapter) {
+        const numericSlug = Number(chapterSlug);
+        chapter = await prisma.chapter.findFirst({
+          where: {
+            seriesId: series.id,
+            isPublished: true,
+            OR: [
+              ...(!isNaN(numericSlug) ? [{ number: numericSlug }] : []),
+              { slug: `chapter-${chapterSlug}` },
+              { slug: { equals: chapterSlug, mode: 'insensitive' as const } },
+              { label: { equals: chapterSlug, mode: 'insensitive' as const } },
+            ],
+          },
+          include: {
+            images: {
+              orderBy: { pageNumber: 'asc' },
+            },
+          },
+        });
+      }
     }
-  }
 
-  if (!chapter) {
-    chapter = await prisma.chapter.findFirst({
-      where: { seriesId: series.id, isPublished: true },
-      orderBy: [{ number: 'asc' }, { createdAt: 'asc' }],
-      include: {
-        images: {
-          orderBy: { pageNumber: 'asc' },
+    if (!chapter) {
+      chapter = await prisma.chapter.findFirst({
+        where: { seriesId: series.id, isPublished: true },
+        orderBy: [{ number: 'asc' }, { createdAt: 'asc' }],
+        include: {
+          images: {
+            orderBy: { pageNumber: 'asc' },
+          },
         },
-      },
-    });
-  }
+      });
+    }
 
-  if (!chapter) return null;
+    if (!chapter) return null;
 
-  // Find previous chapter
-  let prevChapter = null;
-  if (chapter.number !== null) {
-    prevChapter = await prisma.chapter.findFirst({
-      where: {
-        seriesId: series.id,
-        number: { lt: chapter.number },
-        isPublished: true,
-      },
-      orderBy: { number: 'desc' },
-      select: { number: true, slug: true },
-    });
-  }
+    // Find adjacent chapters concurrently
+    let prevChapter = null;
+    let nextChapter = null;
+    if (chapter.number !== null) {
+      [prevChapter, nextChapter] = await Promise.all([
+        prisma.chapter.findFirst({
+          where: {
+            seriesId: series.id,
+            number: { lt: chapter.number },
+            isPublished: true,
+          },
+          orderBy: { number: 'desc' },
+          select: { number: true, slug: true },
+        }),
+        prisma.chapter.findFirst({
+          where: {
+            seriesId: series.id,
+            number: { gt: chapter.number },
+            isPublished: true,
+          },
+          orderBy: { number: 'asc' },
+          select: { number: true, slug: true },
+        })
+      ]);
+    }
 
-  // Find next chapter
-  let nextChapter = null;
-  if (chapter.number !== null) {
-    nextChapter = await prisma.chapter.findFirst({
-      where: {
-        seriesId: series.id,
-        number: { gt: chapter.number },
-        isPublished: true,
-      },
-      orderBy: { number: 'asc' },
-      select: { number: true, slug: true },
-    });
-  }
+    return {
+      id: chapter.id,
+      seriesId: series.id,
+      seriesTitle: series.title,
+      seriesSlug: series.slug,
+      number: chapter.number,
+      title: chapter.title || undefined,
+      slug: chapter.slug,
+      totalPages: chapter.totalPages || chapter.images.length,
+      sourceType: chapter.sourceType || 'UPLOAD',
+      externalUrl: chapter.externalUrl || undefined,
+      externalProvider: chapter.externalProvider || undefined,
+      images: chapter.images?.map((img: any) => ({
+        id: img.id,
+        pageNumber: img.pageNumber,
+        imageUrl: img.imageUrl,
+        width: img.width || undefined,
+        height: img.height || undefined,
+        blurHash: img.blurHash || undefined,
+      })) || [],
+      prevChapter: prevChapter ? { number: prevChapter.number, slug: prevChapter.slug } : undefined,
+      nextChapter: nextChapter ? { number: nextChapter.number, slug: nextChapter.slug } : undefined,
+      seo: chapter.seo as Record<string, string> | undefined,
+    };
+  },
+  ['chapter-reader-data'],
+  { tags: ['chapter-data'], revalidate: 3600 }
+);
 
-  return {
-    id: chapter.id,
-    seriesId: series.id,
-    seriesTitle: series.title,
-    seriesSlug: series.slug,
-    number: chapter.number,
-    title: chapter.title || undefined,
-    slug: chapter.slug,
-    totalPages: chapter.totalPages || chapter.images.length,
-    sourceType: chapter.sourceType || 'UPLOAD',
-    externalUrl: chapter.externalUrl || undefined,
-    externalProvider: chapter.externalProvider || undefined,
-    images: chapter.images?.map((img: any) => ({
-      id: img.id,
-      pageNumber: img.pageNumber,
-      imageUrl: img.imageUrl,
-      width: img.width || undefined,
-      height: img.height || undefined,
-      blurHash: img.blurHash || undefined,
-    })) || [],
-    prevChapter: prevChapter ? { number: prevChapter.number, slug: prevChapter.slug } : undefined,
-    nextChapter: nextChapter ? { number: nextChapter.number, slug: nextChapter.slug } : undefined,
-    seo: chapter.seo as Record<string, string> | undefined,
-  };
-}
+const getChapterData = cache(async (slug: string, chapterSlug: string): Promise<ChapterData | null> => {
+  return getCachedChapterDataInternal(slug, chapterSlug);
+});
 
 // ─── Metadata ──────────────────────────────────────────────────
 
