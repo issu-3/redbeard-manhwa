@@ -4,24 +4,47 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export default async function AdminDashboard() {
-  const [
-    totalSeries,
-    totalUsers,
-    totalChapters,
-    pendingReports,
-    recentUsers,
-    recentSeries
-  ] = await Promise.all([
-    prisma.series.count(),
-    prisma.user.count(),
-    prisma.chapter.count(),
-    prisma.report.count({ where: { status: 'PENDING' } }),
-    prisma.user.findMany({ take: 5, orderBy: { createdAt: 'desc' } }),
-    prisma.series.findMany({ take: 5, orderBy: { createdAt: 'desc' } })
-  ]);
+  let totalSeries = 0;
+  let totalUsers = 0;
+  let totalChapters = 0;
+  let pendingReports = 0;
+  let recentUsers: any[] = [];
+  let recentSeries: any[] = [];
+  let dbError: string | null = null;
+
+  try {
+    [
+      totalSeries,
+      totalUsers,
+      totalChapters,
+      pendingReports,
+      recentUsers,
+      recentSeries
+    ] = await Promise.all([
+      prisma.series.count(),
+      prisma.user.count(),
+      prisma.chapter.count(),
+      prisma.report.count({ where: { status: 'PENDING' } }),
+      prisma.user.findMany({ take: 5, orderBy: { createdAt: 'desc' } }),
+      prisma.series.findMany({ take: 5, orderBy: { createdAt: 'desc' } })
+    ]);
+  } catch (err: any) {
+    console.error('Failed to fetch admin dashboard stats:', err);
+    dbError = err?.message || 'Database connection unreachable or plan limit reached.';
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {dbError && (
+        <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-red-400 flex items-start gap-3 shadow-sm">
+          <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-500 mt-0.5" />
+          <div>
+            <h4 className="font-bold text-red-300">Database Connection Warning</h4>
+            <p className="text-sm mt-1 opacity-90 leading-relaxed">{dbError}</p>
+            <p className="text-xs mt-2 text-red-300/80 font-mono">Tip: If using Prisma Cloud / Accelerate on Vercel, check your usage plan limits in console.prisma.io or switch DATABASE_URL to direct Postgres.</p>
+          </div>
+        </div>
+      )}
       <div>
         <h1 className="text-3xl font-black text-text-primary tracking-tight">Dashboard Overview</h1>
         <p className="text-text-secondary mt-1">Welcome back to the REDBEARD admin panel.</p>

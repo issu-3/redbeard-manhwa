@@ -6,10 +6,15 @@ import { formatDate } from '@/lib/utils';
 import { deleteSeries } from '@/app/actions/admin/series';
 
 export default async function AdminSeriesPage() {
-  const seriesList = await prisma.series.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: { _count: { select: { chapters: true } } }
-  });
+  let seriesList: any[] = [];
+  try {
+    seriesList = await prisma.series.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { chapters: true } } }
+    });
+  } catch (err) {
+    console.error('Failed to load admin series list:', err);
+  }
 
   return (
     <div className="space-y-6">
