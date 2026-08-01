@@ -113,13 +113,29 @@ export async function GET(request: Request) {
         log.push(`Series: migrated ${res.count} new records (${oldSeries.length} total in old DB)`);
       }
 
+      // Create a mapping of old series IDs to new series IDs (for cases where they were skipped due to slug conflicts)
+      const newSeriesList = await prisma.series.findMany();
+      const slugToNewId = new Map(newSeriesList.map(s => [s.slug, s.id]));
+      const oldIdToNewId = new Map();
+      for (const os of oldSeries) {
+        const newId = slugToNewId.get(os.slug);
+        if (newId) {
+          oldIdToNewId.set(os.id, newId);
+        }
+      }
+
+      const mapSeriesId = (oldId: string) => oldIdToNewId.get(oldId) || oldId;
+
       // Migrate Chapters
       const oldChapters = await (oldPrisma as any).chapter.findMany();
       if (oldChapters.length > 0) {
         const batchSize = 200;
         let chapterCount = 0;
         for (let i = 0; i < oldChapters.length; i += batchSize) {
-          const batch = oldChapters.slice(i, i + batchSize);
+          const batch = oldChapters.slice(i, i + batchSize).map((c: any) => ({
+            ...c,
+            seriesId: mapSeriesId(c.seriesId)
+          }));
           const res = await prisma.chapter.createMany({ data: batch, skipDuplicates: true });
           chapterCount += res.count;
         }
@@ -169,14 +185,16 @@ export async function GET(request: Request) {
       // Migrate Bookmarks
       const oldBookmarks = await (oldPrisma as any).bookmark.findMany();
       if (oldBookmarks.length > 0) {
-        const res = await prisma.bookmark.createMany({ data: oldBookmarks, skipDuplicates: true });
+        const mappedBookmarks = oldBookmarks.map((b: any) => ({ ...b, seriesId: mapSeriesId(b.seriesId) }));
+        const res = await prisma.bookmark.createMany({ data: mappedBookmarks, skipDuplicates: true });
         log.push(`Bookmarks: migrated ${res.count} new records`);
       }
 
       // Migrate Reviews
       const oldReviews = await (oldPrisma as any).review.findMany();
       if (oldReviews.length > 0) {
-        const res = await prisma.review.createMany({ data: oldReviews, skipDuplicates: true });
+        const mappedReviews = oldReviews.map((r: any) => ({ ...r, seriesId: mapSeriesId(r.seriesId) }));
+        const res = await prisma.review.createMany({ data: mappedReviews, skipDuplicates: true });
         log.push(`Reviews: migrated ${res.count} new records`);
       }
 
@@ -192,6 +210,14 @@ export async function GET(request: Request) {
       if (oldAnnouncements.length > 0) {
         const res = await prisma.announcement.createMany({ data: oldAnnouncements, skipDuplicates: true });
         log.push(`Announcements: migrated ${res.count} new records`);
+      }
+
+      // Migrate ReadingHistory
+      const oldReadingHistory = await (oldPrisma as any).readingHistory.findMany();
+      if (oldReadingHistory.length > 0) {
+        const mappedHistory = oldReadingHistory.map((h: any) => ({ ...h, seriesId: mapSeriesId(h.seriesId) }));
+        const res = await prisma.readingHistory.createMany({ data: mappedHistory, skipDuplicates: true });
+        log.push(`ReadingHistory: migrated ${res.count} new records`);
       }
 
       return NextResponse.json({
