@@ -17,13 +17,9 @@ export async function GET(request: Request) {
   }
 
   // Connect to old Prisma Postgres database
+  // @ts-ignore - Bypass TS error for accelerateUrl if needed
   const oldPrisma = new PrismaClient({
-    // @ts-ignore - Bypass TS error for datasources in generated types
-    datasources: {
-      db: {
-        url: OLD_DB_URL,
-      },
-    },
+    accelerateUrl: OLD_DB_URL,
   }).$extends(withAccelerate());
 
   try {
