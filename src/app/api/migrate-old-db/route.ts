@@ -155,13 +155,32 @@ export async function GET(request: Request) {
         log.push(`Chapters: migrated ${chapterCount} new records (${oldChapters.length} total in old DB)`);
       }
 
+      // Create a mapping of old chapter IDs to new chapter IDs
+      const newChapterList = await prisma.chapter.findMany();
+      // chapters are unique on [seriesId, slug]
+      const chapterKeyToNewId = new Map(newChapterList.map(c => [`${c.seriesId}_${c.slug}`, c.id]));
+      const oldChapterIdToNewId = new Map();
+      for (const oc of oldChapters) {
+        // use mapped seriesId to find it in new DB
+        const mappedSId = mapSeriesId(oc.seriesId);
+        const newId = chapterKeyToNewId.get(`${mappedSId}_${oc.slug}`);
+        if (newId) {
+          oldChapterIdToNewId.set(oc.id, newId);
+        }
+      }
+
+      const mapChapterId = (oldId: string) => oldChapterIdToNewId.get(oldId) || oldId;
+
       // Migrate ChapterImages
       const oldImages = await (oldPrisma as any).chapterImage.findMany();
       if (oldImages.length > 0) {
         const batchSize = 200;
         let imgCount = 0;
         for (let i = 0; i < oldImages.length; i += batchSize) {
-          const batch = oldImages.slice(i, i + batchSize);
+          const batch = oldImages.slice(i, i + batchSize).map((img: any) => ({
+            ...img,
+            chapterId: mapChapterId(img.chapterId)
+          }));
           const res = await prisma.chapterImage.createMany({ data: batch, skipDuplicates: true });
           imgCount += res.count;
         }
@@ -228,7 +247,12 @@ export async function GET(request: Request) {
       // Migrate ReadingHistory
       const oldReadingHistory = await (oldPrisma as any).readingHistory.findMany();
       if (oldReadingHistory.length > 0) {
-        const mappedHistory = oldReadingHistory.map((h: any) => ({ ...h, seriesId: mapSeriesId(h.seriesId), userId: mapUserId(h.userId) }));
+        const mappedHistory = oldReadingHistory.map((h: any) => ({
+          ...h,
+          seriesId: mapSeriesId(h.seriesId),
+          userId: mapUserId(h.userId),
+          chapterId: mapChapterId(h.chapterId)
+        }));
         const res = await prisma.readingHistory.createMany({ data: mappedHistory, skipDuplicates: true });
         log.push(`ReadingHistory: migrated ${res.count} new records`);
       }
