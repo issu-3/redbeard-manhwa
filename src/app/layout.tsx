@@ -46,6 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: siteDescription,
     keywords: defaultKeywords,
+
     authors: [{ name: `${settings.siteName || 'REDBEARD'} Team` }],
     creator: settings.siteName || 'REDBEARD',
     metadataBase: new URL(APP_URL || 'http://localhost:3000'),
@@ -73,10 +74,6 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     verification: {
       google: settings.seo_gsc_verification || undefined,
-    },
-    icons: {
-      icon: "/logo.png",
-      apple: "/apple-icon.png",
     },
     manifest: '/manifest.json',
   };
