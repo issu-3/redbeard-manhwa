@@ -106,6 +106,19 @@ export async function GET(request: Request) {
         log.push(`Users: migrated ${res.count} new records`);
       }
 
+      // Create a mapping of old user IDs to new user IDs
+      const newUserList = await prisma.user.findMany();
+      const emailToNewUserId = new Map(newUserList.map(u => [u.email, u.id]));
+      const oldUserIdToNewId = new Map();
+      for (const ou of oldUsers) {
+        const newId = emailToNewUserId.get(ou.email);
+        if (newId) {
+          oldUserIdToNewId.set(ou.id, newId);
+        }
+      }
+
+      const mapUserId = (oldId: string) => oldUserIdToNewId.get(oldId) || oldId;
+
       // Migrate Series
       const oldSeries = await (oldPrisma as any).series.findMany();
       if (oldSeries.length > 0) {
@@ -185,7 +198,7 @@ export async function GET(request: Request) {
       // Migrate Bookmarks
       const oldBookmarks = await (oldPrisma as any).bookmark.findMany();
       if (oldBookmarks.length > 0) {
-        const mappedBookmarks = oldBookmarks.map((b: any) => ({ ...b, seriesId: mapSeriesId(b.seriesId) }));
+        const mappedBookmarks = oldBookmarks.map((b: any) => ({ ...b, seriesId: mapSeriesId(b.seriesId), userId: mapUserId(b.userId) }));
         const res = await prisma.bookmark.createMany({ data: mappedBookmarks, skipDuplicates: true });
         log.push(`Bookmarks: migrated ${res.count} new records`);
       }
@@ -193,7 +206,7 @@ export async function GET(request: Request) {
       // Migrate Reviews
       const oldReviews = await (oldPrisma as any).review.findMany();
       if (oldReviews.length > 0) {
-        const mappedReviews = oldReviews.map((r: any) => ({ ...r, seriesId: mapSeriesId(r.seriesId) }));
+        const mappedReviews = oldReviews.map((r: any) => ({ ...r, seriesId: mapSeriesId(r.seriesId), userId: mapUserId(r.userId) }));
         const res = await prisma.review.createMany({ data: mappedReviews, skipDuplicates: true });
         log.push(`Reviews: migrated ${res.count} new records`);
       }
@@ -215,7 +228,7 @@ export async function GET(request: Request) {
       // Migrate ReadingHistory
       const oldReadingHistory = await (oldPrisma as any).readingHistory.findMany();
       if (oldReadingHistory.length > 0) {
-        const mappedHistory = oldReadingHistory.map((h: any) => ({ ...h, seriesId: mapSeriesId(h.seriesId) }));
+        const mappedHistory = oldReadingHistory.map((h: any) => ({ ...h, seriesId: mapSeriesId(h.seriesId), userId: mapUserId(h.userId) }));
         const res = await prisma.readingHistory.createMany({ data: mappedHistory, skipDuplicates: true });
         log.push(`ReadingHistory: migrated ${res.count} new records`);
       }
