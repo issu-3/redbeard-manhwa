@@ -18,6 +18,7 @@ export async function GET(request: Request) {
 
   // Connect to old Prisma Postgres database
   const oldPrisma = new PrismaClient({
+    // @ts-ignore - Bypass TS error for datasources in generated types
     datasources: {
       db: {
         url: OLD_DB_URL,
