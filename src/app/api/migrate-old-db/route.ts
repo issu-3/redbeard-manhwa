@@ -18,7 +18,11 @@ export async function GET(request: Request) {
 
   // Connect to old Prisma Postgres database
   const oldPrisma = new PrismaClient({
-    datasourceUrl: OLD_DB_URL,
+    datasources: {
+      db: {
+        url: OLD_DB_URL,
+      },
+    },
   }).$extends(withAccelerate());
 
   try {
