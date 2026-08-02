@@ -18,11 +18,11 @@ import { getCachedHomepageSections, getCachedHeroBanners, getCachedSectionSeries
 export default async function HomePage() {
   const settings = await getCachedSettings();
   const allSections = await getCachedHomepageSections();
-  const activeSections = allSections.filter((s: any) => s.isActive).sort((a: any, b: any) => a.order - b.order);
+  const activeSections = allSections.filter((s) => s.isActive).sort((a, b) => a.order - b.order);
 
-  const sectionData: Record<string, unknown[]> = {};
+  const sectionData: Record<string, any[]> = {};
 
-  const sectionPromises = activeSections.map(async (sec: any) => {
+  const sectionPromises = activeSections.map(async (sec) => {
     let data: unknown[] = [];
     try {
       if (sec.type === 'HERO_BANNER') {

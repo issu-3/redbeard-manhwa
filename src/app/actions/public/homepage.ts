@@ -4,9 +4,11 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
 import { unstable_cache } from 'next/cache';
+import type { HomepageSection } from '@prisma/client';
+import type { SeriesCardData } from '@/types';
 
 export const getCachedHomepageSections = unstable_cache(
-  async () => {
+  async (): Promise<HomepageSection[]> => {
     try {
       const sections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
       if (sections.length > 0) return sections;
@@ -20,7 +22,7 @@ export const getCachedHomepageSections = unstable_cache(
       { id: '4', type: 'RECENTLY_UPDATED', isActive: true, order: 3, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true, manualSeriesId: [] as string[] },
       { id: '5', type: 'RECOMMENDED', isActive: true, order: 4, limit: 10, isManual: false, title: 'Recommended For You', subtitle: 'Based on your reading history', showViewAll: true, manualSeriesId: [] as string[] },
       { id: '6', type: 'FEATURED', isActive: true, order: 5, limit: 10, isManual: false, title: '⭐ Featured Series', subtitle: 'Handpicked by our staff', showViewAll: true, manualSeriesId: [] as string[] }
-    ] as any[];
+    ];
   },
   ['homepage-sections'],
   { tags: ['homepage', 'sections'], revalidate: 600 }
@@ -51,105 +53,104 @@ export const getCachedHeroBanners = unstable_cache(
   { tags: ['homepage', 'banners'], revalidate: 600 }
 );
 
-export const getCachedSectionSeries = unstable_cache(
-  async (type: string, limit: number, isManual: boolean, manualIds: string[]) => {
-    try {
-      if (isManual && manualIds.length > 0) {
-        const seriesList = await prisma.series.findMany({
-          where: { id: { in: manualIds } },
-          select: SERIES_CARD_SELECT
-        });
-        const seriesMap = new Map(seriesList.map(s => [s.id, s]));
-        return manualIds.map(id => seriesMap.get(id)).filter(Boolean).map(s => toSeriesCardData(s!));
-      }
-
-      if (type === 'TRENDING') {
-        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        const topReads = await prisma.readingHistory.groupBy({
-          by: ['seriesId'],
-          where: { updatedAt: { gte: yesterday } },
-          _count: { seriesId: true },
-          orderBy: { _count: { seriesId: 'desc' } },
-          take: limit
-        });
-        if (topReads.length > 0) {
-          const seriesIds = topReads.map(t => t.seriesId);
-          const foundSeries = await prisma.series.findMany({
-            where: { id: { in: seriesIds } },
+export const getCachedSectionSeries = async (type: string, limit: number, isManual: boolean, manualIds: string[]): Promise<any[]> => {
+  return unstable_cache(
+    async () => {
+      try {
+        if (isManual && manualIds.length > 0) {
+          const seriesList = await prisma.series.findMany({
+            where: { id: { in: manualIds } },
             select: SERIES_CARD_SELECT
           });
-          const seriesMap = new Map(foundSeries.map(s => [s.id, s]));
-          return seriesIds.map(id => seriesMap.get(id)).filter(Boolean).map(s => toSeriesCardData(s!));
-        } else {
-          const automated = await prisma.series.findMany({ orderBy: { totalViews: 'desc' }, select: SERIES_CARD_SELECT, take: limit });
-          return automated.map(toSeriesCardData);
+          const seriesMap = new Map(seriesList.map(s => [s.id, s]));
+          return manualIds.map(id => seriesMap.get(id)).filter(Boolean).map(s => toSeriesCardData(s as any));
         }
-      }
 
-      if (type === 'RECENTLY_UPDATED') {
-        const chapters = await prisma.chapter.findMany({
-          where: { isPublished: true },
-          orderBy: { publishedAt: 'desc' },
-          take: limit * 2,
-          select: {
-            number: true,
-            label: true,
-            sourceType: true,
-            publishedAt: true,
-            createdAt: true,
-            seriesId: true,
-            series: { select: SERIES_CARD_SELECT }
+        if (type === 'TRENDING') {
+          const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          const topReads = await prisma.readingHistory.groupBy({
+            by: ['seriesId'],
+            where: { updatedAt: { gte: yesterday } },
+            _count: { seriesId: true },
+            orderBy: { _count: { seriesId: 'desc' } },
+            take: limit
+          });
+          if (topReads.length > 0) {
+            const seriesIds = topReads.map(t => t.seriesId);
+            const foundSeries = await prisma.series.findMany({
+              where: { id: { in: seriesIds } },
+              select: SERIES_CARD_SELECT
+            });
+            const seriesMap = new Map(foundSeries.map(s => [s.id, s]));
+            return seriesIds.map(id => seriesMap.get(id)).filter(Boolean).map(s => toSeriesCardData(s as any));
+          } else {
+            const automated = await prisma.series.findMany({ orderBy: { totalViews: 'desc' }, select: SERIES_CARD_SELECT, take: limit });
+            return automated.map(toSeriesCardData as any);
           }
-        });
-        const unique = new Map<string, typeof chapters[0]>();
-        for (const ch of chapters) {
-          if (!unique.has(ch.seriesId)) unique.set(ch.seriesId, ch);
         }
-        return Array.from(unique.values()).slice(0, limit).map(ch => ({
-          series: toSeriesCardData(ch.series),
-          chapterNumber: ch.number,
-          chapterLabel: ch.sourceType === 'EXTERNAL' ? ch.label : null,
-          publishedAt: ch.publishedAt?.toISOString() || ch.createdAt.toISOString()
-        }));
-      }
 
-      if (type === 'RECOMMENDED') {
-        const fallback = await prisma.series.findMany({
-          where: { isEditorChoice: true },
-          take: limit,
-          select: SERIES_CARD_SELECT
-        });
-        return fallback.map(toSeriesCardData);
-      }
+        if (type === 'RECENTLY_UPDATED') {
+          const chapters = await prisma.chapter.findMany({
+            where: { isPublished: true },
+            orderBy: { publishedAt: 'desc' },
+            distinct: ['seriesId'],
+            take: limit,
+            select: {
+              number: true,
+              label: true,
+              sourceType: true,
+              publishedAt: true,
+              createdAt: true,
+              seriesId: true,
+              series: { select: SERIES_CARD_SELECT }
+            }
+          });
+          return chapters.map(ch => ({
+            series: toSeriesCardData(ch.series as any),
+            chapterNumber: ch.number,
+            chapterLabel: ch.sourceType === 'EXTERNAL' ? ch.label : null,
+            publishedAt: ch.publishedAt?.toISOString() || ch.createdAt.toISOString()
+          }));
+        }
 
-      if (type === 'FEATURED') {
-        const featured = await prisma.series.findMany({
-          where: { isFeatured: true },
-          orderBy: { totalViews: 'desc' },
-          take: limit,
-          select: SERIES_CARD_SELECT
-        });
-        return featured.map(toSeriesCardData);
-      }
+        if (type === 'RECOMMENDED') {
+          const fallback = await prisma.series.findMany({
+            where: { isEditorChoice: true },
+            take: limit,
+            select: SERIES_CARD_SELECT
+          });
+          return fallback.map(toSeriesCardData as any);
+        }
 
-      if (type === 'NEW_RELEASES' || type === 'LATEST') {
-        const latest = await prisma.series.findMany({
-          orderBy: { createdAt: 'desc' },
-          take: limit,
-          select: SERIES_CARD_SELECT
-        });
-        return latest.map(toSeriesCardData);
-      }
-    } catch (e) {
-      console.warn(`Database error fetching section ${type}:`, e);
-    }
-    return [];
-  },
-  ['homepage-section-data'],
-  { tags: ['homepage', 'series'], revalidate: 300 }
-);
+        if (type === 'FEATURED') {
+          const featured = await prisma.series.findMany({
+            where: { isFeatured: true },
+            orderBy: { totalViews: 'desc' },
+            take: limit,
+            select: SERIES_CARD_SELECT
+          });
+          return featured.map(toSeriesCardData as any);
+        }
 
-export async function getPersonalizedSections(limit: number) {
+        if (type === 'NEW_RELEASES' || type === 'LATEST') {
+          const latest = await prisma.series.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: limit,
+            select: SERIES_CARD_SELECT
+          });
+          return latest.map(toSeriesCardData as any);
+        }
+      } catch (e) {
+        console.warn(`Database error fetching section ${type}:`, e);
+      }
+      return [];
+    },
+    ['homepage-section-data', type, String(limit), String(isManual), manualIds.join(',')],
+    { tags: ['homepage', 'series', `section-${type}`], revalidate: 300 }
+  )();
+};
+
+export async function getPersonalizedSections(limit: number): Promise<{ continueReading: any[], recommended: SeriesCardData[] } | null> {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return null;
@@ -158,6 +159,7 @@ export async function getPersonalizedSections(limit: number) {
   const history = await prisma.readingHistory.findMany({
     where: { userId },
     orderBy: { updatedAt: 'desc' },
+    distinct: ['seriesId'],
     take: limit,
     select: {
       pageNumber: true,
@@ -176,41 +178,46 @@ export async function getPersonalizedSections(limit: number) {
   });
   
   const continueReading = history.map(h => ({
-    series: toSeriesCardData(h.series),
+    series: toSeriesCardData(h.series as any),
     chapterNumber: h.chapter?.number || h.pageNumber || 1,
     chapterSlug: h.chapter?.slug || String(h.chapter?.number || 1),
     chapterLabel: h.chapter?.sourceType === 'EXTERNAL' ? h.chapter?.label : null,
     progress: Math.min(100, Math.max(5, (h.pageNumber / Math.max(1, h.chapter?.totalPages || 1)) * 100))
   }));
 
-  // fetch recommended based on bookmarks using select pruning
-  let recommended: any[] = [];
-  const bookmarks = await prisma.bookmark.findMany({
+  let recommended: SeriesCardData[] = [];
+  const allBookmarks = await prisma.bookmark.findMany({
     where: { userId },
+    select: { seriesId: true }
+  });
+  const bookmarkedIds = allBookmarks.map(b => b.seriesId);
+
+  const recentBookmarks = await prisma.bookmark.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: 5,
     select: {
-      seriesId: true,
       series: {
         select: {
           genres: { select: { id: true } }
         }
       }
-    },
-    take: 5
+    }
   });
   
-  if (bookmarks.length > 0) {
+  if (recentBookmarks.length > 0) {
     const favoriteGenres = new Set<string>();
-    bookmarks.forEach(b => b.series.genres.forEach(g => favoriteGenres.add(g.id)));
+    recentBookmarks.forEach(b => b.series.genres.forEach((g: { id: string }) => favoriteGenres.add(g.id)));
     const recommendedSeries = await prisma.series.findMany({
       where: {
         genres: { some: { id: { in: Array.from(favoriteGenres) } } },
-        id: { notIn: bookmarks.map(b => b.seriesId) }
+        id: { notIn: bookmarkedIds }
       },
       orderBy: { totalViews: 'desc' },
       take: limit,
       select: SERIES_CARD_SELECT
     });
-    recommended = recommendedSeries.map(toSeriesCardData);
+    recommended = recommendedSeries.map(toSeriesCardData as any);
   }
 
   return { continueReading, recommended };

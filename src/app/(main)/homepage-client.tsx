@@ -11,8 +11,11 @@ import { RecentlyUpdatedCarousel } from '@/components/home/RecentlyUpdatedCarous
 import { ContinueReadingCarousel } from '@/components/home/ContinueReadingCarousel';
 import { Sparkles, Heart } from 'lucide-react';
 
+import type { HomepageSection } from '@prisma/client';
+import type { SeriesCardData } from '@/types';
+
 interface HomepageClientProps {
-  sections: any[];
+  sections: HomepageSection[];
   sectionData: Record<string, any[]>;
   isLoggedIn: boolean; // We keep the prop for signature compatibility, but determine actual status via useSession
 }
@@ -24,7 +27,7 @@ export function HomepageClient({
   const { data: _session, status } = useSession();
   const isLoggedIn = status === 'authenticated';
   
-  const [personalizedData, setPersonalizedData] = useState<{ continueReading: any[], recommended: any[] } | null>(null);
+  const [personalizedData, setPersonalizedData] = useState<{ continueReading: any[], recommended: SeriesCardData[] } | null>(null);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -119,7 +122,7 @@ export function HomepageClient({
             ) : (
               <Carousel 
                 title={sec.title || sec.type.replace('_', ' ')} 
-                subtitle={sec.subtitle} 
+                subtitle={sec.subtitle || undefined} 
                 href={sec.showViewAll ? '#' : undefined}
               >
                 {data.map((series: any, i: number) => (
