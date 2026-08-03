@@ -235,7 +235,9 @@ export default async function SeriesDetailPage({
 
       {/* ── Main Content (overlapping banner) ─────────────── */}
       <div className="relative -mt-64 z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
-        <AdRenderer placement="series_detail" />
+        <div className="flex justify-center overflow-hidden w-full">
+          <AdRenderer placement="series_detail" />
+        </div>
         <div className="flex flex-col md:flex-row gap-8 lg:gap-12 mt-8">
           {/* ── Cover Image ─────────────────────────────── */}
           <div className="shrink-0 flex flex-col items-center md:items-start md:w-[280px] lg:w-[320px]">
@@ -388,8 +390,8 @@ export default async function SeriesDetailPage({
         </section>
       </div>
 
-      {/* ── Mobile Sticky Action Bar ──────────────────────── */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-lg border-t border-border p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+      {/* ── Mobile Sticky Action Bar (positioned above MobileNav) ──────── */}
+      <div className="md:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
         <div className="flex gap-3 max-w-7xl mx-auto">
           <SeriesActionsClient
             seriesId={series.id}

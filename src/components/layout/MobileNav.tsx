@@ -24,7 +24,7 @@ export function MobileNav() {
       role="navigation"
       aria-label="Mobile navigation"
     >
-      <div className="flex items-center justify-around px-2 py-1">
+      <div className="flex items-center justify-around px-2 py-2">
         {MOBILE_NAV_ITEMS.map((item) => {
           const Icon = ICON_MAP[item.icon] || Home;
           const isActive =
@@ -37,7 +37,7 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                'relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors',
+                'relative flex flex-1 flex-col items-center gap-1 py-3 text-[10px] font-medium transition-colors',
                 isActive ? 'text-primary' : 'text-text-muted'
               )}
               aria-label={item.label}

@@ -44,7 +44,7 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
           </div>
           <div className="flex min-w-0 flex-1 flex-col justify-between py-1">
             <div>
-              <h3 className="mb-1 line-clamp-1 font-semibold text-text-primary group-hover:text-primary transition-colors">
+              <h3 className="mb-1 line-clamp-2 font-semibold text-text-primary group-hover:text-primary transition-colors">
                 {series.title}
               </h3>
               <div className="mb-2 flex flex-wrap gap-1">

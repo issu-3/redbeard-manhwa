@@ -33,7 +33,7 @@ export function SubscribeCard({ youtubeUrl, className = '' }: SubscribeCardProps
             href={youtubeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-red-600 px-6 py-2.5 font-semibold text-white transition-all hover:bg-red-700 hover:scale-105 active:scale-95 shadow-lg shadow-red-500/20"
+            className="group relative inline-flex h-10 items-center justify-center gap-2 overflow-hidden rounded-xl bg-red-600 px-4 py-2 font-semibold text-white transition-all hover:bg-red-700 hover:scale-105 active:scale-95 shadow-lg shadow-red-500/20"
           >
             <span className="relative z-10 flex items-center gap-2">
               <Youtube className="h-5 w-5" />

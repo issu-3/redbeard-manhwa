@@ -167,7 +167,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
               <div className="flex flex-wrap items-center gap-3">
                 <Link
                   href={`/series/${slide.slug}`}
-                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
                 >
                   <BookOpen className="h-5 w-5" />
                   Read Now
