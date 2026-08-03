@@ -9,14 +9,14 @@ export function SubscribeCard({ youtubeUrl, className = '' }: SubscribeCardProps
   if (!youtubeUrl) return null;
 
   return (
-    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600/10 via-surface to-surface border border-red-500/20 p-6 sm:p-8 ${className}`}>
+    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600/10 via-surface to-surface border border-red-500/20 p-5 md:p-6 ${className}`}>
       {/* Background decoration */}
       <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-red-500/5 blur-3xl" />
       <div className="absolute -left-20 -bottom-20 h-40 w-40 rounded-full bg-red-500/5 blur-2xl" />
 
       <div className="relative z-10 flex flex-col items-center text-center sm:flex-row sm:text-left">
-        <div className="mb-6 flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 sm:mb-0 sm:mr-6">
-          <Youtube className="h-8 w-8" />
+        <div className="mb-5 flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 sm:mb-0 sm:mr-5">
+          <Youtube className="h-7 w-7" />
         </div>
         
         <div className="flex-1">
@@ -33,7 +33,7 @@ export function SubscribeCard({ youtubeUrl, className = '' }: SubscribeCardProps
             href={youtubeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-red-600 px-6 py-3 font-semibold text-white transition-all hover:bg-red-700 hover:scale-105 active:scale-95 shadow-lg shadow-red-500/20"
+            className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-red-600 px-6 py-2.5 font-semibold text-white transition-all hover:bg-red-700 hover:scale-105 active:scale-95 shadow-lg shadow-red-500/20"
           >
             <span className="relative z-10 flex items-center gap-2">
               <Youtube className="h-5 w-5" />

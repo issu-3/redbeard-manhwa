@@ -40,22 +40,22 @@ export function Carousel({ title, subtitle, href, children, className = '' }: Ca
   return (
     <section className={`relative ${className}`}>
       {/* Section header */}
-      <div className="mb-5 flex items-end justify-between px-1">
+      <div className="mb-4 flex items-end justify-between px-1">
         <div>
           <h2
-            className="text-xl font-bold text-text-primary md:text-2xl"
+            className="text-xl font-black text-text-primary md:text-2xl tracking-tight"
             style={{ fontFamily: 'var(--font-heading)' }}
           >
             {title}
           </h2>
           {subtitle && (
-            <p className="mt-1 text-sm text-text-muted">{subtitle}</p>
+            <p className="mt-0.5 text-sm font-medium text-text-muted">{subtitle}</p>
           )}
         </div>
         {href && (
           <Link
             href={href}
-            className="group flex items-center gap-1 text-sm font-medium text-text-secondary transition-colors hover:text-primary"
+            className="group flex items-center gap-1.5 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary transition-all duration-300 hover:bg-primary/20 hover:scale-105 active:scale-95"
           >
             View All
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

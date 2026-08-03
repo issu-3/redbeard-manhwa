@@ -87,7 +87,7 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
       className={isFeatured ? 'w-full' : isCompact ? 'w-full' : 'w-full'}
     >
       <Link href={`/series/${series.slug}`} className="group block">
-        <div className={`relative overflow-hidden rounded-2xl border border-transparent transition-all duration-300 group-hover:border-primary/30 group-hover:shadow-xl group-hover:shadow-primary/5 ${isFeatured ? 'aspect-[2/3]' : 'aspect-[3/4]'}`}>
+        <div className="relative overflow-hidden rounded-2xl border border-transparent transition-all duration-300 group-hover:border-primary/30 group-hover:shadow-xl group-hover:shadow-primary/5 aspect-[3/4]">
           <Image
             src={series.coverImage}
             alt={series.title}
@@ -97,15 +97,15 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
           />
 
           {/* Status badge */}
-          <div className="absolute left-2 top-2 z-10">
-            <span className={`rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase text-text-primary ${statusColors[series.status] || 'bg-gray-500'}`}>
+          <div className="absolute left-2.5 top-2.5 z-10">
+            <span className={`rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm backdrop-blur-md border border-white/10 ${statusColors[series.status] || 'bg-gray-500'}`}>
               {series.status}
             </span>
           </div>
 
           {/* Bottom gradient + info overlay */}
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 pt-12">
-            <div className="flex items-center gap-2 text-[11px] text-white/70">
+            <div className="flex items-center gap-2 text-[11px] font-medium text-white/90">
               <span className="flex items-center gap-0.5">
                 <Star className="h-3 w-3 fill-warning text-warning" />
                 {series.averageRating.toFixed(1)}

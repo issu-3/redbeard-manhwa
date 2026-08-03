@@ -26,7 +26,7 @@ export function RecentlyUpdatedCarousel({ updates }: { updates: RecentUpdate[] }
             href={`/series/${update.series.slug}/chapter/${update.chapterSlug || update.chapterNumber}`}
             className="group block overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/40 hover:bg-card-hover"
           >
-            <div className="relative aspect-[2/3] w-full overflow-hidden bg-surface">
+            <div className="relative aspect-[3/4] w-full overflow-hidden bg-surface">
               <Image
                 src={update.series.coverImage}
                 alt={update.series.title}
@@ -36,13 +36,13 @@ export function RecentlyUpdatedCarousel({ updates }: { updates: RecentUpdate[] }
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-60 transition-opacity group-hover:opacity-80" />
               
-              <div className="absolute bottom-3 left-3 right-3">
+              <div className="absolute bottom-2.5 left-2.5 right-2.5">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="truncate rounded bg-primary px-2 py-0.5 text-xs font-bold text-white shadow-sm">
+                    <span className="truncate rounded-md bg-primary/90 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-white shadow-sm border border-white/10">
                       {update.chapterLabel || `Ch. ${update.chapterNumber}`}
                     </span>
                   </div>
-                <div className="flex items-center gap-1 text-[10px] font-medium text-white/80 mt-2">
+                <div className="flex items-center gap-1 text-[10px] font-medium text-white/90 mt-1.5">
                   <Clock className="h-3 w-3" />
                   <span suppressHydrationWarning>{formatRelativeTime(update.publishedAt)}</span>
                 </div>

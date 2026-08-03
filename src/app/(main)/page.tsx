@@ -50,7 +50,9 @@ export default async function HomePage() {
   return (
     <>
       <h1 className="sr-only">REDBEARD - The Ultimate Reading Experience</h1>
-      <AdRenderer placement="homepage" />
+      <div className="my-6 px-4 md:my-8 md:px-8 lg:px-16 xl:px-20">
+        <AdRenderer placement="homepage" />
+      </div>
       <HomepageClient
         sections={activeSections}
         sectionData={sectionData}

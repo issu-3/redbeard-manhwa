@@ -42,7 +42,7 @@ export function HomepageClient({
   }, [isLoggedIn, sections]);
 
   return (
-    <div className="space-y-12 pb-16 md:space-y-16">
+    <div className="space-y-10 pb-12 md:space-y-14">
       {sections.map(sec => {
         let data = sectionData[sec.type] || [];
         
@@ -93,7 +93,7 @@ export function HomepageClient({
                 <div className="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-accent/5 blur-3xl pointer-events-none" />
                 <div className="relative">
-                  <div className="mb-6 flex items-center justify-between">
+                  <div className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shadow-inner">
                         {isLoggedIn ? (
@@ -106,7 +106,7 @@ export function HomepageClient({
                         <h2 className="text-xl font-black text-text-primary md:text-3xl tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
                           {sec.title || (isLoggedIn ? 'Recommended For You' : "Editor's Picks")}
                         </h2>
-                        <p className="text-sm font-medium text-text-muted mt-1">
+                        <p className="text-sm font-medium text-text-muted mt-0.5">
                           {sec.subtitle || (isLoggedIn ? 'Based on your reading history and bookmarks' : 'Handpicked by our staff')}
                         </p>
                       </div>

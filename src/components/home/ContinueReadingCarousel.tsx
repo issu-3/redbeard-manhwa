@@ -46,11 +46,11 @@ export function ContinueReadingCarousel({ items }: { items: ContinueReadingItem[
             </div>
             
             <div className="px-3 pb-3">
-              <div className="mb-2 flex items-center justify-between text-[10px] font-bold text-text-muted uppercase tracking-wider">
+              <div className="mb-1.5 flex items-center justify-between text-[10px] font-bold text-text-muted uppercase tracking-wider">
                 <span>Progress</span>
                 <span>{Math.round(item.progress)}%</span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface shadow-inner">
                 <div 
                   className="h-full bg-primary rounded-full transition-all duration-500 ease-out" 
                   style={{ width: `${item.progress}%` }} 
@@ -58,7 +58,7 @@ export function ContinueReadingCarousel({ items }: { items: ContinueReadingItem[
               </div>
             </div>
             
-            <div className="border-t border-border/50 bg-surface/50 p-2 text-center text-xs font-bold text-primary group-hover:bg-primary/10 transition-colors flex justify-center items-center gap-1.5">
+            <div className="border-t border-border bg-surface/30 p-2.5 text-center text-xs font-bold text-primary group-hover:bg-primary/10 transition-colors flex justify-center items-center gap-1.5">
               <BookOpen className="h-3.5 w-3.5" />
               Resume
             </div>

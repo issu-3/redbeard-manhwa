@@ -126,12 +126,12 @@ export function HeroSlider({ slides }: HeroSliderProps) {
               sizes="100vw"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/60 to-transparent" />
           </div>
         </motion.div>
       </AnimatePresence>
 
-      <div className="relative z-10 flex h-full items-end px-6 pb-16 pt-16 md:px-12 lg:px-20 pointer-events-none">
+      <div className="relative z-10 flex h-full items-end px-5 pb-12 pt-16 md:px-12 md:pb-16 lg:px-20 pointer-events-none">
         <div className="max-w-2xl pointer-events-auto">
           <AnimatePresence mode="wait">
             <motion.div
@@ -160,11 +160,11 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                 {slide.title}
               </h1>
 
-              <p className="mb-8 line-clamp-3 max-w-lg text-sm text-text-secondary md:text-base">
+              <p className="mb-8 line-clamp-3 max-w-lg text-sm font-medium leading-relaxed text-text-secondary md:text-base md:leading-relaxed">
                 {slide.description}
               </p>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Link
                   href={`/series/${slide.slug}`}
                   className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
