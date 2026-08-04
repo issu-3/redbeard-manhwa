@@ -37,17 +37,38 @@ function SortableItem({ id, children }: SortableItemProps) {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: transition || 'transform 200ms cubic-bezier(0.25, 1, 0.5, 1)',
     zIndex: isDragging ? 10 : 1,
     position: 'relative' as const,
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={`mb-3 ${isDragging ? 'opacity-50' : ''}`}>
-      <div className="flex items-center gap-3 bg-card border border-border rounded-xl p-3 shadow-sm">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`sortable-item-wrapper ${isDragging ? 'sortable-item--dragging' : ''}`}
+    >
+      <div
+        className={`
+          sortable-item flex items-center gap-3 rounded-xl border p-3.5
+          transition-all duration-200 ease-out
+          ${isDragging
+            ? 'bg-card border-primary/30 shadow-[0_8px_24px_rgba(0,0,0,0.2)] scale-[1.02]'
+            : 'bg-card border-border shadow-sm hover:shadow-md hover:border-border-subtle'
+          }
+        `}
+      >
         <button
           type="button"
-          className="cursor-grab active:cursor-grabbing text-text-muted hover:text-text-primary"
+          className="
+            sortable-handle cursor-grab active:cursor-grabbing
+            text-text-muted hover:text-text-secondary
+            min-w-[44px] min-h-[44px] flex items-center justify-center
+            rounded-lg transition-colors duration-150
+            hover:bg-surface focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2
+            -ml-1
+          "
+          aria-label="Drag to reorder"
           {...attributes}
           {...listeners}
         >
@@ -96,7 +117,7 @@ export function SortableList<T extends { id: string }>({
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-        <div className="w-full">
+        <div className="w-full space-y-2">
           {items.map((item) => (
             <SortableItem key={item.id} id={item.id}>
               {renderItem(item)}
