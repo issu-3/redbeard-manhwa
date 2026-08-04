@@ -5,7 +5,14 @@ import { BrowseGrid } from '@/components/shared/BrowseGrid';
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData } from '@/lib/data-mappers';
 
-export const metadata: Metadata = { title: 'Popular' };
+import { generateMetadata } from '@/lib/seo';
+import { APP_URL } from '@/lib/constants';
+
+export const metadata: Metadata = generateMetadata({
+  title: 'Popular',
+  description: 'Read the most popular all-time fan favorite manhwa and webtoons on REDBEARD.',
+  url: `${APP_URL}/browse/popular`
+});
 
 export default async function PopularPage() {
   const dbSeries = await prisma.series.findMany({

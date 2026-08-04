@@ -173,7 +173,16 @@ export default async function SeriesDetailPage({
     publisher: {
       '@type': 'Organization',
       name: 'REDBEARD'
-    }
+    },
+    ...(series.ratingCount > 0 && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: series.averageRating,
+        ratingCount: series.ratingCount,
+        bestRating: 5,
+        worstRating: 1,
+      }
+    })
   };
 
   const breadcrumbLd = {
@@ -190,7 +199,7 @@ export default async function SeriesDetailPage({
         '@type': 'ListItem',
         position: 2,
         name: 'Browse',
-        item: `${siteUrl}/browse`,
+        item: `${siteUrl}/browse/trending`,
       },
       {
         '@type': 'ListItem',

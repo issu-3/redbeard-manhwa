@@ -3,7 +3,14 @@ import { prisma } from '@/lib/prisma';
 import SearchClient from './SearchClient';
 import { unstable_cache } from 'next/cache';
 
-export const metadata: Metadata = { title: 'Search' };
+import { generateMetadata } from '@/lib/seo';
+import { APP_URL } from '@/lib/constants';
+
+export const metadata: Metadata = generateMetadata({
+  title: 'Search',
+  description: 'Search thousands of manhwa, manga, and webtoon titles. Find your next read on REDBEARD.',
+  url: `${APP_URL}/search`
+});
 
 const getCachedSearchFilterData = unstable_cache(
   async () => {

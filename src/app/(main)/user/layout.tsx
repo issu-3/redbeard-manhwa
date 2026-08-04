@@ -1,4 +1,12 @@
 import { ReactNode } from 'react';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 import Link from 'next/link';
 import { User, Bookmark, History, Settings, ChevronRight } from 'lucide-react';
 

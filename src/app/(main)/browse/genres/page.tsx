@@ -3,7 +3,14 @@ import { Metadata } from 'next';
 import { GenreCard } from '@/components/shared/GenreCard';
 import { prisma } from '@/lib/prisma';
 
-export const metadata: Metadata = { title: 'Genres' };
+import { generateMetadata } from '@/lib/seo';
+import { APP_URL } from '@/lib/constants';
+
+export const metadata: Metadata = generateMetadata({
+  title: 'Genres',
+  description: 'Browse thousands of manhwa and manga series by your favorite categories and genres.',
+  url: `${APP_URL}/browse/genres`
+});
 
 export default async function GenresPage() {
   const genres = await prisma.genre.findMany({

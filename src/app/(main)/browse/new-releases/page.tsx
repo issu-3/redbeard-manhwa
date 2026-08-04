@@ -6,7 +6,14 @@ import { BrowseGrid } from '@/components/shared/BrowseGrid';
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData } from '@/lib/data-mappers';
 
-export const metadata: Metadata = { title: 'New Releases' };
+import { generateMetadata } from '@/lib/seo';
+import { APP_URL } from '@/lib/constants';
+
+export const metadata: Metadata = generateMetadata({
+  title: 'New Releases',
+  description: 'Explore the newest manhwa and manga series freshly added to REDBEARD.',
+  url: `${APP_URL}/browse/new-releases`
+});
 
 export default async function NewReleasesPage() {
   const dbSeries = await prisma.series.findMany({

@@ -6,7 +6,14 @@ import { BrowseGrid } from '@/components/shared/BrowseGrid';
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData } from '@/lib/data-mappers';
 
-export const metadata: Metadata = { title: 'Ongoing Series' };
+import { generateMetadata } from '@/lib/seo';
+import { APP_URL } from '@/lib/constants';
+
+export const metadata: Metadata = generateMetadata({
+  title: 'Ongoing Series',
+  description: 'Discover the best ongoing manhwa and webtoons with regular updates on REDBEARD.',
+  url: `${APP_URL}/browse/ongoing`
+});
 
 export default async function OngoingPage() {
   const dbSeries = await prisma.series.findMany({

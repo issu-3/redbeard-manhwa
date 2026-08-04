@@ -5,7 +5,14 @@ import { BrowseGrid } from '@/components/shared/BrowseGrid';
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData } from '@/lib/data-mappers';
 
-export const metadata: Metadata = { title: 'Latest Updates' };
+import { generateMetadata } from '@/lib/seo';
+import { APP_URL } from '@/lib/constants';
+
+export const metadata: Metadata = generateMetadata({
+  title: 'Latest Updates',
+  description: 'Read the latest manhwa and webtoon chapters just dropped on REDBEARD.',
+  url: `${APP_URL}/browse/latest`
+});
 
 export default async function LatestPage() {
   const dbSeries = await prisma.series.findMany({
