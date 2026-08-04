@@ -261,8 +261,8 @@ model Chapter {
   seo         Json?
   // Dual source system
   sourceType       String?  @default("UPLOAD") // UPLOAD, EXTERNAL
-  externalUrl      String?
-  externalProvider String?
+  downloadUrl      String?
+  downloadProvider String?
 
   // Relations
   series         Series           @relation(fields: [seriesId], references: [id], onDelete: Cascade)

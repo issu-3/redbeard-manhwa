@@ -93,8 +93,8 @@ export function toSeriesDetail(series: FullSeries): SeriesDetail {
         publishedAt: c.publishedAt?.toISOString(),
         isRead: false,
         sourceType: c.sourceType || 'UPLOAD',
-        externalUrl: c.externalUrl || undefined,
-        externalProvider: c.externalProvider || undefined,
+        downloadUrl: c.downloadUrl || undefined,
+        downloadProvider: c.downloadProvider || undefined,
       })),
     createdAt: series.createdAt.toISOString(),
   };

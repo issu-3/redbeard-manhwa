@@ -44,8 +44,8 @@ export interface ChapterListItem {
   publishedAt?: string;
   isRead?: boolean;
   sourceType?: string;
-  externalUrl?: string;
-  externalProvider?: string;
+  downloadUrl?: string;
+  downloadProvider?: string;
 }
 
 export interface ChapterData {
@@ -59,8 +59,8 @@ export interface ChapterData {
   slug: string;
   totalPages: number;
   sourceType?: string;
-  externalUrl?: string;
-  externalProvider?: string;
+  downloadUrl?: string;
+  downloadProvider?: string;
   images: ChapterImageData[];
   prevChapter?: { number: number | null; slug: string };
   nextChapter?: { number: number | null; slug: string };

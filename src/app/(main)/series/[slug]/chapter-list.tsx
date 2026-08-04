@@ -108,10 +108,7 @@ export function ChapterListSection({
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.2) }}
                 >
-                  <Link
-                    href={chapter.sourceType === 'EXTERNAL' && chapter.externalUrl ? chapter.externalUrl : `/series/${seriesSlug}/chapter/${chapter.slug}`}
-                    target={chapter.sourceType === 'EXTERNAL' ? '_blank' : undefined}
-                    rel={chapter.sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
+                  <div
                     className={cn(
                       'group relative flex flex-col justify-between p-4 rounded-xl border transition-all h-full',
                       isLatest 
@@ -156,18 +153,39 @@ export function ChapterListSection({
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-1 text-text-secondary group-hover:text-primary transition-colors">
+                      <div className="flex items-center gap-1 text-text-secondary">
                         {chapter.sourceType === 'EXTERNAL' ? (
                           <>
                             <LinkIcon className="h-3 w-3" />
-                            <span>{chapter.externalProvider || 'Link'}</span>
+                            <span>{chapter.downloadProvider || 'Link'}</span>
                           </>
                         ) : (
                           <span>{chapter.totalPages} pgs</span>
                         )}
                       </div>
                     </div>
-                  </Link>
+
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
+                      {chapter.sourceType !== 'EXTERNAL' && (
+                        <Link
+                          href={`/series/${seriesSlug}/chapter/${chapter.slug}`}
+                          className="flex-1 flex items-center justify-center py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-md text-xs font-bold transition-colors"
+                        >
+                          READ
+                        </Link>
+                      )}
+                      {chapter.downloadUrl && (
+                        <a
+                          href={chapter.downloadUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center py-1.5 bg-surface border border-border hover:bg-card-hover text-text-secondary hover:text-text-primary rounded-md text-xs font-bold transition-colors"
+                        >
+                          DOWNLOAD
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 </motion.div>
               );
             })

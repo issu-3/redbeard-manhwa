@@ -117,9 +117,9 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
         return;
       }
     } else {
-      const url = formData.get('externalUrl');
+      const url = formData.get('downloadUrl');
       if (!url) {
-        toast.error('External URL is required.');
+        toast.error('Download URL is required.');
         return;
       }
     }
@@ -232,10 +232,10 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold">External Provider *</label>
+              <label className="text-sm font-semibold">Download Provider *</label>
               <select 
-                name="externalProvider" 
-                defaultValue={chapter?.externalProvider || 'TeraBox'}
+                name="downloadProvider" 
+                defaultValue={chapter?.downloadProvider || 'TeraBox'}
                 className="w-full rounded-lg border border-border bg-card px-4 py-2 font-medium"
               >
                 {EXTERNAL_PROVIDERS.map(p => (
@@ -245,11 +245,11 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-semibold">External URL *</label>
+              <label className="text-sm font-semibold">Download URL *</label>
               <input 
-                name="externalUrl" 
+                name="downloadUrl" 
                 type="url"
-                defaultValue={chapter?.externalUrl || ''}
+                defaultValue={chapter?.downloadUrl || ''}
                 required={sourceType === 'EXTERNAL'}
                 className="w-full rounded-lg border border-border bg-card px-4 py-2" 
                 placeholder="https://terabox.com/s/..." 
@@ -259,7 +259,7 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
           
           <div className="bg-primary/10 border border-primary/20 text-primary p-4 rounded-xl text-sm font-medium flex gap-3">
             <LinkIcon className="h-5 w-5 shrink-0" />
-            <p>Users clicking this chapter will be directly redirected to the external URL instead of opening the built-in reader.</p>
+            <p>Users clicking DOWNLOAD on this chapter will be directly redirected to the download URL.</p>
           </div>
         </div>
       ) : (

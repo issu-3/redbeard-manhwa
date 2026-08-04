@@ -203,7 +203,7 @@ export default async function SeriesDetailPage({
 
   const firstChapter = series.chapters.length > 0 ? series.chapters[0] : null;
   const firstChapterLink = firstChapter 
-    ? (firstChapter.sourceType === 'EXTERNAL' && firstChapter.externalUrl ? firstChapter.externalUrl : `/series/${series.slug}/chapter/${firstChapter.slug || firstChapter.number || 1}`) 
+    ? (firstChapter.sourceType === 'EXTERNAL' && firstChapter.downloadUrl ? firstChapter.downloadUrl : `/series/${series.slug}/chapter/${firstChapter.slug || firstChapter.number || 1}`) 
     : '#';
 
   const chaptersList = series.chapters.map((c: Chapter) => ({
@@ -211,7 +211,7 @@ export default async function SeriesDetailPage({
     label: c.label,
     slug: c.slug,
     sourceType: c.sourceType,
-    externalUrl: c.externalUrl,
+    downloadUrl: c.downloadUrl
   }));
 
   return (
@@ -324,8 +324,8 @@ export default async function SeriesDetailPage({
               totalViews: c.totalViews,
               publishedAt: c.publishedAt?.toISOString(),
               sourceType: c.sourceType || 'UPLOAD',
-              externalUrl: c.externalUrl || undefined,
-              externalProvider: c.externalProvider || undefined,
+              downloadUrl: c.downloadUrl || undefined,
+              downloadProvider: c.downloadProvider || undefined,
               isRead: false
             }))}
             seriesSlug={series.slug}

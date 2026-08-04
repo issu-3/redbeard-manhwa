@@ -42,8 +42,8 @@ export async function createChapter(seriesId: string, formData: FormData) {
   const imageUrls = imageUrlsText ? imageUrlsText.split('\n').map(url => url.trim()).filter(url => url.length > 0) : [];
 
   // External logic
-  const externalProvider = formData.get('externalProvider') as string;
-  const externalUrl = formData.get('externalUrl') as string;
+  const downloadProvider = formData.get('downloadProvider') as string;
+  const downloadUrl = formData.get('downloadUrl') as string;
   let label = formData.get('label') as string | null;
   let numberStr = formData.get('number') as string;
   let number: number | null = numberStr ? parseFloat(numberStr) : null;
@@ -72,8 +72,8 @@ export async function createChapter(seriesId: string, formData: FormData) {
         isPublished,
         publishedAt: isPublished ? new Date() : null,
         sourceType,
-        externalProvider: sourceType === 'EXTERNAL' ? externalProvider : null,
-        externalUrl: sourceType === 'EXTERNAL' ? externalUrl : null,
+        downloadProvider: sourceType === 'EXTERNAL' ? downloadProvider : null,
+        downloadUrl: sourceType === 'EXTERNAL' ? downloadUrl : null,
         images: sourceType === 'UPLOAD' ? {
           create: imageUrls.map((url, index) => ({
             pageNumber: index + 1,
@@ -114,8 +114,8 @@ export async function updateChapter(chapterId: string, seriesId: string, formDat
   const imageUrls = imageUrlsText ? imageUrlsText.split('\n').map(url => url.trim()).filter(url => url.length > 0) : [];
 
   // External logic
-  const externalProvider = formData.get('externalProvider') as string;
-  const externalUrl = formData.get('externalUrl') as string;
+  const downloadProvider = formData.get('downloadProvider') as string;
+  const downloadUrl = formData.get('downloadUrl') as string;
   let label = formData.get('label') as string | null;
   let numberStr = formData.get('number') as string;
   let number: number | null = numberStr ? parseFloat(numberStr) : null;
@@ -146,8 +146,8 @@ export async function updateChapter(chapterId: string, seriesId: string, formDat
           isPublished,
           publishedAt: isPublished ? new Date() : null,
           sourceType,
-          externalProvider: sourceType === 'EXTERNAL' ? externalProvider : null,
-          externalUrl: sourceType === 'EXTERNAL' ? externalUrl : null,
+          downloadProvider: sourceType === 'EXTERNAL' ? downloadProvider : null,
+          downloadUrl: sourceType === 'EXTERNAL' ? downloadUrl : null,
           images: sourceType === 'UPLOAD' && imageUrls.length > 0 ? {
             create: imageUrls.map((url, index) => ({
               pageNumber: index + 1,

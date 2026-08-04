@@ -109,8 +109,8 @@ const getCachedChapterDataInternal = unstable_cache(
       slug: chapter.slug,
       totalPages: chapter.totalPages || chapter.images.length,
       sourceType: chapter.sourceType || 'UPLOAD',
-      externalUrl: chapter.externalUrl || undefined,
-      externalProvider: chapter.externalProvider || undefined,
+      downloadUrl: chapter.downloadUrl || undefined,
+      downloadProvider: chapter.downloadProvider || undefined,
       images: chapter.images?.map((img: any) => ({
         id: img.id,
         pageNumber: img.pageNumber,
@@ -205,7 +205,7 @@ export default async function ChapterPage({
   }
 
   // Handle external redirect
-  if (chapter.sourceType === 'EXTERNAL' && chapter.externalUrl) {
+  if (chapter.sourceType === 'EXTERNAL' && chapter.downloadUrl) {
     // Record reading history before redirecting
     const session = await auth();
     if (session?.user?.id) {
@@ -263,7 +263,7 @@ export default async function ChapterPage({
     }
 
     // Ensure the external URL is absolute to prevent relative redirect bugs
-    let targetUrl = chapter.externalUrl;
+    let targetUrl = chapter.downloadUrl;
     if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
       targetUrl = `https://${targetUrl}`;
     }
