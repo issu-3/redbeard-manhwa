@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import { generateSeriesSeo, calculateSeriesSeoScore } from '@/lib/seo-generator';
 import { APP_URL } from '@/lib/constants';
+import { unstable_cache } from 'next/cache';
 
 export async function generateMissingSeoData(forceRegenerate: boolean = false) {
   const session = await auth();
@@ -159,15 +160,22 @@ export async function fetchSeoDashboardData() {
     throw new Error('Unauthorized');
   }
 
-  const [seriesRaw, chaptersRaw, viewLogs, totalViewsData] = await Promise.all([
-    prisma.series.findMany({ select: { id: true, title: true, slug: true, seo: true, description: true, chapterCount: true, totalViews: true } }),
-    prisma.chapter.findMany({ select: { id: true, number: true, title: true, label: true, slug: true, seriesId: true, series: { select: { title: true } }, seo: true, totalViews: true } }),
-    prisma.viewLog.findMany({ 
-      where: { createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
-      select: { createdAt: true, ipAddress: true }
-    }),
-    prisma.series.aggregate({ _sum: { totalViews: true } })
-  ]);
+  // OPT-14: Cache this heavy operation to avoid loading all DB records into memory on every page load
+  const getCachedRawData = unstable_cache(
+    async () => {
+      const [seriesRaw, chaptersRaw, viewLogs, totalViewsData] = await Promise.all([
+        prisma.series.findMany({ select: { id: true, title: true, slug: true, seo: true, description: true, chapterCount: true, totalViews: true } }),
+        prisma.chapter.findMany({ select: { id: true, number: true, title: true, label: true, slug: true, seriesId: true, series: { select: { title: true } }, seo: true, totalViews: true } }),
+        prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(DISTINCT "ipAddress") as count FROM "ViewLog" WHERE "createdAt" >= NOW() - INTERVAL '7 days' AND "ipAddress" IS NOT NULL GROUP BY 1`,
+        prisma.series.aggregate({ _sum: { totalViews: true } })
+      ]);
+      return { seriesRaw, chaptersRaw, viewLogs, totalViewsData };
+    },
+    ['admin-seo-dashboard-data'],
+    { tags: ['admin-seo'], revalidate: 600 } // 10 minutes cache
+  );
+
+  const { seriesRaw, chaptersRaw, viewLogs, totalViewsData } = await getCachedRawData();
 
   const getSeoData = (record: { seo: any }) => {
     if (!record.seo) return {};
@@ -283,7 +291,7 @@ export async function fetchSeoDashboardData() {
   ];
 
   const totalImpressions = totalViewsData._sum.totalViews || 0;
-  const uniqueIps = new Set(viewLogs.filter(v => v.ipAddress).map(v => v.ipAddress)).size;
+  const uniqueIps = viewLogs.reduce((acc, curr) => acc + Number(curr.count), 0);
   const ctr = totalImpressions > 0 ? ((uniqueIps / totalImpressions) * 100).toFixed(1) : '0';
 
   const gsc = {
@@ -295,25 +303,24 @@ export async function fetchSeoDashboardData() {
     crawlErrors: 0
   };
 
-  const days = Array.from({ length: 7 }).map((_, i) => {
+  const days: Record<string, number> = {};
+  for (let i = 6; i >= 0; i--) {
     const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    return d.toISOString().split('T')[0];
-  });
-
-  const trafficByDay: Record<string, number> = {};
-  days.forEach(d => trafficByDay[d] = 0);
-  viewLogs.forEach(log => {
-    const d = log.createdAt.toISOString().split('T')[0];
-    if (trafficByDay[d] !== undefined) {
-      trafficByDay[d]++;
+    d.setDate(d.getDate() - i);
+    days[d.toISOString().split('T')[0]] = 0;
+  }
+  
+  viewLogs.forEach(v => {
+    const day = v.date.toISOString().split('T')[0];
+    if (days[day] !== undefined) {
+      days[day] = Number(v.count);
     }
   });
 
-  const timelineData = days.map(d => ({
-    date: new Date(d).toLocaleDateString('en-US', { weekday: 'short' }),
+  const timelineData = Object.keys(days).map(date => ({
+    date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
     score: overallScore,
-    traffic: trafficByDay[d]
+    traffic: days[date]
   }));
 
   const aiSuggestions = [];

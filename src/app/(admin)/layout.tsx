@@ -29,7 +29,7 @@ const navigation = [
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
-export const dynamic = 'force-dynamic';
+// OPT-22: Removed force-dynamic to allow individual admin pages to cache appropriately
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const session = await auth();

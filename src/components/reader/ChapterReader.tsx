@@ -142,7 +142,8 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chapterId: chapter.id,
-          seriesId: chapter.seriesId
+          seriesId: chapter.seriesId,
+          userId: currentUserId
         })
       }).catch(err => console.error('Failed to track view:', err));
 

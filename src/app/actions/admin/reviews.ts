@@ -50,17 +50,15 @@ export async function adminDeleteReview(reviewId: string) {
 
     await prisma.review.delete({ where: { id: reviewId } });
     
-    // Recalculate average rating for the series
-    const remainingReviews = await prisma.review.findMany({
+    // OPT-13: Recalculate average rating for the series using aggregate
+    const aggregations = await prisma.review.aggregate({
       where: { seriesId: review.seriesId },
-      select: { rating: true },
+      _count: { rating: true },
+      _avg: { rating: true },
     });
 
-    const ratingCount = remainingReviews.length;
-    const averageRating =
-      ratingCount > 0
-        ? remainingReviews.reduce((acc, curr) => acc + curr.rating, 0) / ratingCount
-        : 0;
+    const ratingCount = aggregations._count.rating;
+    const averageRating = aggregations._avg.rating || 0;
 
     const series = await prisma.series.update({
       where: { id: review.seriesId },

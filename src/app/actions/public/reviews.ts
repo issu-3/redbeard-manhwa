@@ -95,17 +95,16 @@ export async function deleteReview(reviewId: string) {
   }
 }
 
+// OPT-13: Use Prisma aggregate instead of findMany to calculate average rating in database, saving memory.
 async function updateSeriesRating(seriesId: string) {
-  const reviews = await prisma.review.findMany({
+  const aggregations = await prisma.review.aggregate({
     where: { seriesId },
-    select: { rating: true },
+    _count: { rating: true },
+    _avg: { rating: true },
   });
 
-  const ratingCount = reviews.length;
-  const averageRating =
-    ratingCount > 0
-      ? reviews.reduce((acc, curr) => acc + curr.rating, 0) / ratingCount
-      : 0;
+  const ratingCount = aggregations._count.rating;
+  const averageRating = aggregations._avg.rating || 0;
 
   await prisma.series.update({
     where: { id: seriesId },

@@ -99,47 +99,41 @@ async function fetchAnalyticsDataInternal(range: string) {
   sparklineStart.setHours(0, 0, 0, 0);
 
   const [
-    spUsers, spSeries, spChapters, spComments, spBookmarks, spViews
+    spUsers, spSeries, spChapters, spComments, spBookmarks, spViews, spActiveUsers
   ] = await Promise.all([
-    prisma.user.findMany({ where: { createdAt: { gte: sparklineStart } }, select: { createdAt: true } }),
-    prisma.series.findMany({ where: { createdAt: { gte: sparklineStart } }, select: { createdAt: true } }),
-    prisma.chapter.findMany({ where: { createdAt: { gte: sparklineStart } }, select: { createdAt: true } }),
-    prisma.comment.findMany({ where: { createdAt: { gte: sparklineStart } }, select: { createdAt: true } }),
-    prisma.bookmark.findMany({ where: { createdAt: { gte: sparklineStart } }, select: { createdAt: true } }),
-    prisma.viewLog.findMany({ where: { createdAt: { gte: sparklineStart } }, select: { createdAt: true, ipAddress: true } })
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "User" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "Series" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "Chapter" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "Comment" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "Bookmark" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "ViewLog" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(DISTINCT "ipAddress") as count FROM "ViewLog" WHERE "createdAt" >= ${sparklineStart} AND "ipAddress" IS NOT NULL GROUP BY 1`
   ]);
 
-  const generateSparkline = (records: { createdAt: Date, userId?: string }[], countUniqueUsers = false) => {
-    const days: Record<string, Set<string> | number> = {};
+  const formatSparklineData = (raw: {date: Date, count: bigint}[]) => {
+    const days: Record<string, number> = {};
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(now.getDate() - i);
-      days[d.toISOString().split('T')[0]] = countUniqueUsers ? new Set<string>() : 0;
+      days[d.toISOString().split('T')[0]] = 0;
     }
-    records.forEach(r => {
-      const day = r.createdAt.toISOString().split('T')[0];
+    raw.forEach(r => {
+      const day = r.date.toISOString().split('T')[0];
       if (days[day] !== undefined) {
-        if (countUniqueUsers && ('ipAddress' in r) && r.ipAddress) {
-          (days[day] as Set<string>).add(r.ipAddress as string);
-        } else {
-          (days[day] as number) += 1;
-        }
+        days[day] = Number(r.count);
       }
     });
-    return Object.keys(days).map(date => ({
-      date,
-      value: countUniqueUsers ? (days[date] as Set<string>).size : (days[date] as number)
-    }));
+    return Object.keys(days).map(date => ({ date, value: days[date] }));
   };
 
   const sparklines = {
-    users: generateSparkline(spUsers),
-    series: generateSparkline(spSeries),
-    chapters: generateSparkline(spChapters),
-    comments: generateSparkline(spComments),
-    bookmarks: generateSparkline(spBookmarks),
-    views: generateSparkline(spViews),
-    activeUsers: generateSparkline(spViews, true),
+    users: formatSparklineData(spUsers),
+    series: formatSparklineData(spSeries),
+    chapters: formatSparklineData(spChapters),
+    comments: formatSparklineData(spComments),
+    bookmarks: formatSparklineData(spBookmarks),
+    views: formatSparklineData(spViews),
+    activeUsers: formatSparklineData(spActiveUsers),
   };
 
   // --- 3. CHARTS DATA ---
@@ -149,10 +143,10 @@ async function fetchAnalyticsDataInternal(range: string) {
     chartViews, chartUsers, chartSeries, chartChapters,
     topSeriesRaw, mostReadChaptersRaw, topGenresRaw, sessionsRaw
   ] = await Promise.all([
-    prisma.viewLog.findMany({ where: { createdAt: { gte: chartStart } }, select: { createdAt: true } }),
-    prisma.user.findMany({ where: { createdAt: { gte: chartStart } }, select: { createdAt: true } }),
-    prisma.series.findMany({ where: { createdAt: { gte: chartStart } }, select: { createdAt: true } }),
-    prisma.chapter.findMany({ where: { createdAt: { gte: chartStart } }, select: { createdAt: true } }),
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "ViewLog" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "User" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "Series" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "Chapter" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
     prisma.series.findMany({ orderBy: { totalViews: 'desc' }, take: 10, select: { title: true, totalViews: true, totalBookmarks: true } }),
     prisma.chapter.findMany({ orderBy: { totalViews: 'desc' }, take: 10, select: { series: { select: { title: true } }, number: true, title: true, label: true, totalViews: true } }),
     prisma.genre.findMany({ orderBy: { seriesCount: 'desc' }, take: 10, select: { name: true, seriesCount: true } }),
@@ -174,11 +168,11 @@ async function fetchAnalyticsDataInternal(range: string) {
   const timelineDates = getDatesBetween(chartStart, now);
 
   const viewsByDay: Record<string, number> = {};
-  chartViews.forEach(v => { const d = v.createdAt.toISOString().split('T')[0]; viewsByDay[d] = (viewsByDay[d] || 0) + 1; });
+  chartViews.forEach(v => { viewsByDay[v.date.toISOString().split('T')[0]] = Number(v.count); });
   const trafficData = timelineDates.map(date => ({ date, views: viewsByDay[date] || 0 }));
 
   const usersByDay: Record<string, number> = {};
-  chartUsers.forEach(u => { const d = u.createdAt.toISOString().split('T')[0]; usersByDay[d] = (usersByDay[d] || 0) + 1; });
+  chartUsers.forEach(u => { usersByDay[u.date.toISOString().split('T')[0]] = Number(u.count); });
   const initialCumulativeUsers = isAllTime ? 0 : await prisma.user.count({ where: { createdAt: { lt: chartStart } } });
   let cumulative = initialCumulativeUsers;
   const userGrowthData = timelineDates.map(date => {
@@ -188,9 +182,9 @@ async function fetchAnalyticsDataInternal(range: string) {
   });
 
   const seriesByDay: Record<string, number> = {};
-  chartSeries.forEach(s => { const d = s.createdAt.toISOString().split('T')[0]; seriesByDay[d] = (seriesByDay[d] || 0) + 1; });
+  chartSeries.forEach(s => { seriesByDay[s.date.toISOString().split('T')[0]] = Number(s.count); });
   const chaptersByDay: Record<string, number> = {};
-  chartChapters.forEach(c => { const d = c.createdAt.toISOString().split('T')[0]; chaptersByDay[d] = (chaptersByDay[d] || 0) + 1; });
+  chartChapters.forEach(c => { chaptersByDay[c.date.toISOString().split('T')[0]] = Number(c.count); });
   const publishingData = timelineDates.map(date => ({ date, series: seriesByDay[date] || 0, chapters: chaptersByDay[date] || 0 }));
 
   const topSeries = topSeriesRaw.map(s => ({ name: s.title, views: s.totalViews, bookmarks: s.totalBookmarks }));

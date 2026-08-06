@@ -2,6 +2,8 @@ import { MetadataRoute } from 'next';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 
+export const revalidate = 3600;
+
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const baseUrl = APP_URL || 'http://localhost:3000';
   const settings = await getCachedSettings();

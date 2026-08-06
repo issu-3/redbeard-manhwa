@@ -4,12 +4,14 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-
+import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 
 import { Badge } from '@/components/shared/Badge';
 import { SeriesCard } from '@/components/shared/SeriesCard';
 import { ChapterListSection } from './chapter-list';
 import { prisma } from '@/lib/prisma';
+import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
 import type { SeriesCardData } from '@/types';
 import type { Series, Genre, Chapter } from '@prisma/client';
 import { SeriesActionsClient } from '@/components/series/SeriesActionsClient';
@@ -19,7 +21,21 @@ import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdRenderer } from '@/components/ads/AdRenderer';
 
-async function getSeriesData(slug: string) {
+// OPT-21: Pre-render top 100 most popular series at build time
+export async function generateStaticParams() {
+  const series = await prisma.series.findMany({
+    orderBy: { totalViews: 'desc' },
+    take: 100,
+    select: { slug: true }
+  });
+  return series.map((s) => ({
+    slug: s.slug,
+  }));
+}
+
+// OPT-04: React cache() deduplicates getSeriesData between generateMetadata and page component
+const getSeriesData = cache(async (slug: string) => {
+  // OPT-03: Use select instead of include to fetch only needed columns for chapters
   const series = await prisma.series.findUnique({
     where: { slug },
     include: {
@@ -29,6 +45,19 @@ async function getSeriesData(slug: string) {
       artists: true,
       chapters: {
         orderBy: [{ number: 'asc' }, { createdAt: 'asc' }],
+        select: {
+          id: true,
+          number: true,
+          label: true,
+          title: true,
+          slug: true,
+          totalPages: true,
+          totalViews: true,
+          publishedAt: true,
+          sourceType: true,
+          downloadUrl: true,
+          downloadProvider: true,
+        },
       },
       reviews: {
         include: {
@@ -37,12 +66,54 @@ async function getSeriesData(slug: string) {
           }
         },
         orderBy: { createdAt: 'desc' },
-        take: 20, // H10 FIX: Paginate reviews to prevent memory/performance issues
+        take: 20,
       }
     },
   });
   return series;
-}
+});
+
+// OPT-02: Cache recommendation queries — these change infrequently
+const getCachedRelatedSeries = unstable_cache(
+  async (seriesId: string, genreIds: string[]) => {
+    return prisma.series.findMany({
+      where: { 
+        id: { not: seriesId },
+        genres: { some: { id: { in: genreIds } } }
+      },
+      take: 6,
+      select: SERIES_CARD_SELECT
+    });
+  },
+  ['series-related'],
+  { tags: ['series'], revalidate: 600 }
+);
+
+const getCachedTrendingSeries = unstable_cache(
+  async (excludeId: string) => {
+    return prisma.series.findMany({
+      where: { id: { not: excludeId } },
+      orderBy: { totalViews: 'desc' },
+      take: 6,
+      select: SERIES_CARD_SELECT
+    });
+  },
+  ['series-trending-sidebar'],
+  { tags: ['series'], revalidate: 600 }
+);
+
+const getCachedRecentSeries = unstable_cache(
+  async (excludeId: string) => {
+    return prisma.series.findMany({
+      where: { id: { not: excludeId } },
+      orderBy: { updatedAt: 'desc' },
+      take: 6,
+      select: SERIES_CARD_SELECT
+    });
+  },
+  ['series-recent-sidebar'],
+  { tags: ['series'], revalidate: 600 }
+);
 
 export async function generateMetadata({
   params,
@@ -133,28 +204,16 @@ export default async function SeriesDetailPage({
 
   // User data is now fetched client-side in SeriesActionsClient
 
-  const relatedSeries = await prisma.series.findMany({
-    where: { 
-      id: { not: series.id },
-      genres: { some: { id: { in: series.genres.map((g: { id: string }) => g.id) } } }
-    },
-    take: 6,
-    include: { genres: true }
-  });
-
-  const trendingSeries = await prisma.series.findMany({
-    where: { id: { not: series.id } },
-    orderBy: { totalViews: 'desc' },
-    take: 6,
-    include: { genres: true }
-  });
-
-  const recentSeries = await prisma.series.findMany({
-    where: { id: { not: series.id } },
-    orderBy: { updatedAt: 'desc' },
-    take: 6,
-    include: { genres: true }
-  });
+  // OPT-02: Use cached recommendation queries instead of raw Prisma calls
+  const genreIds = series.genres.map((g: { id: string }) => g.id);
+  const [relatedSeriesRaw, trendingSeriesRaw, recentSeriesRaw] = await Promise.all([
+    getCachedRelatedSeries(series.id, genreIds),
+    getCachedTrendingSeries(series.id),
+    getCachedRecentSeries(series.id),
+  ]);
+  const relatedSeries = relatedSeriesRaw.map(s => toSeriesCardData(s as any));
+  const trendingSeries = trendingSeriesRaw.map(s => toSeriesCardData(s as any));
+  const recentSeries = recentSeriesRaw.map(s => toSeriesCardData(s as any));
 
   const siteUrl = APP_URL || 'http://localhost:3000';
   
@@ -215,7 +274,7 @@ export default async function SeriesDetailPage({
     ? (firstChapter.sourceType === 'EXTERNAL' && firstChapter.downloadUrl ? firstChapter.downloadUrl : `/series/${series.slug}/chapter/${firstChapter.slug || firstChapter.number || 1}`) 
     : '#';
 
-  const chaptersList = series.chapters.map((c: Chapter) => ({
+  const chaptersList = series.chapters.map((c: any) => ({
     number: c.number,
     label: c.label,
     slug: c.slug,
@@ -323,7 +382,7 @@ export default async function SeriesDetailPage({
         {/* ── Chapter List ──────────────────────────────────── */}
         <section className="mt-12">
           <ChapterListSection
-            chapters={series.chapters.map((c: Chapter) => ({
+            chapters={series.chapters.map((c: any) => ({
               id: c.id,
               number: c.number,
               label: c.label || undefined,
@@ -364,8 +423,8 @@ export default async function SeriesDetailPage({
                 <Link href="/browse" className="text-sm font-medium text-primary hover:underline">Browse All</Link>
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-                {relatedSeries.map((item: Series & { genres: Genre[] }, index: number) => (
-                  <SeriesCard key={item.id} series={{...item, type: item.type as SeriesCardData['type'], status: item.status as SeriesCardData['status'], updatedAt: item.updatedAt.toISOString(), genres: item.genres, latestChapterNumber: item.chapterCount}} index={index} />
+                {relatedSeries.map((item: SeriesCardData, index: number) => (
+                  <SeriesCard key={item.id} series={item} index={index} />
                 ))}
               </div>
             </div>
@@ -377,8 +436,8 @@ export default async function SeriesDetailPage({
                 <h2 className="text-2xl font-bold text-text-primary">Trending This Week</h2>
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-                {trendingSeries.map((item: Series & { genres: Genre[] }, index: number) => (
-                  <SeriesCard key={item.id} series={{...item, type: item.type as SeriesCardData['type'], status: item.status as SeriesCardData['status'], updatedAt: item.updatedAt.toISOString(), genres: item.genres, latestChapterNumber: item.chapterCount}} index={index} />
+                {trendingSeries.map((item: SeriesCardData, index: number) => (
+                  <SeriesCard key={item.id} series={item} index={index} />
                 ))}
               </div>
             </div>
@@ -390,8 +449,8 @@ export default async function SeriesDetailPage({
                 <h2 className="text-2xl font-bold text-text-primary">Recently Updated</h2>
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-                {recentSeries.map((item: Series & { genres: Genre[] }, index: number) => (
-                  <SeriesCard key={item.id} series={{...item, type: item.type as SeriesCardData['type'], status: item.status as SeriesCardData['status'], updatedAt: item.updatedAt.toISOString(), genres: item.genres, latestChapterNumber: item.chapterCount}} index={index} />
+                {recentSeries.map((item: SeriesCardData, index: number) => (
+                  <SeriesCard key={item.id} series={item} index={index} />
                 ))}
               </div>
             </div>

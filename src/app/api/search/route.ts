@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
-import { auth } from '@/auth';
 
 declare global {
   var _searchLogBuffer: any[] | undefined;
@@ -66,12 +65,13 @@ export async function GET(request: NextRequest) {
     });
 
     if (query && query.length >= 3) {
-      const session = await auth();
+      // OPT-10: Skip auth() — it was only used for optional userId in audit logs.
+      // Saves JWT verification CPU on every search keystroke.
       searchBuffer.push({
         action: 'SEARCH',
         targetType: 'SearchQuery',
         targetId: 'public',
-        userId: session?.user?.id || undefined,
+        userId: undefined,
         metadata: { query: query.toLowerCase() }
       });
       if (searchBuffer.length >= 10) {

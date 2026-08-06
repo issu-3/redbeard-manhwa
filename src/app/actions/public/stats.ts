@@ -13,28 +13,15 @@ export interface WebsiteStats {
 export const getWebsiteStatistics = unstable_cache(
   async (): Promise<WebsiteStats> => {
     try {
-      // 1. Active Series (Assuming all non-UPCOMING are active/published)
-      const activeSeries = await prisma.series.count({
-        where: {
-          status: { not: 'UPCOMING' }
-        }
-      });
+      // OPT-25: Run all stats queries concurrently
+      const [activeSeries, totalChapters, viewsAggregation, ratingAggregation] = await Promise.all([
+        prisma.series.count({ where: { status: { not: 'UPCOMING' } } }),
+        prisma.chapter.count({ where: { isPublished: true } }),
+        prisma.series.aggregate({ _sum: { totalViews: true } }),
+        prisma.review.aggregate({ _avg: { rating: true } })
+      ]);
 
-      // 2. Total Chapters
-      const totalChapters = await prisma.chapter.count({
-        where: { isPublished: true }
-      });
-
-      // 3. Total Views (Sum of totalViews from Series model)
-      const viewsAggregation = await prisma.series.aggregate({
-        _sum: { totalViews: true }
-      });
       const totalViews = viewsAggregation._sum.totalViews || 0;
-
-      // 4. Average Rating
-      const ratingAggregation = await prisma.review.aggregate({
-        _avg: { rating: true }
-      });
       const averageRating = ratingAggregation._avg.rating || null;
 
       return {

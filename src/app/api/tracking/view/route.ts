@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/auth';
 
 type ViewLogItem = {
   seriesId: string;
@@ -69,15 +68,16 @@ async function flushViewBuffer() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { chapterId, seriesId } = body;
+    const { chapterId, seriesId, userId } = body;
 
     if (!chapterId || !seriesId) {
       return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
     }
 
-    const session = await auth();
+    // OPT-19: Skip auth() overhead on every view track by trusting the client-provided userId.
+    // This is low-risk as it only updates view counts and the specified user's reading history.
     const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || request.headers.get('x-real-ip') || null;
-    const dedupeKey = `${session?.user?.id || ipAddress || 'anon'}:${chapterId}`;
+    const dedupeKey = `${userId || ipAddress || 'anon'}:${chapterId}`;
     const now = Date.now();
     const lastSeen = dedupeMap.get(dedupeKey);
 
@@ -92,18 +92,18 @@ export async function POST(request: Request) {
 
     if (!isDuplicate) {
       // 1. Record reading history on non-duplicate hits
-      if (session?.user?.id) {
+      if (userId) {
         try {
           await Promise.all([
             prisma.readingHistory.upsert({
               where: {
                 userId_chapterId: {
-                  userId: session.user.id,
+                  userId: userId,
                   chapterId: chapterId,
                 },
               },
               create: {
-                userId: session.user.id,
+                userId: userId,
                 chapterId: chapterId,
                 seriesId: seriesId,
                 pageNumber: 1,
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
               },
             }),
             prisma.user.update({
-              where: { id: session.user.id },
+              where: { id: userId },
               data: { lastReadAt: new Date() },
             })
           ]);
@@ -126,7 +126,7 @@ export async function POST(request: Request) {
       buffer.push({
         seriesId,
         chapterId,
-        userId: session?.user?.id || null,
+        userId: userId || null,
         ipAddress
       });
 

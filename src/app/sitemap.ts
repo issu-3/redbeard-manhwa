@@ -1,14 +1,33 @@
 import type { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 import { APP_URL } from '@/lib/constants';
+import { unstable_cache } from 'next/cache';
 
+// OPT-11: Cache the heavy sitemap DB queries (up to 50k chapter rows with JOINs).
+// Crawlers don't need real-time data — a 1-hour cache is fine.
+const getCachedSitemapData = unstable_cache(
+  async () => {
+    const [series, genres, chapters] = await Promise.all([
+      prisma.series.findMany({ select: { slug: true, updatedAt: true } }),
+      prisma.genre.findMany({ select: { slug: true } }),
+      prisma.chapter.findMany({ 
+        where: { isPublished: true },
+        select: { slug: true, updatedAt: true, series: { select: { slug: true } } },
+        take: 50000,
+        orderBy: { updatedAt: 'desc' }
+      }),
+    ]);
+    return { series, genres, chapters };
+  },
+  ['sitemap-data'],
+  { tags: ['series', 'chapters'], revalidate: 3600 }
+);
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = APP_URL || 'http://localhost:3000';
-  const PAGE_SIZE = 50000;
 
   try {
-    const routes: MetadataRoute.Sitemap = [];
+    const { series, genres, chapters } = await getCachedSitemapData();
 
     const staticRoutes: MetadataRoute.Sitemap = [
         { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
@@ -20,7 +39,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { url: `${baseUrl}/search`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
       ];
 
-      const series = await prisma.series.findMany({ select: { slug: true, updatedAt: true } });
       const seriesRoutes = series.map((s) => ({
         url: `${baseUrl}/series/${s.slug}`,
         lastModified: s.updatedAt,
@@ -28,7 +46,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8,
       }));
 
-      const genres = await prisma.genre.findMany({ select: { slug: true } });
       const genreRoutes = genres.map((g) => ({
         url: `${baseUrl}/browse/genres/${g.slug}`,
         lastModified: new Date(),
@@ -36,15 +53,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
       }));
 
-      routes.push(...staticRoutes, ...seriesRoutes, ...genreRoutes);
-    // Fetch chapters up to the limit
-    const chapters = await prisma.chapter.findMany({ 
-      where: { isPublished: true },
-      select: { slug: true, updatedAt: true, series: { select: { slug: true } } },
-      take: PAGE_SIZE,
-      orderBy: { updatedAt: 'desc' }
-    });
-    
     const chapterRoutes = chapters.map((c) => ({
       url: `${baseUrl}/series/${c.series.slug}/chapter/${c.slug}`,
       lastModified: c.updatedAt,
@@ -52,9 +60,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-    routes.push(...chapterRoutes);
-
-    return routes;
+    return [...staticRoutes, ...seriesRoutes, ...genreRoutes, ...chapterRoutes];
   } catch (error) {
     console.error('Failed to generate dynamic sitemap routes:', error);
     return [];

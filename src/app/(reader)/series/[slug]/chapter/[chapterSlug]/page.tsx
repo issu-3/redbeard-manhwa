@@ -9,6 +9,19 @@ import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdRenderer } from '@/components/ads/AdRenderer';
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
+// OPT-21: Pre-render recent chapters at build time
+export async function generateStaticParams() {
+  const chapters = await prisma.chapter.findMany({
+    where: { isPublished: true },
+    orderBy: { publishedAt: 'desc' },
+    take: 200,
+    select: { slug: true, series: { select: { slug: true } } }
+  });
+  return chapters.map((c) => ({
+    slug: c.series.slug,
+    chapterSlug: c.slug,
+  }));
+}
 
 // ─── Data Fetching ───────────────────────────────────────────────
 
@@ -132,6 +145,31 @@ const getChapterData = cache(async (slug: string, chapterSlug: string): Promise<
   return getCachedChapterDataInternal(slug, chapterSlug);
 });
 
+// OPT-05: Cache comments to avoid hitting DB on every chapter page load
+const getCachedChapterComments = unstable_cache(
+  async (chapterId: string) => {
+    return prisma.comment.findMany({
+      where: { chapterId },
+      include: {
+        user: {
+          select: { displayName: true, username: true, avatarUrl: true, role: true }
+        },
+        replies: {
+          include: {
+            user: {
+              select: { displayName: true, username: true, avatarUrl: true, role: true }
+            }
+          },
+          orderBy: { createdAt: 'asc' }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  },
+  ['chapter-comments'],
+  { tags: ['comments'], revalidate: 60 }
+);
+
 // ─── Metadata ──────────────────────────────────────────────────
 
 export async function generateMetadata({
@@ -204,35 +242,39 @@ export default async function ChapterPage({
     redirect(`/series/${slug}/chapter/${chapter.slug}`);
   }
 
+  // OPT-06: Call auth() once and reuse throughout the function
+  const session = await auth();
+
   // Handle external redirect
   if (chapter.sourceType === 'EXTERNAL' && chapter.downloadUrl) {
-    // Record reading history before redirecting
-    const session = await auth();
+    // OPT-07: Parallelize all DB writes instead of running sequentially
+    const writePromises: Promise<any>[] = [];
+    
     if (session?.user?.id) {
-      await prisma.readingHistory.upsert({
-        where: {
-          userId_chapterId: {
+      writePromises.push(
+        prisma.readingHistory.upsert({
+          where: {
+            userId_chapterId: {
+              userId: session.user.id,
+              chapterId: chapter.id,
+            },
+          },
+          update: {
+            pageNumber: 1,
+            updatedAt: new Date(),
+          },
+          create: {
             userId: session.user.id,
             chapterId: chapter.id,
+            seriesId: chapter.seriesId,
+            pageNumber: 1,
           },
-        },
-        update: {
-          pageNumber: 1,
-          updatedAt: new Date(),
-        },
-        create: {
-          userId: session.user.id,
-          chapterId: chapter.id,
-          seriesId: chapter.seriesId,
-          pageNumber: 1,
-        },
-      });
-
-      // Update lastReadAt on user
-      await prisma.user.update({
-        where: { id: session.user.id },
-        data: { lastReadAt: new Date() },
-      });
+        }),
+        prisma.user.update({
+          where: { id: session.user.id },
+          data: { lastReadAt: new Date() },
+        })
+      );
     }
 
     // Record view counts for external chapters
@@ -241,26 +283,34 @@ export default async function ChapterPage({
       const headersList = await headers();
       const ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
       
-      await prisma.chapter.update({
-        where: { id: chapter.id },
-        data: { totalViews: { increment: 1 } },
-      });
-      await prisma.series.update({
-        where: { id: chapter.seriesId },
-        data: { totalViews: { increment: 1 } },
-      });
-      
-      await prisma.viewLog.create({
-        data: {
-          seriesId: chapter.seriesId,
-          chapterId: chapter.id,
-          userId: session?.user?.id || null,
-          ipAddress: ipAddress ? ipAddress.split(',')[0].trim() : null,
-        }
-      });
+      writePromises.push(
+        prisma.chapter.update({
+          where: { id: chapter.id },
+          data: { totalViews: { increment: 1 } },
+        }),
+        prisma.series.update({
+          where: { id: chapter.seriesId },
+          data: { totalViews: { increment: 1 } },
+        }),
+        prisma.viewLog.create({
+          data: {
+            seriesId: chapter.seriesId,
+            chapterId: chapter.id,
+            userId: session?.user?.id || null,
+            ipAddress: ipAddress ? ipAddress.split(',')[0].trim() : null,
+          }
+        })
+      );
     } catch (e) {
-      console.error('Failed to increment view count for external chapter:', e);
+      console.error('Failed to prepare view count writes:', e);
     }
+
+    // OPT-07: Fire all writes concurrently and unblock the response using after()
+    // Make sure to require next/server in the file or dynamically import it
+    const { after } = await import('next/server');
+    after(() => {
+      Promise.allSettled(writePromises).catch(e => console.error(e));
+    });
 
     // Ensure the external URL is absolute to prevent relative redirect bugs
     let targetUrl = chapter.downloadUrl;
@@ -275,26 +325,8 @@ export default async function ChapterPage({
   // Reading history and view tracking is now handled asynchronously via client-side API call
   // to prevent blocking the server render thread (TTFB optimization).
 
-  // Fetch comments
-  const commentsData = await prisma.comment.findMany({
-    where: { chapterId: chapter.id },
-    include: {
-      user: {
-        select: { displayName: true, username: true, avatarUrl: true, role: true }
-      },
-      replies: {
-        include: {
-          user: {
-            select: { displayName: true, username: true, avatarUrl: true, role: true }
-          }
-        },
-        orderBy: { createdAt: 'asc' }
-      }
-    },
-    orderBy: { createdAt: 'desc' }
-  });
-
-  const session = await auth();
+  // OPT-05: Use cached comments query
+  const commentsData = await getCachedChapterComments(chapter.id);
   
   // Fetch User Preferences
   let userPreferences = {};

@@ -4,7 +4,8 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import fs from 'fs';
 import path from 'path';
 
-if (!process.env.DATABASE_URL && typeof window === 'undefined') {
+// OPT-23: Guard manual .env parsing so it doesn't run in production and add cold start penalty
+if (process.env.NODE_ENV !== 'production' && !process.env.DATABASE_URL && typeof window === 'undefined') {
   try {
     const envPaths = [
       path.resolve(process.cwd(), '.env'),

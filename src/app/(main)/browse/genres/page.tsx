@@ -1,7 +1,9 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
+
 import { Metadata } from 'next';
 import { GenreCard } from '@/components/shared/GenreCard';
 import { prisma } from '@/lib/prisma';
+import { unstable_cache } from 'next/cache';
 
 import { generateMetadata } from '@/lib/seo';
 import { APP_URL } from '@/lib/constants';
@@ -12,15 +14,23 @@ export const metadata: Metadata = generateMetadata({
   url: `${APP_URL}/browse/genres`
 });
 
+const getCachedGenres = unstable_cache(
+  async () => {
+    return prisma.genre.findMany({
+      include: {
+        _count: {
+          select: { series: true }
+        }
+      },
+      orderBy: { name: 'asc' }
+    });
+  },
+  ['browse-genres'],
+  { tags: ['genres'], revalidate: 300 }
+);
+
 export default async function GenresPage() {
-  const genres = await prisma.genre.findMany({
-    include: {
-      _count: {
-        select: { series: true }
-      }
-    },
-    orderBy: { name: 'asc' }
-  });
+  const genres = await getCachedGenres();
 
   return (
     <div>

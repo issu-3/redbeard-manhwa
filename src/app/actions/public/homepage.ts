@@ -186,24 +186,18 @@ export async function getPersonalizedSections(limit: number): Promise<{ continue
   }));
 
   let recommended: SeriesCardData[] = [];
+  // OPT-16: Combine into a single query to reduce DB roundtrips and limit to 100
   const allBookmarks = await prisma.bookmark.findMany({
     where: { userId },
-    select: { seriesId: true }
-  });
-  const bookmarkedIds = allBookmarks.map(b => b.seriesId);
-
-  const recentBookmarks = await prisma.bookmark.findMany({
-    where: { userId },
     orderBy: { createdAt: 'desc' },
-    take: 5,
+    take: 100,
     select: {
-      series: {
-        select: {
-          genres: { select: { id: true } }
-        }
-      }
+      seriesId: true,
+      series: { select: { genres: { select: { id: true } } } }
     }
   });
+  const bookmarkedIds = allBookmarks.map(b => b.seriesId);
+  const recentBookmarks = allBookmarks.slice(0, 5);
   
   if (recentBookmarks.length > 0) {
     const favoriteGenres = new Set<string>();

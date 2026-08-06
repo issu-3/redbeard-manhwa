@@ -2,14 +2,19 @@
 
 import { prisma } from '@/lib/prisma';
 import { unstable_cache } from 'next/cache';
+import { cache } from 'react';
 
-export const getCachedSettings = unstable_cache(
+const getCachedSettingsInternal = unstable_cache(
   async () => {
     return await getSettings();
   },
   ['site-settings'],
   { tags: ['settings'], revalidate: 3600 }
 );
+
+// OPT-08/09: React cache() deduplicates within the same request render,
+// so generateMetadata + page component share a single cache lookup.
+export const getCachedSettings = cache(getCachedSettingsInternal);
 
 export async function getSettings() {
   try {
