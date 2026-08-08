@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { SeoDashboard } from '@/components/admin/seo/SeoDashboard';
-import { fetchSeoDashboardData } from '@/app/actions/admin/seo';
+import { fetchSeoDashboardData } from '@/app/actions/admin/seo-data';
 
 export const metadata: Metadata = {
   title: 'SEO Health Dashboard | REDBEARD Admin',
