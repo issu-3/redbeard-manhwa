@@ -15,10 +15,17 @@ export async function fetchSeoDashboardData() {
   // OPT-14: Cache this heavy operation to avoid loading all DB records into memory on every page load
   const getCachedRawData = unstable_cache(
     async () => {
-      const [seriesRaw, chaptersRaw, viewLogsRaw, totalViewsData] = await Promise.all([
+      // ViewLog query is wrapped in try-catch because the table may not exist in all environments
+      let viewLogsRaw: {date: Date, count: bigint}[] = [];
+      try {
+        viewLogsRaw = await prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(DISTINCT "ipAddress") as count FROM "ViewLog" WHERE "createdAt" >= NOW() - INTERVAL '7 days' AND "ipAddress" IS NOT NULL GROUP BY 1`;
+      } catch (e) {
+        console.warn('ViewLog query failed (table may not exist):', (e as Error).message);
+      }
+
+      const [seriesRaw, chaptersRaw, totalViewsData] = await Promise.all([
         prisma.series.findMany({ select: { id: true, title: true, slug: true, seo: true, description: true, chapterCount: true, totalViews: true } }),
         prisma.chapter.findMany({ select: { id: true, number: true, title: true, label: true, slug: true, seriesId: true, series: { select: { title: true } }, seo: true, totalViews: true } }),
-        prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(DISTINCT "ipAddress") as count FROM "ViewLog" WHERE "createdAt" >= NOW() - INTERVAL '7 days' AND "ipAddress" IS NOT NULL GROUP BY 1`,
         prisma.series.aggregate({ _sum: { totalViews: true } })
       ]);
       // Convert bigint → number and Date → ISO string so the result is JSON-serializable for unstable_cache
