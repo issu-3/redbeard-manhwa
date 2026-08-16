@@ -1,4 +1,4 @@
-export const revalidate = 300;
+export const revalidate = 3600;
 
 import { Metadata } from 'next';
 import { Rows3 } from 'lucide-react';
@@ -26,7 +26,7 @@ const getCachedOngoingSeries = unstable_cache(
     });
   },
   ['browse-ongoing'],
-  { tags: ['series'], revalidate: 300 }
+  { tags: ['series'], revalidate: 3600 }
 );
 
 export default async function OngoingPage() {

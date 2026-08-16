@@ -1,4 +1,4 @@
-export const revalidate = 300;
+export const revalidate = 3600;
 
 import { Metadata } from 'next';
 import { GenreCard } from '@/components/shared/GenreCard';
@@ -26,7 +26,7 @@ const getCachedGenres = unstable_cache(
     });
   },
   ['browse-genres'],
-  { tags: ['genres'], revalidate: 300 }
+  { tags: ['genres'], revalidate: 3600 }
 );
 
 export default async function GenresPage() {

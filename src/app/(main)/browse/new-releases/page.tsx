@@ -1,4 +1,4 @@
-export const revalidate = 300;
+export const revalidate = 3600;
 
 import { Metadata } from 'next';
 import { Sparkles } from 'lucide-react';
@@ -25,7 +25,7 @@ const getCachedNewReleasesSeries = unstable_cache(
     });
   },
   ['browse-new-releases'],
-  { tags: ['series'], revalidate: 300 }
+  { tags: ['series'], revalidate: 3600 }
 );
 
 export default async function NewReleasesPage() {

@@ -1,4 +1,4 @@
-export const revalidate = 300;
+export const revalidate = 3600;
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BrowseGrid } from '@/components/shared/BrowseGrid';
@@ -16,7 +16,7 @@ const getCachedGenreData = unstable_cache(
     return prisma.genre.findUnique({ where: { slug } });
   },
   ['genre-data-by-slug'],
-  { tags: ['genres'], revalidate: 300 }
+  { tags: ['genres'], revalidate: 3600 }
 );
 
 const getCachedGenreSeries = unstable_cache(
@@ -29,7 +29,7 @@ const getCachedGenreSeries = unstable_cache(
     });
   },
   ['genre-series-by-slug'],
-  { tags: ['series', 'genres'], revalidate: 300 }
+  { tags: ['series', 'genres'], revalidate: 3600 }
 );
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {

@@ -1,4 +1,4 @@
-export const revalidate = 300;
+export const revalidate = 3600;
 
 import { Metadata } from 'next';
 import { Clock } from 'lucide-react';
@@ -25,7 +25,7 @@ const getCachedLatestSeries = unstable_cache(
     });
   },
   ['browse-latest'],
-  { tags: ['series'], revalidate: 300 }
+  { tags: ['series'], revalidate: 3600 }
 );
 
 export default async function LatestPage() {

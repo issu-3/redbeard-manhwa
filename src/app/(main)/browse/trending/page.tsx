@@ -1,4 +1,4 @@
-export const revalidate = 300;
+export const revalidate = 3600;
 
 import { Metadata } from 'next';
 import { Flame } from 'lucide-react';
@@ -25,7 +25,7 @@ const getCachedTrendingSeries = unstable_cache(
     });
   },
   ['browse-trending'],
-  { tags: ['series'], revalidate: 300 }
+  { tags: ['series'], revalidate: 3600 }
 );
 
 export default async function TrendingPage() {

@@ -1,4 +1,4 @@
-export const revalidate = 300;
+export const revalidate = 3600;
 
 import { Metadata } from 'next';
 import { TrendingUp } from 'lucide-react';
@@ -25,7 +25,7 @@ const getCachedPopularSeries = unstable_cache(
     });
   },
   ['browse-popular'],
-  { tags: ['series'], revalidate: 300 }
+  { tags: ['series'], revalidate: 3600 }
 );
 
 export default async function PopularPage() {
