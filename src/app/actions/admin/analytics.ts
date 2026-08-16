@@ -101,13 +101,13 @@ async function fetchAnalyticsDataInternal(range: string) {
   const [
     spUsers, spSeries, spChapters, spComments, spBookmarks, spViews, spActiveUsers
   ] = await Promise.all([
-    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "User" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
-    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "Series" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
-    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "Chapter" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
-    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "Comment" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
-    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "Bookmark" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
-    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "ViewLog" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
-    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(DISTINCT "ipAddress") as count FROM "ViewLog" WHERE "createdAt" >= ${sparklineStart} AND "ipAddress" IS NOT NULL GROUP BY 1`
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "users" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "series" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "chapters" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "comments" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "bookmarks" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "view_logs" WHERE "createdAt" >= ${sparklineStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(DISTINCT "ipAddress") as count FROM "view_logs" WHERE "createdAt" >= ${sparklineStart} AND "ipAddress" IS NOT NULL GROUP BY 1`
   ]);
 
   const formatSparklineData = (raw: {date: Date, count: bigint}[]) => {
@@ -143,10 +143,10 @@ async function fetchAnalyticsDataInternal(range: string) {
     chartViews, chartUsers, chartSeries, chartChapters,
     topSeriesRaw, mostReadChaptersRaw, topGenresRaw, sessionsRaw
   ] = await Promise.all([
-    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "ViewLog" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
-    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "User" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
-    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "Series" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
-    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "Chapter" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "view_logs" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "users" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "series" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
+    prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "chapters" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
     prisma.series.findMany({ orderBy: { totalViews: 'desc' }, take: 10, select: { title: true, totalViews: true, totalBookmarks: true } }),
     prisma.chapter.findMany({ orderBy: { totalViews: 'desc' }, take: 10, select: { series: { select: { title: true } }, number: true, title: true, label: true, totalViews: true } }),
     prisma.genre.findMany({ orderBy: { seriesCount: 'desc' }, take: 10, select: { name: true, seriesCount: true } }),
@@ -269,12 +269,5 @@ async function fetchAnalyticsDataInternal(range: string) {
 
 export async function getAnalyticsData(range: string) {
   await checkAdmin();
-  
-  const getCachedData = unstable_cache(
-    async (r: string) => fetchAnalyticsDataInternal(r),
-    [`analytics_data_${range}`],
-    { revalidate: 300, tags: [`analytics_${range}`] }
-  );
-
-  return getCachedData(range);
+  return getCachedAnalyticsData(range);
 }
