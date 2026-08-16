@@ -12,18 +12,17 @@ async function checkAdmin() {
   }
 }
 
-const getCachedAnalyticsData = unstable_cache(
-  async (range: string) => {
-    return fetchAnalyticsDataInternal(range);
-  },
-  ['admin-analytics-data'],
-  { tags: ['admin-analytics'], revalidate: 60 }
-);
-
 export async function fetchAnalyticsData(range: string) {
   // C5 FIX: This exported server action must verify admin access
   await checkAdmin();
-  return getCachedAnalyticsData(range);
+  
+  const getCachedData = unstable_cache(
+    async () => fetchAnalyticsDataInternal(range),
+    [`admin-analytics-data-${range}`],
+    { tags: [`admin-analytics-${range}`, 'admin-analytics'], revalidate: 60 }
+  );
+  
+  return getCachedData();
 }
 
 async function fetchAnalyticsDataInternal(range: string) {
@@ -269,5 +268,12 @@ async function fetchAnalyticsDataInternal(range: string) {
 
 export async function getAnalyticsData(range: string) {
   await checkAdmin();
-  return getCachedAnalyticsData(range);
+  
+  const getCachedData = unstable_cache(
+    async () => fetchAnalyticsDataInternal(range),
+    [`analytics_data_${range}`],
+    { revalidate: 300, tags: [`analytics_${range}`] }
+  );
+
+  return getCachedData();
 }
