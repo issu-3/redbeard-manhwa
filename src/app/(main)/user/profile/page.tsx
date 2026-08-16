@@ -23,28 +23,47 @@ export const metadata: Metadata = {
 };
 
 async function getProfileData(userId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      bookmarks: true,
-      readingHistory: {
-        include: {
-          series: {
-            include: {
-              genres: true
-            }
-          },
-          chapter: true
-        },
-        orderBy: {
-          updatedAt: 'desc'
-        }
+  const [user, chaptersRead, bookmarksCount, recentlyRead, rawFavoriteGenres] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+    }),
+    prisma.readingHistory.count({
+      where: { userId }
+    }),
+    prisma.bookmark.count({
+      where: { userId }
+    }),
+    prisma.readingHistory.findMany({
+      where: { userId },
+      include: {
+        series: true,
+        chapter: true
       },
-      reviews: true,
-    }
-  });
+      orderBy: { updatedAt: 'desc' },
+      take: 5
+    }),
+    prisma.$queryRaw<{ name: string, count: number }[]>`
+      SELECT g.name, CAST(COUNT(*) AS INTEGER) as count
+      FROM reading_history rh
+      JOIN series s ON rh."seriesId" = s.id
+      JOIN "_GenreToSeries" gs ON s.id = gs."B"
+      JOIN genres g ON gs."A" = g.id
+      WHERE rh."userId" = ${userId}
+      GROUP BY g.id, g.name
+      ORDER BY count DESC
+      LIMIT 3
+    `
+  ]);
   
-  return user;
+  if (!user) return null;
+
+  return {
+    user,
+    chaptersRead,
+    bookmarksCount,
+    recentlyRead,
+    favoriteGenres: rawFavoriteGenres.map(g => ({ name: g.name, count: Number(g.count) }))
+  };
 }
 
 export default async function ProfilePage() {
@@ -54,29 +73,13 @@ export default async function ProfilePage() {
     redirect('/login');
   }
 
-  const user = await getProfileData(session.user.id);
+  const profileData = await getProfileData(session.user.id);
   
-  if (!user) {
+  if (!profileData) {
     redirect('/login');
   }
 
-  // Calculate stats
-  const recentlyRead = user.readingHistory.slice(0, 5);
-  
-  // Calculate favorite genres
-  const genreCounts: Record<string, { count: number, name: string }> = {};
-  user.readingHistory.forEach(rh => {
-    rh.series.genres.forEach(genre => {
-      if (!genreCounts[genre.id]) {
-        genreCounts[genre.id] = { count: 0, name: genre.name };
-      }
-      genreCounts[genre.id].count++;
-    });
-  });
-  
-  const favoriteGenres = Object.values(genreCounts)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 3);
+  const { user, chaptersRead, bookmarksCount, recentlyRead, favoriteGenres } = profileData;
 
   return (
     <div className="space-y-8">
@@ -133,7 +136,7 @@ export default async function ProfilePage() {
           </div>
           <div>
             <p className="text-sm text-muted-foreground font-medium">Chapters Read</p>
-            <p className="text-2xl font-bold">{user.readingHistory.length}</p>
+            <p className="text-2xl font-bold">{chaptersRead}</p>
           </div>
         </div>
         
@@ -153,7 +156,7 @@ export default async function ProfilePage() {
           </div>
           <div>
             <p className="text-sm text-muted-foreground font-medium">Bookmarks</p>
-            <p className="text-2xl font-bold">{user.bookmarks.length}</p>
+            <p className="text-2xl font-bold">{bookmarksCount}</p>
           </div>
         </div>
         
