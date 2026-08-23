@@ -1,9 +1,11 @@
+import type { ContentType } from '../lib/content-types';
+
 export interface SeriesCardData {
   id: string;
   title: string;
   slug: string;
   coverImage: string;
-  type: 'MANHWA' | 'MANGA' | 'MANHUA' | 'WEBTOON';
+  type: ContentType;
   status: 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'CANCELLED' | 'UPCOMING';
   averageRating: number;
   totalViews: number;

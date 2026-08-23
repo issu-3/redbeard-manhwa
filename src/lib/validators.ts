@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CONTENT_TYPES } from './content-types';
 
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -18,7 +19,7 @@ export const seriesSchema = z.object({
   synopsis: z.string().optional(),
   coverImage: z.string().url('Must be a valid URL'),
   bannerImage: z.string().url().optional(),
-  type: z.enum(['MANHWA', 'MANGA', 'MANHUA', 'WEBTOON', 'PORNHWA', 'DOUJINSHI']),
+  type: z.enum(CONTENT_TYPES),
   status: z.enum(['ONGOING', 'COMPLETED', 'HIATUS', 'CANCELLED', 'UPCOMING']),
   readingDirection: z.enum(['LTR', 'RTL', 'VERTICAL']).default('VERTICAL'),
   releaseYear: z.number().int().min(1900).max(2030).optional().nullable(),
@@ -69,7 +70,7 @@ export const searchSchema = z.object({
   genres: z.array(z.string()).optional(),
   tags: z.array(z.string()).optional(),
   status: z.enum(['ONGOING', 'COMPLETED', 'HIATUS', 'CANCELLED', 'UPCOMING']).optional(),
-  type: z.enum(['MANHWA', 'MANGA', 'MANHUA', 'WEBTOON']).optional(),
+  type: z.enum(CONTENT_TYPES).optional(),
   sort: z.enum(['latest', 'popular', 'rating', 'views', 'bookmarks', 'alphabetical', 'updated']).default('popular'),
   order: z.enum(['asc', 'desc']).default('desc'),
   page: z.number().int().positive().default(1),

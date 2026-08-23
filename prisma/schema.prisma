@@ -1,5 +1,5 @@
 // ============================================================================
-// REDBEARD — Manhwa Reading Platform
+// REDBEARD — Multi-Content Download Platform
 // Prisma Schema (PostgreSQL)
 // ============================================================================
 
@@ -37,6 +37,8 @@ enum SeriesType {
   WEBTOON
   PORNHWA
   DOUJINSHI
+  COMIC
+  LIGHT_NOVEL
 }
 
 enum ReadingDirection {
