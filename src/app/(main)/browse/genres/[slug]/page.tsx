@@ -40,14 +40,14 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   if (!genre) return { title: 'Genre Not Found' };
   
   const _siteTitle = settings.seo_site_title || 'REDBEARD';
-  const title = `Best ${genre.name} Manhwa | ${settings.siteName || 'REDBEARD'}`;
-  const description = `Read the best ${genre.name} manhwa, manga, and webtoons online on ${settings.siteName || 'REDBEARD'}. ${genre.description || ''}`;
+  const title = `Best ${genre.name} Comics & Series - Download | ${settings.siteName || 'REDBEARD'}`;
+  const description = `Download the best ${genre.name} series, comics, manga, and webtoons on ${settings.siteName || 'REDBEARD'}. ${genre.description || ''}`;
   const url = `${APP_URL}/browse/genres/${slug}`;
 
   return { 
     title,
     description,
-    keywords: [genre.name, 'manhwa', 'manga', 'read online', `${genre.name} manhwa`],
+    keywords: [genre.name, 'download', 'comics', 'manga', 'webtoon', `${genre.name} series`],
     openGraph: {
       title,
       description,

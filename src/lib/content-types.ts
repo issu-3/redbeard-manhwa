@@ -12,7 +12,7 @@ export const CONTENT_TYPES = [
 export type ContentType = typeof CONTENT_TYPES[number];
 
 export function getContentTypeLabel(type: string | undefined | null): string {
-  if (!type) return 'Manhwa';
+  if (!type) return 'Series';
   
   switch (type.toUpperCase()) {
     case 'MANHWA': return 'Manhwa';
@@ -23,7 +23,7 @@ export function getContentTypeLabel(type: string | undefined | null): string {
     case 'LIGHT_NOVEL': return 'Light Novel';
     case 'DOUJINSHI': return 'Doujinshi';
     case 'PORNHWA': return 'Pornhwa';
-    default: return type;
+    default: return type || 'Series';
   }
 }
 

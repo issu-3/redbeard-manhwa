@@ -187,8 +187,8 @@ export async function generateMetadata({
   const seo = chapter.seo || {};
   const _siteTitle = settings.seo_site_title || 'REDBEARD';
   
-  const defaultTitle = `${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`} - Read Online | ${settings.siteName || 'REDBEARD'}`;
-  const defaultDesc = `Read ${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} online on ${settings.siteName || 'REDBEARD'}. High quality manhwa reading experience.`;
+  const defaultTitle = `${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`} - Download | ${settings.siteName || 'REDBEARD'}`;
+  const defaultDesc = `Download ${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} on ${settings.siteName || 'REDBEARD'}. High quality download experience.`;
   const defaultUrl = `${APP_URL}/series/${slug}/chapter/${chapterSlug}`;
   const defaultImage = chapter.images.length > 0 ? chapter.images[0].imageUrl : undefined;
 

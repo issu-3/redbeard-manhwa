@@ -1,8 +1,10 @@
 import { APP_URL } from './constants';
+import { getContentTypeLabel } from './content-types';
 
 export interface SeriesSeoInput {
   title: string;
   slug: string;
+  type?: string;
   synopsis?: string | null;
   description?: string | null;
   coverImage?: string | null;
@@ -50,10 +52,11 @@ export function validateCanonicalUrl(url?: string | null, expectedSlug?: string)
   }
 }
 
-export function generateDescription(synopsis?: string | null, description?: string | null, title?: string): string {
+export function generateDescription(synopsis?: string | null, description?: string | null, title?: string, type?: string): string {
+  const typeLabel = getContentTypeLabel(type);
   const text = (synopsis && synopsis.trim().length > 0) 
     ? synopsis 
-    : (description || `Read the latest chapters of ${title || 'this series'} manhwa online at REDBEARD.`);
+    : (description || `Download ${title || 'this series'} ${typeLabel} with the latest available chapters. View series information, genres, status and available downloads on REDBEARD.`);
   
   const cleanText = text.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
   if (cleanText.length <= 160) return cleanText;
@@ -68,6 +71,7 @@ export function generateDescription(synopsis?: string | null, description?: stri
 
 export function generateKeywords(
   title: string,
+  type?: string,
   genres: string[] = [],
   tags: string[] = [],
   isAdult: boolean = false
@@ -78,9 +82,9 @@ export function generateKeywords(
   genres.forEach(g => { if (g && g.trim()) kwSet.add(g.trim()); });
   tags.forEach(t => { if (t && t.trim()) kwSet.add(t.trim()); });
   
-  kwSet.add('Manhwa');
-  kwSet.add('Webtoon');
-  kwSet.add('Read Online');
+  const typeLabel = getContentTypeLabel(type);
+  kwSet.add(typeLabel);
+  kwSet.add('Download');
   
   const allText = `${title} ${genres.join(' ')} ${tags.join(' ')}`.toLowerCase();
   const adultKeywords = ['adult', '18+', 'mature', 'smut', 'nsfw', 'ecchi'];
@@ -90,7 +94,7 @@ export function generateKeywords(
   }
   
   const colorKeywords = ['color', 'full color', 'webtoon'];
-  const isColorSeries = colorKeywords.some(w => allText.includes(w)) || true;
+  const isColorSeries = colorKeywords.some(w => allText.includes(w));
   if (isColorSeries) {
     kwSet.add('Full Color');
   }
@@ -110,24 +114,26 @@ export function generateSeriesSeo(
   const baseUrl = APP_URL.startsWith('http') ? APP_URL : 'https://redbeard-manhwa.vercel.app';
   const defaultCanonical = `${baseUrl}/series/${series.slug}`;
 
-  // 1. SEO Title: {Series Title} Manhwa - Read Online | REDBEARD
-  const autoTitle = `${series.title} Manhwa - Read Online | REDBEARD`;
+  const typeLabel = getContentTypeLabel(series.type);
+
+  // 1. SEO Title: {Series Title} [Type] - Download | REDBEARD
+  const autoTitle = `${series.title} ${typeLabel} - Download | REDBEARD`;
   const title = (!forceRegenerate && current.title && current.title.trim()) ? current.title.trim() : autoTitle;
 
-  // 2. Focus Keyword: {Series Title} Manhwa
-  const autoFocusKeyword = `${series.title} Manhwa`;
+  // 2. Focus Keyword: {Series Title} [Type]
+  const autoFocusKeyword = `${series.title} ${typeLabel}`;
   const focusKeyword = (!forceRegenerate && current.focusKeyword && current.focusKeyword.trim()) 
     ? current.focusKeyword.trim() 
     : autoFocusKeyword;
 
   // 3. SEO Description: 150-160 chars from Synopsis or Description
-  const autoDescription = generateDescription(series.synopsis, series.description, series.title);
+  const autoDescription = generateDescription(series.synopsis, series.description, series.title, series.type);
   const description = (!forceRegenerate && current.description && current.description.trim()) 
     ? current.description.trim() 
     : autoDescription;
 
   // 4. Keywords: combined & deduplicated
-  const autoKeywords = generateKeywords(series.title, series.genres || [], series.tags || [], series.isAdult);
+  const autoKeywords = generateKeywords(series.title, series.type, series.genres || [], series.tags || [], series.isAdult);
   const keywords = (!forceRegenerate && current.keywords && current.keywords.trim()) 
     ? current.keywords.trim() 
     : autoKeywords;

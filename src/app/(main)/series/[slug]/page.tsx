@@ -12,6 +12,7 @@ import { SeriesCard } from '@/components/shared/SeriesCard';
 import { ChapterListSection } from './chapter-list';
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
+import { getContentTypeLabel } from '@/lib/content-types';
 import type { SeriesCardData } from '@/types';
 import type { Series, Genre, Chapter } from '@prisma/client';
 import { SeriesActionsClient } from '@/components/series/SeriesActionsClient';
@@ -129,7 +130,7 @@ export async function generateMetadata({
   const seo = (series.seo as Record<string, string>) || {};
   const siteTitle = settings.seo_site_title || 'REDBEARD';
   
-  const title = seo.title || `${series.title} Manhwa - Read Online | ${siteTitle}`;
+  const title = seo.title || `${series.title} ${getContentTypeLabel((series as any).type)} - Download | ${siteTitle}`;
   const description = seo.description || series.synopsis || series.description.slice(0, 160);
   
   const keywords = seo.keywords 
@@ -139,7 +140,7 @@ export async function generateMetadata({
         ...series.tags.map(t => t.name),
         ...series.authors.map(a => a.name),
         series.title,
-        'read manhwa online'
+        `download ${getContentTypeLabel((series as any).type).toLowerCase()}`
       ];
 
   const robots = seo.robots || 'index, follow';

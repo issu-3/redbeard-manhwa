@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { MediaManager } from '@/components/admin/MediaManager';
 import { Sparkles, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { getContentTypeLabel } from '@/lib/content-types';
 
 export interface SeoData {
   title?: string;
@@ -39,20 +40,22 @@ export function SeoFormFields({
     const seriesTitle = (form?.querySelector('[name="title"]') as HTMLInputElement)?.value || '';
     const seriesDesc = (form?.querySelector('[name="description"]') as HTMLTextAreaElement)?.value || '';
     const seriesSyn = (form?.querySelector('[name="synopsis"]') as HTMLTextAreaElement)?.value || '';
+    const seriesType = (form?.querySelector('[name="type"]') as HTMLSelectElement)?.value || '';
+    const typeLabel = getContentTypeLabel(seriesType);
     
     if (!title && seriesTitle) {
-      setTitle(`${seriesTitle} Manhwa - Read Online | REDBEARD`);
+      setTitle(`${seriesTitle} ${typeLabel} - Download | REDBEARD`);
     }
     if (!focusKeyword && seriesTitle) {
-      setFocusKeyword(`${seriesTitle} Manhwa`);
+      setFocusKeyword(`${seriesTitle} ${typeLabel}`);
     }
     if (!description) {
-      const text = seriesSyn || seriesDesc || `Read the latest chapters of ${seriesTitle || 'this series'} manhwa online at REDBEARD.`;
+      const text = seriesSyn || seriesDesc || `Download ${seriesTitle || 'this series'} ${typeLabel} with the latest available chapters. View series information, genres, status and available downloads on REDBEARD.`;
       const clean = text.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
       setDescription(clean.length > 160 ? `${clean.substring(0, 157)}...` : clean);
     }
     if (!keywords && seriesTitle) {
-      setKeywords(`${seriesTitle}, Manhwa, Webtoon, Read Online, Full Color`);
+      setKeywords(`${seriesTitle}, ${typeLabel}, Download`);
     }
     if (!canonicalUrl && seriesTitle) {
       const slug = seriesTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -115,7 +118,7 @@ export function SeoFormFields({
             name="seoTitle" 
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Defaults to Series Title Manhwa - Read Online | REDBEARD..."
+            placeholder="Defaults to Series Title Type - Download | REDBEARD..."
             className={`w-full rounded-xl border bg-card px-4 py-2 text-sm focus:outline-none focus:ring-2 transition-all ${
               isTitleTooLong || isDuplicateTitle ? 'border-danger focus:ring-danger/20' : 'border-border focus:ring-primary/20'
             }`} 
@@ -140,7 +143,7 @@ export function SeoFormFields({
             name="seoFocusKeyword" 
             value={focusKeyword}
             onChange={(e) => setFocusKeyword(e.target.value)}
-            placeholder="e.g. Solo Leveling Manhwa"
+            placeholder="e.g. Solo Leveling Comic"
             className={`w-full rounded-xl border bg-card px-4 py-2 text-sm focus:outline-none focus:ring-2 transition-all ${
               isMissingFocusKw ? 'border-warning focus:ring-warning/20' : 'border-border focus:ring-primary/20'
             }`} 
@@ -190,7 +193,7 @@ export function SeoFormFields({
             name="seoKeywords" 
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
-            placeholder="manhwa, webtoon, action, read online, full color"
+            placeholder="comic, webtoon, action, download"
             className="w-full rounded-xl border border-border bg-card px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
           />
         </div>

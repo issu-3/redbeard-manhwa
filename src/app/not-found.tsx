@@ -28,7 +28,7 @@ export default function NotFound() {
             href="/browse/trending"
             className="inline-flex items-center gap-2 rounded-xl border border-border px-6 py-3 font-medium text-text-secondary transition-all hover:border-border-hover hover:text-text-primary"
           >
-            Browse Manhwa
+            Browse Series
           </Link>
         </div>
       </div>

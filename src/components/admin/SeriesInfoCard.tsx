@@ -19,7 +19,7 @@ export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
     ? defaultValues.alternativeTitles.join('\n')
     : (defaultValues.alternativeTitles || '');
 
-  const [type, setType] = useState(defaultValues.type || 'MANHWA');
+  const [type, setType] = useState(defaultValues.type || 'SERIES');
   const [releaseYear, setReleaseYear] = useState(defaultValues.releaseYear ? defaultValues.releaseYear.toString() : '');
   const [readingDirection, setReadingDirection] = useState(defaultValues.readingDirection || 'VERTICAL');
   const [alternativeNames, setAlternativeNames] = useState(initialAltNames);
@@ -37,7 +37,9 @@ export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
       case 'PORNHWA': return 'Pornhwa';
       case 'DOUJINSHI': return 'Doujinshi';
       case 'WEBTOON': return 'Webtoon';
-      default: return val || 'Manhwa';
+      case 'COMIC': return 'Comic';
+      case 'LIGHT_NOVEL': return 'Light Novel';
+      default: return val || 'Series';
     }
   };
 
@@ -94,12 +96,14 @@ export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
             onChange={(e) => setType(e.target.value)}
             className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           >
+            <option value="COMIC">Comic</option>
             <option value="MANHWA">Manhwa</option>
             <option value="MANGA">Manga</option>
             <option value="MANHUA">Manhua</option>
             <option value="PORNHWA">Pornhwa</option>
             <option value="DOUJINSHI">Doujinshi</option>
             <option value="WEBTOON">Webtoon</option>
+            <option value="LIGHT_NOVEL">Light Novel</option>
           </select>
         </div>
 
