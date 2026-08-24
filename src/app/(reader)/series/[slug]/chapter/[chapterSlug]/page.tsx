@@ -246,7 +246,7 @@ export default async function ChapterPage({
   const session = await auth();
 
   // Handle external redirect
-  if (chapter.sourceType === 'DOWNLOAD' && chapter.downloadUrl) {
+  if (['DOWNLOAD', 'EXTERNAL'].includes(chapter.sourceType as string) && chapter.downloadUrl) {
     // OPT-07: Parallelize all DB writes instead of running sequentially
     const writePromises: Promise<any>[] = [];
     

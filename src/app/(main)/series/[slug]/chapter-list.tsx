@@ -27,7 +27,7 @@ export function ChapterListSection({
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredChapters = useMemo(() => {
-    let filtered = [...chapters];
+    let filtered = chapters.filter(c => (c.totalPages && c.totalPages > 0) || c.downloadUrl);
 
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
@@ -129,7 +129,7 @@ export function ChapterListSection({
                           "font-bold truncate transition-colors",
                           isLatest ? "text-primary" : "text-text-primary group-hover:text-primary"
                         )}>
-                          {chapter.sourceType === 'DOWNLOAD' && chapter.label ? chapter.label : `Chapter ${chapter.number}`}
+                          {chapter.label || `Chapter ${chapter.number}`}
                         </h3>
                         {chapter.title && (
                           <p className="text-xs text-text-secondary truncate mt-0.5">
@@ -153,27 +153,28 @@ export function ChapterListSection({
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-1 text-text-secondary">
-                        {chapter.sourceType === 'DOWNLOAD' ? (
-                          <>
+                      <div className="flex items-center gap-3 text-text-secondary">
+                        {chapter.totalPages && chapter.totalPages > 0 ? (
+                          <span>{chapter.totalPages} pgs</span>
+                        ) : null}
+                        {chapter.downloadUrl && (
+                          <div className="flex items-center gap-1">
                             <LinkIcon className="h-3 w-3" />
                             <span>{chapter.downloadProvider || 'Link'}</span>
-                          </>
-                        ) : (
-                          <span>{chapter.totalPages} pgs</span>
+                          </div>
                         )}
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
-                      {chapter.sourceType !== 'DOWNLOAD' && (
+                      {chapter.totalPages && chapter.totalPages > 0 ? (
                         <Link
                           href={`/series/${seriesSlug}/chapter/${chapter.slug}`}
                           className="flex-1 flex items-center justify-center py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-md text-xs font-bold transition-colors"
                         >
                           READ
                         </Link>
-                      )}
+                      ) : null}
                       {chapter.downloadUrl && (
                         <a
                           href={chapter.downloadUrl}

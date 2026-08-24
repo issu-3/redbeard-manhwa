@@ -51,7 +51,7 @@ export default async function AdminChaptersPage({ params }: { params: Promise<{ 
                 <tr key={chapter.id} className="hover:bg-surface/50 transition-colors">
                   <td className="px-6 py-4 font-bold text-text-primary flex items-center gap-2">
                     {chapter.label || `Chapter ${chapter.number}`}
-                    {chapter.sourceType === 'DOWNLOAD' && <span title={`Download Link: ${chapter.downloadProvider}`}><LinkIcon className="h-4 w-4 text-primary" /></span>}
+                    {['DOWNLOAD', 'EXTERNAL'].includes(chapter.sourceType as string) && <span title={`Download Link: ${chapter.downloadProvider}`}><LinkIcon className="h-4 w-4 text-primary" /></span>}
                   </td>
                   <td className="px-6 py-4 text-text-secondary">{chapter.title || '-'}</td>
                   <td className="px-6 py-4">
@@ -62,7 +62,7 @@ export default async function AdminChaptersPage({ params }: { params: Promise<{ 
                     </span>
                   </td>
                   <td className="px-6 py-4 text-text-secondary">
-                    {chapter.sourceType === 'DOWNLOAD' ? '-' : chapter.totalPages}
+                    {['DOWNLOAD', 'EXTERNAL'].includes(chapter.sourceType as string) ? '-' : chapter.totalPages}
                   </td>
                   <td className="px-6 py-4 text-text-secondary">{formatDate(chapter.createdAt)}</td>
                   <td className="px-6 py-4 text-right">
