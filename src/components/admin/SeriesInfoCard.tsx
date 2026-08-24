@@ -19,7 +19,7 @@ export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
     ? defaultValues.alternativeTitles.join('\n')
     : (defaultValues.alternativeTitles || '');
 
-  const [type, setType] = useState(defaultValues.type || 'SERIES');
+  const [type, setType] = useState(defaultValues.type || 'MANGA');
   const [releaseYear, setReleaseYear] = useState(defaultValues.releaseYear ? defaultValues.releaseYear.toString() : '');
   const [readingDirection, setReadingDirection] = useState(defaultValues.readingDirection || 'VERTICAL');
   const [alternativeNames, setAlternativeNames] = useState(initialAltNames);
