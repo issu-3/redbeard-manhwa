@@ -194,9 +194,9 @@ export default async function ProfilePage() {
               <div className="space-y-4">
                 {recentlyRead.map((item) => (
                   <Link 
-                    href={item.chapter.sourceType === 'EXTERNAL' && item.chapter.downloadUrl ? item.chapter.downloadUrl : `/series/${item.series.slug}/chapter/${item.chapter.slug || item.chapter.number || 1}`} 
-                    target={item.chapter.sourceType === 'EXTERNAL' ? '_blank' : undefined}
-                    rel={item.chapter.sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
+                    href={item.chapter.sourceType === 'DOWNLOAD' && item.chapter.downloadUrl ? item.chapter.downloadUrl : `/series/${item.series.slug}/chapter/${item.chapter.slug || item.chapter.number || 1}`} 
+                    target={item.chapter.sourceType === 'DOWNLOAD' ? '_blank' : undefined}
+                    rel={item.chapter.sourceType === 'DOWNLOAD' ? 'noopener noreferrer' : undefined}
                     key={item.id}
                     className="flex gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-border"
                   >

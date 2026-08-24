@@ -48,32 +48,31 @@ export async function createChapter(seriesId: string, formData: FormData) {
   let numberStr = formData.get('number') as string;
   let number: number | null = numberStr ? parseFloat(numberStr) : null;
   
-  if (sourceType === 'EXTERNAL') {
-    number = null; // Enforce null number for external links
-    if (!label) throw new Error('Chapter label is required for external links.');
+  if (sourceType === 'DOWNLOAD') {
+    if (!label) return { error: 'Label is required for download links' };
+    if (!downloadProvider) return { error: 'Download Provider is required' };
+    if (!downloadUrl) return { error: 'Download URL is required' };
   } else {
-    label = null;
-    if (number === null || isNaN(number)) {
-      throw new Error('Chapter number is required and must be a valid number for sorting.');
-    }
+    if (number === null || isNaN(number)) return { error: 'Valid chapter number is required' };
+    if (!imageUrls || imageUrls.length === 0) return { error: 'At least one image is required for uploads' };
   }
 
-  const slug = sourceType === 'EXTERNAL' ? `chapter-${label!.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : `chapter-${number}`;
+  const slug = sourceType === 'DOWNLOAD' ? `chapter-${label!.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : `chapter-${number}`;
 
   try {
-    await prisma.chapter.create({
+    const chapter = await prisma.chapter.create({
       data: {
         seriesId,
-        number,
-        label,
-        title: title || undefined,
+        number: sourceType === 'DOWNLOAD' ? null : number,
+        title: title || null,
+        label: label || null,
         slug,
-        totalPages: sourceType === 'EXTERNAL' ? 0 : imageUrls.length,
         isPublished,
-        publishedAt: isPublished ? new Date() : null,
+        totalPages: sourceType === 'DOWNLOAD' ? 0 : imageUrls.length,
         sourceType,
-        downloadProvider: sourceType === 'EXTERNAL' ? downloadProvider : null,
-        downloadUrl: sourceType === 'EXTERNAL' ? downloadUrl : null,
+        seo: {},
+        downloadProvider: sourceType === 'DOWNLOAD' ? downloadProvider : null,
+        downloadUrl: sourceType === 'DOWNLOAD' ? downloadUrl : null,
         images: sourceType === 'UPLOAD' ? {
           create: imageUrls.map((url, index) => ({
             pageNumber: index + 1,
@@ -102,8 +101,11 @@ export async function createChapter(seriesId: string, formData: FormData) {
   redirect(`/admin/series/${seriesId}/chapters`);
 }
 
-export async function updateChapter(chapterId: string, seriesId: string, formData: FormData) {
+export async function updateChapter(id: string, seriesId: string, formData: FormData) {
   await checkAdmin();
+
+  const existing = await prisma.chapter.findUnique({ where: { id } });
+  if (!existing) throw new Error('Chapter not found');
 
   const title = formData.get('title') as string;
   const isPublished = formData.get('isPublished') === 'on' || formData.get('isPublished') === 'true';
@@ -120,34 +122,38 @@ export async function updateChapter(chapterId: string, seriesId: string, formDat
   let numberStr = formData.get('number') as string;
   let number: number | null = numberStr ? parseFloat(numberStr) : null;
   
-  if (sourceType === 'EXTERNAL') {
-    number = null; // Enforce null number for external links
-    if (!label) throw new Error('Chapter label is required for external links.');
+  if (sourceType === 'DOWNLOAD') {
+    if (!label) return { error: 'Label is required for download links' };
+    if (!downloadProvider) return { error: 'Download Provider is required' };
+    if (!downloadUrl) return { error: 'Download URL is required' };
   } else {
-    label = null;
-    if (number === null || isNaN(number)) {
-      throw new Error('Chapter number is required and must be a valid number for sorting.');
-    }
+    if (number === null || isNaN(number)) return { error: 'Valid chapter number is required' };
+    if (!imageUrls || imageUrls.length === 0) return { error: 'At least one image is required for uploads' };
   }
 
-  const slug = sourceType === 'EXTERNAL' ? `chapter-${label!.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : `chapter-${number}`;
+  const slug = sourceType === 'DOWNLOAD' ? `chapter-${label!.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : `chapter-${number}`;
 
   try {
-    await prisma.$transaction([
-      prisma.chapterImage.deleteMany({ where: { chapterId } }),
-      prisma.chapter.update({
-        where: { id: chapterId },
+    const updatedChapter = await prisma.$transaction(async (tx) => {
+      // 1. Delete existing images if we are updating an uploaded archive
+      // Or if switching from UPLOAD to DOWNLOAD, clear old images
+      if (sourceType === 'UPLOAD' || existing.sourceType === 'UPLOAD') {
+        await tx.chapterImage.deleteMany({ where: { chapterId: id } });
+      }
+
+      // 2. Update chapter details
+      const chapter = await tx.chapter.update({
+        where: { id },
         data: {
-          number,
-          label,
-          title: title || undefined,
+          number: sourceType === 'DOWNLOAD' ? null : number,
+          title: title || null,
+          label: label || null,
           slug,
-          totalPages: sourceType === 'EXTERNAL' ? 0 : imageUrls.length,
           isPublished,
-          publishedAt: isPublished ? new Date() : null,
+          totalPages: sourceType === 'DOWNLOAD' ? 0 : imageUrls.length,
           sourceType,
-          downloadProvider: sourceType === 'EXTERNAL' ? downloadProvider : null,
-          downloadUrl: sourceType === 'EXTERNAL' ? downloadUrl : null,
+          downloadProvider: sourceType === 'DOWNLOAD' ? downloadProvider : null,
+          downloadUrl: sourceType === 'DOWNLOAD' ? downloadUrl : null,
           images: sourceType === 'UPLOAD' && imageUrls.length > 0 ? {
             create: imageUrls.map((url, index) => ({
               pageNumber: index + 1,
@@ -155,8 +161,9 @@ export async function updateChapter(chapterId: string, seriesId: string, formDat
             }))
           } : undefined
         }
-      })
-    ]);
+      });
+      return chapter;
+    });
 
     if (isPublished) {
       await prisma.series.update({

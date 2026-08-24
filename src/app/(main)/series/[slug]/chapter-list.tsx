@@ -129,7 +129,7 @@ export function ChapterListSection({
                           "font-bold truncate transition-colors",
                           isLatest ? "text-primary" : "text-text-primary group-hover:text-primary"
                         )}>
-                          {chapter.sourceType === 'EXTERNAL' && chapter.label ? chapter.label : `Chapter ${chapter.number}`}
+                          {chapter.sourceType === 'DOWNLOAD' && chapter.label ? chapter.label : `Chapter ${chapter.number}`}
                         </h3>
                         {chapter.title && (
                           <p className="text-xs text-text-secondary truncate mt-0.5">
@@ -154,7 +154,7 @@ export function ChapterListSection({
                       </div>
                       
                       <div className="flex items-center gap-1 text-text-secondary">
-                        {chapter.sourceType === 'EXTERNAL' ? (
+                        {chapter.sourceType === 'DOWNLOAD' ? (
                           <>
                             <LinkIcon className="h-3 w-3" />
                             <span>{chapter.downloadProvider || 'Link'}</span>
@@ -166,7 +166,7 @@ export function ChapterListSection({
                     </div>
 
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
-                      {chapter.sourceType !== 'EXTERNAL' && (
+                      {chapter.sourceType !== 'DOWNLOAD' && (
                         <Link
                           href={`/series/${seriesSlug}/chapter/${chapter.slug}`}
                           className="flex-1 flex items-center justify-center py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-md text-xs font-bold transition-colors"

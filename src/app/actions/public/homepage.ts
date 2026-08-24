@@ -108,7 +108,7 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
           return chapters.map(ch => ({
             series: toSeriesCardData(ch.series as any),
             chapterNumber: ch.number,
-            chapterLabel: ch.sourceType === 'EXTERNAL' ? ch.label : null,
+            chapterLabel: ch.sourceType === 'DOWNLOAD' ? ch.label : null,
             publishedAt: ch.publishedAt?.toISOString() || ch.createdAt.toISOString()
           }));
         }
@@ -181,7 +181,7 @@ export async function getPersonalizedSections(limit: number): Promise<{ continue
     series: toSeriesCardData(h.series as any),
     chapterNumber: h.chapter?.number || h.pageNumber || 1,
     chapterSlug: h.chapter?.slug || String(h.chapter?.number || 1),
-    chapterLabel: h.chapter?.sourceType === 'EXTERNAL' ? h.chapter?.label : null,
+    chapterLabel: h.chapter?.sourceType === 'DOWNLOAD' ? h.chapter?.label : null,
     progress: Math.min(100, Math.max(5, (h.pageNumber / Math.max(1, h.chapter?.totalPages || 1)) * 100))
   }));
 

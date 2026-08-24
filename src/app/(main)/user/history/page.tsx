@@ -52,9 +52,9 @@ export default async function HistoryPage() {
           {history.map((item) => (
             <Link 
               key={item.id} 
-              href={item.chapter.sourceType === 'EXTERNAL' && item.chapter.downloadUrl ? item.chapter.downloadUrl : `/series/${item.series.slug}/chapter/${item.chapter.slug || item.chapter.number || 1}`}
-              target={item.chapter.sourceType === 'EXTERNAL' ? '_blank' : undefined}
-              rel={item.chapter.sourceType === 'EXTERNAL' ? 'noopener noreferrer' : undefined}
+              href={item.chapter.sourceType === 'DOWNLOAD' && item.chapter.downloadUrl ? item.chapter.downloadUrl : `/series/${item.series.slug}/chapter/${item.chapter.slug || item.chapter.number || 1}`}
+              target={item.chapter.sourceType === 'DOWNLOAD' ? '_blank' : undefined}
+              rel={item.chapter.sourceType === 'DOWNLOAD' ? 'noopener noreferrer' : undefined}
               className="group flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors"
             >
               <div className="relative w-full sm:w-24 h-32 shrink-0 rounded-lg overflow-hidden border border-border bg-muted">

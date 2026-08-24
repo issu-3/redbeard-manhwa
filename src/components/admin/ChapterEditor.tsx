@@ -65,7 +65,7 @@ function SortableImage({ id, url, pageNumber, onRemove, onReplace }: any) {
   );
 }
 
-const EXTERNAL_PROVIDERS = [
+const DOWNLOAD_PROVIDERS = [
   'TeraBox',
   'Google Drive',
   'Mega',
@@ -161,19 +161,19 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
         </button>
         <button
           type="button"
-          onClick={() => setSourceType('EXTERNAL')}
+          onClick={() => setSourceType('DOWNLOAD')}
           className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-            sourceType === 'EXTERNAL' ? 'bg-primary text-white shadow' : 'text-text-secondary hover:text-text-primary hover:bg-card'
+            sourceType === 'DOWNLOAD' ? 'bg-primary text-white shadow' : 'text-text-secondary hover:text-text-primary hover:bg-card'
           }`}
         >
           <LinkIcon className="h-4 w-4" />
-          External Link
+          Download Link
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="grid grid-cols-2 gap-4">
-          {sourceType === 'EXTERNAL' ? (
+          {sourceType === 'DOWNLOAD' ? (
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold">Chapter Label *</label>
               <input 
@@ -228,7 +228,7 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
 
       <hr className="border-border" />
 
-      {sourceType === 'EXTERNAL' ? (
+      {sourceType === 'DOWNLOAD' ? (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -238,7 +238,7 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
                 defaultValue={chapter?.downloadProvider || 'TeraBox'}
                 className="w-full rounded-lg border border-border bg-card px-4 py-2 font-medium"
               >
-                {EXTERNAL_PROVIDERS.map(p => (
+                {DOWNLOAD_PROVIDERS.map(p => (
                   <option key={p} value={p}>{p}</option>
                 ))}
               </select>
@@ -250,7 +250,7 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
                 name="downloadUrl" 
                 type="url"
                 defaultValue={chapter?.downloadUrl || ''}
-                required={sourceType === 'EXTERNAL'}
+                required={sourceType === 'DOWNLOAD'}
                 className="w-full rounded-lg border border-border bg-card px-4 py-2" 
                 placeholder="https://terabox.com/s/..." 
               />

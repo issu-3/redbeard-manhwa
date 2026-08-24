@@ -35,13 +35,13 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
     : null;
 
   const continueLink = continueChapterObj
-    ? (continueChapterObj.sourceType === 'EXTERNAL' && continueChapterObj.downloadUrl ? continueChapterObj.downloadUrl : `/series/${seriesSlug}/chapter/${continueChapterObj.slug || continueChapterObj.number || continueChapterObj.label || 1}`)
+    ? (continueChapterObj.sourceType === 'DOWNLOAD' && continueChapterObj.downloadUrl ? continueChapterObj.downloadUrl : `/series/${seriesSlug}/chapter/${continueChapterObj.slug || continueChapterObj.number || continueChapterObj.label || 1}`)
     : firstChapterLink;
 
   const hasHistory = !!continueChapterObj;
 
   const isExternal = continueChapterObj 
-    ? continueChapterObj.sourceType === 'EXTERNAL'
+    ? continueChapterObj.sourceType === 'DOWNLOAD'
     : false; // First chapter link logic is tricky, assume not external unless continue is. Actually, handled by target="_blank"
 
   if (isMobile) {

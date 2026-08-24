@@ -262,7 +262,7 @@ model Chapter {
   updatedAt   DateTime  @updatedAt
   seo         Json?
   // Dual source system
-  sourceType       String?  @default("UPLOAD") // UPLOAD, EXTERNAL
+  sourceType       String?  @default("UPLOAD") // UPLOAD, DOWNLOAD
   downloadUrl      String?
   downloadProvider String?
 
