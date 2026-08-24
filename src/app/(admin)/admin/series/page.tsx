@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { deleteSeries } from '@/app/actions/admin/series';
+import { getContentTypeLabel } from '@/lib/content-types';
 
 export default async function AdminSeriesPage() {
   let seriesList: any[] = [];
@@ -64,7 +65,11 @@ export default async function AdminSeriesPage() {
                       {series.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-text-secondary">{series.type}</td>
+                  <td className="px-6 py-4">
+                    <span className="rounded-full bg-accent/10 px-2 py-1 text-xs font-semibold text-accent">
+                      {getContentTypeLabel(series.type)}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 text-text-secondary">{series._count.chapters}</td>
                   <td className="px-6 py-4 text-text-secondary">{formatDate(series.createdAt)}</td>
                   <td className="px-6 py-4 text-right">

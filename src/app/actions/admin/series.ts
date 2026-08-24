@@ -90,6 +90,7 @@ export async function createSeries(formData: FormData) {
   const autoSeo = generateSeriesSeo({
     title,
     slug,
+    type,
     synopsis,
     description,
     coverImage,
@@ -204,6 +205,7 @@ export async function updateSeries(formData: FormData) {
   const autoSeo = generateSeriesSeo({
     title,
     slug,
+    type,
     synopsis,
     description,
     coverImage,

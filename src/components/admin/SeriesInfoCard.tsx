@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { BookOpen, AlertCircle, Eye } from 'lucide-react';
+import { TYPE_OPTIONS, getContentTypeLabel } from '@/lib/content-types';
 
 export interface SeriesInfoDefaultValues {
   type?: string;
@@ -27,21 +28,6 @@ export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
   const currentYear = new Date().getFullYear();
   const yearNum = parseInt(releaseYear, 10);
   const isYearInvalid = releaseYear.trim() !== '' && (isNaN(yearNum) || yearNum < 1900 || yearNum > currentYear);
-
-  // Helper formatting for Frontend Live Preview (matching public Series page rules exactly)
-  const formatPreviewType = (val: string) => {
-    switch (val.toUpperCase()) {
-      case 'MANHWA': return 'Manhwa';
-      case 'MANGA': return 'Manga';
-      case 'MANHUA': return 'Manhua';
-      case 'PORNHWA': return 'Pornhwa';
-      case 'DOUJINSHI': return 'Doujinshi';
-      case 'WEBTOON': return 'Webtoon';
-      case 'COMIC': return 'Comic';
-      case 'LIGHT_NOVEL': return 'Light Novel';
-      default: return val || 'Series';
-    }
-  };
 
   const formatPreviewDirection = (val: string) => {
     switch (val.toUpperCase()) {
@@ -76,7 +62,7 @@ export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
           Frontend Preview: Public Series Card Display
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
-          <MetaItem label="Type" value={formatPreviewType(type)} />
+          <MetaItem label="Type" value={getContentTypeLabel(type)} />
           <MetaItem label="Release Year" value={previewYear} />
           <MetaItem label="Direction" value={formatPreviewDirection(readingDirection)} />
           <MetaItem label="Alt Names" value={previewAltNames} />
@@ -96,14 +82,9 @@ export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
             onChange={(e) => setType(e.target.value)}
             className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           >
-            <option value="COMIC">Comic</option>
-            <option value="MANHWA">Manhwa</option>
-            <option value="MANGA">Manga</option>
-            <option value="MANHUA">Manhua</option>
-            <option value="PORNHWA">Pornhwa</option>
-            <option value="DOUJINSHI">Doujinshi</option>
-            <option value="WEBTOON">Webtoon</option>
-            <option value="LIGHT_NOVEL">Light Novel</option>
+            {TYPE_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
         </div>
 

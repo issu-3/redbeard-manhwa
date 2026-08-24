@@ -27,7 +27,7 @@ export default async function NewSeriesPage({ searchParams }: { searchParams: Pr
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-black tracking-tight">Add New Series</h1>
-        <p className="text-text-secondary">Create a new manhwa/manga entry.</p>
+        <p className="text-text-secondary">Create a new series entry.</p>
       </div>
 
       {error && (
