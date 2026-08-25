@@ -14,7 +14,6 @@ import { prisma } from '@/lib/prisma';
 import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
 import { getContentTypeLabel } from '@/lib/content-types';
 import type { SeriesCardData } from '@/types';
-import type { Series, Genre, Chapter } from '@prisma/client';
 import { SeriesActionsClient } from '@/components/series/SeriesActionsClient';
 import { DescriptionClient } from './description-client';
 import { ReviewsSection } from '@/components/series/ReviewsSection';
@@ -225,7 +224,7 @@ export default async function SeriesDetailPage({
     description: series.synopsis || series.description,
     image: series.coverImage,
     url: `${siteUrl}/series/${slug}`,
-    genre: series.genres.map((g: { name: string }) => g.name),
+    genre: [getContentTypeLabel(series.type as any), ...series.genres.map((g: { name: string }) => g.name)],
     author: series.authors.map((a: { name: string }) => ({
       '@type': 'Person',
       name: a.name,
@@ -329,6 +328,14 @@ export default async function SeriesDetailPage({
                 {series.status}
               </Badge>
               {series.isHot && <Badge variant="danger" size="sm">🔥 HOT</Badge>}
+              <Badge variant="primary" size="sm" className="font-bold uppercase tracking-wider">
+                {getContentTypeLabel(series.type as any)}
+              </Badge>
+              {((series as any).isNSFW || series.type === 'PORNHWA' || series.type === 'DOUJINSHI') && (
+                <Badge variant="danger" size="sm" className="font-bold uppercase tracking-wider">
+                  🔞 NSFW
+                </Badge>
+              )}
             </div>
             
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-text-primary tracking-tight leading-tight mb-4">

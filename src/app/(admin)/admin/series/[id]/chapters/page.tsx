@@ -24,13 +24,22 @@ export default async function AdminChaptersPage({ params }: { params: Promise<{ 
           <h1 className="text-3xl font-black tracking-tight">Chapters for {series.title}</h1>
           <p className="text-text-secondary">Manage chapters for this series.</p>
         </div>
-        <Link 
-          href={`/admin/series/${series.id}/chapters/new`} 
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4" />
-          Add Chapter
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link 
+            href={`/admin/series/${series.id}/chapters/bulk`} 
+            className="flex items-center gap-2 rounded-lg bg-surface px-4 py-2 text-sm font-semibold text-text-primary border border-border hover:bg-surface-hover"
+          >
+            <LinkIcon className="h-4 w-4" />
+            Bulk Add
+          </Link>
+          <Link 
+            href={`/admin/series/${series.id}/chapters/new`} 
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4" />
+            Add Chapter
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">

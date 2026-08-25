@@ -15,6 +15,7 @@ export interface SeriesCardData {
   latestChapterNumber?: number;
   genres: { name: string; slug: string }[];
   updatedAt: string;
+  isNSFW: boolean;
 }
 
 export interface SeriesDetail extends SeriesCardData {

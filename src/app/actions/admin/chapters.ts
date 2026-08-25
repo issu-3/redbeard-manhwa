@@ -60,7 +60,7 @@ export async function createChapter(seriesId: string, formData: FormData) {
   const slug = sourceType === 'DOWNLOAD' ? `chapter-${label!.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : `chapter-${number}`;
 
   try {
-    const chapter = await prisma.chapter.create({
+    await prisma.chapter.create({
       data: {
         seriesId,
         number: sourceType === 'DOWNLOAD' ? null : number,
@@ -134,7 +134,7 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
   const slug = sourceType === 'DOWNLOAD' ? `chapter-${label!.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : `chapter-${number}`;
 
   try {
-    const updatedChapter = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       // 1. Delete existing images if we are updating an uploaded archive
       // Or if switching from UPLOAD to DOWNLOAD, clear old images
       if (sourceType === 'UPLOAD' || existing.sourceType === 'UPLOAD') {
@@ -142,7 +142,7 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
       }
 
       // 2. Update chapter details
-      const chapter = await tx.chapter.update({
+      await tx.chapter.update({
         where: { id },
         data: {
           number: sourceType === 'DOWNLOAD' ? null : number,
@@ -162,7 +162,6 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
           } : undefined
         }
       });
-      return chapter;
     });
 
     if (isPublished) {
@@ -183,4 +182,50 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
     throw error;
   }
   redirect(`/admin/series/${seriesId}/chapters`);
+}
+
+export async function createBulkChapters(seriesId: string, chapters: { label: string; url: string; provider: string }[]) {
+  await checkAdmin();
+
+  if (!chapters || chapters.length === 0) return { error: 'No chapters provided' };
+
+  try {
+    const created = await prisma.$transaction(async (tx) => {
+      const createResult = await tx.chapter.createMany({
+        data: chapters.map(ch => ({
+          seriesId,
+          number: null,
+          title: null,
+          label: ch.label,
+          slug: `chapter-${ch.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+          isPublished: true,
+          totalPages: 0,
+          sourceType: 'DOWNLOAD',
+          downloadProvider: ch.provider,
+          downloadUrl: ch.url,
+          seo: {}
+        }))
+      });
+
+      await tx.series.update({
+        where: { id: seriesId },
+        data: { 
+          chapterCount: { increment: createResult.count },
+          updatedAt: new Date()
+        }
+      });
+
+      return createResult.count;
+    });
+
+    revalidatePath(`/admin/series/${seriesId}/chapters`);
+    updateTag('homepage_data');
+    
+    return { success: true, count: created };
+  } catch (error: any) {
+    if (error?.code === 'P2002') {
+      return { success: false, error: 'One or more chapters have duplicate slugs (labels).' };
+    }
+    throw error;
+  }
 }

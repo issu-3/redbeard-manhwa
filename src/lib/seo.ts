@@ -61,6 +61,7 @@ export function generateSeriesSchema(series: {
   authors: { name: string }[];
   genres: { name: string }[];
   slug: string;
+  type?: string;
 }) {
   return {
     '@context': 'https://schema.org',
@@ -70,7 +71,7 @@ export function generateSeriesSchema(series: {
     image: series.coverImage,
     url: `${APP_URL}/series/${series.slug}`,
     author: series.authors.map((a) => ({ '@type': 'Person', name: a.name })),
-    genre: series.genres.map((g) => g.name),
+    genre: series.type ? [series.type, ...series.genres.map((g) => g.name)] : series.genres.map((g) => g.name),
     aggregateRating: series.ratingCount > 0
       ? {
           '@type': 'AggregateRating',

@@ -9,6 +9,7 @@ type SeriesCardInput = {
   coverImage: string | null;
   type: string;
   status: string;
+  isNSFW: boolean;
   averageRating: number;
   ratingCount: number;
   totalViews: number;
@@ -32,6 +33,7 @@ export const SERIES_CARD_SELECT = {
   coverImage: true,
   type: true,
   status: true,
+  isNSFW: true,
   averageRating: true,
   ratingCount: true,
   totalViews: true,
@@ -46,7 +48,7 @@ export const SERIES_CARD_SELECT = {
   },
 } as const;
 
-export function toSeriesCardData(series: SeriesCardInput | SeriesWithGenres): SeriesCardData {
+export function toSeriesCardData(series: SeriesCardInput | SeriesWithGenres | any): SeriesCardData {
   return {
     id: series.id,
     title: series.title,
@@ -54,12 +56,13 @@ export function toSeriesCardData(series: SeriesCardInput | SeriesWithGenres): Se
     coverImage: series.coverImage || '',
     type: series.type as SeriesCardData['type'],
     status: series.status as SeriesCardData['status'],
+    isNSFW: series.isNSFW,
     averageRating: series.averageRating,
     ratingCount: series.ratingCount,
     totalViews: series.totalViews,
     totalBookmarks: series.totalBookmarks,
     chapterCount: series.chapterCount,
-    genres: series.genres.map((g) => ({ name: g.name, slug: g.slug })),
+    genres: series.genres.map((g: any) => ({ name: g.name, slug: g.slug })),
     updatedAt: series.updatedAt.toISOString(),
   };
 }

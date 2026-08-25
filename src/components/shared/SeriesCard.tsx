@@ -21,7 +21,20 @@ const statusColors: Record<string, string> = {
   UPCOMING: 'bg-purple-500/90',
 };
 
+const typeBadges: Record<string, string> = {
+  MANHWA: '🇰🇷 Manhwa',
+  MANGA: '🇯🇵 Manga',
+  MANHUA: '🇨🇳 Manhua',
+  WEBTOON: '📱 Webtoon',
+  PORNHWA: '🔞 Pornhwa',
+  DOUJINSHI: '🔞 Doujinshi',
+  COMIC: '🇺🇸 Comic',
+  LIGHT_NOVEL: '📖 Light Novel',
+};
+
 export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCardProps) {
+  const isPorn = series.isNSFW || series.type === 'PORNHWA' || series.type === 'DOUJINSHI';
+
   if (variant === 'wide') {
     return (
       <motion.div
@@ -48,7 +61,15 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
                 {series.title}
               </h3>
               <div className="mb-2 flex flex-wrap gap-1">
-                {series.genres.slice(0, 3).map((g) => (
+                {isPorn && (
+                  <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-500 border border-red-500/30">
+                    🔞 NSFW
+                  </span>
+                )}
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary border border-primary/20">
+                  {typeBadges[series.type] || series.type}
+                </span>
+                {series.genres.slice(0, 2).map((g) => (
                   <span key={g.slug} className="rounded-full bg-surface px-2 py-0.5 text-[10px] text-text-muted">
                     {g.name}
                   </span>
@@ -120,6 +141,14 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
           {/* Hover overlay with more info */}
           <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/60 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <div className="flex flex-wrap gap-1 mb-2">
+              {isPorn && (
+                <span className="rounded-full bg-red-500/80 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                  🔞 NSFW
+                </span>
+              )}
+              <span className="rounded-full bg-primary/80 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                {typeBadges[series.type] || series.type}
+              </span>
               {series.genres.slice(0, 2).map((g) => (
                 <span key={g.slug} className="rounded-full bg-foreground/15 px-2 py-0.5 text-[10px] text-text-primary backdrop-blur-sm">
                   {g.name}

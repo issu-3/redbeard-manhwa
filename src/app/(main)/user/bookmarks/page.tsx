@@ -32,6 +32,7 @@ async function getBookmarks(userId: string) {
     coverImage: b.series.coverImage,
     type: b.series.type as SeriesCardData['type'],
     status: b.series.status as SeriesCardData['status'],
+    isNSFW: b.series.isNSFW,
     averageRating: b.series.averageRating,
     ratingCount: b.series.ratingCount,
     totalViews: b.series.totalViews,
