@@ -9,7 +9,7 @@ interface SeriesActionsProps {
   seriesId: string;
   seriesSlug: string;
   firstChapterLink: string;
-  chapters: { number: number | null; label?: string | null; slug?: string; sourceType: string | null; downloadUrl: string | null }[];
+  chapters: { id: string; number: number | null; label?: string | null; slug?: string; sourceType: string | null; downloadUrl: string | null }[];
   isMobile?: boolean;
 }
 
@@ -35,14 +35,14 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
     : null;
 
   const continueLink = continueChapterObj
-    ? (['DOWNLOAD', 'EXTERNAL'].includes(continueChapterObj.sourceType as string) && continueChapterObj.downloadUrl ? continueChapterObj.downloadUrl : `/series/${seriesSlug}/chapter/${continueChapterObj.slug || continueChapterObj.number || continueChapterObj.label || 1}`)
+    ? (['DOWNLOAD', 'EXTERNAL'].includes(continueChapterObj.sourceType as string) && continueChapterObj.downloadUrl ? `/api/chapter/${continueChapterObj.id}/download` : `/series/${seriesSlug}/chapter/${continueChapterObj.slug || continueChapterObj.number || continueChapterObj.label || 1}`)
     : firstChapterLink;
 
   const hasHistory = !!continueChapterObj;
 
   const isExternal = continueChapterObj 
     ? ['DOWNLOAD', 'EXTERNAL'].includes(continueChapterObj.sourceType as string)
-    : false; // First chapter link logic is tricky, assume not external unless continue is. Actually, handled by target="_blank"
+    : firstChapterLink.includes('/api/chapter/');
 
   if (isMobile) {
     return (

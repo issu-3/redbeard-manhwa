@@ -18,6 +18,7 @@ export function BulkChapterAdder({ seriesId }: { seriesId: string }) {
   const [inputText, setInputText] = useState('');
   const [defaultProvider, setDefaultProvider] = useState('TeraBox');
   const [parsedChapters, setParsedChapters] = useState<ParsedChapter[]>([]);
+  const [isPublished, setIsPublished] = useState(true);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -91,7 +92,7 @@ export function BulkChapterAdder({ seriesId }: { seriesId: string }) {
 
     startTransition(async () => {
       try {
-        const res = await createBulkChapters(seriesId, parsedChapters);
+        const res = await createBulkChapters(seriesId, parsedChapters, isPublished);
         if (res?.error) {
           toast.error(res.error);
         } else {
@@ -189,7 +190,17 @@ export function BulkChapterAdder({ seriesId }: { seriesId: string }) {
               </tbody>
             </table>
           </div>
-          <div className="p-4 border-t border-border bg-surface flex justify-end">
+          <div className="p-4 border-t border-border bg-surface flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="isPublished"
+                checked={isPublished}
+                onChange={(e) => setIsPublished(e.target.checked)}
+                className="h-4 w-4 rounded border-border bg-card text-primary"
+              />
+              <label htmlFor="isPublished" className="text-sm font-semibold">Publish immediately</label>
+            </div>
             <button
               onClick={handleSubmit}
               disabled={isPending}

@@ -184,7 +184,7 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
   redirect(`/admin/series/${seriesId}/chapters`);
 }
 
-export async function createBulkChapters(seriesId: string, chapters: { label: string; url: string; provider: string }[]) {
+export async function createBulkChapters(seriesId: string, chapters: { label: string; url: string; provider: string }[], isPublished: boolean = true) {
   await checkAdmin();
 
   if (!chapters || chapters.length === 0) return { error: 'No chapters provided' };
@@ -192,27 +192,32 @@ export async function createBulkChapters(seriesId: string, chapters: { label: st
   try {
     const created = await prisma.$transaction(async (tx) => {
       const createResult = await tx.chapter.createMany({
-        data: chapters.map(ch => ({
-          seriesId,
-          number: null,
-          title: null,
-          label: ch.label,
-          slug: `chapter-${ch.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-          isPublished: true,
-          totalPages: 0,
-          sourceType: 'DOWNLOAD',
-          downloadProvider: ch.provider,
-          downloadUrl: ch.url,
-          seo: {}
-        }))
+        data: chapters.map(ch => {
+          const match = ch.label.match(/(\d+(\.\d+)?)/);
+          const parsedNumber = match ? parseFloat(match[1]) : null;
+          
+          return {
+            seriesId,
+            number: parsedNumber,
+            title: null,
+            label: ch.label,
+            slug: `chapter-${ch.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+            isPublished: isPublished,
+            totalPages: 0,
+            sourceType: 'DOWNLOAD',
+            downloadProvider: ch.provider,
+            downloadUrl: ch.url,
+            seo: {}
+          };
+        })
       });
+
+      const updateData: any = { chapterCount: { increment: createResult.count } };
+      if (isPublished) updateData.updatedAt = new Date();
 
       await tx.series.update({
         where: { id: seriesId },
-        data: { 
-          chapterCount: { increment: createResult.count },
-          updatedAt: new Date()
-        }
+        data: updateData
       });
 
       return createResult.count;

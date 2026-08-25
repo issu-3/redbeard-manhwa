@@ -147,6 +147,8 @@ export async function generateMetadata({
   const ogImage = seo.ogImage || series.coverImage;
   const twitterImage = seo.twitterImage || series.coverImage;
 
+  const isNSFW = (series as any).isNSFW || series.type === 'PORNHWA' || series.type === 'DOUJINSHI';
+
   return {
     title,
     description,
@@ -167,7 +169,12 @@ export async function generateMetadata({
     },
     alternates: {
       canonical: canonical,
-    }
+    },
+    ...(isNSFW && {
+      other: {
+        rating: 'adult',
+      }
+    })
   };
 }
 
@@ -271,10 +278,11 @@ export default async function SeriesDetailPage({
 
   const firstChapter = series.chapters.length > 0 ? series.chapters[0] : null;
   const firstChapterLink = firstChapter 
-    ? (['DOWNLOAD', 'EXTERNAL'].includes(firstChapter.sourceType as string) && firstChapter.downloadUrl ? firstChapter.downloadUrl : `/series/${series.slug}/chapter/${firstChapter.slug || firstChapter.number || 1}`) 
+    ? (['DOWNLOAD', 'EXTERNAL'].includes(firstChapter.sourceType as string) && firstChapter.downloadUrl ? `/api/chapter/${firstChapter.id}/download` : `/series/${series.slug}/chapter/${firstChapter.slug || firstChapter.number || 1}`) 
     : '#';
 
   const chaptersList = series.chapters.map((c: any) => ({
+    id: c.id,
     number: c.number,
     label: c.label,
     slug: c.slug,

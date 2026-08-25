@@ -25,6 +25,7 @@ export function ChapterListSection({
 }: ChapterListSectionProps) {
   const [sortAsc, setSortAsc] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [displayLimit, setDisplayLimit] = useState(100);
 
   const filteredChapters = useMemo(() => {
     let filtered = chapters.filter(c => (c.totalPages && c.totalPages > 0) || c.downloadUrl);
@@ -45,7 +46,19 @@ export function ChapterListSection({
       }
       const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
       const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-      return sortAsc ? dateA - dateB : dateB - dateA;
+      
+      if (dateA !== dateB) {
+        return sortAsc ? dateA - dateB : dateB - dateA;
+      }
+      
+      // Fallback to label alphanumeric sorting for identical timestamps (bulk uploads)
+      if (a.label && b.label) {
+        return sortAsc 
+          ? a.label.localeCompare(b.label, undefined, { numeric: true })
+          : b.label.localeCompare(a.label, undefined, { numeric: true });
+      }
+      
+      return 0;
     });
 
     return filtered;
@@ -70,7 +83,10 @@ export function ChapterListSection({
               type="text"
               placeholder="Search chapters..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setDisplayLimit(100);
+              }}
               className="w-full sm:w-64 rounded-xl border border-border bg-card pl-9 pr-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 transition-all"
             />
           </div>
@@ -96,7 +112,7 @@ export function ChapterListSection({
               <p>No chapters match your search.</p>
             </motion.div>
           ) : (
-            filteredChapters.map((chapter, index) => {
+            filteredChapters.slice(0, displayLimit).map((chapter, index) => {
               const isLatest = chapter.number === latestChapterNumber;
               
               return (
@@ -177,7 +193,7 @@ export function ChapterListSection({
                       ) : null}
                       {chapter.downloadUrl && (
                         <a
-                          href={chapter.downloadUrl}
+                          href={`/api/chapter/${chapter.id}/download`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex-1 flex items-center justify-center py-1.5 bg-surface border border-border hover:bg-card-hover text-text-secondary hover:text-text-primary rounded-md text-xs font-bold transition-colors"
@@ -193,6 +209,17 @@ export function ChapterListSection({
           )}
         </AnimatePresence>
       </div>
+
+      {filteredChapters.length > displayLimit && (
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={() => setDisplayLimit((prev) => prev + 100)}
+            className="rounded-xl border-2 border-border bg-card px-8 py-3 text-sm font-bold text-text-primary transition-all hover:border-primary/50 hover:text-primary active:scale-95"
+          >
+            Load More Chapters ({filteredChapters.length - displayLimit} remaining)
+          </button>
+        </div>
+      )}
     </div>
   );
 }
