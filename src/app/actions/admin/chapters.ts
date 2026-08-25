@@ -190,6 +190,9 @@ export async function createBulkChapters(seriesId: string, chapters: { label: st
   if (!chapters || chapters.length === 0) return { error: 'No chapters provided' };
 
   try {
+    const series = await prisma.series.findUnique({ where: { id: seriesId }, select: { title: true } });
+    const seriesTitle = series?.title || 'Series';
+
     const created = await prisma.$transaction(async (tx) => {
       const createResult = await tx.chapter.createMany({
         data: chapters.map(ch => {
@@ -207,9 +210,13 @@ export async function createBulkChapters(seriesId: string, chapters: { label: st
             sourceType: 'DOWNLOAD',
             downloadProvider: ch.provider,
             downloadUrl: ch.url,
-            seo: {}
+            seo: {
+              title: `${seriesTitle} ${ch.label} Download`,
+              description: `Download ${seriesTitle} ${ch.label} from ${ch.provider}.`
+            }
           };
-        })
+        }),
+        skipDuplicates: true
       });
 
       const updateData: any = { chapterCount: { increment: createResult.count } };

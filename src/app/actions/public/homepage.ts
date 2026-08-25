@@ -57,6 +57,11 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
   return unstable_cache(
     async () => {
       try {
+        const SAFE_SEARCH_FILTER = {
+          isNSFW: false,
+          type: { notIn: ['PORNHWA', 'DOUJINSHI'] as any }
+        };
+
         if (isManual && manualIds.length > 0) {
           const seriesList = await prisma.series.findMany({
             where: { id: { in: manualIds } },
@@ -84,14 +89,25 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
             const seriesMap = new Map(foundSeries.map(s => [s.id, s]));
             return seriesIds.map(id => seriesMap.get(id)).filter(Boolean).map(s => toSeriesCardData(s as any));
           } else {
-            const automated = await prisma.series.findMany({ orderBy: { totalViews: 'desc' }, select: SERIES_CARD_SELECT, take: limit });
+            const automated = await prisma.series.findMany({ 
+              where: { ...SAFE_SEARCH_FILTER },
+              orderBy: { totalViews: 'desc' }, 
+              select: SERIES_CARD_SELECT, 
+              take: limit 
+            });
             return automated.map(toSeriesCardData as any);
           }
         }
 
         if (type === 'RECENTLY_UPDATED') {
           const chapters = await prisma.chapter.findMany({
-            where: { isPublished: true },
+            where: { 
+              isPublished: true,
+              series: {
+                isNSFW: false,
+                type: { notIn: ['PORNHWA', 'DOUJINSHI'] }
+              }
+            },
             orderBy: { publishedAt: 'desc' },
             distinct: ['seriesId'],
             take: limit,
@@ -115,7 +131,7 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
 
         if (type === 'RECOMMENDED') {
           const fallback = await prisma.series.findMany({
-            where: { isEditorChoice: true },
+            where: { isEditorChoice: true, ...SAFE_SEARCH_FILTER },
             take: limit,
             select: SERIES_CARD_SELECT
           });
@@ -124,7 +140,7 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
 
         if (type === 'FEATURED') {
           const featured = await prisma.series.findMany({
-            where: { isFeatured: true },
+            where: { isFeatured: true, ...SAFE_SEARCH_FILTER },
             orderBy: { totalViews: 'desc' },
             take: limit,
             select: SERIES_CARD_SELECT
@@ -134,6 +150,7 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
 
         if (type === 'NEW_RELEASES' || type === 'LATEST') {
           const latest = await prisma.series.findMany({
+            where: { ...SAFE_SEARCH_FILTER },
             orderBy: { createdAt: 'desc' },
             take: limit,
             select: SERIES_CARD_SELECT
@@ -205,7 +222,9 @@ export async function getPersonalizedSections(limit: number): Promise<{ continue
     const recommendedSeries = await prisma.series.findMany({
       where: {
         genres: { some: { id: { in: Array.from(favoriteGenres) } } },
-        id: { notIn: bookmarkedIds }
+        id: { notIn: bookmarkedIds },
+        isNSFW: false,
+        type: { notIn: ['PORNHWA', 'DOUJINSHI'] as any }
       },
       orderBy: { totalViews: 'desc' },
       take: limit,

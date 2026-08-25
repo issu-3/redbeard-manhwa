@@ -478,6 +478,53 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
         className="h-full w-full"
         onClick={handleContainerClick}
       >
+        {chapter.sourceType === 'DOWNLOAD' ? (
+          <div className="flex flex-col items-center justify-center h-full w-full p-4">
+            <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 text-center shadow-2xl">
+              <ArrowDownToLine className="h-16 w-16 text-primary mx-auto mb-6" />
+              <h2 className="text-2xl font-bold text-text-primary mb-2">
+                Download Available
+              </h2>
+              <p className="text-text-secondary mb-8">
+                This chapter is provided as a direct download. Click the button below to get it from {chapter.downloadProvider || 'the provider'}.
+              </p>
+              <a
+                href={`/api/chapter/${chapter.id}/download`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center justify-center w-full gap-2 rounded-xl bg-primary px-8 py-4 text-base font-bold text-white transition-all hover:bg-primary-hover active:scale-95 shadow-lg shadow-primary/25"
+              >
+                <ArrowDownToLine className="h-5 w-5" />
+                Download Now
+              </a>
+              <div className="mt-8 pt-8 border-t border-border flex justify-between items-center">
+                {chapter.prevChapter ? (
+                  <Link
+                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug || chapter.prevChapter.number}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-sm font-medium text-text-muted hover:text-primary transition-colors flex items-center gap-1"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Link>
+                ) : <div />}
+                {chapter.nextChapter ? (
+                  <Link
+                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug || chapter.nextChapter.number}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-sm font-medium text-text-muted hover:text-primary transition-colors flex items-center gap-1"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                ) : <div />}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+
         {/* Vertical / Long Strip Mode */}
         {(mode === 'vertical' || mode === 'longStrip') && (
           <div
@@ -645,6 +692,8 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
               <ChevronRight className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           </div>
+        )}
+        </>
         )}
       </div>
 

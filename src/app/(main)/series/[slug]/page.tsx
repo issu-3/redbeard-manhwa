@@ -44,7 +44,9 @@ const getSeriesData = cache(async (slug: string) => {
       authors: true,
       artists: true,
       chapters: {
-        orderBy: [{ number: 'asc' }, { createdAt: 'asc' }],
+        where: { isPublished: true },
+        orderBy: [{ number: 'desc' }, { createdAt: 'desc' }],
+        take: 100,
         select: {
           id: true,
           number: true,
@@ -413,6 +415,8 @@ export default async function SeriesDetailPage({
               isRead: false
             }))}
             seriesSlug={series.slug}
+            seriesId={series.id}
+            totalChapters={series.chapterCount}
           />
         </section>
 

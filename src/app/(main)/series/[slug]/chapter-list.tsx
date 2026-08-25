@@ -17,16 +17,25 @@ import type { ChapterListItem } from '@/types';
 interface ChapterListSectionProps {
   chapters: ChapterListItem[];
   seriesSlug: string;
+  seriesId: string;
+  totalChapters: number;
 }
 
 export function ChapterListSection({
-  chapters,
+  chapters: initialChapters,
   seriesSlug,
+  seriesId,
+  totalChapters,
 }: ChapterListSectionProps) {
+  const [chapters, setChapters] = useState<ChapterListItem[]>(initialChapters);
   const [sortAsc, setSortAsc] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [displayLimit, setDisplayLimit] = useState(100);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+  // When initialChapters change (e.g., from navigation), reset state
+  // We'll just trust initialChapters for the initial mount.
+  
   const filteredChapters = useMemo(() => {
     let filtered = chapters.filter(c => (c.totalPages && c.totalPages > 0) || c.downloadUrl);
 
@@ -210,13 +219,41 @@ export function ChapterListSection({
         </AnimatePresence>
       </div>
 
-      {filteredChapters.length > displayLimit && (
+      {filteredChapters.length < totalChapters && (
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={async () => {
+              setIsLoadingMore(true);
+              try {
+                // Fetch next 100 chapters
+                const { getSeriesChapters } = await import('@/app/actions/public/chapters');
+                const nextChapters = await getSeriesChapters(seriesId, chapters.length, 100);
+                if (nextChapters.length > 0) {
+                  setChapters(prev => [...prev, ...nextChapters]);
+                } else {
+                  // Fallback in case chapterCount is out of sync
+                  setDisplayLimit(prev => prev + 100);
+                }
+              } catch (e) {
+                console.error(e);
+              } finally {
+                setIsLoadingMore(false);
+              }
+            }}
+            disabled={isLoadingMore}
+            className="rounded-xl border-2 border-border bg-card px-8 py-3 text-sm font-bold text-text-primary transition-all hover:border-primary/50 hover:text-primary active:scale-95 disabled:opacity-50"
+          >
+            {isLoadingMore ? 'Loading...' : `Load More Chapters (${totalChapters - chapters.length} remaining)`}
+          </button>
+        </div>
+      )}
+      {filteredChapters.length >= totalChapters && filteredChapters.length > displayLimit && (
         <div className="mt-8 flex justify-center">
           <button
             onClick={() => setDisplayLimit((prev) => prev + 100)}
             className="rounded-xl border-2 border-border bg-card px-8 py-3 text-sm font-bold text-text-primary transition-all hover:border-primary/50 hover:text-primary active:scale-95"
           >
-            Load More Chapters ({filteredChapters.length - displayLimit} remaining)
+            Show More ({filteredChapters.length - displayLimit} hidden)
           </button>
         </div>
       )}

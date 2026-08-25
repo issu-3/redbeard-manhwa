@@ -40,7 +40,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const whereClause: import('@prisma/client').Prisma.SeriesWhereInput = {};
+    const whereClause: import('@prisma/client').Prisma.SeriesWhereInput = {
+      isNSFW: false,
+      type: { notIn: ['PORNHWA', 'DOUJINSHI'] }
+    };
     
     if (query) {
       whereClause.OR = [

@@ -55,7 +55,13 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
             className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 font-bold text-white active:scale-95 transition-transform shadow-lg shadow-primary/25"
           >
             <BookOpen className="h-5 w-5" />
-            {isLoading ? 'Loading...' : (hasHistory ? `Continue Ch. ${continueChapterObj?.label || continueChapterObj?.number || continueReadingChapter}` : 'Read First Chapter')}
+            {isLoading 
+              ? 'Loading...' 
+              : (hasHistory 
+                  ? `Continue ${isExternal ? 'Download' : 'Ch.'} ${continueChapterObj?.label || continueChapterObj?.number || continueReadingChapter}` 
+                  : (isExternal ? 'Download First Chapter' : 'Read First Chapter')
+                )
+            }
           </Link>
         )}
         <BookmarkButton seriesId={seriesId} initialBookmarked={isBookmarked} />
@@ -73,7 +79,13 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
           className="flex items-center gap-2 rounded-xl bg-primary px-10 py-4 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
         >
           <BookOpen className="h-5 w-5" />
-          {isLoading ? 'Loading...' : (hasHistory ? `Continue Ch. ${continueChapterObj?.label || continueChapterObj?.number || continueReadingChapter}` : 'Read First Chapter')}
+            {isLoading 
+              ? 'Loading...' 
+              : (hasHistory 
+                  ? `Continue ${isExternal ? 'Download' : 'Ch.'} ${continueChapterObj?.label || continueChapterObj?.number || continueReadingChapter}` 
+                  : (isExternal ? 'Download First Chapter' : 'Read First Chapter')
+                )
+            }
         </Link>
       )}
       
