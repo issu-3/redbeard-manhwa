@@ -12,7 +12,7 @@ import { APP_URL } from '@/lib/constants';
 
 export const metadata: Metadata = generateMetadata({
   title: 'Ongoing Series',
-  description: 'Discover the best ongoing manhwa and webtoons with regular updates on REDBEARD.',
+  description: 'Discover the best ongoing series with regular updates on REDBEARD.',
   url: `${APP_URL}/browse/ongoing`
 });
 

@@ -107,7 +107,7 @@ export default function SearchClient({ dynamicGenres, dynamicTrending }: SearchC
             onKeyDown={(e) => {
               if (e.key === 'Enter' && query.trim()) addRecentSearch(query.trim());
             }}
-            placeholder="Search manhwa, manga, authors..."
+            placeholder="Search series, authors..."
             className="w-full rounded-2xl border border-border bg-card py-4 pl-12 pr-24 text-base text-text-primary placeholder:text-text-muted transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             autoFocus
           />

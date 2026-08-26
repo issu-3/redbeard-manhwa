@@ -31,8 +31,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getCachedSettings();
   
   const siteTitle = settings.seo_site_title || 'REDBEARD - The Ultimate Reading Experience';
-  const siteDescription = settings.seo_site_description || 'REDBEARD is a premium manhwa reading platform offering the best reading experience with thousands of manhwa, manga, and webtoon titles.';
-  const defaultKeywords = settings.seo_default_keywords ? settings.seo_default_keywords.split(',').map(k => k.trim()) : ['manhwa', 'manga', 'webtoon', 'read manhwa'];
+  const siteDescription = settings.seo_site_description || 'REDBEARD is a premium reading platform offering the best reading experience with thousands of series.';
+  const defaultKeywords = settings.seo_default_keywords ? settings.seo_default_keywords.split(',').map(k => k.trim()) : ['comics', 'manga', 'webtoon', 'read online'];
   const robotsSetting = settings.seo_robots || 'index, follow';
   const shouldIndex = robotsSetting.includes('index') && !robotsSetting.includes('noindex');
   const shouldFollow = robotsSetting.includes('follow') && !robotsSetting.includes('nofollow');
@@ -105,7 +105,7 @@ export default async function RootLayout({
         '@type': 'WebSite',
         url: siteUrl,
         name: siteName,
-        description: settings.seo_site_description || 'Premium manhwa reading platform.',
+        description: settings.seo_site_description || 'Premium reading platform.',
         potentialAction: {
           '@type': 'SearchAction',
           target: `${siteUrl}/search?q={search_term_string}`,

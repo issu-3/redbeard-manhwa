@@ -1,6 +1,6 @@
 export const APP_NAME = 'REDBEARD';
 export const APP_TAGLINE = 'The Ultimate Reading Experience';
-export const APP_DESCRIPTION = 'REDBEARD is a premium manhwa reading platform offering the best reading experience with thousands of manhwa, manga, and webtoon titles.';
+export const APP_DESCRIPTION = 'REDBEARD is a premium reading platform offering the best reading experience with thousands of comics and novels.';
 export const getBaseUrl = () => {
   if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
   if (process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`;

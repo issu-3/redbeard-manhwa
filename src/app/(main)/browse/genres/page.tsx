@@ -10,7 +10,7 @@ import { APP_URL } from '@/lib/constants';
 
 export const metadata: Metadata = generateMetadata({
   title: 'Genres',
-  description: 'Browse thousands of manhwa and manga series by your favorite categories and genres.',
+  description: 'Browse thousands of series by your favorite categories and genres.',
   url: `${APP_URL}/browse/genres`
 });
 

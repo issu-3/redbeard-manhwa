@@ -408,7 +408,7 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                   <label className="block text-sm font-medium text-text-primary mb-1">Site Description</label>
                   <textarea
                     name="seo_site_description"
-                    defaultValue={initialSettings.seo_site_description || 'Premium manhwa reading platform offering the best reading experience.'}
+                    defaultValue={initialSettings.seo_site_description || 'Premium reading platform offering the best reading experience.'}
                     rows={3}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -417,7 +417,7 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                   <label className="block text-sm font-medium text-text-primary mb-1">Default Keywords</label>
                   <input
                     name="seo_default_keywords"
-                    defaultValue={initialSettings.seo_default_keywords || 'manhwa, manga, webtoon, read online'}
+                    defaultValue={initialSettings.seo_default_keywords || 'comics, series, read online'}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>

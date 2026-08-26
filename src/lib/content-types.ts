@@ -28,7 +28,7 @@ export function getContentTypeLabel(type: string | undefined | null): string {
 }
 
 export function getContentTypeSlug(type: string): string {
-  if (!type) return 'manhwa';
+  if (!type) return 'series';
   
   switch (type.toUpperCase()) {
     case 'LIGHT_NOVEL': return 'light-novels';

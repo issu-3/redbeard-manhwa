@@ -12,7 +12,7 @@ import { APP_URL } from '@/lib/constants';
 
 export const metadata: Metadata = generateMetadata({
   title: 'Latest Updates',
-  description: 'Read the latest manhwa and webtoon chapters just dropped on REDBEARD.',
+  description: 'Read the latest chapters just dropped on REDBEARD.',
   url: `${APP_URL}/browse/latest`
 });
 

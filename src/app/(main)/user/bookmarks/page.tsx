@@ -9,7 +9,7 @@ import type { SeriesCardData } from '@/types';
 
 export const metadata: Metadata = {
   title: 'My Bookmarks | REDBEARD',
-  description: 'Manage your bookmarked manhwa series',
+  description: 'Manage your bookmarked series',
 };
 
 async function getBookmarks(userId: string) {

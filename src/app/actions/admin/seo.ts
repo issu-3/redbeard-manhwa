@@ -95,7 +95,7 @@ export async function generateMissingSeoData(forceRegenerate: boolean = false) {
 
     const chLabel = c.number !== null ? `Chapter ${c.number}` : (c.title || c.slug || 'Latest Chapter');
     const autoTitle = `${c.series.title} - ${chLabel} | REDBEARD`;
-    const autoDesc = `Read ${c.series.title} ${chLabel} online. High quality manhwa and webtoons available at REDBEARD.`;
+    const autoDesc = `Read ${c.series.title} ${chLabel} online. High quality series available at REDBEARD.`;
     const baseUrl = APP_URL.startsWith('http') ? APP_URL : 'https://redbeard-manhwa.vercel.app';
     const autoCanonical = `${baseUrl}/series/${c.series.slug}/chapter/${c.slug}`;
     const autoImg = existingSeo.ogImage || c.series.bannerImage || c.series.coverImage || '/images/og-default.png';

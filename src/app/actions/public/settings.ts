@@ -42,8 +42,8 @@ export async function getSettings() {
         { key: 'tiktokUrl', value: '' },
         // SEO Defaults
         { key: 'seo_site_title', value: 'REDBEARD - The Ultimate Reading Experience' },
-        { key: 'seo_site_description', value: 'Premium manhwa reading platform offering the best reading experience.' },
-        { key: 'seo_default_keywords', value: 'manhwa, manga, webtoon, read online' },
+        { key: 'seo_site_description', value: 'Premium reading platform offering the best reading experience.' },
+        { key: 'seo_default_keywords', value: 'comics, series, read online' },
         { key: 'seo_robots', value: 'index, follow' },
         { key: 'seo_gsc_verification', value: '' },
         { key: 'seo_ga_measurement_id', value: '' },

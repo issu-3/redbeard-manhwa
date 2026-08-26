@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getCachedSettings();
   return {
     title: settings.seo_site_title || 'REDBEARD - The Ultimate Reading Experience',
-    description: settings.seo_site_description || 'Read the best manhwa and webtoons online.',
+    description: settings.seo_site_description || 'Read the best series and comics online.',
   };
 }
 

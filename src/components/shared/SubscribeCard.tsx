@@ -24,7 +24,7 @@ export function SubscribeCard({ youtubeUrl, className = '' }: SubscribeCardProps
             Subscribe to REDBEARD
           </h3>
           <p className="mt-2 max-w-md text-sm leading-relaxed text-text-muted">
-            Get notified about new series, behind-the-scenes content, and exclusive manhwa recommendations.
+            Get notified about new series, behind-the-scenes content, and exclusive series recommendations.
           </p>
         </div>
 

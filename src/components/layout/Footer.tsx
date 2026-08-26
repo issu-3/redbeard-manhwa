@@ -23,7 +23,7 @@ export async function Footer() {
             </span>
           </Link>
           <p className="mt-3 text-sm leading-relaxed text-text-muted max-w-md">
-            {APP_TAGLINE}. Discover thousands of manhwa, manga, and webtoon
+            {APP_TAGLINE}. Discover thousands of series
             titles with the smoothest reading experience.
           </p>
 

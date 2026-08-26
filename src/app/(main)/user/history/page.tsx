@@ -10,7 +10,7 @@ import { formatDistanceToNow } from 'date-fns';
 
 export const metadata: Metadata = {
   title: 'Reading History | REDBEARD',
-  description: 'View your recently read manhwa chapters',
+  description: 'View your recently read chapters',
 };
 
 async function getReadingHistory(userId: string) {
