@@ -250,33 +250,6 @@ export default async function ChapterPage({
     // OPT-07: Parallelize all DB writes instead of running sequentially
     const writePromises: Promise<any>[] = [];
     
-    if (session?.user?.id) {
-      writePromises.push(
-        prisma.readingHistory.upsert({
-          where: {
-            userId_chapterId: {
-              userId: session.user.id,
-              chapterId: chapter.id,
-            },
-          },
-          update: {
-            pageNumber: 1,
-            updatedAt: new Date(),
-          },
-          create: {
-            userId: session.user.id,
-            chapterId: chapter.id,
-            seriesId: chapter.seriesId,
-            pageNumber: 1,
-          },
-        }),
-        prisma.user.update({
-          where: { id: session.user.id },
-          data: { lastReadAt: new Date() },
-        })
-      );
-    }
-
     // Record view counts for external chapters
     try {
       const { headers } = await import('next/headers');
