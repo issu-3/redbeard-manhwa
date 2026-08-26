@@ -75,7 +75,7 @@ const DOWNLOAD_PROVIDERS = [
 ];
 
 export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { seriesId: string; chapter?: any; initialImages?: any[] }) {
-  const [sourceType, setSourceType] = useState(chapter?.sourceType || 'UPLOAD');
+  const [sourceType, setSourceType] = useState(chapter?.sourceType || 'DOWNLOAD');
   const [images, setImages] = useState(initialImages.map((img: any, i: number) => ({ id: `img-${Date.now()}-${i}`, url: img.imageUrl })));
   const [isPending, startTransition] = useTransition();
   const [showUploader, setShowUploader] = useState(images.length === 0 && sourceType === 'UPLOAD');

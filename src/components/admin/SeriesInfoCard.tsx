@@ -9,6 +9,7 @@ export interface SeriesInfoDefaultValues {
   releaseYear?: number | null;
   readingDirection?: string;
   alternativeTitles?: string[] | string;
+  isNSFW?: boolean;
 }
 
 interface SeriesInfoCardProps {
@@ -24,6 +25,7 @@ export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
   const [releaseYear, setReleaseYear] = useState(defaultValues.releaseYear ? defaultValues.releaseYear.toString() : '');
   const [readingDirection, setReadingDirection] = useState(defaultValues.readingDirection || 'VERTICAL');
   const [alternativeNames, setAlternativeNames] = useState(initialAltNames);
+  const [isNSFW, setIsNSFW] = useState(defaultValues.isNSFW || false);
 
   const currentYear = new Date().getFullYear();
   const yearNum = parseInt(releaseYear, 10);
@@ -144,6 +146,33 @@ export function SeriesInfoCard({ defaultValues = {} }: SeriesInfoCardProps) {
             className="w-full rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-mono" 
           />
           <p className="text-xs text-text-muted">Used for search indexing and alternate title matching.</p>
+        </div>
+
+        <div className="space-y-2 md:col-span-3 flex items-center gap-3 pt-2">
+          <input
+            type="hidden"
+            name="isNSFW"
+            value={isNSFW ? 'true' : 'false'}
+          />
+          <button
+            type="button"
+            onClick={() => setIsNSFW(!isNSFW)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 ${
+              isNSFW ? 'bg-danger' : 'bg-surface border border-border'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                isNSFW ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <div>
+            <label className="text-sm font-semibold text-text-primary cursor-pointer" onClick={() => setIsNSFW(!isNSFW)}>
+              NSFW Content (18+)
+            </label>
+            <p className="text-xs text-text-muted">Mark this series as containing mature or explicit content. (Will be excluded from SafeSearch)</p>
+          </div>
         </div>
       </div>
     </div>

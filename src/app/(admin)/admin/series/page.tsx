@@ -6,16 +6,31 @@ import { formatDate } from '@/lib/utils';
 import { deleteSeries } from '@/app/actions/admin/series';
 import { getContentTypeLabel } from '@/lib/content-types';
 
-export default async function AdminSeriesPage() {
+export default async function AdminSeriesPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { page } = await searchParams;
+  const currentPage = parseInt(page || '1', 10);
+  const take = 50;
+  const skip = (currentPage - 1) * take;
+
   let seriesList: any[] = [];
+  let totalSeries = 0;
   try {
-    seriesList = await prisma.series.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { chapters: true } } }
-    });
+    const [fetchedSeries, count] = await Promise.all([
+      prisma.series.findMany({
+        take,
+        skip,
+        orderBy: { createdAt: 'desc' },
+        include: { _count: { select: { chapters: true } } }
+      }),
+      prisma.series.count()
+    ]);
+    seriesList = fetchedSeries;
+    totalSeries = count;
   } catch (err) {
     console.error('Failed to load admin series list:', err);
   }
+
+  const totalPages = Math.ceil(totalSeries / take);
 
   return (
     <div className="space-y-6">
@@ -36,6 +51,7 @@ export default async function AdminSeriesPage() {
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
+            {/* Table content remains exactly the same */}
             <thead className="bg-surface border-b border-border text-text-secondary">
               <tr>
                 <th className="px-6 py-4 font-semibold">Title</th>
@@ -109,6 +125,44 @@ export default async function AdminSeriesPage() {
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-border bg-surface px-6 py-4">
+            <p className="text-sm text-text-secondary">
+              Showing <span className="font-semibold text-text-primary">{Math.min(skip + 1, totalSeries)}</span> to{' '}
+              <span className="font-semibold text-text-primary">{Math.min(skip + take, totalSeries)}</span> of{' '}
+              <span className="font-semibold text-text-primary">{totalSeries}</span> entries
+            </p>
+            <div className="flex gap-2">
+              {currentPage > 1 ? (
+                <Link
+                  href={`/admin/series?page=${currentPage - 1}`}
+                  className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold hover:bg-surface transition-colors"
+                >
+                  Previous
+                </Link>
+              ) : (
+                <button disabled className="rounded-lg border border-border bg-card/50 px-4 py-2 text-sm font-semibold text-text-muted cursor-not-allowed">
+                  Previous
+                </button>
+              )}
+              
+              {currentPage < totalPages ? (
+                <Link
+                  href={`/admin/series?page=${currentPage + 1}`}
+                  className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold hover:bg-surface transition-colors"
+                >
+                  Next
+                </Link>
+              ) : (
+                <button disabled className="rounded-lg border border-border bg-card/50 px-4 py-2 text-sm font-semibold text-text-muted cursor-not-allowed">
+                  Next
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -53,6 +53,7 @@ export async function createSeries(formData: FormData) {
     genreIds: formData.getAll('genres') as string[],
     tagIds: formData.getAll('tags') as string[],
     alternativeTitles,
+    isNSFW: formData.get('isNSFW') === 'true',
   };
 
   const parsed = seriesSchema.safeParse(rawData);
@@ -64,7 +65,7 @@ export async function createSeries(formData: FormData) {
 
   const {
     title, description, synopsis, type, status, readingDirection,
-    coverImage, bannerImage, genreIds, tagIds, releaseYear
+    coverImage, bannerImage, genreIds, tagIds, releaseYear, isNSFW
   } = parsed.data;
 
   const slug = slugify(title);
@@ -115,6 +116,7 @@ export async function createSeries(formData: FormData) {
         alternativeTitles: alternativeTitles || [],
         coverImage: coverImage || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==',
         bannerImage: bannerImage || null,
+        isNSFW,
         seo: autoSeo,
         genres: {
           connect: genreIds.map(id => ({ id }))
@@ -168,6 +170,7 @@ export async function updateSeries(formData: FormData) {
     genreIds: formData.getAll('genres') as string[],
     tagIds: formData.getAll('tags') as string[],
     alternativeTitles,
+    isNSFW: formData.get('isNSFW') === 'true',
   };
 
   const parsed = seriesSchema.safeParse(rawData);
@@ -179,7 +182,7 @@ export async function updateSeries(formData: FormData) {
 
   const {
     title, description, synopsis, type, status, readingDirection,
-    coverImage, bannerImage, genreIds, tagIds, releaseYear
+    coverImage, bannerImage, genreIds, tagIds, releaseYear, isNSFW
   } = parsed.data;
 
   const slug = slugify(title);
@@ -231,6 +234,7 @@ export async function updateSeries(formData: FormData) {
         alternativeTitles: alternativeTitles || [],
         coverImage: coverImage || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==',
         bannerImage: bannerImage || null,
+        isNSFW,
         seo: autoSeo,
         genres: {
           set: genreIds.map(genreId => ({ id: genreId }))

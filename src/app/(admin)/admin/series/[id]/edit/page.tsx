@@ -137,7 +137,8 @@ export default async function EditSeriesPage({
             type: series.type,
             releaseYear: series.releaseYear,
             readingDirection: series.readingDirection,
-            alternativeTitles: series.alternativeTitles || []
+            alternativeTitles: series.alternativeTitles || [],
+            isNSFW: series.isNSFW
           }}
         />
 
