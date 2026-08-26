@@ -57,10 +57,7 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
   return unstable_cache(
     async () => {
       try {
-        const SAFE_SEARCH_FILTER = {
-          isNSFW: false,
-          type: { notIn: ['PORNHWA', 'DOUJINSHI'] as any }
-        };
+        const SAFE_SEARCH_FILTER = {};
 
         if (isManual && manualIds.length > 0) {
           const seriesList = await prisma.series.findMany({
@@ -103,10 +100,7 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
           const chapters = await prisma.chapter.findMany({
             where: { 
               isPublished: true,
-              series: {
-                isNSFW: false,
-                type: { notIn: ['PORNHWA', 'DOUJINSHI'] }
-              }
+              series: {}
             },
             orderBy: { publishedAt: 'desc' },
             distinct: ['seriesId'],
@@ -222,9 +216,7 @@ export async function getPersonalizedSections(limit: number): Promise<{ continue
     const recommendedSeries = await prisma.series.findMany({
       where: {
         genres: { some: { id: { in: Array.from(favoriteGenres) } } },
-        id: { notIn: bookmarkedIds },
-        isNSFW: false,
-        type: { notIn: ['PORNHWA', 'DOUJINSHI'] as any }
+        id: { notIn: bookmarkedIds }
       },
       orderBy: { totalViews: 'desc' },
       take: limit,

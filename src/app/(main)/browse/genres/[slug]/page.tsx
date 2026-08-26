@@ -23,9 +23,7 @@ const getCachedGenreSeries = unstable_cache(
   async (slug: string) => {
     return prisma.series.findMany({
       where: { 
-        genres: { some: { slug } },
-        isNSFW: false,
-        type: { notIn: ['PORNHWA', 'DOUJINSHI'] }
+        genres: { some: { slug } }
       },
       select: SERIES_CARD_SELECT,
       take: 40,

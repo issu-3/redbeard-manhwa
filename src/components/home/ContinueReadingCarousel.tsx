@@ -39,9 +39,16 @@ export function ContinueReadingCarousel({ items }: { items: ContinueReadingItem[
                 <h3 className="line-clamp-2 text-sm font-bold text-text-primary group-hover:text-primary transition-colors mb-1" title={item.series.title}>
                   {item.series.title}
                 </h3>
-                <span className="text-xs font-medium text-text-muted">
-                  {item.chapterLabel || `Chapter ${item.chapterNumber}`}
-                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {(item.series as any).isNSFW || item.series.type === 'PORNHWA' || item.series.type === 'DOUJINSHI' ? (
+                    <span className="rounded-full bg-red-500/20 px-1.5 py-0.5 text-[9px] font-bold text-red-500 border border-red-500/30">
+                      🔞 NSFW
+                    </span>
+                  ) : null}
+                  <span className="text-xs font-medium text-text-muted">
+                    {item.chapterLabel || `Chapter ${item.chapterNumber}`}
+                  </span>
+                </div>
               </div>
             </div>
             
