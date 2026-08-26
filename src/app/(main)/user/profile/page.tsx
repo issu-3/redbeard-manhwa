@@ -194,7 +194,7 @@ export default async function ProfilePage() {
               <div className="space-y-4">
                 {recentlyRead.map((item) => (
                   <Link 
-                    href={['DOWNLOAD', 'EXTERNAL'].includes(item.chapter.sourceType as string) && item.chapter.downloadUrl ? item.chapter.downloadUrl : `/series/${item.series.slug}/chapter/${item.chapter.slug || item.chapter.number || 1}`} 
+                    href={item.chapter.sourceType === 'DOWNLOAD' && item.chapter.downloadUrl ? item.chapter.downloadUrl : `/series/${item.series.slug}/chapter/${item.chapter.slug || item.chapter.number || 1}`} 
                     target={['DOWNLOAD', 'EXTERNAL'].includes(item.chapter.sourceType as string) ? '_blank' : undefined}
                     rel={['DOWNLOAD', 'EXTERNAL'].includes(item.chapter.sourceType as string) ? 'noopener noreferrer' : undefined}
                     key={item.id}

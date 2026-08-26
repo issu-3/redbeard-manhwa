@@ -53,7 +53,7 @@ async function flushDownloadBuffer() {
       promises.push(prisma.auditLog.createMany({
         data: itemsToFlush.map(i => ({
           userId: i.userId,
-          action: i.sourceType === 'EXTERNAL' ? 'EXTERNAL_CLICK' : 'DOWNLOAD_CHAPTER',
+          action: 'DOWNLOAD_CHAPTER',
           targetType: 'CHAPTER',
           targetId: i.chapterId,
           ipAddress: i.ipAddress,

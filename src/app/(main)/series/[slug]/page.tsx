@@ -284,7 +284,7 @@ export default async function SeriesDetailPage({
 
   const firstChapter = series.chapters.length > 0 ? series.chapters[0] : null;
   const firstChapterLink = firstChapter 
-    ? (['DOWNLOAD', 'EXTERNAL'].includes(firstChapter.sourceType as string) && firstChapter.downloadUrl ? `/api/chapter/${firstChapter.id}/download` : `/series/${series.slug}/chapter/${firstChapter.slug || firstChapter.number || 1}`) 
+    ? (firstChapter.sourceType === 'DOWNLOAD' && firstChapter.downloadUrl ? `/api/chapter/${firstChapter.id}/download` : `/series/${series.slug}/chapter/${firstChapter.slug || firstChapter.number || 1}`) 
     : '#';
 
   const chaptersList = series.chapters.map((c: any) => ({

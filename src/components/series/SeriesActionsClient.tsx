@@ -35,13 +35,13 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
     : null;
 
   const continueLink = continueChapterObj
-    ? (['DOWNLOAD', 'EXTERNAL'].includes(continueChapterObj.sourceType as string) && continueChapterObj.downloadUrl ? `/api/chapter/${continueChapterObj.id}/download` : `/series/${seriesSlug}/chapter/${continueChapterObj.slug || continueChapterObj.number || continueChapterObj.label || 1}`)
+    ? (continueChapterObj.sourceType === 'DOWNLOAD' && continueChapterObj.downloadUrl ? `/api/chapter/${continueChapterObj.id}/download` : `/series/${seriesSlug}/chapter/${continueChapterObj.slug || continueChapterObj.number || continueChapterObj.label || 1}`)
     : firstChapterLink;
 
   const hasHistory = !!continueChapterObj;
 
   const isExternal = continueChapterObj 
-    ? ['DOWNLOAD', 'EXTERNAL'].includes(continueChapterObj.sourceType as string)
+    ? continueChapterObj.sourceType === 'DOWNLOAD'
     : firstChapterLink.includes('/api/chapter/');
 
   if (isMobile) {
