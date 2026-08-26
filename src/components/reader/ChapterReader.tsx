@@ -501,7 +501,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
               <div className="mt-8 pt-8 border-t border-border flex justify-between items-center">
                 {chapter.prevChapter ? (
                   <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug || chapter.prevChapter.number}`}
+                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug}`}
                     onClick={(e) => e.stopPropagation()}
                     className="text-sm font-medium text-text-muted hover:text-primary transition-colors flex items-center gap-1"
                   >
@@ -511,7 +511,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                 ) : <div />}
                 {chapter.nextChapter ? (
                   <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug || chapter.nextChapter.number}`}
+                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug}`}
                     onClick={(e) => e.stopPropagation()}
                     className="text-sm font-medium text-text-muted hover:text-primary transition-colors flex items-center gap-1"
                   >
@@ -608,7 +608,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                 <div className="flex items-center justify-center gap-4">
                   {chapter.prevChapter && (
                     <Link
-                      href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug || chapter.prevChapter.number}`}
+                      href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug}`}
                       className="flex items-center gap-2 rounded-xl bg-foreground/5 px-6 py-3 text-sm font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -618,7 +618,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                   )}
                   {chapter.nextChapter && (
                     <Link
-                      href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug || chapter.nextChapter.number}`}
+                      href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug}`}
                       className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white hover:bg-primary-hover transition-all"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -734,7 +734,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
               <div className="flex items-center gap-2">
                 {chapter.prevChapter ? (
                   <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug || chapter.prevChapter.number}`}
+                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug}`}
                     className="flex items-center gap-1.5 rounded-lg bg-foreground/5 px-3 py-2 text-xs font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -760,7 +760,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
               <div className="flex items-center gap-2">
                 {chapter.nextChapter ? (
                   <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug || chapter.nextChapter.number}`}
+                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug}`}
                     className="flex items-center gap-1.5 rounded-lg bg-foreground/5 px-3 py-2 text-xs font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                     onClick={(e) => e.stopPropagation()}
                   >

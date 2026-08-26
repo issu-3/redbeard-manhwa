@@ -30,6 +30,8 @@ export function MobileNav() {
           const isActive =
             item.href === '/'
               ? pathname === '/'
+              : item.label === 'Browse'
+              ? pathname.startsWith('/browse')
               : pathname.startsWith(item.href);
 
           return (
