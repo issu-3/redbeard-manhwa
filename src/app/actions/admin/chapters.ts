@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
+import { del } from '@vercel/blob';
 
 async function checkAdmin() {
   const session = await auth();
@@ -15,6 +16,18 @@ async function checkAdmin() {
 export async function deleteChapter(chapterId: string, seriesId: string) {
   await checkAdmin();
   
+  const chapter = await prisma.chapter.findUnique({
+    where: { id: chapterId },
+    include: { images: true }
+  });
+
+  if (chapter && chapter.images.length > 0) {
+    const blobUrls = chapter.images.map(img => img.imageUrl).filter(url => url.includes('.public.blob.vercel-storage.com'));
+    if (blobUrls.length > 0) {
+      await del(blobUrls).catch(e => console.error('Failed to delete blobs:', e));
+    }
+  }
+
   await prisma.chapter.delete({
     where: { id: chapterId }
   });
@@ -138,6 +151,13 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
       // 1. Delete existing images if we are updating an uploaded archive
       // Or if switching from UPLOAD to DOWNLOAD, clear old images
       if (sourceType === 'UPLOAD' || existing.sourceType === 'UPLOAD') {
+        const oldImages = await tx.chapterImage.findMany({ where: { chapterId: id } });
+        if (oldImages.length > 0) {
+          const blobUrls = oldImages.map(img => img.imageUrl).filter(url => url.includes('.public.blob.vercel-storage.com'));
+          if (blobUrls.length > 0) {
+            await del(blobUrls).catch(e => console.error('Failed to delete blobs:', e));
+          }
+        }
         await tx.chapterImage.deleteMany({ where: { chapterId: id } });
       }
 

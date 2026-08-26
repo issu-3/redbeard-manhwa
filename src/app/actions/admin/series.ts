@@ -7,6 +7,7 @@ import { auth } from '@/auth';
 import { slugify } from '@/lib/utils';
 import { seriesSchema } from '@/lib/validators';
 import { generateSeriesSeo } from '@/lib/seo-generator';
+import { del } from '@vercel/blob';
 
 async function checkAdmin() {
   const session = await auth();
@@ -18,6 +19,35 @@ async function checkAdmin() {
 export async function deleteSeries(id: string) {
   await checkAdmin();
   
+  const series = await prisma.series.findUnique({
+    where: { id },
+    include: { chapters: { include: { images: true } } }
+  });
+
+  if (series) {
+    const urlsToDelete: string[] = [];
+    if (series.coverImage && series.coverImage.includes('.public.blob.vercel-storage.com')) {
+      urlsToDelete.push(series.coverImage);
+    }
+    if (series.bannerImage && series.bannerImage.includes('.public.blob.vercel-storage.com')) {
+      urlsToDelete.push(series.bannerImage);
+    }
+    for (const chapter of series.chapters) {
+      for (const img of chapter.images) {
+        if (img.imageUrl.includes('.public.blob.vercel-storage.com')) {
+          urlsToDelete.push(img.imageUrl);
+        }
+      }
+    }
+    if (urlsToDelete.length > 0) {
+      // Vercel blob del() allows up to 500 URLs at once. If we exceed that, we should chunk it, 
+      // but for most series it shouldn't be an issue. To be safe, we'll chunk by 500.
+      for (let i = 0; i < urlsToDelete.length; i += 500) {
+        await del(urlsToDelete.slice(i, i + 500)).catch(e => console.error('Failed to delete series blobs:', e));
+      }
+    }
+  }
+
   await prisma.series.delete({
     where: { id }
   });

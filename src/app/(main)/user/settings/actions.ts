@@ -24,22 +24,29 @@ export async function updateProfile(formData: FormData) {
 
   // Handle file upload if present
   if (avatarFile && avatarFile.size > 0) {
+    if (avatarFile.size > 2 * 1024 * 1024) {
+      throw new Error('File size exceeds 2MB limit');
+    }
+
     const bytes = await avatarFile.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Ensure it's an image
-    if (!avatarFile.type.startsWith('image/')) {
-      throw new Error('Invalid file type');
+    // Validate extension and MIME type
+    const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'];
+    const validMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
+    
+    const extension = avatarFile.name.split('.').pop()?.toLowerCase() || '';
+    if (!validExtensions.includes(extension) || !validMimes.includes(avatarFile.type)) {
+      throw new Error('Invalid file type. SVGs and non-image files are not allowed.');
     }
 
-    // Write to public/uploads directory
-    const fileName = `${userId}-${Date.now()}-${avatarFile.name}`;
+    // Write to public/uploads directory with a completely safe, randomized name
+    const safeExtension = extension || 'webp';
+    const fileName = `${userId}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${safeExtension}`;
     const uploadDir = join(process.cwd(), 'public', 'uploads');
     const filePath = join(uploadDir, fileName);
     
     // We assume public/uploads exists or we create it.
-    // For simplicity, we'll try to write directly. If we needed to ensure dir exists,
-    // we'd use fs.mkdir, but let's assume it exists or will be handled.
     try {
       await writeFile(filePath, buffer);
       avatarUrl = `/uploads/${fileName}`;
