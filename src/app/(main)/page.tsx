@@ -5,12 +5,19 @@ import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdRenderer } from '@/components/ads/AdRenderer';
 import { SubscribeCard } from '@/components/shared/SubscribeCard';
 
+import { generateMetadata as generateSeoMetadata } from '@/lib/seo';
+import { APP_URL } from '@/lib/constants';
+
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getCachedSettings();
-  return {
-    title: settings.seo_site_title || 'REDBEARD - The Ultimate Reading Experience',
-    description: settings.seo_site_description || 'Read the best series and comics online.',
-  };
+  const title = settings.seo_site_title || 'REDBEARD - The Ultimate Reading Experience';
+  const description = settings.seo_site_description || 'Read the best series and comics online.';
+  
+  return generateSeoMetadata({
+    title: title.split(' | ')[0], // generateSeoMetadata appends APP_NAME
+    description,
+    url: APP_URL
+  });
 }
 
 import { getCachedHomepageSections, getCachedHeroBanners, getCachedSectionSeries } from '@/app/actions/public/homepage';

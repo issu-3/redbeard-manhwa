@@ -9,7 +9,8 @@ import { APP_URL } from '@/lib/constants';
 export const metadata: Metadata = generateMetadata({
   title: 'Search',
   description: 'Search thousands of series. Find your next read on REDBEARD.',
-  url: `${APP_URL}/search`
+  url: `${APP_URL}/search`,
+  noindex: true
 });
 
 const getCachedSearchFilterData = unstable_cache(

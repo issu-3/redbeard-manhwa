@@ -226,9 +226,12 @@ export default async function SeriesDetailPage({
 
   const siteUrl = APP_URL || 'http://localhost:3000';
   
+  const isLightNovel = series.type === 'LIGHT_NOVEL';
+  const isAdult = (series as any).isNSFW || series.type === 'PORNHWA' || series.type === 'DOUJINSHI';
+  
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'ComicSeries',
+    '@type': isLightNovel ? 'Book' : 'ComicSeries',
     name: series.title,
     description: series.synopsis || series.description,
     image: series.coverImage,
@@ -242,6 +245,7 @@ export default async function SeriesDetailPage({
       '@type': 'Organization',
       name: 'REDBEARD'
     },
+    ...(isAdult && { contentRating: 'adult' }),
     ...(series.ratingCount > 0 && {
       aggregateRating: {
         '@type': 'AggregateRating',

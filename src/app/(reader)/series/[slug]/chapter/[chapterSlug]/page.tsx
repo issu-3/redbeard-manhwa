@@ -342,17 +342,68 @@ export default async function ChapterPage({
 
   const settings = await getCachedSettings();
 
+  const siteUrl = APP_URL || 'http://localhost:3000';
+  const chapterUrl = `${siteUrl}/series/${slug}/chapter/${chapterSlug}`;
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: siteUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: chapter.seriesTitle,
+        item: `${siteUrl}/series/${slug}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: chapter.label || `Chapter ${chapter.number}`,
+        item: chapterUrl,
+      }
+    ]
+  };
+
+  const chapterLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Chapter',
+    name: chapter.title || chapter.label || `Chapter ${chapter.number}`,
+    isPartOf: {
+      '@type': 'ComicSeries',
+      name: chapter.seriesTitle,
+      url: `${siteUrl}/series/${slug}`
+    },
+    url: chapterUrl,
+    image: chapter.images.length > 0 ? chapter.images[0].imageUrl : undefined
+  };
+
   return (
-    <ChapterReader 
-      chapter={chapter} 
-      comments={commentsData} 
-      currentUserId={session?.user?.id} 
-      adSlotTop={<AdRenderer placement="reader_top" />}
-      adSlotMiddle={<AdRenderer placement="reader_middle" />}
-      adSlotBottom={<AdRenderer placement="reader_bottom" />}
-      userPreferences={userPreferences}
-      defaultReadingMode={settings.defaultReadingMode || 'vertical'}
-      youtubeUrl={settings.youtubeUrl || null}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(chapterLd) }}
+      />
+      <ChapterReader 
+        chapter={chapter} 
+        comments={commentsData} 
+        currentUserId={session?.user?.id} 
+        adSlotTop={<AdRenderer placement="reader_top" />}
+        adSlotMiddle={<AdRenderer placement="reader_middle" />}
+        adSlotBottom={<AdRenderer placement="reader_bottom" />}
+        userPreferences={userPreferences}
+        defaultReadingMode={settings.defaultReadingMode || 'vertical'}
+        youtubeUrl={settings.youtubeUrl || null}
+      />
+    </>
   );
 }
