@@ -22,7 +22,11 @@ const getCachedGenreData = unstable_cache(
 const getCachedGenreSeries = unstable_cache(
   async (slug: string) => {
     return prisma.series.findMany({
-      where: { genres: { some: { slug } } },
+      where: { 
+        genres: { some: { slug } },
+        isNSFW: false,
+        type: { notIn: ['PORNHWA', 'DOUJINSHI'] }
+      },
       select: SERIES_CARD_SELECT,
       take: 40,
       orderBy: { totalViews: 'desc' }

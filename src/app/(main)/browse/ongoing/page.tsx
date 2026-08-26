@@ -19,7 +19,7 @@ export const metadata: Metadata = generateMetadata({
 const getCachedOngoingSeries = unstable_cache(
   async () => {
     return prisma.series.findMany({
-      where: { status: 'ONGOING' },
+      where: { isNSFW: false, type: { notIn: ['PORNHWA', 'DOUJINSHI'] }, status: 'ONGOING' },
       select: SERIES_CARD_SELECT,
       take: 40,
       orderBy: { updatedAt: 'desc' }

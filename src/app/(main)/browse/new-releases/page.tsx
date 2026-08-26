@@ -19,6 +19,7 @@ export const metadata: Metadata = generateMetadata({
 const getCachedNewReleasesSeries = unstable_cache(
   async () => {
     return prisma.series.findMany({
+      where: { isNSFW: false, type: { notIn: ['PORNHWA', 'DOUJINSHI'] } },
       select: SERIES_CARD_SELECT,
       take: 40,
       orderBy: { createdAt: 'desc' }
