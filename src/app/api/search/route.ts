@@ -29,11 +29,16 @@ export async function GET(request: NextRequest) {
   const query = searchParams.get('q') || '';
   
   // H6 FIX: Cap limit to 50 max to prevent resource exhaustion
-  let limit = parseInt(searchParams.get('limit') || '10', 10);
-  if (isNaN(limit) || limit < 1) limit = 10;
+  let limit = parseInt(searchParams.get('limit') || '20', 10);
+  if (isNaN(limit) || limit < 1) limit = 20;
   limit = Math.min(limit, 50);
 
+  let skip = parseInt(searchParams.get('skip') || '0', 10);
+  if (isNaN(skip) || skip < 0) skip = 0;
+
   const genreSlugs = searchParams.getAll('genre');
+  const statusParam = searchParams.get('status');
+  const sortParam = searchParams.get('sort');
 
   if (!query && genreSlugs.length === 0) {
     return NextResponse.json({ success: true, data: [] });
@@ -58,10 +63,33 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    if (statusParam) {
+      whereClause.status = statusParam as import('@prisma/client').SeriesStatus;
+    }
+
+    let orderByClause: import('@prisma/client').Prisma.SeriesOrderByWithRelationInput = { totalViews: 'desc' };
+    if (sortParam === 'latest') {
+      orderByClause = { updatedAt: 'desc' };
+    } else if (sortParam === 'newest') {
+      orderByClause = { createdAt: 'desc' };
+    } else if (sortParam === 'rating') {
+      orderByClause = { averageRating: 'desc' };
+    } else if (sortParam === 'popular' || sortParam === 'views') {
+      orderByClause = { totalViews: 'desc' };
+    } else if (sortParam === 'bookmarks') {
+      orderByClause = { totalBookmarks: 'desc' };
+    } else if (sortParam === 'alphabetical') {
+      orderByClause = { title: 'asc' };
+    } else if (sortParam === 'updated') {
+      orderByClause = { updatedAt: 'desc' };
+    }
+
     const results = await prisma.series.findMany({
       where: whereClause,
       select: SERIES_CARD_SELECT,
       take: limit,
+      skip: skip,
+      orderBy: orderByClause,
     });
 
     if (query && query.length >= 3) {

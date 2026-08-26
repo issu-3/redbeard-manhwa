@@ -22,6 +22,8 @@ export default function SearchClient({ dynamicGenres, dynamicTrending }: SearchC
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [sortBy, setSortBy] = useState('popular');
+  const [skip, setSkip] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const debouncedQuery = useDebounce(query, 300);
@@ -34,19 +36,45 @@ export default function SearchClient({ dynamicGenres, dynamicTrending }: SearchC
   }, []);
 
   useEffect(() => {
-    if (!debouncedQuery.trim()) {
-      setTimeout(() => setResults([]), 0);
+    setSkip(0);
+    setResults([]);
+  }, [debouncedQuery, selectedGenres, selectedStatus, sortBy]);
+
+  useEffect(() => {
+    if (!debouncedQuery.trim() && selectedGenres.length === 0) {
+      setTimeout(() => {
+        setResults([]);
+        setHasMore(false);
+      }, 0);
       return;
     }
     
     let isMounted = true;
     const fetchResults = async () => {
       try {
-        setIsSearching(true);
-        const res = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}&limit=20`);
+        if (skip === 0) setIsSearching(true);
+        
+        const params = new URLSearchParams();
+        if (debouncedQuery.trim()) params.append('q', debouncedQuery);
+        params.append('limit', '20');
+        params.append('skip', skip.toString());
+        selectedGenres.forEach(g => params.append('genre', g));
+        if (selectedStatus) params.append('status', selectedStatus);
+        if (sortBy) params.append('sort', sortBy);
+
+        const res = await fetch(`/api/search?${params.toString()}`);
         const data = await res.json();
         if (isMounted && data.success) {
-          setResults(data.data);
+          if (skip === 0) {
+            setResults(data.data);
+          } else {
+            setResults(prev => {
+              const existingIds = new Set(prev.map(p => p.id));
+              const newItems = data.data.filter((d: SeriesCardData) => !existingIds.has(d.id));
+              return [...prev, ...newItems];
+            });
+          }
+          setHasMore(data.data.length === 20);
         }
       } catch (err) {
         console.error('Search failed:', err);
@@ -60,7 +88,7 @@ export default function SearchClient({ dynamicGenres, dynamicTrending }: SearchC
     return () => {
       isMounted = false;
     };
-  }, [debouncedQuery]);
+  }, [debouncedQuery, selectedGenres, selectedStatus, sortBy, skip]);
 
   const addRecentSearch = (term: string) => {
     const updated = [term, ...recentSearches.filter((s) => s !== term)].slice(0, 8);
@@ -79,7 +107,7 @@ export default function SearchClient({ dynamicGenres, dynamicTrending }: SearchC
     localStorage.removeItem('redbeard-recent-searches');
   };
 
-  const hasQuery = query.trim().length > 0;
+  const hasQuery = query.trim().length > 0 || selectedGenres.length > 0;
 
   return (
     <div className="min-h-screen px-4 pb-16 pt-8 md:px-8 lg:px-16 xl:px-20">
@@ -274,6 +302,17 @@ export default function SearchClient({ dynamicGenres, dynamicTrending }: SearchC
                     <SeriesCard key={series.id} series={series} index={i} />
                   ))}
                 </div>
+                
+                {hasMore && (
+                  <div className="mt-8 flex justify-center">
+                    <button
+                      onClick={() => setSkip(prev => prev + 20)}
+                      className="rounded-xl bg-surface px-6 py-3 text-sm font-semibold text-text-primary transition-all hover:bg-card-hover"
+                    >
+                      Load More
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>
