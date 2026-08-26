@@ -3,13 +3,71 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 
 const DEDUPE_WINDOW_MS = 60_000; // 60 seconds
+const FLUSH_INTERVAL_MS = 5_000; // 5 seconds
+const MAX_BUFFER_SIZE = 20;
+
+type DownloadLogItem = {
+  seriesId: string;
+  chapterId: string;
+  userId: string | null;
+  ipAddress: string | null;
+  sourceType: string | null;
+};
 
 declare global {
   var _downloadDedupeMap: Map<string, number> | undefined;
+  var _downloadLogBuffer: DownloadLogItem[] | undefined;
+  var _downloadFlushTimer: NodeJS.Timeout | undefined;
 }
 
 const dedupeMap = globalThis._downloadDedupeMap ?? new Map<string, number>();
 if (!globalThis._downloadDedupeMap) globalThis._downloadDedupeMap = dedupeMap;
+
+const buffer = globalThis._downloadLogBuffer ?? [];
+if (!globalThis._downloadLogBuffer) globalThis._downloadLogBuffer = buffer;
+
+async function flushDownloadBuffer() {
+  if (buffer.length === 0) return;
+  const itemsToFlush = [...buffer];
+  buffer.length = 0;
+
+  try {
+    const chapterIncrements = new Map<string, number>();
+    const seriesIncrements = new Map<string, number>();
+
+    for (const item of itemsToFlush) {
+      chapterIncrements.set(item.chapterId, (chapterIncrements.get(item.chapterId) || 0) + 1);
+      seriesIncrements.set(item.seriesId, (seriesIncrements.get(item.seriesId) || 0) + 1);
+    }
+
+    const promises: Promise<any>[] = [];
+
+    for (const [chId, count] of chapterIncrements.entries()) {
+      promises.push(prisma.chapter.update({ where: { id: chId }, data: { totalViews: { increment: count } } }));
+    }
+    for (const [sId, count] of seriesIncrements.entries()) {
+      promises.push(prisma.series.update({ where: { id: sId }, data: { totalViews: { increment: count } } }));
+    }
+
+    if (itemsToFlush.length > 0) {
+      promises.push(prisma.auditLog.createMany({
+        data: itemsToFlush.map(i => ({
+          userId: i.userId,
+          action: i.sourceType === 'EXTERNAL' ? 'EXTERNAL_CLICK' : 'DOWNLOAD_CHAPTER',
+          targetType: 'CHAPTER',
+          targetId: i.chapterId,
+          ipAddress: i.ipAddress,
+          metadata: { seriesId: i.seriesId }
+        })),
+        skipDuplicates: true
+      }));
+    }
+
+    await Promise.allSettled(promises);
+  } catch (err) {
+    console.error('Error flushing download buffer:', err);
+  }
+}
 
 export async function GET(
   request: Request,
@@ -42,9 +100,6 @@ export async function GET(
     const userId = session?.user?.id;
     const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || request.headers.get('x-real-ip') || null;
 
-    // Use our existing view tracking endpoint logic (via internal POST or directly here)
-    // Since we're server-side, it's easier to just call the same endpoint internally via fetch,
-    // but Next.js absolute URL is tricky. We'll duplicate the increment/history logic minimally.
     try {
       const dedupeKey = `${userId || ipAddress || 'anon'}:${chapter.id}`;
       const now = Date.now();
@@ -61,26 +116,25 @@ export async function GET(
       dedupeMap.set(dedupeKey, now);
 
       if (!isDuplicate) {
-        // Record download analytics (using ViewLog as the existing mechanism)
-        // We do not record ReadingHistory or lastReadAt for downloads
-        
-        // Increment views
-        await Promise.all([
-          prisma.chapter.update({ where: { id: chapter.id }, data: { totalViews: { increment: 1 } } }),
-          prisma.series.update({ where: { id: chapter.seriesId }, data: { totalViews: { increment: 1 } } }),
-          prisma.viewLog.create({
-            data: {
-              seriesId: chapter.seriesId,
-              chapterId: chapter.id,
-              userId: userId || null,
-              ipAddress: ipAddress
-            }
-          }).catch(() => {}) // Catch unique constraint errors if any
-        ]);
+        buffer.push({
+          seriesId: chapter.seriesId,
+          chapterId: chapter.id,
+          userId: userId || null,
+          ipAddress,
+          sourceType: chapter.sourceType
+        });
+
+        if (buffer.length >= MAX_BUFFER_SIZE) {
+          flushDownloadBuffer().catch(e => console.error('Flush error:', e));
+        } else if (!globalThis._downloadFlushTimer) {
+          globalThis._downloadFlushTimer = setTimeout(() => {
+            globalThis._downloadFlushTimer = undefined;
+            flushDownloadBuffer().catch(e => console.error('Flush timer error:', e));
+          }, FLUSH_INTERVAL_MS);
+        }
       }
     } catch (e) {
       console.error('Failed to update download analytics:', e);
-      // We don't fail the request if tracking fails
     }
 
     // 3. Redirect to the actual download URL
