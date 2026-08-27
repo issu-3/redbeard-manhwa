@@ -360,7 +360,7 @@ export default async function SeriesDetailPage({
               {series.genres.slice(0, 4).map((genre: { slug: string, name: string }) => (
                 <Link
                   key={genre.slug}
-                  href={`/browse?genre=${genre.slug}`}
+                  href={`/browse/genres/${genre.slug}`}
                   className="rounded-md bg-card/60 backdrop-blur-md px-3 py-1 text-sm font-medium text-text-primary border border-border/50 hover:bg-primary/20 hover:text-primary transition-colors"
                 >
                   {genre.name}
@@ -444,7 +444,7 @@ export default async function SeriesDetailPage({
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-text-primary">Similar Series</h2>
-                <Link href="/browse" className="text-sm font-medium text-primary hover:underline">Browse All</Link>
+                <Link href="/browse/trending" className="text-sm font-medium text-primary hover:underline">Browse All</Link>
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
                 {relatedSeries.map((item: SeriesCardData, index: number) => (

@@ -1,5 +1,6 @@
 export const revalidate = 3600;
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { BrowseGrid } from '@/components/shared/BrowseGrid';
 import { prisma } from '@/lib/prisma';
@@ -71,7 +72,14 @@ export default async function GenreDetailPage({ params }: { params: Promise<Para
   const dbSeries = await getCachedGenreSeries(slug);
 
   return (
-    <BrowseGrid
+    <div>
+      {/* SEO: Breadcrumb link back to genres index */}
+      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-text-muted">
+        <Link href="/browse/genres" className="hover:text-text-primary transition-colors">
+          ← All Genres
+        </Link>
+      </nav>
+      <BrowseGrid
       title={genre.name}
       subtitle={`Explore all ${genre.name.toLowerCase()} series`}
       icon={
@@ -79,6 +87,7 @@ export default async function GenreDetailPage({ params }: { params: Promise<Para
       }
       series={dbSeries.map(s => toSeriesCardData(s as any))}
     />
+    </div>
   );
 }
 

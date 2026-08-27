@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ChapterReader } from '@/components/reader/ChapterReader';
@@ -366,6 +367,10 @@ export default async function ChapterPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(chapterLd) }}
       />
+      {/* SEO: Server-rendered crawlable link back to parent series for Googlebot */}
+      <Link href={`/series/${slug}`} className="sr-only">
+        Back to {chapter.seriesTitle}
+      </Link>
       <ChapterReader 
         chapter={chapter} 
         comments={commentsData} 

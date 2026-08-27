@@ -51,6 +51,16 @@ export async function Footer() {
               )}
             </div>
           )}
+
+          {/* SEO: Crawlable internal navigation links */}
+          <nav aria-label="Browse" className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+            <Link href="/browse/trending" className="text-xs text-text-muted hover:text-text-primary transition-colors">Trending</Link>
+            <Link href="/browse/popular" className="text-xs text-text-muted hover:text-text-primary transition-colors">Popular</Link>
+            <Link href="/browse/latest" className="text-xs text-text-muted hover:text-text-primary transition-colors">Latest</Link>
+            <Link href="/browse/completed" className="text-xs text-text-muted hover:text-text-primary transition-colors">Completed</Link>
+            <Link href="/browse/new-releases" className="text-xs text-text-muted hover:text-text-primary transition-colors">New Releases</Link>
+            <Link href="/browse/genres" className="text-xs text-text-muted hover:text-text-primary transition-colors">Genres</Link>
+          </nav>
         </div>
       </div>
     </footer>

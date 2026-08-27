@@ -14,6 +14,17 @@ import { Sparkles, Heart } from 'lucide-react';
 import type { HomepageSection } from '@prisma/client';
 import type { SeriesCardData } from '@/types';
 
+// Map homepage section types to their browse page URLs
+const sectionTypeToHref: Record<string, string> = {
+  TRENDING: '/browse/trending',
+  RECENTLY_UPDATED: '/browse/latest',
+  NEW_RELEASES: '/browse/new-releases',
+  LATEST: '/browse/latest',
+  FEATURED: '/browse/popular',
+  RECOMMENDED: '/browse/popular',
+  COMPLETED: '/browse/completed',
+};
+
 interface HomepageClientProps {
   sections: HomepageSection[];
   sectionData: Record<string, any[]>;
@@ -123,7 +134,7 @@ export function HomepageClient({
               <Carousel 
                 title={sec.title || sec.type.replace('_', ' ')} 
                 subtitle={sec.subtitle || undefined} 
-                href={sec.showViewAll ? '#' : undefined}
+                href={sec.showViewAll ? (sectionTypeToHref[sec.type] || undefined) : undefined}
               >
                 {data.map((series: any, i: number) => (
                   <SeriesCard key={series.id} series={series} index={i} />
