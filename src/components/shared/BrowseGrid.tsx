@@ -7,11 +7,12 @@ import type { SeriesCardData } from '@/types';
 interface BrowseGridProps {
   title: string;
   subtitle: string;
+  description?: React.ReactNode;
   icon: React.ReactNode;
   series: SeriesCardData[];
 }
 
-export function BrowseGrid({ title, subtitle, icon, series }: BrowseGridProps) {
+export function BrowseGrid({ title, subtitle, description, icon, series }: BrowseGridProps) {
   return (
     <div>
       <div className="mb-6 flex items-center gap-3">
@@ -25,6 +26,21 @@ export function BrowseGrid({ title, subtitle, icon, series }: BrowseGridProps) {
           <p className="text-sm text-text-muted">{subtitle}</p>
         </div>
       </div>
+      
+      {description && (
+        <div className="mb-8 text-sm leading-relaxed text-text-muted max-w-3xl">
+          {description}
+        </div>
+      )}
+
+      {series.length === 0 ? (
+        <div className="rounded-xl border border-border bg-surface/50 p-12 text-center">
+          <h3 className="text-lg font-bold text-text-primary">No series found</h3>
+          <p className="mt-2 text-sm text-text-muted">
+            There are currently no series available in this category. Please check back later!
+          </p>
+        </div>
+      ) : (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -34,6 +50,7 @@ export function BrowseGrid({ title, subtitle, icon, series }: BrowseGridProps) {
           <SeriesCard key={s.id} series={s} index={i} />
         ))}
       </motion.div>
+      )}
     </div>
   );
 }

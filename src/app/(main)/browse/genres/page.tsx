@@ -32,8 +32,31 @@ const getCachedGenres = unstable_cache(
 export default async function GenresPage() {
   const genres = await getCachedGenres();
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': 'Home',
+        'item': `${APP_URL}`
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': 'Genres',
+        'item': `${APP_URL}/browse/genres`
+      }
+    ]
+  };
+
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-text-primary md:text-3xl" style={{ fontFamily: 'var(--font-heading)' }}>
           Browse by Genre
