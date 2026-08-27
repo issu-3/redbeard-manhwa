@@ -123,6 +123,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
               fill
               className="object-cover"
               priority={current === 0}
+              fetchPriority={current === 0 ? "high" : "auto"}
               sizes="100vw"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />

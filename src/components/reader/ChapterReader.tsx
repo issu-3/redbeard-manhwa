@@ -253,23 +253,32 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
     const el = scrollRef.current;
     if (!el) return;
 
-    const handleScroll = () => {
-      const images = el.querySelectorAll('[data-page]');
-      let visiblePage = 1;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const page = parseInt(entry.target.getAttribute('data-page') || '1', 10);
+            setCurrentPage(page);
+          }
+        });
+      },
+      {
+        root: el,
+        rootMargin: '-20% 0px -40% 0px', // Trigger when an element is near the top/middle of the viewport
+        threshold: 0,
+      }
+    );
 
-      images.forEach((img) => {
-        const rect = img.getBoundingClientRect();
-        const containerRect = el.getBoundingClientRect();
-        if (rect.top < containerRect.top + containerRect.height / 2) {
-          visiblePage = parseInt(img.getAttribute('data-page') || '1', 10);
-        }
-      });
+    // Defer observation slightly to ensure elements are mounted
+    const timeout = setTimeout(() => {
+      const elements = el.querySelectorAll('[data-page]');
+      elements.forEach((element) => observer.observe(element));
+    }, 100);
 
-      setCurrentPage(visiblePage);
+    return () => {
+      clearTimeout(timeout);
+      observer.disconnect();
     };
-
-    el.addEventListener('scroll', handleScroll, { passive: true });
-    return () => el.removeEventListener('scroll', handleScroll);
   }, [mode, setCurrentPage]);
 
   // ─── Navigation helpers ────────────────────────────────────
@@ -593,6 +602,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                       !loadedImages.has(img.pageNumber) && 'opacity-0 absolute'
                     )}
                     priority={img.pageNumber <= 3}
+                    fetchPriority={img.pageNumber <= 3 ? "high" : "auto"}
                     onLoad={() => handleImageLoad(img.pageNumber)}
                     sizes="(max-width: 900px) 100vw, 900px"
                   />
@@ -674,6 +684,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                       !loadedImages.has(currentPage) && 'opacity-0 absolute'
                     )}
                     priority
+                    fetchPriority="high"
                     onLoad={() => handleImageLoad(currentPage)}
                     sizes="900px"
                   />

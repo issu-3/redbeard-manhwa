@@ -59,7 +59,22 @@ export function HomepageClient({
         
         if (sec.type === 'CONTINUE_READING') {
           if (!isLoggedIn) return null;
-          data = personalizedData?.continueReading || [];
+          if (!personalizedData) {
+            return (
+              <div key={sec.id} className="px-4 md:px-8 lg:px-16 xl:px-20 mb-10 md:mb-14">
+                <div className="mb-4 flex flex-col gap-2">
+                  <div className="h-8 w-48 rounded-lg bg-foreground/10 animate-pulse" />
+                  <div className="h-4 w-32 rounded-lg bg-foreground/5 animate-pulse" />
+                </div>
+                <div className="flex gap-4 overflow-hidden">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-28 w-[280px] shrink-0 rounded-xl bg-surface animate-pulse" />
+                  ))}
+                </div>
+              </div>
+            );
+          }
+          data = personalizedData.continueReading || [];
           if (data.length === 0) return null;
           return (
             <div key={sec.id} className="px-4 md:px-8 lg:px-16 xl:px-20">
@@ -69,7 +84,24 @@ export function HomepageClient({
         }
 
         if (sec.type === 'RECOMMENDED' && isLoggedIn && !sec.isManual) {
-          data = personalizedData?.recommended || sectionData[sec.type] || [];
+          if (!personalizedData) {
+            return (
+              <div key={sec.id} className="px-4 md:px-8 lg:px-16 xl:px-20 mb-10 md:mb-14">
+                <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-surface to-card p-6 md:p-10 shadow-lg">
+                  <div className="mb-4 flex flex-col gap-2">
+                    <div className="h-8 w-64 rounded-lg bg-foreground/10 animate-pulse" />
+                    <div className="h-4 w-48 rounded-lg bg-foreground/5 animate-pulse" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="aspect-[3/4] w-full rounded-2xl bg-surface animate-pulse" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          data = personalizedData.recommended || sectionData[sec.type] || [];
         }
 
         if (data.length === 0 && sec.type !== 'HERO_BANNER') return null;
