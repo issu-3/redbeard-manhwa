@@ -76,8 +76,7 @@ const getSeriesData = cache(async (slug: string) => {
 });
 
 // OPT-02: Cache recommendation queries — these change infrequently
-const getCachedRelatedSeries = unstable_cache(
-  async (seriesId: string, genreIds: string[]) => {
+const getCachedRelatedSeries = async (seriesId: string, genreIds: string[]) => {
     return prisma.series.findMany({
       where: { 
         id: { not: seriesId },
@@ -86,36 +85,25 @@ const getCachedRelatedSeries = unstable_cache(
       take: 6,
       select: SERIES_CARD_SELECT
     });
-  },
-  ['series-related'],
-  { tags: ['series'], revalidate: 600 }
-);
+};
 
-const getCachedTrendingSeries = unstable_cache(
-  async (excludeId: string) => {
+const getCachedTrendingSeries = async (excludeId: string) => {
     return prisma.series.findMany({
       where: { id: { not: excludeId } },
       orderBy: { totalViews: 'desc' },
       take: 6,
       select: SERIES_CARD_SELECT
     });
-  },
-  ['series-trending-sidebar'],
-  { tags: ['series'], revalidate: 600 }
-);
+};
 
-const getCachedRecentSeries = unstable_cache(
-  async (excludeId: string) => {
+const getCachedRecentSeries = async (excludeId: string) => {
     return prisma.series.findMany({
       where: { id: { not: excludeId } },
       orderBy: { updatedAt: 'desc' },
       take: 6,
       select: SERIES_CARD_SELECT
     });
-  },
-  ['series-recent-sidebar'],
-  { tags: ['series'], revalidate: 600 }
-);
+};
 
 function getSeoDescription(series: any, seo: Record<string, string>, siteTitle: string, typeLabel: string): string {
   let description = seo.description;

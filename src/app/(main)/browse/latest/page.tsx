@@ -16,18 +16,14 @@ export const metadata: Metadata = generateMetadata({
   url: `${APP_URL}/browse/latest`
 });
 
-const getCachedLatestSeries = unstable_cache(
-  async () => {
+const getCachedLatestSeries = async () => {
     return prisma.series.findMany({
       where: {},
       select: SERIES_CARD_SELECT,
       take: 40,
       orderBy: { updatedAt: 'desc' }
     });
-  },
-  ['browse-latest'],
-  { tags: ['series'], revalidate: 3600 }
-);
+};
 
 export default async function LatestPage() {
   const dbSeries = await getCachedLatestSeries();

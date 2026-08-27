@@ -7,8 +7,7 @@ import { unstable_cache } from 'next/cache';
 import type { HomepageSection } from '@prisma/client';
 import type { SeriesCardData } from '@/types';
 
-export const getCachedHomepageSections = unstable_cache(
-  async (): Promise<HomepageSection[]> => {
+export const getCachedHomepageSections = async (): Promise<HomepageSection[]> => {
     try {
       const sections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
       if (sections.length > 0) return sections;
@@ -23,13 +22,9 @@ export const getCachedHomepageSections = unstable_cache(
       { id: '5', type: 'RECOMMENDED', isActive: true, order: 4, limit: 10, isManual: false, title: 'Recommended For You', subtitle: 'Based on your reading history', showViewAll: true, manualSeriesId: [] as string[] },
       { id: '6', type: 'FEATURED', isActive: true, order: 5, limit: 10, isManual: false, title: '⭐ Featured Series', subtitle: 'Handpicked by our staff', showViewAll: true, manualSeriesId: [] as string[] }
     ];
-  },
-  ['homepage-sections'],
-  { tags: ['homepage', 'sections'], revalidate: 600 }
-);
+};
 
-export const getCachedHeroBanners = unstable_cache(
-  async () => {
+export const getCachedHeroBanners = async () => {
     try {
       const banners = await prisma.heroBanner.findMany({ orderBy: { order: 'asc' } });
       return banners.map(b => ({
@@ -48,14 +43,9 @@ export const getCachedHeroBanners = unstable_cache(
     } catch (e) {
       return [];
     }
-  },
-  ['homepage-hero-banners'],
-  { tags: ['homepage', 'banners'], revalidate: 600 }
-);
+};
 
 export const getCachedSectionSeries = async (type: string, limit: number, isManual: boolean, manualIds: string[]): Promise<any[]> => {
-  return unstable_cache(
-    async () => {
       try {
         const SAFE_SEARCH_FILTER = {};
 
@@ -155,10 +145,6 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
         console.warn(`Database error fetching section ${type}:`, e);
       }
       return [];
-    },
-    ['homepage-section-data', type, String(limit), String(isManual), manualIds.join(',')],
-    { tags: ['homepage', 'series', `section-${type}`], revalidate: 300 }
-  )();
 };
 
 export async function getPersonalizedSections(limit: number): Promise<{ continueReading: any[], recommended: SeriesCardData[] } | null> {

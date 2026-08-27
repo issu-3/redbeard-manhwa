@@ -4,17 +4,15 @@ import { APP_URL } from '@/lib/constants';
 import { unstable_cache } from 'next/cache';
 
 // OPT-11: Cache the heavy sitemap DB queries.
-const getCachedSitemapData = unstable_cache(
-  async () => {
+export const revalidate = 86400; // Cache sitemap for 24 hours at the Edge
+
+const getCachedSitemapData = async () => {
     const [series, genres] = await Promise.all([
         prisma.series.findMany({ select: { slug: true, updatedAt: true } }),
         prisma.genre.findMany({ select: { slug: true } }),
       ]);
     return { series, genres };
-  },
-  ['sitemap-data'],
-  { tags: ['series'], revalidate: 3600 }
-);
+};
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = APP_URL || 'http://localhost:3000';
