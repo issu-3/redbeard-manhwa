@@ -3,51 +3,30 @@ import { prisma } from '@/lib/prisma';
 import { APP_URL } from '@/lib/constants';
 import { unstable_cache } from 'next/cache';
 
-const CHAPTERS_PER_CHUNK = 30000;
-
-export async function generateSitemaps() {
-  const totalChapters = await prisma.chapter.count({
-    where: { isPublished: true },
-  });
-  
-  const numChunks = Math.ceil(totalChapters / CHAPTERS_PER_CHUNK);
-  if (numChunks === 0) return [{ id: 0 }];
-  
-  return Array.from({ length: numChunks }, (_, i) => ({ id: i }));
-}
-
 // OPT-11: Cache the heavy sitemap DB queries.
 const getCachedSitemapData = unstable_cache(
-  async (chunkId: number) => {
-    // Only chunk 0 gets the static + series + genres data
-    let series: any[] = [];
-    let genres: any[] = [];
-    
-    if (chunkId === 0) {
-      [series, genres] = await Promise.all([
+  async () => {
+    const [series, genres] = await Promise.all([
         prisma.series.findMany({ select: { slug: true, updatedAt: true } }),
         prisma.genre.findMany({ select: { slug: true } }),
       ]);
-    }
-
     return { series, genres };
   },
-  ['sitemap-data-chunked'],
+  ['sitemap-data'],
   { tags: ['series'], revalidate: 3600 }
 );
 
-export default async function sitemap({ id }: { id: number }): Promise<MetadataRoute.Sitemap> {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = APP_URL || 'http://localhost:3000';
 
   try {
-    const { series, genres } = await getCachedSitemapData(id);
+    const { series, genres } = await getCachedSitemapData();
 
     let staticRoutes: MetadataRoute.Sitemap = [];
     let seriesRoutes: MetadataRoute.Sitemap = [];
     let genreRoutes: MetadataRoute.Sitemap = [];
 
-    if (id === 0) {
-      staticRoutes = [
+    staticRoutes = [
         { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
         { url: `${baseUrl}/browse/trending`, lastModified: new Date(), changeFrequency: 'hourly', priority: 0.9 },
         { url: `${baseUrl}/browse/popular`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
@@ -72,11 +51,9 @@ export default async function sitemap({ id }: { id: number }): Promise<MetadataR
         changeFrequency: 'weekly' as const,
         priority: 0.7,
       }));
-    }
-
     return [...staticRoutes, ...seriesRoutes, ...genreRoutes];
   } catch (error) {
-    console.error(`Failed to generate dynamic sitemap routes for chunk ${id}:`, error);
+    console.error(`Failed to generate dynamic sitemap routes:`, error);
     return [];
   }
 }

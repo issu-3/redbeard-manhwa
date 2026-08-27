@@ -196,7 +196,7 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
     if (sec.type === 'CONTINUE_READING') {
       const mapped = data.map((h: any) => ({
         series: toSeriesCardData(h.series),
-        chapterNumber: h.chapter?.number || h.pageNumber || 1,
+        chapterNumber: h.chapter?.number ?? h.pageNumber ?? null,
         progress: 50
       }));
       return (

@@ -97,7 +97,8 @@ export async function generateMissingSeoData(forceRegenerate: boolean = false) {
     const autoTitle = `${c.series.title} - ${chLabel} | REDBEARD`;
     const autoDesc = `Download ${c.series.title} ${chLabel}. High quality series available at REDBEARD.`;
     const baseUrl = APP_URL.startsWith('http') ? APP_URL : 'https://redbeard-manhwa.vercel.app';
-    const autoCanonical = `${baseUrl}/series/${c.series.slug}/chapter/${c.slug}`;
+    const safeSlug = typeof c.slug === 'string' && c.slug.trim() ? c.slug : c.number != null ? String(c.number) : null;
+    const autoCanonical = safeSlug ? `${baseUrl}/series/${c.series.slug}/chapter/${safeSlug}` : `${baseUrl}/series/${c.series.slug}`;
     const autoImg = existingSeo.ogImage || c.series.bannerImage || c.series.coverImage || '/images/og-default.png';
 
     const newTitle = (!forceRegenerate && existingSeo.title && existingSeo.title.trim()) ? existingSeo.title.trim() : autoTitle;

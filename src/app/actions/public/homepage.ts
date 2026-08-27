@@ -190,8 +190,8 @@ export async function getPersonalizedSections(limit: number): Promise<{ continue
   
   const continueReading = history.map(h => ({
     series: toSeriesCardData(h.series as any),
-    chapterNumber: h.chapter?.number || h.pageNumber || 1,
-    chapterSlug: h.chapter?.slug || String(h.chapter?.number || 1),
+    chapterNumber: h.chapter?.number ?? h.pageNumber ?? null,
+    chapterSlug: h.chapter?.slug || null,
     chapterLabel: ['DOWNLOAD', 'EXTERNAL'].includes(h.chapter?.sourceType as string) ? h.chapter?.label : null,
     progress: Math.min(100, Math.max(5, (h.pageNumber / Math.max(1, h.chapter?.totalPages || 1)) * 100))
   }));

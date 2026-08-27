@@ -117,6 +117,29 @@ const getCachedRecentSeries = unstable_cache(
   { tags: ['series'], revalidate: 600 }
 );
 
+function getSeoDescription(series: any, seo: Record<string, string>, siteTitle: string, typeLabel: string): string {
+  let description = seo.description;
+  if (description && description.trim()) return description;
+
+  const prefix = `Read ${series.title} ${typeLabel} in Hindi on ${siteTitle}.`;
+  let contentText = series.synopsis?.trim() || series.description?.trim() || '';
+  contentText = contentText.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
+  
+  if (!contentText) return prefix;
+
+  const combined = `${prefix} ${contentText}`;
+  if (combined.length <= 160) return combined;
+
+  let truncated = combined.substring(0, 157);
+  const lastPeriod = truncated.lastIndexOf('.');
+  if (lastPeriod > prefix.length) {
+    return truncated.substring(0, lastPeriod + 1);
+  } else {
+    const lastSpace = truncated.lastIndexOf(' ');
+    return (lastSpace > prefix.length ? truncated.substring(0, lastSpace) : truncated) + '...';
+  }
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -130,9 +153,10 @@ export async function generateMetadata({
 
   const seo = (series.seo as Record<string, string>) || {};
   const siteTitle = settings.seo_site_title || 'REDBEARD';
+  const typeLabel = getContentTypeLabel((series as any).type);
   
-  const title = seo.title || `${series.title} ${getContentTypeLabel((series as any).type)} - Download | ${siteTitle}`;
-  const description = seo.description || series.synopsis || series.description.slice(0, 160);
+  const title = seo.title || `${series.title} - Read ${typeLabel} in Hindi | ${siteTitle}`;
+  const description = getSeoDescription(series, seo, siteTitle, typeLabel);
   
   const keywords = seo.keywords 
     ? seo.keywords.split(',').map(k => k.trim()) 
@@ -141,10 +165,10 @@ export async function generateMetadata({
         ...series.tags.map(t => t.name),
         ...series.authors.map(a => a.name),
         series.title,
-        `download ${getContentTypeLabel((series as any).type).toLowerCase()}`
+        `read ${typeLabel.toLowerCase()} hindi`
       ];
 
-  const robots = seo.robots || 'index, follow';
+  const robots = seo.robots || { index: true, follow: true };
   const canonical = seo.canonicalUrl || `${APP_URL}/series/${slug}`;
   const ogImage = seo.ogImage || series.coverImage;
   const twitterImage = seo.twitterImage || series.coverImage;
@@ -225,15 +249,20 @@ export default async function SeriesDetailPage({
   const recentSeries = recentSeriesRaw.map(s => toSeriesCardData(s as any));
 
   const siteUrl = APP_URL || 'http://localhost:3000';
+  const siteTitle = settings.seo_site_title || 'REDBEARD';
   
   const isLightNovel = series.type === 'LIGHT_NOVEL';
   const isAdult = (series as any).isNSFW || series.type === 'PORNHWA' || series.type === 'DOUJINSHI';
+  
+  const seo = (series.seo as Record<string, string>) || {};
+  const typeLabel = getContentTypeLabel((series as any).type);
+  const jsonLdDescription = getSeoDescription(series, seo, siteTitle, typeLabel);
   
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': isLightNovel ? 'Book' : 'ComicSeries',
     name: series.title,
-    description: series.synopsis || series.description,
+    description: jsonLdDescription,
     image: series.coverImage,
     url: `${siteUrl}/series/${slug}`,
     genre: [getContentTypeLabel(series.type as any), ...series.genres.map((g: { name: string }) => g.name)],
