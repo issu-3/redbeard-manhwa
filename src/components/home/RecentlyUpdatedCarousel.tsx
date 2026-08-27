@@ -20,10 +20,13 @@ export function RecentlyUpdatedCarousel({ updates }: { updates: RecentUpdate[] }
 
   return (
     <Carousel title="🆕 Recently Updated" subtitle="Fresh chapters just dropped" href="/browse/latest">
-      {updates.map((update, i) => (
+      {updates.map((update, i) => {
+        const safeSlug = typeof update.chapterSlug === 'string' && update.chapterSlug.trim() ? update.chapterSlug : update.chapterNumber != null ? String(update.chapterNumber) : null;
+        if (!safeSlug) return null;
+        return (
         <div key={`${update.series.id}-${update.chapterNumber}`} className="w-[160px] shrink-0 md:w-[190px]">
           <Link 
-            href={`/series/${update.series.slug}/chapter/${update.chapterSlug || update.chapterNumber}`}
+            href={`/series/${update.series.slug}/chapter/${safeSlug}`}
             className="group block overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/40 hover:bg-card-hover"
           >
             <div className="relative aspect-[3/4] w-full overflow-hidden bg-surface">
@@ -56,7 +59,8 @@ export function RecentlyUpdatedCarousel({ updates }: { updates: RecentUpdate[] }
             </div>
           </Link>
         </div>
-      ))}
+        );
+      })}
     </Carousel>
   );
 }

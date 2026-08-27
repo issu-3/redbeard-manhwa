@@ -19,10 +19,13 @@ export function ContinueReadingCarousel({ items }: { items: ContinueReadingItem[
 
   return (
     <Carousel title="📚 Continue Reading" subtitle="Pick up where you left off" href="/user/history">
-      {items.map((item, i) => (
+      {items.map((item, i) => {
+        const safeSlug = typeof item.chapterSlug === 'string' && item.chapterSlug.trim() ? item.chapterSlug : item.chapterNumber != null ? String(item.chapterNumber) : null;
+        if (!safeSlug) return null;
+        return (
         <div key={item.series.id} className="w-[180px] shrink-0 md:w-[220px]">
           <Link 
-            href={`/series/${item.series.slug}/chapter/${item.chapterSlug || item.chapterNumber}`}
+            href={`/series/${item.series.slug}/chapter/${safeSlug}`}
             className="group block overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/40 hover:bg-card-hover"
           >
             <div className="flex p-3 gap-3">
@@ -71,7 +74,8 @@ export function ContinueReadingCarousel({ items }: { items: ContinueReadingItem[
             </div>
           </Link>
         </div>
-      ))}
+        );
+      })}
     </Carousel>
   );
 }

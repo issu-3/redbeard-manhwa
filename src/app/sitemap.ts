@@ -30,25 +30,17 @@ const getCachedSitemapData = unstable_cache(
       ]);
     }
 
-    const chapters = await prisma.chapter.findMany({ 
-      where: { isPublished: true },
-      select: { slug: true, updatedAt: true, series: { select: { slug: true } } },
-      skip: chunkId * CHAPTERS_PER_CHUNK,
-      take: CHAPTERS_PER_CHUNK,
-      orderBy: { updatedAt: 'desc' }
-    });
-
-    return { series, genres, chapters };
+    return { series, genres };
   },
   ['sitemap-data-chunked'],
-  { tags: ['series', 'chapters'], revalidate: 3600 }
+  { tags: ['series'], revalidate: 3600 }
 );
 
 export default async function sitemap({ id }: { id: number }): Promise<MetadataRoute.Sitemap> {
   const baseUrl = APP_URL || 'http://localhost:3000';
 
   try {
-    const { series, genres, chapters } = await getCachedSitemapData(id);
+    const { series, genres } = await getCachedSitemapData(id);
 
     let staticRoutes: MetadataRoute.Sitemap = [];
     let seriesRoutes: MetadataRoute.Sitemap = [];
@@ -82,14 +74,7 @@ export default async function sitemap({ id }: { id: number }): Promise<MetadataR
       }));
     }
 
-    const chapterRoutes = chapters.map((c) => ({
-      url: `${baseUrl}/series/${c.series.slug}/chapter/${c.slug}`,
-      lastModified: c.updatedAt,
-      changeFrequency: 'never' as const,
-      priority: 0.6,
-    }));
-
-    return [...staticRoutes, ...seriesRoutes, ...genreRoutes, ...chapterRoutes];
+    return [...staticRoutes, ...seriesRoutes, ...genreRoutes];
   } catch (error) {
     console.error(`Failed to generate dynamic sitemap routes for chunk ${id}:`, error);
     return [];

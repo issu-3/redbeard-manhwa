@@ -1,6 +1,6 @@
 export const revalidate = 3600;
 import { Metadata } from 'next';
-import Link from 'next/link';
+// Removed Link import since it's unused
 import { HomepageClient } from './homepage-client';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdRenderer } from '@/components/ads/AdRenderer';

@@ -188,15 +188,18 @@ export async function generateMetadata({
   const seo = chapter.seo || {};
   const _siteTitle = settings.seo_site_title || 'REDBEARD';
   
-  const defaultTitle = `${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`} - Download | ${settings.siteName || 'REDBEARD'}`;
+  const defaultTitle = `${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} - Download | ${settings.siteName || 'REDBEARD'}`;
   const defaultDesc = `Download ${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} on ${settings.siteName || 'REDBEARD'}. High quality download experience.`;
-  const defaultUrl = `${APP_URL}/series/${slug}/chapter/${chapterSlug}`;
+  const safeSlug = typeof chapter.slug === 'string' && chapter.slug.trim() ? chapter.slug : chapter.number != null ? String(chapter.number) : null;
+  
+  if (!safeSlug) return { title: 'Chapter Not Found' };
+  
+  const defaultUrl = `${APP_URL}/series/${slug}/chapter/${safeSlug}`;
   const defaultImage = chapter.images.length > 0 ? chapter.images[0].imageUrl : undefined;
 
   const title = seo.title || defaultTitle;
   const description = seo.description || defaultDesc;
   const canonical = seo.canonicalUrl || defaultUrl;
-  const robots = seo.robots || 'index, follow';
   const ogImage = seo.ogImage || defaultImage;
   const twitterImage = seo.twitterImage || defaultImage;
   const keywords = seo.keywords ? seo.keywords.split(',').map(k => k.trim()) : undefined;
@@ -205,7 +208,10 @@ export async function generateMetadata({
     title,
     description,
     keywords,
-    robots,
+    robots: {
+      index: false,
+      follow: true,
+    },
     openGraph: {
       title,
       description,
@@ -239,8 +245,13 @@ export default async function ChapterPage({
     notFound();
   }
 
-  if (chapter.slug !== chapterSlug) {
-    redirect(`/series/${slug}/chapter/${chapter.slug}`);
+  const safeSlug = typeof chapter.slug === 'string' && chapter.slug.trim() ? chapter.slug : chapter.number != null ? String(chapter.number) : null;
+  if (!safeSlug) {
+    notFound();
+  }
+
+  if (safeSlug !== chapterSlug) {
+    redirect(`/series/${slug}/chapter/${safeSlug}`);
   }
 
   // OPT-06: Call auth() once and reuse throughout the function
@@ -317,7 +328,7 @@ export default async function ChapterPage({
   const settings = await getCachedSettings();
 
   const siteUrl = APP_URL || 'http://localhost:3000';
-  const chapterUrl = `${siteUrl}/series/${slug}/chapter/${chapterSlug}`;
+  const chapterUrl = `${siteUrl}/series/${slug}/chapter/${safeSlug}`;
 
   const breadcrumbLd = {
     '@context': 'https://schema.org',

@@ -192,9 +192,13 @@ export default async function ProfilePage() {
             
             {recentlyRead.length > 0 ? (
               <div className="space-y-4">
-                {recentlyRead.map((item) => (
+                {recentlyRead.map((item) => {
+                  const safeSlug = typeof item.chapter.slug === 'string' && item.chapter.slug.trim() ? item.chapter.slug : item.chapter.number != null ? String(item.chapter.number) : null;
+                  if (!safeSlug && item.chapter.sourceType !== 'DOWNLOAD' && item.chapter.sourceType !== 'EXTERNAL') return null;
+                  const href = item.chapter.sourceType === 'DOWNLOAD' && item.chapter.downloadUrl ? item.chapter.downloadUrl : `/series/${item.series.slug}/chapter/${safeSlug}`;
+                  return (
                   <Link 
-                    href={item.chapter.sourceType === 'DOWNLOAD' && item.chapter.downloadUrl ? item.chapter.downloadUrl : `/series/${item.series.slug}/chapter/${item.chapter.slug || item.chapter.number || 1}`} 
+                    href={href}
                     target={['DOWNLOAD', 'EXTERNAL'].includes(item.chapter.sourceType as string) ? '_blank' : undefined}
                     rel={['DOWNLOAD', 'EXTERNAL'].includes(item.chapter.sourceType as string) ? 'noopener noreferrer' : undefined}
                     key={item.id}
@@ -219,7 +223,8 @@ export default async function ProfilePage() {
                       </div>
                     </div>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">

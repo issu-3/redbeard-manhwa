@@ -49,10 +49,14 @@ export default async function HistoryPage() {
 
       {history.length > 0 ? (
         <div className="flex flex-col gap-4">
-          {history.map((item) => (
+          {history.map((item) => {
+            const safeSlug = typeof item.chapter.slug === 'string' && item.chapter.slug.trim() ? item.chapter.slug : item.chapter.number != null ? String(item.chapter.number) : null;
+            if (!safeSlug && item.chapter.sourceType !== 'DOWNLOAD' && item.chapter.sourceType !== 'EXTERNAL') return null;
+            const href = item.chapter.sourceType === 'DOWNLOAD' && item.chapter.downloadUrl ? item.chapter.downloadUrl : `/series/${item.series.slug}/chapter/${safeSlug}`;
+            return (
             <Link 
               key={item.id} 
-              href={item.chapter.sourceType === 'DOWNLOAD' && item.chapter.downloadUrl ? item.chapter.downloadUrl : `/series/${item.series.slug}/chapter/${item.chapter.slug || item.chapter.number || 1}`}
+              href={href}
               target={['DOWNLOAD', 'EXTERNAL'].includes(item.chapter.sourceType as string) ? '_blank' : undefined}
               rel={['DOWNLOAD', 'EXTERNAL'].includes(item.chapter.sourceType as string) ? 'noopener noreferrer' : undefined}
               className="group flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors"
@@ -93,7 +97,8 @@ export default async function HistoryPage() {
                 </div>
               </div>
             </Link>
-          ))}
+          );
+          })}
         </div>
       ) : (
         <div className="pt-12 border border-dashed rounded-xl bg-card border-border">

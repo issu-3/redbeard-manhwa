@@ -110,19 +110,20 @@ export function ChapterListSection({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence initial={false}>
           {filteredChapters.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="col-span-full py-16 text-center text-text-muted bg-card/30 rounded-2xl border border-border/50"
+              exit={{ opacity: 0 }}
+              className="text-center py-12 text-text-muted"
             >
-              <Search className="h-8 w-8 mx-auto mb-3 opacity-50" />
-              <p>No chapters match your search.</p>
+              No chapters found matching your search.
             </motion.div>
           ) : (
             filteredChapters.slice(0, displayLimit).map((chapter, index) => {
               const isLatest = chapter.number === latestChapterNumber;
+              const safeSlug = typeof chapter.slug === 'string' && chapter.slug.trim() ? chapter.slug : chapter.number != null ? String(chapter.number) : null;
               
               return (
                 <motion.div
@@ -192,9 +193,9 @@ export function ChapterListSection({
                     </div>
 
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
-                      {chapter.totalPages && chapter.totalPages > 0 ? (
+                      {chapter.totalPages && chapter.totalPages > 0 && safeSlug ? (
                         <Link
-                          href={`/series/${seriesSlug}/chapter/${chapter.slug}`}
+                          href={`/series/${seriesSlug}/chapter/${safeSlug}`}
                           className="flex-1 flex items-center justify-center py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-md text-xs font-bold transition-colors"
                         >
                           READ

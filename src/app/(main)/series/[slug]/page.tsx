@@ -283,8 +283,9 @@ export default async function SeriesDetailPage({
   };
 
   const firstChapter = series.chapters.length > 0 ? series.chapters[0] : null;
+  const safeFirstSlug = firstChapter ? (typeof firstChapter.slug === 'string' && firstChapter.slug.trim() ? firstChapter.slug : firstChapter.number != null ? String(firstChapter.number) : null) : null;
   const firstChapterLink = firstChapter 
-    ? (firstChapter.sourceType === 'DOWNLOAD' && firstChapter.downloadUrl ? `/api/chapter/${firstChapter.id}/download` : `/series/${series.slug}/chapter/${firstChapter.slug || firstChapter.number || 1}`) 
+    ? (firstChapter.sourceType === 'DOWNLOAD' && firstChapter.downloadUrl ? `/api/chapter/${firstChapter.id}/download` : safeFirstSlug ? `/series/${series.slug}/chapter/${safeFirstSlug}` : '#') 
     : '#';
 
   const chaptersList = series.chapters.map((c: any) => ({

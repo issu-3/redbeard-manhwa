@@ -58,6 +58,13 @@ interface ChapterReaderProps {
 
 import { saveUserPreferences } from '@/app/actions/preferences';
 
+function getSafeSlug(c?: { slug?: string | null; number?: number | null } | null) {
+  if (!c) return null;
+  if (typeof c.slug === 'string' && c.slug.trim()) return c.slug;
+  if (c.number != null) return String(c.number);
+  return null;
+}
+
 export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adSlotMiddle, adSlotBottom, userPreferences, defaultReadingMode, youtubeUrl }: ChapterReaderProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -111,7 +118,11 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
     setMounted(true);
   }, []);
 
-  // ─── Initialize ────────────────────────────────────────────
+  // Compute safe slugs for adjacent chapters
+  const nextSlug = getSafeSlug(chapter.nextChapter);
+  const prevSlug = getSafeSlug(chapter.prevChapter);
+
+  // ─── Initialization ────────────────────────────────────────────
 
   useEffect(() => {
     setTotalPages(chapter.images.length);
@@ -218,9 +229,9 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
           // Check if reached bottom
           const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
           if (scrollTop + clientHeight >= scrollHeight - 10) {
-            if (autoNextChapter && chapter.nextChapter) {
+            if (autoNextChapter && nextSlug) {
               router.push(
-                `/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug || chapter.nextChapter.number}`
+                `/series/${chapter.seriesSlug}/chapter/${nextSlug}`
               );
             }
           }
@@ -233,7 +244,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
         clearInterval(autoScrollIntervalRef.current);
       }
     };
-  }, [autoScroll, autoScrollSpeed, mode, autoNextChapter, chapter.nextChapter, chapter.seriesSlug, router]);
+  }, [autoScroll, autoScrollSpeed, mode, autoNextChapter, nextSlug, chapter.seriesSlug, router]);
 
   // ─── Scroll-based page tracking ───────────────────────────
 
@@ -280,21 +291,21 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
     if (mode === 'singlePage' || mode === 'horizontal') {
       if (currentPage < chapter.images.length) {
         nextPage();
-      } else if (autoNextChapter && chapter.nextChapter) {
-        router.push(`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug || chapter.nextChapter.number}`);
+      } else if (autoNextChapter && nextSlug) {
+        router.push(`/series/${chapter.seriesSlug}/chapter/${nextSlug}`);
       }
     }
-  }, [mode, currentPage, chapter.images.length, chapter.nextChapter, chapter.seriesSlug, autoNextChapter, nextPage, router]);
+  }, [mode, currentPage, chapter.images.length, nextSlug, chapter.seriesSlug, autoNextChapter, nextPage, router]);
 
   const goPrev = useCallback(() => {
     if (mode === 'singlePage' || mode === 'horizontal') {
       if (currentPage > 1) {
         prevPage();
-      } else if (chapter.prevChapter) {
-        router.push(`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug || chapter.prevChapter.number}`);
+      } else if (prevSlug) {
+        router.push(`/series/${chapter.seriesSlug}/chapter/${prevSlug}`);
       }
     }
-  }, [mode, currentPage, chapter.prevChapter, chapter.seriesSlug, prevPage, router]);
+  }, [mode, currentPage, prevSlug, chapter.seriesSlug, prevPage, router]);
 
   // ─── Keyboard Shortcuts ────────────────────────────────────
 
@@ -499,9 +510,9 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                 Download Now
               </a>
               <div className="mt-8 pt-8 border-t border-border flex justify-between items-center">
-                {chapter.prevChapter ? (
+                {prevSlug ? (
                   <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug}`}
+                    href={`/series/${chapter.seriesSlug}/chapter/${prevSlug}`}
                     onClick={(e) => e.stopPropagation()}
                     className="text-sm font-medium text-text-muted hover:text-primary transition-colors flex items-center gap-1"
                   >
@@ -509,9 +520,9 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                     Previous
                   </Link>
                 ) : <div />}
-                {chapter.nextChapter ? (
+                {nextSlug ? (
                   <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug}`}
+                    href={`/series/${chapter.seriesSlug}/chapter/${nextSlug}`}
                     onClick={(e) => e.stopPropagation()}
                     className="text-sm font-medium text-text-muted hover:text-primary transition-colors flex items-center gap-1"
                   >
@@ -606,9 +617,9 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                   End of {chapter.number !== null ? `Chapter ${chapter.number}` : (chapter.title || 'Oneshot')}
                 </p>
                 <div className="flex items-center justify-center gap-4">
-                  {chapter.prevChapter && (
+                  {prevSlug && (
                     <Link
-                      href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug}`}
+                      href={`/series/${chapter.seriesSlug}/chapter/${prevSlug}`}
                       className="flex items-center gap-2 rounded-xl bg-foreground/5 px-6 py-3 text-sm font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -616,9 +627,9 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                       Previous
                     </Link>
                   )}
-                  {chapter.nextChapter && (
+                  {nextSlug && (
                     <Link
-                      href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug}`}
+                      href={`/series/${chapter.seriesSlug}/chapter/${nextSlug}`}
                       className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white hover:bg-primary-hover transition-all"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -732,14 +743,14 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
             <div className="flex items-center justify-between px-4 py-3">
               {/* Prev chapter */}
               <div className="flex items-center gap-2">
-                {chapter.prevChapter ? (
+                {prevSlug ? (
                   <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.prevChapter.slug}`}
+                    href={`/series/${chapter.seriesSlug}/chapter/${prevSlug}`}
                     className="flex items-center gap-1.5 rounded-lg bg-foreground/5 px-3 py-2 text-xs font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Ch. {chapter.prevChapter.number}</span>
+                    <span className="hidden sm:inline">Ch. {chapter.prevChapter?.number}</span>
                     <span className="sm:hidden">Prev</span>
                   </Link>
                 ) : (
@@ -758,13 +769,13 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
 
               {/* Next chapter */}
               <div className="flex items-center gap-2">
-                {chapter.nextChapter ? (
+                {nextSlug ? (
                   <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${chapter.nextChapter.slug}`}
+                    href={`/series/${chapter.seriesSlug}/chapter/${nextSlug}`}
                     className="flex items-center gap-1.5 rounded-lg bg-foreground/5 px-3 py-2 text-xs font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="hidden sm:inline">Ch. {chapter.nextChapter.number}</span>
+                    <span className="hidden sm:inline">Ch. {chapter.nextChapter?.number}</span>
                     <span className="sm:hidden">Next</span>
                     <ChevronRight className="h-3.5 w-3.5" />
                   </Link>

@@ -34,8 +34,10 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
     ? chapters.find(c => c.number === continueReadingChapter || c.label === String(continueReadingChapter))
     : null;
 
+  const safeContinueSlug = continueChapterObj ? (typeof continueChapterObj.slug === 'string' && continueChapterObj.slug.trim() ? continueChapterObj.slug : continueChapterObj.number != null ? String(continueChapterObj.number) : null) : null;
+
   const continueLink = continueChapterObj
-    ? (continueChapterObj.sourceType === 'DOWNLOAD' && continueChapterObj.downloadUrl ? `/api/chapter/${continueChapterObj.id}/download` : `/series/${seriesSlug}/chapter/${continueChapterObj.slug || continueChapterObj.number || continueChapterObj.label || 1}`)
+    ? (continueChapterObj.sourceType === 'DOWNLOAD' && continueChapterObj.downloadUrl ? `/api/chapter/${continueChapterObj.id}/download` : safeContinueSlug ? `/series/${seriesSlug}/chapter/${safeContinueSlug}` : '#')
     : firstChapterLink;
 
   const hasHistory = !!continueChapterObj;
@@ -44,12 +46,14 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
     ? continueChapterObj.sourceType === 'DOWNLOAD'
     : firstChapterLink.includes('/api/chapter/');
 
+  const targetLink = hasHistory ? continueLink : firstChapterLink;
+
   if (isMobile) {
     return (
       <>
-        {firstChapterLink !== '#' && (
+        {targetLink !== '#' && (
           <Link
-            href={hasHistory ? continueLink : firstChapterLink}
+            href={targetLink}
             target={isExternal ? '_blank' : undefined}
             rel={isExternal ? 'noopener noreferrer' : undefined}
             className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 font-bold text-white active:scale-95 transition-transform shadow-lg shadow-primary/25"
@@ -71,9 +75,9 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
 
   return (
     <>
-      {firstChapterLink !== '#' && (
+      {targetLink !== '#' && (
         <Link
-          href={hasHistory ? continueLink : firstChapterLink}
+          href={targetLink}
           target={isExternal ? '_blank' : undefined}
           rel={isExternal ? 'noopener noreferrer' : undefined}
           className="flex items-center gap-2 rounded-xl bg-primary px-10 py-4 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
