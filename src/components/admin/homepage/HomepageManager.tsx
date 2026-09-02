@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { HeroSlider } from '@/components/shared/HeroSlider';
 import { TrendingCarousel } from '@/components/home/TrendingCarousel';
 import { RecentlyUpdatedCarousel } from '@/components/home/RecentlyUpdatedCarousel';
-import { ContinueReadingCarousel } from '@/components/home/ContinueReadingCarousel';
+import { PopularCarousel } from '@/components/home/PopularCarousel';
 import { SeriesCard } from '@/components/shared/SeriesCard';
 import { Carousel } from '@/components/shared/Carousel';
 import { toSeriesCardData } from '@/lib/data-mappers';
@@ -208,15 +208,11 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
       );
     }
 
-    if (sec.type === 'CONTINUE_READING') {
-      const mapped = data.map((h: any) => ({
-        series: toSeriesCardData(h.series),
-        chapterNumber: h.chapter?.number ?? h.pageNumber ?? null,
-        progress: 50
-      }));
+    if (sec.type === 'POPULAR') {
+      const mapped = data.map(toSeriesCardData);
       return (
         <div className="pointer-events-none p-4">
-          <ContinueReadingCarousel items={mapped} />
+          <PopularCarousel series={mapped} />
         </div>
       );
     }

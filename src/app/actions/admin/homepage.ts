@@ -6,7 +6,7 @@ import { auth } from '@/auth';
 
 const DEFAULT_SECTIONS = [
   { type: 'HERO_BANNER', isActive: true, order: 0, limit: 10, isManual: false, title: null, subtitle: null, showViewAll: false },
-  { type: 'CONTINUE_READING', isActive: true, order: 1, limit: 10, isManual: false, title: '📚 Continue Reading', subtitle: 'Pick up where you left off', showViewAll: true },
+  { type: 'POPULAR', isActive: true, order: 1, limit: 10, isManual: false, title: '🔥 Most Popular Series All Time', subtitle: 'Top-rated and most-read series on REDBEARD', showViewAll: true },
   { type: 'TRENDING', isActive: true, order: 2, limit: 10, isManual: false, title: '🔥 Trending', subtitle: 'Top 10 most viewed this week', showViewAll: true },
   { type: 'RECENTLY_UPDATED', isActive: true, order: 3, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true },
   { type: 'RECOMMENDED', isActive: true, order: 4, limit: 10, isManual: false, title: 'Recommended For You', subtitle: 'Based on your reading history', showViewAll: true },
@@ -72,10 +72,20 @@ export async function reorderBanners(orderedIds: string[]) {
 export async function getSections() {
   await checkAdmin();
   
+  // In-place migration from CONTINUE_READING to POPULAR
+  await prisma.homepageSection.updateMany({
+    where: { type: 'CONTINUE_READING' },
+    data: { 
+      type: 'POPULAR', 
+      title: '🔥 Most Popular Series All Time', 
+      subtitle: 'Top-rated and most-read series on REDBEARD' 
+    }
+  });
+
   let sections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
   
   // Seed if empty or if it contains old unsupported sections (like LATEST instead of RECENTLY_UPDATED)
-  const hasOldSections = sections.some(s => ['LATEST', 'POPULAR', 'HERO'].includes(s.type));
+  const hasOldSections = sections.some(s => ['LATEST', 'HERO'].includes(s.type));
   
   if (sections.length === 0 || hasOldSections) {
     if (hasOldSections) {

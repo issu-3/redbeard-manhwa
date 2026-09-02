@@ -16,7 +16,7 @@ export const getCachedHomepageSections = async (): Promise<HomepageSection[]> =>
     }
     return [
       { id: '1', type: 'HERO_BANNER', isActive: true, order: 0, limit: 10, isManual: false, title: null, subtitle: null, showViewAll: false, manualSeriesId: [] as string[] },
-      { id: '2', type: 'CONTINUE_READING', isActive: true, order: 1, limit: 10, isManual: false, title: '📚 Continue Reading', subtitle: 'Pick up where you left off', showViewAll: true, manualSeriesId: [] as string[] },
+      { id: '2', type: 'POPULAR', isActive: true, order: 1, limit: 10, isManual: false, title: '🔥 Most Popular Series All Time', subtitle: 'Top-rated and most-read series on REDBEARD', showViewAll: true, manualSeriesId: [] as string[] },
       { id: '3', type: 'TRENDING', isActive: true, order: 2, limit: 10, isManual: false, title: '🔥 Trending', subtitle: 'Top 10 most viewed this week', showViewAll: true, manualSeriesId: [] as string[] },
       { id: '4', type: 'RECENTLY_UPDATED', isActive: true, order: 3, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true, manualSeriesId: [] as string[] },
       { id: '5', type: 'RECOMMENDED', isActive: true, order: 4, limit: 10, isManual: false, title: 'Recommended For You', subtitle: 'Based on your reading history', showViewAll: true, manualSeriesId: [] as string[] },
@@ -64,6 +64,16 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
           });
           const seriesMap = new Map(seriesList.map(s => [s.id, s]));
           return manualIds.map(id => seriesMap.get(id)).filter(Boolean).map(s => toSeriesCardData(s as any));
+        }
+
+        if (type === 'POPULAR') {
+          const automated = await prisma.series.findMany({ 
+            where: { ...SAFE_SEARCH_FILTER },
+            orderBy: [{ totalViews: 'desc' }, { createdAt: 'desc' }], 
+            select: SERIES_CARD_SELECT, 
+            take: limit 
+          });
+          return automated.map(toSeriesCardData as any);
         }
 
         if (type === 'TRENDING') {
@@ -157,40 +167,10 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
       return [];
 };
 
-export async function getPersonalizedSections(limit: number): Promise<{ continueReading: any[], recommended: SeriesCardData[] } | null> {
+export async function getPersonalizedSections(limit: number): Promise<{ recommended: SeriesCardData[] } | null> {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return null;
-
-  // fetch reading history for continue reading using optimized select and index
-  const history = await prisma.readingHistory.findMany({
-    where: { userId },
-    orderBy: { updatedAt: 'desc' },
-    distinct: ['seriesId'],
-    take: limit,
-    select: {
-      pageNumber: true,
-      updatedAt: true,
-      series: { select: SERIES_CARD_SELECT },
-      chapter: {
-        select: {
-          number: true,
-          slug: true,
-          label: true,
-          totalPages: true,
-          sourceType: true
-        }
-      }
-    }
-  });
-  
-  const continueReading = history.map(h => ({
-    series: toSeriesCardData(h.series as any),
-    chapterNumber: h.chapter?.number ?? h.pageNumber ?? null,
-    chapterSlug: h.chapter?.slug || null,
-    chapterLabel: ['DOWNLOAD', 'EXTERNAL'].includes(h.chapter?.sourceType as string) ? h.chapter?.label : null,
-    progress: Math.min(100, Math.max(5, (h.pageNumber / Math.max(1, h.chapter?.totalPages || 1)) * 100))
-  }));
 
   let recommended: SeriesCardData[] = [];
   // OPT-16: Combine into a single query to reduce DB roundtrips and limit to 100
@@ -221,5 +201,5 @@ export async function getPersonalizedSections(limit: number): Promise<{ continue
     recommended = recommendedSeries.map(toSeriesCardData as any);
   }
 
-  return { continueReading, recommended };
+  return { recommended };
 }

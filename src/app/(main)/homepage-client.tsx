@@ -8,7 +8,7 @@ import { SeriesCard } from '@/components/shared/SeriesCard';
 import { Carousel } from '@/components/shared/Carousel';
 import { TrendingCarousel } from '@/components/home/TrendingCarousel';
 import { RecentlyUpdatedCarousel } from '@/components/home/RecentlyUpdatedCarousel';
-import { ContinueReadingCarousel } from '@/components/home/ContinueReadingCarousel';
+import { PopularCarousel } from '@/components/home/PopularCarousel';
 import { NewReleasesCarousel } from '@/components/home/NewReleasesCarousel';
 
 import type { HomepageSection } from '@prisma/client';
@@ -38,14 +38,12 @@ export function HomepageClient({
   const { data: _session, status } = useSession();
   const isLoggedIn = status === 'authenticated';
   
-  const [personalizedData, setPersonalizedData] = useState<{ continueReading: any[], recommended: SeriesCardData[] } | null>(null);
+  const [personalizedData, setPersonalizedData] = useState<{ recommended: SeriesCardData[] } | null>(null);
 
   useEffect(() => {
     if (isLoggedIn) {
-      const crSection = sections.find(s => s.type === 'CONTINUE_READING');
-      const recSection = sections.find(s => s.type === 'RECOMMENDED');
-      
-      const limit = Math.max(crSection?.limit || 10, recSection?.limit || 10);
+      const recSection = sections.find((s: any) => s.type === 'RECOMMENDED');
+      const limit = recSection?.limit || 10;
       getPersonalizedSections(limit).then(data => {
         if (data) setPersonalizedData(data);
       });
@@ -57,28 +55,10 @@ export function HomepageClient({
       {sections.map(sec => {
         let data = sectionData[sec.type] || [];
         
-        if (sec.type === 'CONTINUE_READING') {
-          if (!isLoggedIn) return null;
-          if (!personalizedData) {
-            return (
-              <div key={sec.id} className="px-4 md:px-8 lg:px-16 xl:px-20">
-                <div className="mb-4 flex flex-col gap-2">
-                  <div className="h-8 w-48 rounded-lg bg-foreground/10 animate-pulse" />
-                  <div className="h-4 w-32 rounded-lg bg-foreground/5 animate-pulse" />
-                </div>
-                <div className="flex gap-4 overflow-hidden">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-28 w-[280px] shrink-0 rounded-xl bg-surface animate-pulse" />
-                  ))}
-                </div>
-              </div>
-            );
-          }
-          data = personalizedData.continueReading || [];
-          if (data.length === 0) return null;
+        if (sec.type === 'POPULAR') {
           return (
             <div key={sec.id} className="px-4 md:px-8 lg:px-16 xl:px-20">
-              <ContinueReadingCarousel items={data} />
+              <PopularCarousel series={data} />
             </div>
           );
         }
