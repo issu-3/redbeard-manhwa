@@ -24,7 +24,7 @@ export function RecentlyUpdatedCarousel({ updates }: { updates: RecentUpdate[] }
         const safeSlug = typeof update.chapterSlug === 'string' && update.chapterSlug.trim() ? update.chapterSlug : update.chapterNumber != null ? String(update.chapterNumber) : null;
         if (!safeSlug) return null;
         return (
-        <div key={`${update.series.id}-${update.chapterNumber}`} className="w-[160px] shrink-0 md:w-[190px]">
+        <div key={`${update.series.id}-${update.chapterNumber}`} className="w-[155px] shrink-0 md:w-[200px]">
           <Link 
             href={`/series/${update.series.slug}/chapter/${safeSlug}`}
             className="group block overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/40 hover:bg-card-hover"
@@ -34,7 +34,7 @@ export function RecentlyUpdatedCarousel({ updates }: { updates: RecentUpdate[] }
                 src={update.series.coverImage}
                 alt={update.series.title}
                 fill
-                sizes="(max-width: 768px) 160px, 190px"
+                sizes="(max-width: 768px) 155px, 200px"
                 className="object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-60 transition-opacity group-hover:opacity-80" />

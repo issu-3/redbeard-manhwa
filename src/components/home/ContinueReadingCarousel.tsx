@@ -23,7 +23,7 @@ export function ContinueReadingCarousel({ items }: { items: ContinueReadingItem[
         const safeSlug = typeof item.chapterSlug === 'string' && item.chapterSlug.trim() ? item.chapterSlug : item.chapterNumber != null ? String(item.chapterNumber) : null;
         if (!safeSlug) return null;
         return (
-        <div key={item.series.id} className="w-[180px] shrink-0 md:w-[220px]">
+        <div key={item.series.id} className="w-[200px] shrink-0 md:w-[260px]">
           <Link 
             href={`/series/${item.series.slug}/chapter/${safeSlug}`}
             className="group block overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/40 hover:bg-card-hover"

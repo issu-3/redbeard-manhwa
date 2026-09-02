@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import { BookmarkButton } from '@/components/shared/BookmarkButton';
 import { Badge } from '@/components/shared/Badge';
 
@@ -95,7 +95,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
   return (
     <section
       className="relative w-full overflow-hidden"
-      style={{ minHeight: 'clamp(400px, 70vh, 700px)' }}
+      style={{ height: 'clamp(380px, 55vh, 500px)' }}
       onMouseEnter={stopAutoplay}
       onMouseLeave={startAutoplay}
       role="region"
@@ -156,12 +156,12 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                 ))}
               </div>
 
-              <h1 className="mb-4 text-3xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
+              <h1 className="mb-4 text-2xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
                   style={{ fontFamily: 'var(--font-heading)' }}>
                 {slide.title}
               </h1>
 
-              <p className="mb-8 line-clamp-3 max-w-lg text-sm font-medium leading-relaxed text-text-secondary md:text-base md:leading-relaxed">
+              <p className="mb-8 hidden md:block line-clamp-3 max-w-lg text-sm font-medium leading-relaxed text-text-secondary md:text-base md:leading-relaxed">
                 {slide.description}
               </p>
 
@@ -172,6 +172,13 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                 >
                   <BookOpen className="h-5 w-5" />
                   Read Now
+                </Link>
+                <Link
+                  href={`/series/${slide.slug}`}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border-2 border-primary/50 bg-background/50 px-4 py-2 font-bold text-text-primary backdrop-blur-md transition-all hover:bg-primary/10 hover:border-primary hover:scale-[1.02] active:scale-95"
+                >
+                  <Info className="h-5 w-5" />
+                  Details
                 </Link>
                 <div className="h-[52px]">
                   {/* BookmarkButton handles its own height/padding, we just ensure it aligns by putting it in a flex context */}

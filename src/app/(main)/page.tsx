@@ -58,7 +58,7 @@ export default async function HomePage() {
   return (
     <>
       <h1 className="sr-only">REDBEARD - The Ultimate Reading Experience</h1>
-      <div className="my-6 px-4 md:my-8 md:px-8 lg:px-16 xl:px-20 flex justify-center overflow-hidden">
+      <div className="my-4 px-4 md:my-5 md:px-8 lg:px-16 xl:px-20 flex justify-center overflow-hidden">
         <AdRenderer placement="homepage" />
       </div>
       <HomepageClient

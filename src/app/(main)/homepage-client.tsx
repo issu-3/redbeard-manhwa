@@ -9,7 +9,7 @@ import { Carousel } from '@/components/shared/Carousel';
 import { TrendingCarousel } from '@/components/home/TrendingCarousel';
 import { RecentlyUpdatedCarousel } from '@/components/home/RecentlyUpdatedCarousel';
 import { ContinueReadingCarousel } from '@/components/home/ContinueReadingCarousel';
-import { Sparkles, Heart } from 'lucide-react';
+import { NewReleasesCarousel } from '@/components/home/NewReleasesCarousel';
 
 import type { HomepageSection } from '@prisma/client';
 import type { SeriesCardData } from '@/types';
@@ -53,7 +53,7 @@ export function HomepageClient({
   }, [isLoggedIn, sections]);
 
   return (
-    <div className="space-y-10 pb-12 md:space-y-14">
+    <div className="space-y-8 md:space-y-10 pb-4">
       {sections.map(sec => {
         let data = sectionData[sec.type] || [];
         
@@ -61,7 +61,7 @@ export function HomepageClient({
           if (!isLoggedIn) return null;
           if (!personalizedData) {
             return (
-              <div key={sec.id} className="px-4 md:px-8 lg:px-16 xl:px-20 mb-10 md:mb-14">
+              <div key={sec.id} className="px-4 md:px-8 lg:px-16 xl:px-20">
                 <div className="mb-4 flex flex-col gap-2">
                   <div className="h-8 w-48 rounded-lg bg-foreground/10 animate-pulse" />
                   <div className="h-4 w-32 rounded-lg bg-foreground/5 animate-pulse" />
@@ -86,17 +86,15 @@ export function HomepageClient({
         if (sec.type === 'RECOMMENDED' && isLoggedIn && !sec.isManual) {
           if (!personalizedData) {
             return (
-              <div key={sec.id} className="px-4 md:px-8 lg:px-16 xl:px-20 mb-10 md:mb-14">
-                <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-surface to-card p-6 md:p-10 shadow-lg">
-                  <div className="mb-4 flex flex-col gap-2">
-                    <div className="h-8 w-64 rounded-lg bg-foreground/10 animate-pulse" />
-                    <div className="h-4 w-48 rounded-lg bg-foreground/5 animate-pulse" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <div key={i} className="aspect-[3/4] w-full rounded-2xl bg-surface animate-pulse" />
-                    ))}
-                  </div>
+              <div key={sec.id} className="px-4 md:px-8 lg:px-16 xl:px-20">
+                <div className="mb-4 flex flex-col gap-2">
+                  <div className="h-8 w-48 rounded-lg bg-foreground/10 animate-pulse" />
+                  <div className="h-4 w-32 rounded-lg bg-foreground/5 animate-pulse" />
+                </div>
+                <div className="flex gap-4 overflow-hidden">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="aspect-[3/4] w-[160px] md:w-[200px] shrink-0 rounded-2xl bg-surface animate-pulse" />
+                  ))}
                 </div>
               </div>
             );
@@ -127,52 +125,26 @@ export function HomepageClient({
           );
         }
 
-        // Default layout for RECOMMENDED, FEATURED, etc.
-        const isRecommended = sec.type === 'RECOMMENDED';
+        if (sec.type === 'NEW_RELEASES') {
+          return (
+            <div key={sec.id} className="px-4 md:px-8 lg:px-16 xl:px-20">
+              <NewReleasesCarousel series={data} />
+            </div>
+          );
+        }
+
+        // Default layout for FEATURED, RECOMMENDED (if logged out or fallback), etc.
         return (
           <div key={sec.id} className="px-4 md:px-8 lg:px-16 xl:px-20">
-            {isRecommended ? (
-              <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-surface to-card p-6 md:p-10 shadow-lg">
-                <div className="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-accent/5 blur-3xl pointer-events-none" />
-                <div className="relative">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shadow-inner">
-                        {isLoggedIn ? (
-                          <Heart className="h-6 w-6 text-primary" />
-                        ) : (
-                          <Sparkles className="h-6 w-6 text-primary" />
-                        )}
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-black text-text-primary md:text-3xl tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
-                          {sec.title || (isLoggedIn ? 'Recommended For You' : "Editor's Picks")}
-                        </h2>
-                        <p className="text-sm font-medium text-text-muted mt-0.5">
-                          {sec.subtitle || (isLoggedIn ? 'Based on your reading history and bookmarks' : 'Handpicked by our staff')}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                    {data.map((series: any, i: number) => (
-                      <SeriesCard key={series.id} series={series} index={i} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <Carousel 
-                title={sec.title || sec.type.replace('_', ' ')} 
-                subtitle={sec.subtitle || undefined} 
-                href={sec.showViewAll ? (sectionTypeToHref[sec.type] || undefined) : undefined}
-              >
-                {data.map((series: any, i: number) => (
-                  <SeriesCard key={series.id} series={series} index={i} />
-                ))}
-              </Carousel>
-            )}
+            <Carousel 
+              title={sec.title || sec.type.replace('_', ' ')} 
+              subtitle={sec.subtitle || undefined} 
+              href={sec.showViewAll ? (sectionTypeToHref[sec.type] || undefined) : undefined}
+            >
+              {data.map((series: any, i: number) => (
+                <SeriesCard key={series.id} series={series} index={i} />
+              ))}
+            </Carousel>
           </div>
         );
       })}
