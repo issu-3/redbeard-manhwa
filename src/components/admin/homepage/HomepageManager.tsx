@@ -29,6 +29,7 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
   const [isPending, startTransition] = useTransition();
 
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  const [editingBanner, setEditingBanner] = useState<any>(null);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -47,7 +48,13 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
     const formData = new FormData(e.currentTarget);
     const data: Record<string, any> = Object.fromEntries(formData.entries());
     data.isActive = data.isActive === 'true';
+    
+    if (editingBanner) {
+      data.id = editingBanner.id;
+    }
+    
     e.currentTarget.reset();
+    setEditingBanner(null);
     
     startTransition(async () => {
       await upsertBanner(data);
@@ -56,6 +63,7 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
   };
 
   const handleDeleteBanner = (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this banner?')) return;
     startTransition(async () => {
       await deleteBanner(id);
       setBanners((prev: any[]) => prev.filter(b => b.id !== id));
@@ -151,19 +159,26 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
     const data = manualData[sec.type] || [];
     
     if (sec.type === 'HERO_BANNER') {
-      const slides = data.map((b: any) => ({
-        id: b.id,
-        title: b.title || 'Untitled',
-        slug: '#',
-        coverImage: b.desktopImage,
-        bannerImage: b.desktopImage,
-        description: b.buttonText || '',
+      const slides = data.map((b: any) => {
+        let slug = b.buttonUrl?.trim() || null;
+        if (slug) {
+          if (slug.startsWith('/series/')) slug = slug.replace('/series/', '');
+          if (slug.startsWith('/')) slug = slug.substring(1);
+        }
+        return {
+          id: b.id,
+          title: b.title || 'Untitled',
+          slug: slug,
+          coverImage: b.desktopImage,
+          bannerImage: b.desktopImage,
+          description: b.buttonText || '',
         genres: [],
         averageRating: 0,
         chapterCount: 0,
         totalViews: 0,
         status: 'ONGOING'
-      }));
+        };
+      });
       return slides.length > 0 ? (
         <div className="scale-[0.8] origin-top-left w-[125%] -mb-16 pointer-events-none">
           <HeroSlider slides={slides} />
@@ -561,26 +576,41 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                           <h4 className="font-semibold text-sm truncate">{banner.title || 'Untitled'}</h4>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => handleDeleteBanner(banner.id)} 
-                        className="
-                          text-error hover:bg-error/10 p-2 rounded-lg
-                          min-w-[36px] min-h-[36px] flex items-center justify-center
-                          transition-colors duration-150 flex-shrink-0
-                          focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2
-                        "
-                        aria-label={`Delete banner ${banner.title || 'Untitled'}`}
-                      >
-                        <Trash2 width={14} height={14} />
-                      </button>
+                      <div className="flex gap-1.5">
+                        <button 
+                          onClick={() => setEditingBanner(banner)} 
+                          className="
+                            text-text-primary hover:bg-surface p-2 rounded-lg
+                            min-w-[36px] min-h-[36px] flex items-center justify-center
+                            transition-colors duration-150 flex-shrink-0
+                            focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2
+                          "
+                          aria-label={`Edit banner ${banner.title || 'Untitled'}`}
+                        >
+                          <Settings width={14} height={14} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteBanner(banner.id)} 
+                          className="
+                            text-error hover:bg-error/10 p-2 rounded-lg
+                            min-w-[36px] min-h-[36px] flex items-center justify-center
+                            transition-colors duration-150 flex-shrink-0
+                            focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2
+                          "
+                          aria-label={`Delete banner ${banner.title || 'Untitled'}`}
+                        >
+                          <Trash2 width={14} height={14} />
+                        </button>
+                      </div>
                     </div>
                   )}
                 />
-                <form onSubmit={handleBannerSave} className="mt-5 grid grid-cols-2 gap-3 p-5 bg-background rounded-xl border border-border">
+                <form key={editingBanner?.id || 'new'} onSubmit={handleBannerSave} className="mt-5 grid grid-cols-2 gap-3 p-5 bg-background rounded-xl border border-border">
                   <div className="col-span-2">
                     <input 
                       required 
                       name="desktopImage" 
+                      defaultValue={editingBanner?.desktopImage || ''}
                       placeholder="Image URL (e.g. from Vercel Blob)" 
                       className="
                         w-full bg-surface border border-input rounded-lg px-3.5 py-2.5 text-sm
@@ -591,6 +621,7 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                   </div>
                   <input 
                     name="title" 
+                    defaultValue={editingBanner?.title || ''}
                     placeholder="Title (Optional)" 
                     className="
                       bg-surface border border-input rounded-lg px-3.5 py-2.5 text-sm
@@ -600,6 +631,7 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                   />
                   <input 
                     name="buttonText" 
+                    defaultValue={editingBanner?.buttonText || ''}
                     placeholder="Synopsis (Optional)" 
                     className="
                       bg-surface border border-input rounded-lg px-3.5 py-2.5 text-sm
@@ -608,18 +640,46 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                     " 
                   />
                   <div className="col-span-2">
+                    <input 
+                      required 
+                      name="buttonUrl" 
+                      defaultValue={editingBanner?.buttonUrl || ''}
+                      placeholder="Series Slug (e.g. solo-leveling)" 
+                      className="
+                        w-full bg-surface border border-input rounded-lg px-3.5 py-2.5 text-sm
+                        transition-colors duration-150
+                        focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary
+                      " 
+                    />
+                  </div>
+                  <div className="col-span-2 flex gap-3">
                     <button 
                       type="submit" 
                       className="
-                        w-full bg-primary text-white py-2.5 rounded-xl text-sm font-semibold
+                        flex-1 bg-primary text-white py-2.5 rounded-xl text-sm font-semibold
                         transition-all duration-200 ease-out
                         hover:bg-primary/90 hover:shadow-md
                         active:scale-[0.98]
                         focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2
                       "
                     >
-                      Add New Banner
+                      {editingBanner ? 'Save Changes' : 'Add New Banner'}
                     </button>
+                    {editingBanner && (
+                      <button 
+                        type="button"
+                        onClick={() => setEditingBanner(null)}
+                        className="
+                          flex-1 bg-surface text-text-primary border border-border py-2.5 rounded-xl text-sm font-semibold
+                          transition-all duration-200 ease-out
+                          hover:bg-card-hover hover:border-text-muted
+                          active:scale-[0.98]
+                          focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2
+                        "
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </div>
                 </form>
               </div>

@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info, Download } from 'lucide-react';
 import { BookmarkButton } from '@/components/shared/BookmarkButton';
 import { Badge } from '@/components/shared/Badge';
 
@@ -166,20 +166,24 @@ export function HeroSlider({ slides }: HeroSliderProps) {
               </p>
 
               <div className="flex flex-wrap items-center gap-3">
-                <Link
-                  href={`/series/${slide.slug}`}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
-                >
-                  <BookOpen className="h-5 w-5" />
-                  Read Now
-                </Link>
-                <Link
-                  href={`/series/${slide.slug}`}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border-2 border-primary/50 bg-background/50 px-4 py-2 font-bold text-text-primary backdrop-blur-md transition-all hover:bg-primary/10 hover:border-primary hover:scale-[1.02] active:scale-95"
-                >
-                  <Info className="h-5 w-5" />
-                  Details
-                </Link>
+                {slide.slug ? (
+                  <>
+                    <Link
+                      href={`/series/${slide.slug}`}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
+                    >
+                      <Download className="h-5 w-5" />
+                      Download
+                    </Link>
+                    <Link
+                      href={`/series/${slide.slug}`}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border-2 border-primary/50 bg-background/50 px-4 py-2 font-bold text-text-primary backdrop-blur-md transition-all hover:bg-primary/10 hover:border-primary hover:scale-[1.02] active:scale-95"
+                    >
+                      <Info className="h-5 w-5" />
+                      Details
+                    </Link>
+                  </>
+                ) : null}
                 <div className="h-[52px]">
                   {/* BookmarkButton handles its own height/padding, we just ensure it aligns by putting it in a flex context */}
                   <BookmarkButton seriesId={slide.id} initialBookmarked={false} />
