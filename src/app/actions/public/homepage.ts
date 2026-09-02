@@ -97,6 +97,7 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
             take: limit,
             select: {
               number: true,
+              slug: true,
               label: true,
               sourceType: true,
               publishedAt: true,
@@ -108,6 +109,7 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
           return chapters.map(ch => ({
             series: toSeriesCardData(ch.series as any),
             chapterNumber: ch.number,
+            chapterSlug: ch.slug,
             chapterLabel: ['DOWNLOAD', 'EXTERNAL'].includes(ch.sourceType as string) ? ch.label : null,
             publishedAt: ch.publishedAt?.toISOString() || ch.createdAt.toISOString()
           }));

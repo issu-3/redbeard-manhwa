@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Carousel } from '@/components/shared/Carousel';
-import { BookOpen } from 'lucide-react';
+
 import type { SeriesCardData } from '@/types';
 
 export interface ContinueReadingItem {
@@ -22,55 +22,50 @@ export function ContinueReadingCarousel({ items }: { items: ContinueReadingItem[
       {items.map((item, i) => {
         const safeSlug = typeof item.chapterSlug === 'string' && item.chapterSlug.trim() ? item.chapterSlug : item.chapterNumber != null ? String(item.chapterNumber) : null;
         if (!safeSlug) return null;
+        
+        const isNSFW = (item.series as any).isNSFW || item.series.type === 'PORNHWA' || item.series.type === 'DOUJINSHI';
+        
         return (
-        <div key={item.series.id} className="w-[200px] shrink-0 md:w-[260px]">
+        <div key={item.series.id} className="w-[150px] shrink-0 md:w-[200px]">
           <Link 
             href={`/series/${item.series.slug}/chapter/${safeSlug}`}
-            className="group block overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/40 hover:bg-card-hover"
+            className="group relative block w-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
           >
-            <div className="flex p-3 gap-3">
-              <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-md bg-surface shadow-sm">
-                <Image
-                  src={item.series.coverImage}
-                  alt={item.series.title}
-                  fill
-                  sizes="56px"
-                  className="object-cover"
-                />
-              </div>
-              <div className="flex flex-1 flex-col justify-center min-w-0">
-                <h3 className="line-clamp-2 text-sm font-bold text-text-primary group-hover:text-primary transition-colors mb-1" title={item.series.title}>
-                  {item.series.title}
-                </h3>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {(item.series as any).isNSFW || item.series.type === 'PORNHWA' || item.series.type === 'DOUJINSHI' ? (
-                    <span className="rounded-full bg-red-500/20 px-1.5 py-0.5 text-[9px] font-bold text-red-500 border border-red-500/30">
-                      🔞 NSFW
-                    </span>
-                  ) : null}
-                  <span className="text-xs font-medium text-text-muted">
-                    {item.chapterLabel || `Chapter ${item.chapterNumber}`}
-                  </span>
+            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-surface shadow-sm">
+              <Image
+                src={item.series.coverImage}
+                alt={item.series.title}
+                fill
+                sizes="(max-width: 768px) 150px, 200px"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/10 to-transparent opacity-80" />
+              
+              {isNSFW && (
+                <div className="absolute left-2.5 top-2.5 rounded bg-red-500/90 px-1.5 py-0.5 text-[9px] font-black text-white shadow-sm backdrop-blur-md">
+                  NSFW
+                </div>
+              )}
+
+              {/* Progress Overlay */}
+              <div className="absolute bottom-3 left-3 right-3 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between text-[11px] font-bold text-white drop-shadow-md">
+                  <span className="truncate pr-2">{item.chapterLabel || `Ch. ${item.chapterNumber}`}</span>
+                  <span>{Math.round(item.progress)}%</span>
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/50 shadow-inner backdrop-blur-sm">
+                  <div 
+                    className="h-full bg-primary rounded-full transition-all duration-500 ease-out" 
+                    style={{ width: `${item.progress}%` }} 
+                  />
                 </div>
               </div>
             </div>
             
-            <div className="px-3 pb-3">
-              <div className="mb-1.5 flex items-center justify-between text-[10px] font-bold text-text-muted uppercase tracking-wider">
-                <span>Progress</span>
-                <span>{Math.round(item.progress)}%</span>
-              </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface shadow-inner">
-                <div 
-                  className="h-full bg-primary rounded-full transition-all duration-500 ease-out" 
-                  style={{ width: `${item.progress}%` }} 
-                />
-              </div>
-            </div>
-            
-            <div className="border-t border-border bg-surface/30 p-2.5 text-center text-xs font-bold text-primary group-hover:bg-primary/10 transition-colors flex justify-center items-center gap-1.5">
-              <BookOpen className="h-3.5 w-3.5" />
-              Resume
+            <div className="mt-2.5 px-1">
+              <h3 className="line-clamp-2 text-sm font-bold leading-tight text-text-primary transition-colors group-hover:text-primary">
+                {item.series.title}
+              </h3>
             </div>
           </Link>
         </div>
