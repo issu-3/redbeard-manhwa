@@ -11,6 +11,7 @@ import {
   refreshHomepageCache
 } from '@/app/actions/admin/homepage';
 import { toast } from 'sonner';
+import { MediaManager } from '@/components/admin/MediaManager';
 
 // Preview Components
 import { HeroSlider } from '@/components/shared/HeroSlider';
@@ -595,16 +596,11 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                 />
                 <form key={editingBanner?.id || 'new'} onSubmit={handleBannerSave} className="mt-5 grid grid-cols-2 gap-3 p-5 bg-background rounded-xl border border-border">
                   <div className="col-span-2">
-                    <input 
-                      required 
+                    <MediaManager 
                       name="desktopImage" 
-                      defaultValue={editingBanner?.desktopImage || ''}
-                      placeholder="Image URL (e.g. from Vercel Blob)" 
-                      className="
-                        w-full bg-surface border border-input rounded-lg px-3.5 py-2.5 text-sm
-                        transition-colors duration-150
-                        focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary
-                      " 
+                      label="Hero Banner Image" 
+                      recommendedDimensions="1920x600" 
+                      defaultValue={editingBanner?.desktopImage || ''} 
                     />
                   </div>
                   <input 

@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
+import { del } from '@vercel/blob';
 
 const DEFAULT_SECTIONS = [
   { type: 'HERO_BANNER', isActive: true, order: 0, limit: 10, isManual: false, title: null, subtitle: null, showViewAll: false },
@@ -34,6 +35,18 @@ export async function upsertBanner(data: any) {
   const { id, ...rest } = data;
   
   if (id) {
+    const existing = await prisma.heroBanner.findUnique({ where: { id } });
+    if (
+      existing && 
+      existing.desktopImage !== rest.desktopImage && 
+      existing.desktopImage.includes('public.blob.vercel-storage.com')
+    ) {
+      try {
+        await del(existing.desktopImage);
+      } catch (e) {
+        console.error('Failed to delete old Vercel blob:', e);
+      }
+    }
     await prisma.heroBanner.update({ where: { id }, data: rest });
   } else {
     // get max order
@@ -48,6 +61,16 @@ export async function upsertBanner(data: any) {
 
 export async function deleteBanner(id: string) {
   await checkAdmin();
+  const existing = await prisma.heroBanner.findUnique({ where: { id } });
+  
+  if (existing && existing.desktopImage.includes('public.blob.vercel-storage.com')) {
+    try {
+      await del(existing.desktopImage);
+    } catch (e) {
+      console.error('Failed to delete Vercel blob:', e);
+    }
+  }
+  
   await prisma.heroBanner.delete({ where: { id } });
   revalidatePath('/', 'layout');
 }
