@@ -14,10 +14,10 @@ export const getCachedHomepageSections = async (): Promise<HomepageSection[]> =>
     return [
       { id: '1', type: 'HERO_BANNER', isActive: true, order: 0, limit: 10, isManual: false, title: null, subtitle: null, showViewAll: false, manualSeriesId: [] as string[] },
       { id: '2', type: 'POPULAR', isActive: true, order: 1, limit: 10, isManual: false, title: '🔥 Most Popular Series All Time', subtitle: 'Top-rated and most-read series on REDBEARD', showViewAll: true, manualSeriesId: [] as string[] },
-      { id: '3', type: 'MANGA', isActive: true, order: 2, limit: 10, isManual: false, title: 'Manga', subtitle: 'Top Manga series', showViewAll: true, manualSeriesId: [] as string[] },
-      { id: '4', type: 'MANHWA', isActive: true, order: 3, limit: 10, isManual: false, title: 'Manhwa', subtitle: 'Top Manhwa series', showViewAll: true, manualSeriesId: [] as string[] },
+      { id: '3', type: 'MANGA', isActive: true, order: 2, limit: 10, isManual: false, title: 'Manga', subtitle: 'Popular manga series', showViewAll: true, manualSeriesId: [] as string[] },
+      { id: '4', type: 'MANHWA', isActive: true, order: 3, limit: 10, isManual: false, title: 'Manhwa', subtitle: 'Popular manhwa series', showViewAll: true, manualSeriesId: [] as string[] },
       { id: '5', type: 'RECENTLY_UPDATED', isActive: true, order: 4, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true, manualSeriesId: [] as string[] },
-      { id: '6', type: 'NEW_RELEASES', isActive: true, order: 5, limit: 10, isManual: false, title: 'Sparkling New', subtitle: 'Brand new releases', showViewAll: true, manualSeriesId: [] as string[] }
+      { id: '6', type: 'NEW_RELEASES', isActive: true, order: 5, limit: 10, isManual: false, title: 'New Releases', subtitle: 'Fresh series and latest additions', showViewAll: true, manualSeriesId: [] as string[] }
     ];
 };
 

@@ -7,10 +7,10 @@ import { auth } from '@/auth';
 const DEFAULT_SECTIONS = [
   { type: 'HERO_BANNER', isActive: true, order: 0, limit: 10, isManual: false, title: null, subtitle: null, showViewAll: false },
   { type: 'POPULAR', isActive: true, order: 1, limit: 10, isManual: false, title: '🔥 Most Popular Series All Time', subtitle: 'Top-rated and most-read series on REDBEARD', showViewAll: true },
-  { type: 'MANGA', isActive: true, order: 2, limit: 10, isManual: false, title: 'Manga', subtitle: 'Top Manga series', showViewAll: true },
-  { type: 'MANHWA', isActive: true, order: 3, limit: 10, isManual: false, title: 'Manhwa', subtitle: 'Top Manhwa series', showViewAll: true },
+  { type: 'MANGA', isActive: true, order: 2, limit: 10, isManual: false, title: 'Manga', subtitle: 'Popular manga series', showViewAll: true },
+  { type: 'MANHWA', isActive: true, order: 3, limit: 10, isManual: false, title: 'Manhwa', subtitle: 'Popular manhwa series', showViewAll: true },
   { type: 'RECENTLY_UPDATED', isActive: true, order: 4, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true },
-  { type: 'NEW_RELEASES', isActive: true, order: 5, limit: 10, isManual: false, title: 'Sparkling New', subtitle: 'Brand new releases', showViewAll: true }
+  { type: 'NEW_RELEASES', isActive: true, order: 5, limit: 10, isManual: false, title: 'New Releases', subtitle: 'Fresh series and latest additions', showViewAll: true }
 ];
 
 async function checkAdmin() {
@@ -79,17 +79,20 @@ export async function getSections() {
 
   let sections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
   
-  // Seed if empty or if it contains old unsupported sections (like LATEST instead of RECENTLY_UPDATED)
+  // Clean out any old unwanted sections safely if they somehow stuck around
   const hasOldSections = sections.some(s => ['LATEST', 'HERO'].includes(s.type));
+  if (hasOldSections) {
+    await prisma.homepageSection.deleteMany({
+      where: { type: { in: ['LATEST', 'HERO'] } }
+    });
+    sections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
+  }
   
-  if (sections.length === 0 || hasOldSections) {
-    if (hasOldSections) {
-      await prisma.homepageSection.deleteMany({});
-    }
-    
-    // We map the manual creation here because Prisma createMany won't work on SQLite/Edge if there's type conflicts, but we are using Postgres so createMany works.
+  // Seed missing sections if they don't exist
+  const missingSections = DEFAULT_SECTIONS.filter(d => !sections.some(s => s.type === d.type));
+  if (missingSections.length > 0) {
     await prisma.homepageSection.createMany({ 
-      data: DEFAULT_SECTIONS.map(s => ({
+      data: missingSections.map(s => ({
         type: s.type,
         isActive: s.isActive,
         order: s.order,
@@ -97,7 +100,8 @@ export async function getSections() {
         isManual: s.isManual,
         title: s.title,
         subtitle: s.subtitle,
-        showViewAll: s.showViewAll
+        showViewAll: s.showViewAll,
+        manualSeriesId: []
       }))
     });
     sections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
