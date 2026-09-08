@@ -3,9 +3,7 @@ export const revalidate = 3600;
 import { Metadata } from 'next';
 import { Clock } from 'lucide-react';
 import { BrowseGrid } from '@/components/shared/BrowseGrid';
-import { prisma } from '@/lib/prisma';
-import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
-import { unstable_cache } from 'next/cache';
+import { getCachedSectionSeries } from '@/app/actions/public/homepage';
 
 import { generateMetadata } from '@/lib/seo';
 import { APP_URL } from '@/lib/constants';
@@ -16,24 +14,21 @@ export const metadata: Metadata = generateMetadata({
   url: `${APP_URL}/browse/latest`
 });
 
-const getCachedLatestSeries = async () => {
-    return prisma.series.findMany({
-      where: {},
-      select: SERIES_CARD_SELECT,
-      take: 40,
-      orderBy: { updatedAt: 'desc' }
-    });
-};
-
 export default async function LatestPage() {
-  const dbSeries = await getCachedLatestSeries();
+  const updates = await getCachedSectionSeries('RECENTLY_UPDATED', 40, false, []);
+  // getCachedSectionSeries returns RecentUpdate[] for RECENTLY_UPDATED
+  // We map it back to SeriesCardData for BrowseGrid
+  const dbSeries = updates.map(u => ({
+    ...u.series,
+    updatedAt: u.publishedAt // Overwrite the series updatedAt with the chapter's effective timestamp
+  }));
   
   return (
     <BrowseGrid 
       title="Latest Updates" 
       subtitle="Fresh chapters just dropped" 
       icon={<Clock className="h-5 w-5 text-primary" />} 
-      series={dbSeries.map(toSeriesCardData)} 
+      series={dbSeries} 
     />
   );
 }

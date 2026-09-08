@@ -199,7 +199,9 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
       const mapped = data.map((ch: any) => ({
         series: toSeriesCardData(ch.series),
         chapterNumber: ch.number,
-        publishedAt: ch.publishedAt || new Date().toISOString()
+        chapterSlug: ch.slug,
+        chapterLabel: ['DOWNLOAD', 'EXTERNAL'].includes(ch.sourceType) ? ch.label : null,
+        publishedAt: (ch.publishedAt ?? ch.createdAt)?.toISOString() ?? new Date().toISOString()
       }));
       return (
         <div className="pointer-events-none p-4">

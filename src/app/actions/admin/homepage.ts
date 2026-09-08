@@ -245,7 +245,10 @@ export async function getAutomatedSeries(type: string, limit: number) {
     // However, the admin panel currently expects series. Let's return the series with the latest chapter included.
     const chapters = await prisma.chapter.findMany({
       where: { isPublished: true },
-      orderBy: { publishedAt: 'desc' },
+      orderBy: [
+        { publishedAt: { sort: 'desc', nulls: 'last' } },
+        { createdAt: 'desc' }
+      ],
       take: limit * 2,
       include: { series: { include: { genres: true } } }
     });

@@ -110,7 +110,10 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
               isPublished: true,
               series: {}
             },
-            orderBy: { publishedAt: 'desc' },
+            orderBy: [
+              { publishedAt: { sort: 'desc', nulls: 'last' } },
+              { createdAt: 'desc' }
+            ],
             distinct: ['seriesId'],
             take: limit,
             select: {
@@ -129,7 +132,7 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
             chapterNumber: ch.number,
             chapterSlug: ch.slug,
             chapterLabel: ['DOWNLOAD', 'EXTERNAL'].includes(ch.sourceType as string) ? ch.label : null,
-            publishedAt: ch.publishedAt?.toISOString() || ch.createdAt.toISOString()
+            publishedAt: ch.publishedAt?.toISOString() ?? ch.createdAt.toISOString()
           }));
         }
 
