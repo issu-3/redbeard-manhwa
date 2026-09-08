@@ -1,4 +1,4 @@
-export const revalidate = 3600;
+export const revalidate = 300;
 import { Metadata } from 'next';
 // Removed Link import since it's unused
 import { HomepageClient } from './homepage-client';

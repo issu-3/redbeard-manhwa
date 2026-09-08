@@ -40,6 +40,8 @@ export async function deleteChapter(chapterId: string, seriesId: string) {
   revalidatePath(`/admin/series/${seriesId}/chapters`);
   revalidatePath(`/series/[slug]`, 'page');
   revalidatePath(`/series/[slug]/chapter/[chapterSlug]`, 'page');
+  revalidatePath('/');
+  revalidatePath('/browse/latest');
   updateTag('homepage_data');
 }
 
@@ -105,6 +107,8 @@ export async function createChapter(seriesId: string, formData: FormData) {
     });
 
     revalidatePath(`/admin/series/${seriesId}/chapters`);
+    revalidatePath('/');
+    revalidatePath('/browse/latest');
     updateTag('homepage_data');
   } catch (error: any) {
     if (error?.code === 'P2002') {
@@ -196,6 +200,8 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
     revalidatePath(`/admin/series/${seriesId}/chapters`);
     revalidatePath(`/series/[slug]`, 'page');
     revalidatePath(`/series/[slug]/chapter/[chapterSlug]`, 'page');
+    revalidatePath('/');
+    revalidatePath('/browse/latest');
     updateTag('homepage_data');
   } catch (error: any) {
     if (error?.code === 'P2002') {
@@ -254,6 +260,8 @@ export async function createBulkChapters(seriesId: string, chapters: { label: st
     });
 
     revalidatePath(`/admin/series/${seriesId}/chapters`);
+    revalidatePath('/');
+    revalidatePath('/browse/latest');
     updateTag('homepage_data');
     
     return { success: true, count: created };
