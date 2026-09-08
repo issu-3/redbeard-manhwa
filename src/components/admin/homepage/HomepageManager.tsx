@@ -14,7 +14,6 @@ import { toast } from 'sonner';
 
 // Preview Components
 import { HeroSlider } from '@/components/shared/HeroSlider';
-import { TrendingCarousel } from '@/components/home/TrendingCarousel';
 import { RecentlyUpdatedCarousel } from '@/components/home/RecentlyUpdatedCarousel';
 import { PopularCarousel } from '@/components/home/PopularCarousel';
 import { SeriesCard } from '@/components/shared/SeriesCard';
@@ -186,15 +185,6 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
       ) : <p className="text-sm text-text-muted">No banners active.</p>;
     }
 
-    if (sec.type === 'TRENDING') {
-      const mapped = data.map(toSeriesCardData);
-      return (
-        <div className="pointer-events-none p-4">
-          <TrendingCarousel series={mapped} />
-        </div>
-      );
-    }
-
     if (sec.type === 'RECENTLY_UPDATED') {
       const mapped = data.map((ch: any) => ({
         series: toSeriesCardData(ch.series),
@@ -219,7 +209,7 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
       );
     }
 
-    // Default for FEATURED, RECOMMENDED
+    // Default for MANGA, MANHWA, etc.
     const mapped = data.map(toSeriesCardData);
     return (
       <div className="pointer-events-none p-4">
@@ -398,7 +388,7 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                           transition-colors duration-150
                           focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary
                         "
-                        placeholder="e.g. 🔥 Trending"
+                        placeholder="e.g. Manga"
                       />
                     </div>
                     <div>
@@ -452,7 +442,7 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                       </label>
                     </div>
                   )}
-                  {['TRENDING', 'RECOMMENDED', 'FEATURED'].includes(activeSection.type) && (
+                  {['MANGA', 'MANHWA', 'POPULAR', 'RECENTLY_UPDATED', 'NEW_RELEASES'].includes(activeSection.type) && (
                     <div className="flex items-center gap-2.5 pt-5 ml-2">
                       <input 
                         type="checkbox" 

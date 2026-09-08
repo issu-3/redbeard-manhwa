@@ -37,10 +37,11 @@ export async function GET(request: NextRequest) {
   if (isNaN(skip) || skip < 0) skip = 0;
 
   const genreSlugs = searchParams.getAll('genre');
+  const typeParam = searchParams.get('type');
   const statusParam = searchParams.get('status');
   const sortParam = searchParams.get('sort');
 
-  if (!query && genreSlugs.length === 0) {
+  if (!query && genreSlugs.length === 0 && !typeParam) {
     return NextResponse.json({ success: true, data: [] });
   }
 
@@ -61,6 +62,10 @@ export async function GET(request: NextRequest) {
           slug: { in: genreSlugs }
         }
       };
+    }
+
+    if (typeParam) {
+      whereClause.type = typeParam as import('@prisma/client').SeriesType;
     }
 
     if (statusParam) {

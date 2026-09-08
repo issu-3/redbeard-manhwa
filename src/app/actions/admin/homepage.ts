@@ -7,10 +7,10 @@ import { auth } from '@/auth';
 const DEFAULT_SECTIONS = [
   { type: 'HERO_BANNER', isActive: true, order: 0, limit: 10, isManual: false, title: null, subtitle: null, showViewAll: false },
   { type: 'POPULAR', isActive: true, order: 1, limit: 10, isManual: false, title: '🔥 Most Popular Series All Time', subtitle: 'Top-rated and most-read series on REDBEARD', showViewAll: true },
-  { type: 'TRENDING', isActive: true, order: 2, limit: 10, isManual: false, title: '🔥 Trending', subtitle: 'Top 10 most viewed this week', showViewAll: true },
-  { type: 'RECENTLY_UPDATED', isActive: true, order: 3, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true },
-  { type: 'RECOMMENDED', isActive: true, order: 4, limit: 10, isManual: false, title: 'Recommended For You', subtitle: 'Based on your reading history', showViewAll: true },
-  { type: 'FEATURED', isActive: true, order: 5, limit: 10, isManual: false, title: '⭐ Featured Series', subtitle: 'Handpicked by our staff', showViewAll: true }
+  { type: 'MANGA', isActive: true, order: 2, limit: 10, isManual: false, title: 'Manga', subtitle: 'Top Manga series', showViewAll: true },
+  { type: 'MANHWA', isActive: true, order: 3, limit: 10, isManual: false, title: 'Manhwa', subtitle: 'Top Manhwa series', showViewAll: true },
+  { type: 'RECENTLY_UPDATED', isActive: true, order: 4, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true },
+  { type: 'NEW_RELEASES', isActive: true, order: 5, limit: 10, isManual: false, title: 'Sparkling New', subtitle: 'Brand new releases', showViewAll: true }
 ];
 
 async function checkAdmin() {
@@ -72,14 +72,9 @@ export async function reorderBanners(orderedIds: string[]) {
 export async function getSections() {
   await checkAdmin();
   
-  // In-place migration from CONTINUE_READING to POPULAR
-  await prisma.homepageSection.updateMany({
-    where: { type: 'CONTINUE_READING' },
-    data: { 
-      type: 'POPULAR', 
-      title: '🔥 Most Popular Series All Time', 
-      subtitle: 'Top-rated and most-read series on REDBEARD' 
-    }
+  // Disable/Remove deprecated section types safely
+  await prisma.homepageSection.deleteMany({
+    where: { type: { in: ['TRENDING', 'RECOMMENDED', 'FEATURED'] } }
   });
 
   let sections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
@@ -220,25 +215,13 @@ export async function refreshHomepageCache() {
 export async function getAutomatedSeries(type: string, limit: number) {
   await checkAdmin();
   
-  if (type === 'TRENDING') {
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const topReads = await prisma.readingHistory.groupBy({
-      by: ['seriesId'],
-      where: { updatedAt: { gte: yesterday } },
-      _count: { seriesId: true },
-      orderBy: { _count: { seriesId: 'desc' } },
-      take: limit
+  if (type === 'MANGA' || type === 'MANHWA') {
+    return prisma.series.findMany({ 
+      where: { type },
+      orderBy: [{ totalViews: 'desc' }, { createdAt: 'desc' }], 
+      include: { genres: true }, 
+      take: limit 
     });
-    if (topReads.length > 0) {
-      const seriesIds = topReads.map(t => t.seriesId);
-      const foundSeries = await prisma.series.findMany({
-        where: { id: { in: seriesIds } },
-        include: { genres: true }
-      });
-      return seriesIds.map(id => foundSeries.find(s => s.id === id)).filter(Boolean);
-    } else {
-      return prisma.series.findMany({ orderBy: { totalViews: 'desc' }, include: { genres: true }, take: limit });
-    }
   }
   else if (type === 'RECENTLY_UPDATED') {
     // For recently updated, we actually need to return chapters wrapped in a specific format for the preview.
@@ -258,21 +241,8 @@ export async function getAutomatedSeries(type: string, limit: number) {
     }
     return Array.from(unique.values()).slice(0, limit);
   }
-  else if (type === 'RECOMMENDED') {
-    // Recommended requires session, for admin live preview just show editor's picks
-    return prisma.series.findMany({ where: { isEditorChoice: true }, include: { genres: true }, take: limit });
-  }
-  else if (type === 'FEATURED') {
-    return prisma.series.findMany({ where: { isFeatured: true }, include: { genres: true }, take: limit });
-  }
-  else if (type === 'CONTINUE_READING') {
-    // This is user-specific. For admin live preview, fetch the most recent global reading history just to show *something*
-    const history = await prisma.readingHistory.findMany({
-      orderBy: { updatedAt: 'desc' },
-      take: limit,
-      include: { series: { include: { genres: true } }, chapter: true }
-    });
-    return history;
+  else if (type === 'NEW_RELEASES' || type === 'LATEST') {
+    return prisma.series.findMany({ orderBy: { createdAt: 'desc' }, include: { genres: true }, take: limit });
   }
   return [];
 }

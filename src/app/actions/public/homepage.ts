@@ -1,11 +1,8 @@
 'use server';
 
-import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
-import { unstable_cache } from 'next/cache';
 import type { HomepageSection } from '@prisma/client';
-import type { SeriesCardData } from '@/types';
 
 export const getCachedHomepageSections = async (): Promise<HomepageSection[]> => {
     try {
@@ -17,10 +14,10 @@ export const getCachedHomepageSections = async (): Promise<HomepageSection[]> =>
     return [
       { id: '1', type: 'HERO_BANNER', isActive: true, order: 0, limit: 10, isManual: false, title: null, subtitle: null, showViewAll: false, manualSeriesId: [] as string[] },
       { id: '2', type: 'POPULAR', isActive: true, order: 1, limit: 10, isManual: false, title: '🔥 Most Popular Series All Time', subtitle: 'Top-rated and most-read series on REDBEARD', showViewAll: true, manualSeriesId: [] as string[] },
-      { id: '3', type: 'TRENDING', isActive: true, order: 2, limit: 10, isManual: false, title: '🔥 Trending', subtitle: 'Top 10 most viewed this week', showViewAll: true, manualSeriesId: [] as string[] },
-      { id: '4', type: 'RECENTLY_UPDATED', isActive: true, order: 3, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true, manualSeriesId: [] as string[] },
-      { id: '5', type: 'RECOMMENDED', isActive: true, order: 4, limit: 10, isManual: false, title: 'Recommended For You', subtitle: 'Based on your reading history', showViewAll: true, manualSeriesId: [] as string[] },
-      { id: '6', type: 'FEATURED', isActive: true, order: 5, limit: 10, isManual: false, title: '⭐ Featured Series', subtitle: 'Handpicked by our staff', showViewAll: true, manualSeriesId: [] as string[] }
+      { id: '3', type: 'MANGA', isActive: true, order: 2, limit: 10, isManual: false, title: 'Manga', subtitle: 'Top Manga series', showViewAll: true, manualSeriesId: [] as string[] },
+      { id: '4', type: 'MANHWA', isActive: true, order: 3, limit: 10, isManual: false, title: 'Manhwa', subtitle: 'Top Manhwa series', showViewAll: true, manualSeriesId: [] as string[] },
+      { id: '5', type: 'RECENTLY_UPDATED', isActive: true, order: 4, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true, manualSeriesId: [] as string[] },
+      { id: '6', type: 'NEW_RELEASES', isActive: true, order: 5, limit: 10, isManual: false, title: 'Sparkling New', subtitle: 'Brand new releases', showViewAll: true, manualSeriesId: [] as string[] }
     ];
 };
 
@@ -76,32 +73,14 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
           return automated.map(toSeriesCardData as any);
         }
 
-        if (type === 'TRENDING') {
-          const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-          const topReads = await prisma.readingHistory.groupBy({
-            by: ['seriesId'],
-            where: { updatedAt: { gte: yesterday } },
-            _count: { seriesId: true },
-            orderBy: { _count: { seriesId: 'desc' } },
-            take: limit
+        if (type === 'MANGA' || type === 'MANHWA') {
+          const content = await prisma.series.findMany({ 
+            where: { type, ...SAFE_SEARCH_FILTER },
+            orderBy: [{ totalViews: 'desc' }, { createdAt: 'desc' }], 
+            select: SERIES_CARD_SELECT, 
+            take: limit 
           });
-          if (topReads.length > 0) {
-            const seriesIds = topReads.map(t => t.seriesId);
-            const foundSeries = await prisma.series.findMany({
-              where: { id: { in: seriesIds } },
-              select: SERIES_CARD_SELECT
-            });
-            const seriesMap = new Map(foundSeries.map(s => [s.id, s]));
-            return seriesIds.map(id => seriesMap.get(id)).filter(Boolean).map(s => toSeriesCardData(s as any));
-          } else {
-            const automated = await prisma.series.findMany({ 
-              where: { ...SAFE_SEARCH_FILTER },
-              orderBy: { totalViews: 'desc' }, 
-              select: SERIES_CARD_SELECT, 
-              take: limit 
-            });
-            return automated.map(toSeriesCardData as any);
-          }
+          return content.map(toSeriesCardData as any);
         }
 
         if (type === 'RECENTLY_UPDATED') {
@@ -136,24 +115,7 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
           }));
         }
 
-        if (type === 'RECOMMENDED') {
-          const fallback = await prisma.series.findMany({
-            where: { isEditorChoice: true, ...SAFE_SEARCH_FILTER },
-            take: limit,
-            select: SERIES_CARD_SELECT
-          });
-          return fallback.map(toSeriesCardData as any);
-        }
 
-        if (type === 'FEATURED') {
-          const featured = await prisma.series.findMany({
-            where: { isFeatured: true, ...SAFE_SEARCH_FILTER },
-            orderBy: { totalViews: 'desc' },
-            take: limit,
-            select: SERIES_CARD_SELECT
-          });
-          return featured.map(toSeriesCardData as any);
-        }
 
         if (type === 'NEW_RELEASES' || type === 'LATEST') {
           const latest = await prisma.series.findMany({
@@ -170,39 +132,4 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
       return [];
 };
 
-export async function getPersonalizedSections(limit: number): Promise<{ recommended: SeriesCardData[] } | null> {
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return null;
 
-  let recommended: SeriesCardData[] = [];
-  // OPT-16: Combine into a single query to reduce DB roundtrips and limit to 100
-  const allBookmarks = await prisma.bookmark.findMany({
-    where: { userId },
-    orderBy: { createdAt: 'desc' },
-    take: 100,
-    select: {
-      seriesId: true,
-      series: { select: { genres: { select: { id: true } } } }
-    }
-  });
-  const bookmarkedIds = allBookmarks.map(b => b.seriesId);
-  const recentBookmarks = allBookmarks.slice(0, 5);
-  
-  if (recentBookmarks.length > 0) {
-    const favoriteGenres = new Set<string>();
-    recentBookmarks.forEach(b => b.series.genres.forEach((g: { id: string }) => favoriteGenres.add(g.id)));
-    const recommendedSeries = await prisma.series.findMany({
-      where: {
-        genres: { some: { id: { in: Array.from(favoriteGenres) } } },
-        id: { notIn: bookmarkedIds }
-      },
-      orderBy: { totalViews: 'desc' },
-      take: limit,
-      select: SERIES_CARD_SELECT
-    });
-    recommended = recommendedSeries.map(toSeriesCardData as any);
-  }
-
-  return { recommended };
-}
