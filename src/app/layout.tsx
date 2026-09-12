@@ -6,6 +6,7 @@ import { Toaster } from 'sonner';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdGlobalScripts } from '@/components/ads/AdGlobalScripts';
+import { MonetagHeadScript } from '@/components/ads/MonetagHeadScript';
 import './globals.css';
 
 const inter = Inter({
@@ -131,10 +132,14 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${plusJakarta.variable} ${poppins.variable}`}
     >
+      <head>
+        <MonetagHeadScript 
+          scriptString={settings.ads_enabled_monetag === 'true' ? settings.ads_monetag_global_script : null} 
+        />
+      </head>
       <AdGlobalScripts 
         adsterraPopunder={settings.ads_enabled_adsterra === 'true' && settings.ads_adsterra_popunder ? Buffer.from(settings.ads_adsterra_popunder).toString('base64') : null}
         adsterraSocialBar={settings.ads_enabled_adsterra === 'true' && settings.ads_adsterra_social_bar ? Buffer.from(settings.ads_adsterra_social_bar).toString('base64') : null}
-        monetagGlobal={settings.ads_enabled_monetag === 'true' && settings.ads_monetag_global_script ? Buffer.from(settings.ads_monetag_global_script).toString('base64') : null}
       />
       <script
         type="application/ld+json"

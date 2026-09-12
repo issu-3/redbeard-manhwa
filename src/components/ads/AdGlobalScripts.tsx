@@ -4,12 +4,10 @@ import { useEffect, useRef, useCallback } from 'react';
 
 export function AdGlobalScripts({
   adsterraPopunder,
-  adsterraSocialBar,
-  monetagGlobal
+  adsterraSocialBar
 }: {
   adsterraPopunder?: string | null;
   adsterraSocialBar?: string | null;
-  monetagGlobal?: string | null;
 }) {
   const injectedRef = useRef(false);
 
@@ -53,11 +51,10 @@ export function AdGlobalScripts({
     const timer = setTimeout(() => {
       if (adsterraPopunder) injectScript(adsterraPopunder);
       if (adsterraSocialBar) injectScript(adsterraSocialBar);
-      if (monetagGlobal) injectScript(monetagGlobal);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [adsterraPopunder, adsterraSocialBar, monetagGlobal, injectScript]);
+  }, [adsterraPopunder, adsterraSocialBar, injectScript]);
 
   return null;
 }
