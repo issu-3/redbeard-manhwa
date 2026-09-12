@@ -11,7 +11,7 @@ import { Badge } from '@/components/shared/Badge';
 interface HeroSlide {
   id: string;
   title: string;
-  slug: string;
+  slug: string | null;
   coverImage: string;
   bannerImage?: string;
   description: string;

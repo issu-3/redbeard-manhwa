@@ -20,6 +20,7 @@ import { PopularCarousel } from '@/components/home/PopularCarousel';
 import { SeriesCard } from '@/components/shared/SeriesCard';
 import { Carousel } from '@/components/shared/Carousel';
 import { toSeriesCardData } from '@/lib/data-mappers';
+import { normalizeSeriesLink } from '@/lib/utils';
 
 export function HomepageManager({ initialBanners, initialSections, initialManualData, featuredCount, initialSettings }: any) {
   const [banners, setBanners] = useState(initialBanners);
@@ -160,11 +161,7 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
     
     if (sec.type === 'HERO_BANNER') {
       const slides = data.map((b: any) => {
-        let slug = b.buttonUrl?.trim() || null;
-        if (slug) {
-          if (slug.startsWith('/series/')) slug = slug.replace('/series/', '');
-          if (slug.startsWith('/')) slug = slug.substring(1);
-        }
+        const slug = normalizeSeriesLink(b.buttonUrl) || null;
         return {
           id: b.id,
           title: b.title || 'Untitled',
@@ -624,17 +621,21 @@ export function HomepageManager({ initialBanners, initialSections, initialManual
                     " 
                   />
                   <div className="col-span-2">
+                    <label className="block text-xs font-semibold mb-1.5 text-text-secondary tracking-wide uppercase">
+                      Series Link
+                    </label>
                     <input 
                       required 
                       name="buttonUrl" 
                       defaultValue={editingBanner?.buttonUrl || ''}
-                      placeholder="Series Slug (e.g. solo-leveling)" 
+                      placeholder="https://redbeard.store/series/love-quest or love-quest" 
                       className="
                         w-full bg-surface border border-input rounded-lg px-3.5 py-2.5 text-sm
                         transition-colors duration-150
                         focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary
                       " 
                     />
+                    <p className="mt-1.5 text-xs text-text-muted">Enter the full series URL or just the series slug.</p>
                   </div>
                   <div className="col-span-2 flex gap-3">
                     <button 

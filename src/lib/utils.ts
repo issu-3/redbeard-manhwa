@@ -100,3 +100,29 @@ export function debounce<T extends (...args: unknown[]) => unknown>(fn: T, delay
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
+
+export function normalizeSeriesLink(urlOrSlug: string | null | undefined): string | null {
+  if (!urlOrSlug) return null;
+  let str = urlOrSlug.trim();
+  if (!str) return null;
+
+  try {
+    if (str.startsWith('http://') || str.startsWith('https://')) {
+      const url = new URL(str);
+      str = url.pathname;
+    } else if (str.includes('/') && str.match(/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)) {
+      str = str.substring(str.indexOf('/'));
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  str = str.replace(/^\/+|\/+$/g, '');
+  
+  const segments = str.split('/');
+  if (segments.length >= 2 && segments[0] === 'series') {
+    return segments[1];
+  }
+  
+  return segments[segments.length - 1];
+}

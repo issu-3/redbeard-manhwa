@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
 import type { HomepageSection } from '@prisma/client';
+import { normalizeSeriesLink } from '@/lib/utils';
 
 export const getCachedHomepageSections = async (): Promise<HomepageSection[]> => {
     try {
@@ -25,11 +26,7 @@ export const getCachedHeroBanners = async () => {
     try {
       const banners = await prisma.heroBanner.findMany({ orderBy: { order: 'asc' } });
       return banners.map(b => {
-        let slug = b.buttonUrl?.trim() || null;
-        if (slug) {
-          if (slug.startsWith('/series/')) slug = slug.replace('/series/', '');
-          if (slug.startsWith('/')) slug = slug.substring(1);
-        }
+        const slug = normalizeSeriesLink(b.buttonUrl) || null;
         
         return {
           id: b.id,
