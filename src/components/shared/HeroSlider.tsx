@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, AnimatePresence, useMotionValue, useSpring, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useReducedMotion, Variants } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { BookmarkButton } from '@/components/shared/BookmarkButton';
 import { Badge } from '@/components/shared/Badge';
@@ -112,13 +112,13 @@ export function HeroSlider({ slides }: HeroSliderProps) {
   if (!slides.length) return null;
   const slide = slides[current];
 
-  const variants = {
+  const variants: Variants = {
     enter: (d: number) => ({ x: d > 0 ? '3%' : '-3%', opacity: 0 }),
     center: { x: 0, opacity: 1 },
     exit: (d: number) => ({ x: d > 0 ? '-3%' : '3%', opacity: 0 }),
   };
 
-  const contentContainerVariants = {
+  const contentContainerVariants: Variants = {
     initial: { opacity: 0 },
     animate: {
       opacity: 1,
@@ -133,9 +133,9 @@ export function HeroSlider({ slides }: HeroSliderProps) {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     initial: { opacity: 0, y: 8 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.33, 1, 0.68, 1] } },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.33, 1, 0.68, 1] as const } },
     exit: { opacity: 0, y: -4, transition: { duration: 0.3 } }
   };
 
@@ -156,7 +156,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{ duration: 0.7, ease: [0.33, 1, 0.68, 1] }}
+          transition={{ duration: 0.7, ease: [0.33, 1, 0.68, 1] as const }}
           className="absolute inset-0 cursor-grab active:cursor-grabbing"
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
