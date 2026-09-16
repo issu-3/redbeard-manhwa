@@ -87,23 +87,7 @@ const getCachedRelatedSeries = async (seriesId: string, genreIds: string[]) => {
     });
 };
 
-const getCachedTrendingSeries = async (excludeId: string) => {
-    return prisma.series.findMany({
-      where: { id: { not: excludeId } },
-      orderBy: { totalViews: 'desc' },
-      take: 6,
-      select: SERIES_CARD_SELECT
-    });
-};
 
-const getCachedRecentSeries = async (excludeId: string) => {
-    return prisma.series.findMany({
-      where: { id: { not: excludeId } },
-      orderBy: { updatedAt: 'desc' },
-      take: 6,
-      select: SERIES_CARD_SELECT
-    });
-};
 
 function getSeoDescription(series: any, seo: Record<string, string>, siteTitle: string, typeLabel: string): string {
   let description = seo.description;
@@ -227,14 +211,8 @@ export default async function SeriesDetailPage({
 
   // OPT-02: Use cached recommendation queries instead of raw Prisma calls
   const genreIds = series.genres.map((g: { id: string }) => g.id);
-  const [relatedSeriesRaw, trendingSeriesRaw, recentSeriesRaw] = await Promise.all([
-    getCachedRelatedSeries(series.id, genreIds),
-    getCachedTrendingSeries(series.id),
-    getCachedRecentSeries(series.id),
-  ]);
+  const relatedSeriesRaw = await getCachedRelatedSeries(series.id, genreIds);
   const relatedSeries = relatedSeriesRaw.map(s => toSeriesCardData(s as any));
-  const trendingSeries = trendingSeriesRaw.map(s => toSeriesCardData(s as any));
-  const recentSeries = recentSeriesRaw.map(s => toSeriesCardData(s as any));
 
   const siteUrl = APP_URL || 'http://localhost:3000';
   const siteTitle = settings.seo_site_title || 'REDBEARD';
@@ -335,7 +313,7 @@ export default async function SeriesDetailPage({
 
       {/* ── Main Content (overlapping banner) ─────────────── */}
       <div className="relative -mt-64 z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="flex justify-center overflow-hidden w-full min-h-0">
+        <div className="flex justify-center overflow-hidden w-full">
           <AdRenderer placement="series_detail" />
         </div>
         <div className="flex flex-col md:flex-row gap-8 lg:gap-12 mt-8">
@@ -457,47 +435,19 @@ export default async function SeriesDetailPage({
         />
 
         {/* ── Recommendations ────────────────────────────────── */}
-        <section className="mt-10 space-y-8 md:mt-20 md:space-y-16">
-          {relatedSeries.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-text-primary">Similar Series</h2>
-                <Link href="/browse/trending" className="text-sm font-medium text-primary hover:underline">Browse All</Link>
-              </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-                {relatedSeries.map((item: SeriesCardData, index: number) => (
-                  <SeriesCard key={item.id} series={item} index={index} />
-                ))}
-              </div>
+        {relatedSeries.length > 0 && (
+          <section className="mt-10 md:mt-20">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-text-primary">Similar Series</h2>
+              <Link href="/browse/trending" className="text-sm font-medium text-primary hover:underline">Browse All</Link>
             </div>
-          )}
-
-          {trendingSeries.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-text-primary">Trending This Week</h2>
-              </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-                {trendingSeries.map((item: SeriesCardData, index: number) => (
-                  <SeriesCard key={item.id} series={item} index={index} />
-                ))}
-              </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+              {relatedSeries.map((item: SeriesCardData, index: number) => (
+                <SeriesCard key={item.id} series={item} index={index} />
+              ))}
             </div>
-          )}
-
-          {recentSeries.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-text-primary">Recently Updated</h2>
-              </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-                {recentSeries.map((item: SeriesCardData, index: number) => (
-                  <SeriesCard key={item.id} series={item} index={index} />
-                ))}
-              </div>
-            </div>
-          )}
-        </section>
+          </section>
+        )}
       </div>
 
       {/* ── Mobile Sticky Action Bar (positioned above MobileNav) ──────── */}
