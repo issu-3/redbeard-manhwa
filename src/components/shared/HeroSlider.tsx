@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useReducedMotion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { BookmarkButton } from '@/components/shared/BookmarkButton';
 import { Badge } from '@/components/shared/Badge';
@@ -35,6 +35,14 @@ export function HeroSlider({ slides }: HeroSliderProps) {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prefersReducedMotion = useReducedMotion();
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  
+  const springConfig = { damping: 25, stiffness: 100, mass: 0.5 };
+  const parallaxX = useSpring(mouseX, springConfig);
+  const parallaxY = useSpring(mouseY, springConfig);
 
   const startAutoplay = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -55,6 +63,24 @@ export function HeroSlider({ slides }: HeroSliderProps) {
     startAutoplay();
     return () => stopAutoplay();
   }, [startAutoplay, stopAutoplay]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    if (prefersReducedMotion || typeof window === 'undefined' || window.innerWidth < 768) return;
+    const { clientWidth, clientHeight } = e.currentTarget;
+    const { clientX, clientY } = e;
+    const x = (clientX / clientWidth - 0.5) * 16;
+    const y = (clientY / clientHeight - 0.5) * 16;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const handleMouseLeave = () => {
+    if (!prefersReducedMotion && typeof window !== 'undefined' && window.innerWidth >= 768) {
+      mouseX.set(0);
+      mouseY.set(0);
+    }
+    startAutoplay();
+  };
 
   const goTo = (index: number) => {
     setDirection(index > current ? 1 : -1);
@@ -87,16 +113,38 @@ export function HeroSlider({ slides }: HeroSliderProps) {
   const slide = slides[current];
 
   const variants = {
-    enter: (d: number) => ({ x: d > 0 ? '100%' : '-100%', opacity: 0 }),
+    enter: (d: number) => ({ x: d > 0 ? '3%' : '-3%', opacity: 0 }),
     center: { x: 0, opacity: 1 },
-    exit: (d: number) => ({ x: d > 0 ? '-100%' : '100%', opacity: 0 }),
+    exit: (d: number) => ({ x: d > 0 ? '-3%' : '3%', opacity: 0 }),
+  };
+
+  const contentContainerVariants = {
+    initial: { opacity: 0 },
+    animate: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.1
+      }
+    },
+    exit: {
+      opacity: 0,
+      transition: { duration: 0.3 }
+    }
+  };
+
+  const itemVariants = {
+    initial: { opacity: 0, y: 8 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.33, 1, 0.68, 1] } },
+    exit: { opacity: 0, y: -4, transition: { duration: 0.3 } }
   };
 
   return (
     <section
       className="relative w-full overflow-hidden aspect-[16/7.5] max-h-[260px] md:aspect-auto md:max-h-none md:h-[clamp(340px,45vh,500px)]"
       onMouseEnter={stopAutoplay}
-      onMouseLeave={startAutoplay}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       role="region"
       aria-label="Featured series"
     >
@@ -108,14 +156,19 @@ export function HeroSlider({ slides }: HeroSliderProps) {
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
+          transition={{ duration: 0.7, ease: [0.33, 1, 0.68, 1] }}
           className="absolute inset-0 cursor-grab active:cursor-grabbing"
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={1}
           onDragEnd={handleDragEnd}
         >
-          <div className="absolute inset-0 pointer-events-none">
+          <motion.div 
+            className="absolute inset-0 pointer-events-none origin-center"
+            style={{ x: parallaxX, y: parallaxY }}
+            animate={prefersReducedMotion ? {} : { scale: [1.02, 1.06, 1.02] }}
+            transition={{ duration: 15, ease: "easeInOut", repeat: Infinity }}
+          >
             <Image
               src={slide.bannerImage || slide.coverImage}
               alt={slide.title}
@@ -125,9 +178,9 @@ export function HeroSlider({ slides }: HeroSliderProps) {
               fetchPriority={current === 0 ? "high" : "auto"}
               sizes="100vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/60 to-transparent" />
-          </div>
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent sm:via-transparent" />
+          </motion.div>
         </motion.div>
       </AnimatePresence>
 
@@ -136,12 +189,12 @@ export function HeroSlider({ slides }: HeroSliderProps) {
           <AnimatePresence mode="wait">
             <motion.div
               key={slide.id + '-content'}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+              variants={contentContainerVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
             >
-              <div className="mb-1 md:mb-3 flex items-center flex-wrap gap-1.5 md:gap-2">
+              <motion.div variants={itemVariants} className="mb-1 md:mb-3 flex items-center flex-wrap gap-1.5 md:gap-2">
                 <Badge variant={statusVariant[slide.status] || 'primary'} size="sm" className="font-bold uppercase tracking-wider">
                   {slide.status}
                 </Badge>
@@ -153,31 +206,31 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                     {genre.name}
                   </span>
                 ))}
-              </div>
+              </motion.div>
 
-              <h1 className="mb-1.5 md:mb-4 text-xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
+              <motion.h1 variants={itemVariants} className="mb-1.5 md:mb-4 text-xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
                   style={{ fontFamily: 'var(--font-heading)' }}>
                 {slide.title}
-              </h1>
+              </motion.h1>
 
-              <p className="mb-8 hidden md:block line-clamp-3 max-w-lg text-sm font-medium leading-relaxed text-text-secondary md:text-base md:leading-relaxed">
+              <motion.p variants={itemVariants} className="mb-8 hidden md:block line-clamp-3 max-w-lg text-sm font-medium leading-relaxed text-text-secondary md:text-base md:leading-relaxed">
                 {slide.description}
-              </p>
+              </motion.p>
 
-              <div className="flex items-center gap-2 md:gap-3">
+              <motion.div variants={itemVariants} className="flex items-center gap-2 md:gap-3">
                 {slide.slug ? (
                   <Link
                     href={`/series/${slide.slug}`}
-                    className="inline-flex h-8 md:h-10 items-center justify-center gap-1.5 md:gap-2 rounded-xl bg-primary px-3 md:px-4 py-1 md:py-2 text-xs md:text-base font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
+                    className="inline-flex h-8 md:h-10 items-center justify-center gap-1.5 md:gap-2 rounded-xl bg-primary px-3 md:px-4 py-1 md:py-2 text-xs md:text-base font-bold text-white transition-all duration-200 hover:bg-primary-hover hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/40 active:scale-[0.97] shadow-md shadow-primary/25"
                   >
                     <Download className="h-4 w-4 md:h-5 md:w-5" />
                     Download
                   </Link>
                 ) : null}
-                <div className="h-8 md:h-[52px]">
+                <div className="flex h-8 md:h-10 items-center transition-all duration-200 hover:scale-[1.02] active:scale-[0.97]">
                   <BookmarkButton seriesId={slide.id} initialBookmarked={false} />
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
           </AnimatePresence>
         </div>
@@ -203,8 +256,8 @@ export function HeroSlider({ slides }: HeroSliderProps) {
           <button
             key={i}
             onClick={() => goTo(i)}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i === current ? 'w-8 bg-primary' : 'w-2 bg-foreground/30 hover:bg-foreground/50'
+            className={`h-1.5 md:h-2 rounded-full transition-all duration-500 ease-in-out ${
+              i === current ? 'w-6 md:w-8 bg-primary shadow-sm shadow-primary/50' : 'w-1.5 md:w-2 bg-foreground/30 hover:bg-foreground/50 hover:w-3 md:hover:w-4'
             }`}
             aria-label={`Go to slide ${i + 1}`}
           />
@@ -213,3 +266,4 @@ export function HeroSlider({ slides }: HeroSliderProps) {
     </section>
   );
 }
+
