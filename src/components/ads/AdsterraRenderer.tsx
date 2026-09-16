@@ -40,8 +40,8 @@ export function AdsterraRenderer({ placement, html }: AdsterraRendererProps) {
     return () => observer.disconnect();
   }, []);
 
-  const minHeightClass = 'min-h-[90px]';
-  const containerClass = `w-full overflow-hidden flex justify-center my-4 ad-container relative ${minHeightClass} items-center`;
+  const isNative = placement.includes('reader');
+  const containerClass = `w-full overflow-hidden flex justify-center my-4 ad-container relative items-center`;
 
   const iframeContent = `
     <!DOCTYPE html>
@@ -80,13 +80,20 @@ export function AdsterraRenderer({ placement, html }: AdsterraRendererProps) {
     </html>
   `;
 
+  // Standard banners: 320x50 on mobile, 728x90 on desktop.
+  // Native banners: fluid width.
+  const iframeClass = isNative 
+    ? "w-full min-h-[250px]" 
+    : "w-[320px] h-[50px] md:w-[728px] md:h-[90px] max-w-full";
+
   return (
     <div ref={containerRef} className={containerClass} data-provider="adsterra">
       {isInView && decodedHtml ? (
         <div className="relative z-10 w-full flex justify-center" data-ad-placement={placement}>
           <iframe
             srcDoc={iframeContent}
-            style={{ width: '100%', minHeight: '90px', border: 'none', overflow: 'hidden', background: 'transparent' }}
+            className={iframeClass}
+            style={{ border: 'none', overflow: 'hidden', background: 'transparent' }}
             scrolling="no"
             title="Advertisement"
             allowTransparency={true}
