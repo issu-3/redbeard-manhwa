@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Info, Download } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { BookmarkButton } from '@/components/shared/BookmarkButton';
 import { Badge } from '@/components/shared/Badge';
 
@@ -164,27 +164,17 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                 {slide.description}
               </p>
 
-              <div className="flex flex-wrap items-center gap-2 md:gap-3">
+              <div className="flex items-center gap-2 md:gap-3">
                 {slide.slug ? (
-                  <>
-                    <Link
-                      href={`/series/${slide.slug}`}
-                      className="inline-flex h-9 md:h-10 items-center justify-center gap-2 rounded-xl bg-primary px-3 md:px-4 py-1.5 md:py-2 text-sm md:text-base font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
-                    >
-                      <Download className="h-5 w-5" />
-                      Download
-                    </Link>
-                    <Link
-                      href={`/series/${slide.slug}`}
-                      className="inline-flex h-9 md:h-10 items-center justify-center gap-2 rounded-xl border-2 border-primary/50 bg-background/50 px-3 md:px-4 py-1.5 md:py-2 text-sm md:text-base font-bold text-text-primary backdrop-blur-md transition-all hover:bg-primary/10 hover:border-primary hover:scale-[1.02] active:scale-95"
-                    >
-                      <Info className="h-5 w-5" />
-                      Details
-                    </Link>
-                  </>
+                  <Link
+                    href={`/series/${slide.slug}`}
+                    className="inline-flex h-8 md:h-10 items-center justify-center gap-1.5 md:gap-2 rounded-xl bg-primary px-3 md:px-4 py-1 md:py-2 text-xs md:text-base font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
+                  >
+                    <Download className="h-4 w-4 md:h-5 md:w-5" />
+                    Download
+                  </Link>
                 ) : null}
-                <div className="h-9 md:h-[52px]">
-                  {/* BookmarkButton handles its own height/padding, we just ensure it aligns by putting it in a flex context */}
+                <div className="h-8 md:h-[52px]">
                   <BookmarkButton seriesId={slide.id} initialBookmarked={false} />
                 </div>
               </div>
