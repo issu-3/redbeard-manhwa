@@ -48,6 +48,7 @@ export function MonetagRenderer({ placement, html }: MonetagRendererProps) {
     <html style="background: transparent !important; color-scheme: dark;">
       <head>
         <meta charset="utf-8">
+        <base href="${typeof window !== 'undefined' ? window.location.origin : ''}/">
         <style>
           :root {
             color-scheme: dark;
