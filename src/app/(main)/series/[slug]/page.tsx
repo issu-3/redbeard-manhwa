@@ -293,7 +293,7 @@ export default async function SeriesDetailPage({
   }));
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
+    <div className="min-h-screen bg-background">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       
@@ -312,7 +312,7 @@ export default async function SeriesDetailPage({
       </section>
 
       {/* ── Main Content (overlapping banner) ─────────────── */}
-      <div className="relative -mt-64 z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
+      <div className="relative -mt-64 z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-6 md:pb-16">
         <div className="flex justify-center overflow-hidden w-full">
           <AdRenderer placement="series_detail" />
         </div>
