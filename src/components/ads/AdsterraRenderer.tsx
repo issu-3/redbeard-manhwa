@@ -41,7 +41,14 @@ export function AdsterraRenderer({ placement, html }: AdsterraRendererProps) {
   }, []);
 
   const isNative = placement.includes('reader');
-  const containerClass = `w-full overflow-hidden flex justify-center my-4 ad-container relative items-center`;
+  
+  // Provide a minimum height to the container to ensure IntersectionObserver 
+  // reliably detects it on desktop and to prevent layout shift.
+  const minHeightClass = isNative 
+    ? "min-h-[250px]" 
+    : "min-h-[50px] md:min-h-[90px]";
+    
+  const containerClass = `w-full overflow-hidden flex justify-center my-4 ad-container relative items-center ${minHeightClass}`;
 
   const iframeContent = `
     <!DOCTYPE html>
