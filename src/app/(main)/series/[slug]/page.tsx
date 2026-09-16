@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
-import { unstable_cache } from 'next/cache';
 
 import { Badge } from '@/components/shared/Badge';
 import { SeriesCard } from '@/components/shared/SeriesCard';
@@ -417,6 +416,7 @@ export default async function SeriesDetailPage({
             seriesSlug={series.slug}
             seriesId={series.id}
             totalChapters={series.chapterCount}
+            adSlotMiddle={<AdRenderer placement="series_detail" />}
           />
         </section>
 

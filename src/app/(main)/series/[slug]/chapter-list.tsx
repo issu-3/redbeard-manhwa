@@ -19,6 +19,7 @@ interface ChapterListSectionProps {
   seriesSlug: string;
   seriesId: string;
   totalChapters: number;
+  adSlotMiddle?: React.ReactNode;
 }
 
 export function ChapterListSection({
@@ -26,6 +27,7 @@ export function ChapterListSection({
   seriesSlug,
   seriesId,
   totalChapters,
+  adSlotMiddle,
 }: ChapterListSectionProps) {
   const [chapters, setChapters] = useState<ChapterListItem[]>(initialChapters);
   const [sortAsc, setSortAsc] = useState(true);
@@ -121,101 +123,116 @@ export function ChapterListSection({
               No chapters found matching your search.
             </motion.div>
           ) : (
-            filteredChapters.slice(0, displayLimit).map((chapter, index) => {
-              const isLatest = chapter.number === latestChapterNumber;
-              const safeSlug = typeof chapter.slug === 'string' && chapter.slug.trim() ? chapter.slug : chapter.number != null ? String(chapter.number) : null;
+            (() => {
+              const limit = Math.min(filteredChapters.length, displayLimit);
+              const adIndex = Math.max(1, Math.floor(limit / 2));
               
-              return (
-                <motion.div
-                  key={chapter.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.2) }}
-                >
-                  <div
-                    className={cn(
-                      'group relative flex flex-col justify-between p-4 rounded-xl border transition-all h-full',
-                      isLatest 
-                        ? 'bg-primary/5 border-primary/30 hover:border-primary/60 hover:bg-primary/10 shadow-sm'
-                        : 'bg-card border-border hover:border-primary/40 hover:bg-card-hover',
-                      chapter.isRead && 'opacity-60'
-                    )}
+              const nodes = filteredChapters.slice(0, displayLimit).map((chapter, index) => {
+                const isLatest = chapter.number === latestChapterNumber;
+                const safeSlug = typeof chapter.slug === 'string' && chapter.slug.trim() ? chapter.slug : chapter.number != null ? String(chapter.number) : null;
+                
+                return (
+                  <motion.div
+                    key={chapter.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.2) }}
                   >
-                    {isLatest && (
-                      <div className="absolute -top-2.5 -right-2.5 bg-primary text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-md z-10">
-                        New
-                      </div>
-                    )}
-                    
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1 min-w-0 pr-4">
-                        <h3 className={cn(
-                          "font-bold truncate transition-colors",
-                          isLatest ? "text-primary" : "text-text-primary group-hover:text-primary"
-                        )}>
-                          {chapter.label || `Chapter ${chapter.number}`}
-                        </h3>
-                        {chapter.title && (
-                          <p className="text-xs text-text-secondary truncate mt-0.5">
-                            {chapter.title}
-                          </p>
-                        )}
-                      </div>
-                      
-                      {chapter.isRead && (
-                        <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                    <div
+                      className={cn(
+                        'group relative flex flex-col justify-between p-4 rounded-xl border transition-all h-full',
+                        isLatest 
+                          ? 'bg-primary/5 border-primary/30 hover:border-primary/60 hover:bg-primary/10 shadow-sm'
+                          : 'bg-card border-border hover:border-primary/40 hover:bg-card-hover',
+                        chapter.isRead && 'opacity-60'
                       )}
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-[11px] font-medium text-text-muted mt-auto pt-3 border-t border-border/50">
-                      <div className="flex items-center gap-3">
-                        {chapter.publishedAt && (
-                          <span className="flex items-center gap-1" suppressHydrationWarning>
-                            <Calendar className="h-3 w-3" />
-                            {formatRelativeTime(chapter.publishedAt)}
-                          </span>
+                    >
+                      {isLatest && (
+                        <div className="absolute -top-2.5 -right-2.5 bg-primary text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-md z-10">
+                          New
+                        </div>
+                      )}
+                      
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1 min-w-0 pr-4">
+                          <h3 className={cn(
+                            "font-bold truncate transition-colors",
+                            isLatest ? "text-primary" : "text-text-primary group-hover:text-primary"
+                          )}>
+                            {chapter.label || `Chapter ${chapter.number}`}
+                          </h3>
+                          {chapter.title && (
+                            <p className="text-xs text-text-secondary truncate mt-0.5">
+                              {chapter.title}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {chapter.isRead && (
+                          <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-3 text-text-secondary">
-                        {chapter.totalPages && chapter.totalPages > 0 ? (
-                          <span>{chapter.totalPages} pgs</span>
+                      <div className="flex items-center justify-between text-[11px] font-medium text-text-muted mt-auto pt-3 border-t border-border/50">
+                        <div className="flex items-center gap-3">
+                          {chapter.publishedAt && (
+                            <span className="flex items-center gap-1" suppressHydrationWarning>
+                              <Calendar className="h-3 w-3" />
+                              {formatRelativeTime(chapter.publishedAt)}
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-3 text-text-secondary">
+                          {chapter.totalPages && chapter.totalPages > 0 ? (
+                            <span>{chapter.totalPages} pgs</span>
+                          ) : null}
+                          {chapter.downloadUrl && (
+                            <div className="flex items-center gap-1">
+                              <LinkIcon className="h-3 w-3" />
+                              <span>{chapter.downloadProvider || 'Link'}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
+                        {chapter.totalPages && chapter.totalPages > 0 && safeSlug ? (
+                          <Link
+                            href={`/series/${seriesSlug}/chapter/${safeSlug}`}
+                            className="flex-1 flex items-center justify-center py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-md text-xs font-bold transition-colors"
+                          >
+                            READ
+                          </Link>
                         ) : null}
                         {chapter.downloadUrl && (
-                          <div className="flex items-center gap-1">
-                            <LinkIcon className="h-3 w-3" />
-                            <span>{chapter.downloadProvider || 'Link'}</span>
-                          </div>
+                          <a
+                            href={`/api/chapter/${chapter.id}/download`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 flex items-center justify-center py-1.5 bg-surface border border-border hover:bg-card-hover text-text-secondary hover:text-text-primary rounded-md text-xs font-bold transition-colors"
+                          >
+                            DOWNLOAD
+                          </a>
                         )}
                       </div>
                     </div>
+                  </motion.div>
+                );
+              });
 
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
-                      {chapter.totalPages && chapter.totalPages > 0 && safeSlug ? (
-                        <Link
-                          href={`/series/${seriesSlug}/chapter/${safeSlug}`}
-                          className="flex-1 flex items-center justify-center py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-md text-xs font-bold transition-colors"
-                        >
-                          READ
-                        </Link>
-                      ) : null}
-                      {chapter.downloadUrl && (
-                        <a
-                          href={`/api/chapter/${chapter.id}/download`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center py-1.5 bg-surface border border-border hover:bg-card-hover text-text-secondary hover:text-text-primary rounded-md text-xs font-bold transition-colors"
-                        >
-                          DOWNLOAD
-                        </a>
-                      )}
-                    </div>
+              if (limit > 0 && adSlotMiddle) {
+                nodes.splice(adIndex, 0, (
+                  <div key="ad-middle" className="col-span-full flex justify-center w-full my-4 md:my-6 overflow-hidden">
+                    {adSlotMiddle}
                   </div>
-                </motion.div>
-              );
-            })
+                ));
+              }
+              
+              return nodes;
+            })()
           )}
         </AnimatePresence>
       </div>
