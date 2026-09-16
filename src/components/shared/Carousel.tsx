@@ -40,22 +40,22 @@ export function Carousel({ title, subtitle, href, children, className = '' }: Ca
   return (
     <section className={`relative ${className}`}>
       {/* Section header */}
-      <div className="mb-4 flex flex-row items-center justify-between gap-4 px-1">
+      <div className="mb-2 md:mb-4 flex flex-row items-center justify-between gap-4 px-1">
         <div className="min-w-0 flex-1">
           <h2
-            className="text-lg font-black text-text-primary md:text-2xl tracking-tight truncate"
+            className="text-xl md:text-2xl font-black text-text-primary tracking-tight truncate"
             style={{ fontFamily: 'var(--font-heading)' }}
           >
             {title}
           </h2>
           {subtitle && (
-            <p className="mt-0.5 text-xs md:text-sm font-medium text-text-muted truncate">{subtitle}</p>
+            <p className="mt-0.5 text-[11px] md:text-sm font-medium text-text-muted truncate">{subtitle}</p>
           )}
         </div>
         {href && (
           <Link
             href={href}
-            className="group flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-primary/10 h-10 px-4 py-2 text-sm font-semibold text-primary transition-all duration-300 hover:bg-primary/20 hover:scale-105 active:scale-95"
+            className="group flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-primary/10 h-8 px-3 py-1.5 md:h-10 md:px-4 md:py-2 text-xs md:text-sm font-semibold text-primary transition-all duration-300 hover:bg-primary/20 hover:scale-105 active:scale-95"
           >
             View All
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

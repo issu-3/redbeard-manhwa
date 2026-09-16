@@ -139,8 +139,8 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
           </div>
 
           {/* Hover overlay with more info */}
-          <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/60 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <div className="flex flex-wrap gap-1 mb-2">
+          <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/60 to-transparent p-2.5 md:p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            <div className="flex flex-wrap gap-1 mb-1.5 md:mb-2">
               {isPorn && (
                 <span className="rounded-full bg-red-500/80 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
                   🔞 NSFW
@@ -164,8 +164,8 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
           </div>
         </div>
 
-        <div className="mt-2 px-1">
-          <h3 className={`line-clamp-2 font-semibold text-text-primary transition-colors group-hover:text-primary ${isCompact ? 'text-xs' : 'text-sm'}`}>
+        <div className="mt-1.5 md:mt-2 px-1">
+          <h3 className={`line-clamp-2 font-semibold text-text-primary transition-colors group-hover:text-primary ${isCompact ? 'text-[11px] md:text-xs' : 'text-[13px] md:text-sm'}`}>
             {series.title}
           </h3>
           {!isCompact && (

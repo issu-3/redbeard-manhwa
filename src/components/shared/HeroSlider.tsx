@@ -95,7 +95,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
   return (
     <section
       className="relative w-full overflow-hidden"
-      style={{ height: 'clamp(380px, 55vh, 500px)' }}
+      style={{ height: 'clamp(340px, 45vh, 500px)' }}
       onMouseEnter={stopAutoplay}
       onMouseLeave={startAutoplay}
       role="region"
@@ -132,7 +132,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
         </motion.div>
       </AnimatePresence>
 
-      <div className="relative z-10 flex h-full items-end px-5 pb-12 pt-16 md:px-12 md:pb-16 lg:px-20 pointer-events-none">
+      <div className="relative z-10 flex h-full items-end px-5 pb-6 pt-12 md:px-12 md:pb-16 md:pt-16 lg:px-20 pointer-events-none">
         <div className="max-w-2xl pointer-events-auto">
           <AnimatePresence mode="wait">
             <motion.div
@@ -142,7 +142,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <div className="mb-3 flex items-center flex-wrap gap-2">
+              <div className="mb-2 md:mb-3 flex items-center flex-wrap gap-2">
                 <Badge variant={statusVariant[slide.status] || 'primary'} size="sm" className="font-bold uppercase tracking-wider">
                   {slide.status}
                 </Badge>
@@ -156,7 +156,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                 ))}
               </div>
 
-              <h1 className="mb-4 text-2xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
+              <h1 className="mb-2 md:mb-4 text-2xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
                   style={{ fontFamily: 'var(--font-heading)' }}>
                 {slide.title}
               </h1>

@@ -56,9 +56,9 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
             href={targetLink}
             target={isExternal ? '_blank' : undefined}
             rel={isExternal ? 'noopener noreferrer' : undefined}
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 font-bold text-white active:scale-95 transition-transform shadow-lg shadow-primary/25"
+            className="flex-1 flex items-center justify-center gap-1.5 md:gap-2 rounded-xl bg-primary px-3 py-2.5 md:px-4 md:py-3.5 font-bold text-sm md:text-base text-white active:scale-95 transition-transform shadow-lg shadow-primary/25"
           >
-            <BookOpen className="h-5 w-5" />
+            <BookOpen className="h-4 w-4 md:h-5 md:w-5" />
             {isLoading 
               ? 'Loading...' 
               : (hasHistory 

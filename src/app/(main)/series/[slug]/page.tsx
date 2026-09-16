@@ -315,12 +315,12 @@ export default async function SeriesDetailPage({
   }));
 
   return (
-    <div className="min-h-screen bg-background pb-24 md:pb-0">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       
       {/* ── Banner Section ────────────────────────────────── */}
-      <section className="relative h-[45vh] min-h-[400px] w-full overflow-hidden">
+      <section className="relative h-[30vh] min-h-[250px] md:h-[45vh] md:min-h-[400px] w-full overflow-hidden">
         <Image
           src={series.bannerImage || series.coverImage}
           alt=""
@@ -335,13 +335,13 @@ export default async function SeriesDetailPage({
 
       {/* ── Main Content (overlapping banner) ─────────────── */}
       <div className="relative -mt-64 z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="flex justify-center overflow-hidden w-full">
+        <div className="flex justify-center overflow-hidden w-full min-h-0">
           <AdRenderer placement="series_detail" />
         </div>
         <div className="flex flex-col md:flex-row gap-8 lg:gap-12 mt-8">
           {/* ── Cover Image ─────────────────────────────── */}
           <div className="shrink-0 flex flex-col items-center md:items-start md:w-[280px] lg:w-[320px]">
-            <div className="relative w-[220px] md:w-full aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-border/50">
+            <div className="relative w-[160px] md:w-full aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-border/50">
               <Image
                 src={series.coverImage}
                 alt={series.title}
@@ -355,7 +355,7 @@ export default async function SeriesDetailPage({
 
           {/* ── Series Hero Info ──────────────────────────────── */}
           <div className="flex-1 min-w-0 flex flex-col justify-end pt-4 md:pt-16">
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <div className="flex items-center gap-2 mb-2 md:mb-3 flex-wrap">
               <Badge variant={statusVariant[series.status]} size="sm" className="font-bold uppercase tracking-wider">
                 {series.status}
               </Badge>
@@ -370,11 +370,11 @@ export default async function SeriesDetailPage({
               )}
             </div>
             
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-text-primary tracking-tight leading-tight mb-4">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-text-primary tracking-tight leading-tight mb-2 md:mb-4">
               {series.title}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-2 mb-6">
+            <div className="flex flex-wrap items-center gap-2 mb-4 md:mb-6">
               {series.genres.slice(0, 4).map((genre: { slug: string, name: string }) => (
                 <Link
                   key={genre.slug}
@@ -391,7 +391,7 @@ export default async function SeriesDetailPage({
               ))}
             </div>
 
-            <div className="mb-8 max-w-3xl">
+            <div className="mb-4 md:mb-8 max-w-3xl">
               <DescriptionClient description={series.synopsis || series.description} />
             </div>
 
@@ -408,8 +408,8 @@ export default async function SeriesDetailPage({
         </div>
 
         {/* ── Metadata Grid ──────────────────────────────────── */}
-        <div className="mt-12 mb-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 p-6 rounded-2xl bg-card border border-border">
+        <div className="mt-6 mb-6 md:mt-12 md:mb-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4 p-4 md:p-6 rounded-2xl bg-card border border-border">
             <MetaItem label="Type" value={series.type} />
             <MetaItem label="Release Year" value={series.releaseYear?.toString() || 'N/A'} />
             <MetaItem label="Author" value={series.authors.map((a: { name: string }) => a.name).join(', ') || 'Unknown'} />
@@ -420,7 +420,7 @@ export default async function SeriesDetailPage({
         </div>
 
         {/* ── Chapter List ──────────────────────────────────── */}
-        <section className="mt-12">
+        <section className="mt-8 md:mt-12">
           <ChapterListSection
             chapters={series.chapters.map((c: any) => ({
               id: c.id,
@@ -443,7 +443,7 @@ export default async function SeriesDetailPage({
         </section>
 
         {/* ── Subscribe Card ──────────────────────────────────── */}
-        <div className="mt-12">
+        <div className="mt-8 md:mt-12">
           <SubscribeCard youtubeUrl={settings.youtubeUrl || null} />
         </div>
 
@@ -457,7 +457,7 @@ export default async function SeriesDetailPage({
         />
 
         {/* ── Recommendations ────────────────────────────────── */}
-        <section className="mt-20 space-y-16">
+        <section className="mt-10 space-y-8 md:mt-20 md:space-y-16">
           {relatedSeries.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-6">
@@ -501,7 +501,7 @@ export default async function SeriesDetailPage({
       </div>
 
       {/* ── Mobile Sticky Action Bar (positioned above MobileNav) ──────── */}
-      <div className="md:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+      <div className="md:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border p-2.5 md:p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
         <div className="flex gap-3 max-w-7xl mx-auto">
           <SeriesActionsClient
             seriesId={series.id}

@@ -31,7 +31,7 @@ export function HomepageClient({
 }: HomepageClientProps) {
 
   return (
-    <div className="space-y-8 md:space-y-10 pb-4">
+    <div className="space-y-6 md:space-y-10 pb-2 md:pb-4">
       {sections.map(sec => {
         let data = sectionData[sec.type] || [];
         
@@ -76,7 +76,9 @@ export function HomepageClient({
               href={sec.showViewAll ? (sectionTypeToHref[sec.type] || undefined) : undefined}
             >
               {data.map((series: any, i: number) => (
-                <SeriesCard key={series.id} series={series} index={i} />
+                <div key={series.id} className="w-[135px] shrink-0 md:w-[200px]">
+                  <SeriesCard series={series} index={i} />
+                </div>
               ))}
             </Carousel>
           </div>

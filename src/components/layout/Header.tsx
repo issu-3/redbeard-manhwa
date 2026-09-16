@@ -95,7 +95,7 @@ export function Header() {
             : 'bg-background border-b border-transparent'
         )}
       >
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 lg:px-6">
+        <div className="mx-auto flex h-[60px] md:h-16 max-w-7xl items-center justify-between gap-4 px-4 lg:px-6">
           {/* Logo */}
           <Link href="/" className="group flex shrink-0 items-center gap-2.5">
             <div className="relative flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden shadow-lg shadow-primary/25">

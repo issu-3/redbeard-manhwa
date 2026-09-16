@@ -24,7 +24,7 @@ export function RecentlyUpdatedCarousel({ updates }: { updates: RecentUpdate[] }
         const safeSlug = typeof update.chapterSlug === 'string' && update.chapterSlug.trim() ? update.chapterSlug : update.chapterNumber != null ? String(update.chapterNumber) : null;
         if (!safeSlug) return null;
         return (
-        <div key={`${update.series.id}-${update.chapterNumber}`} className="w-[155px] shrink-0 md:w-[200px]">
+        <div key={`${update.series.id}-${update.chapterNumber}`} className="w-[135px] shrink-0 md:w-[200px]">
           <Link 
             href={`/series/${update.series.slug}/chapter/${safeSlug}`}
             className="group block overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/40 hover:bg-card-hover"
