@@ -451,7 +451,7 @@ export default async function SeriesDetailPage({
       </div>
 
       {/* ── Mobile Sticky Action Bar (positioned above MobileNav) ──────── */}
-      <div id="series-action-bar" className="md:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border p-2.5 md:p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+      <div id="series-action-bar" className="md:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border p-2.5 md:p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] transition-transform duration-300 ease-in-out [.mobile-menu-open_&]:translate-y-[200%]">
         <div className="flex gap-3 max-w-7xl mx-auto">
           <SeriesActionsClient
             seriesId={series.id}

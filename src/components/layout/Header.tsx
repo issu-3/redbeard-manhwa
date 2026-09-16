@@ -76,10 +76,14 @@ export function Header() {
     return () => document.removeEventListener('click', handleClick);
   }, [userMenuOpen]);
 
-  // Prevent body scroll when mobile menu is open
+  // Prevent body scroll and add class when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    document.body.classList.toggle('mobile-menu-open', mobileMenuOpen);
+    return () => { 
+      document.body.style.overflow = ''; 
+      document.body.classList.remove('mobile-menu-open');
+    };
   }, [mobileMenuOpen]);
 
   return (

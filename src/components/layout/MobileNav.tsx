@@ -20,7 +20,7 @@ export function MobileNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-surface/80 backdrop-blur-xl safe-bottom md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-surface/80 backdrop-blur-xl safe-bottom md:hidden transition-transform duration-300 ease-in-out [.mobile-menu-open_&]:translate-y-[150%]"
       role="navigation"
       aria-label="Mobile navigation"
     >
