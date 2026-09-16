@@ -1,22 +1,34 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { BookOpen, Bell, History, Compass, Settings } from 'lucide-react';
+import { Home, BookOpen, Bell, History, Compass, Search, Settings, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MOBILE_NAV_ITEMS } from '@/lib/constants';
+import { MOBILE_NAV_ITEMS, ANDROID_NAV_ITEMS } from '@/lib/constants';
+import { Capacitor } from '@capacitor/core';
 
 const ICON_MAP: Record<string, React.ElementType> = {
+  Home,
   BookOpen,
   Bell,
   History,
   Compass,
+  Search,
   Settings,
+  User,
 };
 
 export function MobileNav() {
   const pathname = usePathname();
+  const [isNative, setIsNative] = useState(false);
+
+  useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+  }, []);
+
+  const navItems = isNative ? ANDROID_NAV_ITEMS : MOBILE_NAV_ITEMS;
 
   return (
     <nav
@@ -25,7 +37,7 @@ export function MobileNav() {
       aria-label="Mobile navigation"
     >
       <div className="flex items-center justify-around px-2 py-2">
-        {MOBILE_NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const Icon = ICON_MAP[item.icon] || BookOpen;
           const isActive =
             item.href === '/'
@@ -79,3 +91,4 @@ export function MobileNav() {
     </nav>
   );
 }
+

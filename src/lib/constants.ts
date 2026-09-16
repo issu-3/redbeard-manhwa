@@ -98,9 +98,15 @@ export const USER_NAV_ITEMS = [
 ] as const;
 
 export const MOBILE_NAV_ITEMS = [
+  { label: 'Home', href: '/', icon: 'Home' },
+  { label: 'Browse', href: '/browse/trending', icon: 'Compass' },
+  { label: 'Search', href: '/search', icon: 'Search' },
   { label: 'Library', href: '/library', icon: 'BookOpen' },
-  { label: 'Updates', href: '/browse/latest', icon: 'Bell' },
-  { label: 'History', href: '/user/history', icon: 'History' },
+  { label: 'Profile', href: '/user/profile', icon: 'User' },
+] as const;
+
+export const ANDROID_NAV_ITEMS = [
+  { label: 'Library', href: '/library', icon: 'BookOpen' },
   { label: 'Browse', href: '/', icon: 'Compass' },
   { label: 'More', href: '/more', icon: 'Settings' },
 ] as const;
