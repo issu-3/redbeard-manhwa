@@ -51,10 +51,12 @@ async function validateDownloadedFile(fileName: string): Promise<boolean> {
 
     const data = result.data;
     if (typeof data === 'string') {
-      // Decode base64 header
-      const decoded = atob(data.substring(0, 50));
-      if (decoded.startsWith('%PDF-')) return true; // PDF
-      if (decoded.startsWith('PK')) return true; // CBZ, EPUB, ZIP
+      // Direct base64 signature matching to avoid atob() exceptions
+      if (data.startsWith('JVBERi0')) return true; // %PDF-
+      if (data.startsWith('UEsDB')) return true; // PK (CBZ, EPUB, ZIP)
+
+      // Decode base64 header safely (must be a multiple of 4) for HTML detection
+      const decoded = atob(data.substring(0, 48));
       if (decoded.includes('<!DOCTYPE html>') || decoded.includes('<html')) return false; // HTML Error/Provider page
     } else if (data instanceof Blob) {
        // Future proofing for binary returns
