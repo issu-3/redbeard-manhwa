@@ -9,7 +9,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       {/* H3 FIX: JSON-LD removed — already defined in root layout.tsx */}
       <Header />
       <main id="main-content" className="flex-1 pb-20 md:pb-0">{children}</main>
-      <AdRenderer placement="footer" />
+      <div className="pb-36 md:pb-0">
+        <AdRenderer placement="footer" />
+      </div>
       <Footer />
       <MobileNav />
     </div>
