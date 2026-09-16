@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BookOpen, Share2 } from 'lucide-react';
 import { BookmarkButton } from '@/components/shared/BookmarkButton';
+import { Capacitor } from '@capacitor/core';
+import { useRouter } from 'next/navigation';
 
 interface SeriesActionsProps {
   seriesId: string;
@@ -17,6 +19,7 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [continueReadingChapter, setContinueReadingChapter] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     fetch(`/api/series/${seriesSlug}/user-data`)
@@ -56,6 +59,12 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
             href={targetLink}
             target={isExternal ? '_blank' : undefined}
             rel={isExternal ? 'noopener noreferrer' : undefined}
+            onClick={(e) => {
+              if (isExternal && Capacitor.isNativePlatform()) {
+                e.preventDefault();
+                router.push(targetLink);
+              }
+            }}
             className="flex-1 flex items-center justify-center gap-1.5 md:gap-2 rounded-xl bg-primary px-3 py-2.5 md:px-4 md:py-3.5 font-bold text-sm md:text-base text-white active:scale-95 transition-transform shadow-lg shadow-primary/25"
           >
             <BookOpen className="h-4 w-4 md:h-5 md:w-5" />
@@ -80,6 +89,12 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
           href={targetLink}
           target={isExternal ? '_blank' : undefined}
           rel={isExternal ? 'noopener noreferrer' : undefined}
+          onClick={(e) => {
+            if (isExternal && Capacitor.isNativePlatform()) {
+              e.preventDefault();
+              router.push(targetLink);
+            }
+          }}
           className="flex items-center gap-2 rounded-xl bg-primary px-10 py-4 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
         >
           <BookOpen className="h-5 w-5" />

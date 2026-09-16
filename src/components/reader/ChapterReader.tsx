@@ -35,6 +35,8 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useSwipeGestures } from '@/hooks/useSwipeGestures';
 import { cn } from '@/lib/utils';
 import type { ChapterData } from '@/types';
+import { Capacitor } from '@capacitor/core';
+import { useDownloadStore } from '@/store/download-store';
 
 import { CommentSection } from '@/components/shared/CommentSection';
 import type { CommentData } from '@/components/shared/CommentItem';
@@ -110,6 +112,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
   const [showUI, setShowUI] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const downloadState = useDownloadStore(state => state.downloads[chapter.id]);
 
   useEffect(() => {
     setMounted(true);
@@ -505,16 +508,38 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
               <p className="text-text-secondary mb-8">
                 This chapter is provided as a direct download. Click the button below to get it from {chapter.downloadProvider || 'the provider'}.
               </p>
-              <Link
-                href={`/download/${chapter.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center justify-center w-full gap-2 rounded-xl bg-primary px-8 py-4 text-base font-bold text-white transition-all hover:bg-primary-hover active:scale-95 shadow-lg shadow-primary/25"
-              >
-                <ArrowDownToLine className="h-5 w-5" />
-                Download Now
-              </Link>
+              {downloadState?.status === 'DOWNLOADING' ? (
+                <div className="w-full text-center mb-8">
+                  <div className="w-full bg-foreground/10 rounded-full h-4 mb-2 overflow-hidden">
+                    <div 
+                      className="bg-primary h-4 transition-all duration-300 rounded-full" 
+                      style={{ width: `${Math.round(downloadState.progress * 100)}%` }} 
+                    />
+                  </div>
+                  <p className="text-sm font-bold text-primary">
+                    Downloading {Math.round(downloadState.progress * 100)}%
+                  </p>
+                </div>
+              ) : downloadState?.status === 'COMPLETED' ? (
+                <div className="inline-flex items-center justify-center w-full gap-2 rounded-xl bg-green-600 px-8 py-4 text-base font-bold text-white shadow-lg mb-8">
+                  Downloaded
+                </div>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (Capacitor.isNativePlatform()) {
+                      router.push(`/download/${chapter.id}`);
+                    } else {
+                      window.open(`/download/${chapter.id}`, '_blank');
+                    }
+                  }}
+                  className="inline-flex items-center justify-center w-full gap-2 rounded-xl bg-primary px-8 py-4 text-base font-bold text-white transition-all hover:bg-primary-hover active:scale-95 shadow-lg shadow-primary/25 mb-8"
+                >
+                  <ArrowDownToLine className="h-5 w-5" />
+                  Download Now
+                </button>
+              )}
               <div className="mt-8 pt-8 border-t border-border flex justify-between items-center">
                 {prevSlug ? (
                   <Link

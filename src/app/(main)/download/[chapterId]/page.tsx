@@ -46,7 +46,14 @@ export default async function DownloadInterstitialPage({ params }: { params: Pro
           </div>
 
           <div className="mt-8">
-            <AdCountdown downloadUrl={`/api/chapter/${chapterId}/download`} />
+            <AdCountdown 
+              redirectUrl={`/api/chapter/${chapterId}/download`}
+              chapterId={chapterId}
+              seriesId={chapter.series.id}
+              seriesTitle={chapter.series.title}
+              seriesSlug={chapter.series.slug}
+              chapterNumber={chapter.number || chapter.title || '1'}
+            />
           </div>
 
         </div>

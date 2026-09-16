@@ -1,11 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { ArrowDownToLine, Clock } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { startNativeDownload } from '@/lib/native-download';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
-export function AdCountdown({ downloadUrl }: { downloadUrl: string }) {
+interface AdCountdownProps {
+  redirectUrl: string;
+  chapterId?: string;
+  seriesId?: string;
+  seriesTitle?: string;
+  seriesSlug?: string;
+  chapterNumber?: string | number;
+}
+
+export function AdCountdown({ redirectUrl, chapterId, seriesId, seriesTitle, seriesSlug, chapterNumber }: AdCountdownProps) {
   const [timeLeft, setTimeLeft] = useState(5);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -29,12 +43,47 @@ export function AdCountdown({ downloadUrl }: { downloadUrl: string }) {
   }
 
   return (
-    <Link 
-      href={downloadUrl}
-      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
+    <button 
+      onClick={async () => {
+        if (isProcessing) return;
+        
+        if (Capacitor.isNativePlatform() && chapterId && seriesId && seriesTitle && seriesSlug) {
+          setIsProcessing(true);
+          
+          try {
+            // Hit the API to resolve the URL and register the view
+            const resolveUrl = redirectUrl + (redirectUrl.includes('?') ? '&' : '?') + 'resolve=true';
+            const res = await fetch(resolveUrl);
+            
+            if (!res.ok) throw new Error('Failed to resolve download URL');
+            
+            const data = await res.json();
+            
+            if (data.url) {
+              // Start the background transfer and validation process
+              startNativeDownload(chapterId, data.url, seriesId, seriesTitle, seriesSlug, chapterNumber || '1');
+              
+              // Immediately send user back to the reader while it downloads in the background
+              toast.success('Download started in background');
+              router.back();
+              return;
+            }
+          } catch (error) {
+            console.error('Failed native resolve flow:', error);
+            toast.error('Download failed to start');
+          }
+          
+          setIsProcessing(false);
+        }
+        
+        // Fallback to normal web flow (or if native fails)
+        window.location.href = redirectUrl;
+      }}
+      disabled={isProcessing}
+      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25 disabled:opacity-50"
     >
       <ArrowDownToLine className="h-5 w-5" />
-      Continue to Download
-    </Link>
+      {isProcessing ? 'Processing...' : 'Continue to Download'}
+    </button>
   );
 }

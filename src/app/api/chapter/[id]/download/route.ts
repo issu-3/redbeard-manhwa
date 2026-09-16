@@ -137,7 +137,16 @@ export async function GET(
       console.error('Failed to update download analytics:', e);
     }
 
-    // 3. Redirect to the actual download URL
+    // 3. Check for native resolve parameter
+    const { searchParams } = new URL(request.url);
+    if (searchParams.get('resolve') === 'true') {
+      return NextResponse.json({
+        url: chapter.downloadUrl,
+        provider: chapter.sourceType
+      });
+    }
+
+    // 4. Redirect to the actual download URL
     return NextResponse.redirect(chapter.downloadUrl);
   } catch (error) {
     console.error('Download route error:', error);
