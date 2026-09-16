@@ -1,0 +1,6 @@
+1:"$Sreact.fragment"
+2:I[29494,["/_next/static/chunks/05dzx_nzyfa4w.js","/_next/static/chunks/3mf9gg2ozi8vd.js","/_next/static/chunks/14mrh2-p_w84d.js","/_next/static/chunks/3jvf6lv6rusbu.js","/_next/static/chunks/24yfmp68w4oit.js"],"OfflineLibraryClient"]
+3:I[97367,["/_next/static/chunks/05dzx_nzyfa4w.js","/_next/static/chunks/3mf9gg2ozi8vd.js","/_next/static/chunks/14mrh2-p_w84d.js"],"OutletBoundary"]
+4:"$Sreact.suspense"
+0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"container mx-auto px-4 py-8 max-w-5xl","children":["$","$L2",null,{}]}],[["$","script","script-0",{"src":"/_next/static/chunks/3jvf6lv6rusbu.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/24yfmp68w4oit.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"DeXP9cLyDiR8OenzncfaG"}
+5:null

@@ -88,6 +88,8 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
+import { NetworkListener } from '@/components/shared/NetworkListener';
+
 export default async function RootLayout({
   children,
 }: {
@@ -157,6 +159,7 @@ export default async function RootLayout({
             forcedTheme={theme !== 'system' ? theme : undefined}
             disableTransitionOnChange
           >
+            <NetworkListener />
             {children}
             <Toaster position="bottom-right" />
           </ThemeProvider>

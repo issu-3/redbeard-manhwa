@@ -498,16 +498,22 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
         className="h-full w-full"
         onClick={handleContainerClick}
       >
-        {chapter.sourceType === 'DOWNLOAD' ? (
+        {chapter.sourceType === 'DOWNLOAD' || chapter.sourceType === 'IMPORTED' ? (
           <div className="flex flex-col items-center justify-center h-full w-full p-4">
             <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 text-center shadow-2xl">
-              <ArrowDownToLine className="h-16 w-16 text-primary mx-auto mb-6" />
-              <h2 className="text-2xl font-bold text-text-primary mb-2">
-                Download Available
+              <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
+                <ArrowDownToLine className="h-8 w-8" />
+              </div>
+              
+              <h2 className="text-2xl font-black text-text-primary mb-2">
+                {chapter.sourceType === 'IMPORTED' ? 'Imported Chapter' : 'Download Available'}
               </h2>
               <p className="text-text-secondary mb-8">
-                This chapter is provided as a direct download. Click the button below to get it from {chapter.downloadProvider || 'the provider'}.
+                {chapter.sourceType === 'IMPORTED' 
+                  ? 'This chapter was imported from your device and is available for offline reading.' 
+                  : 'This chapter is available as a high-quality PDF download for offline reading.'}
               </p>
+              
               {downloadState?.status === 'DOWNLOADING' ? (
                 <div className="w-full text-center mb-8">
                   <div className="w-full bg-foreground/10 rounded-full h-4 mb-2 overflow-hidden">
@@ -521,10 +527,24 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                   </p>
                 </div>
               ) : downloadState?.status === 'COMPLETED' ? (
-                <div className="inline-flex items-center justify-center w-full gap-2 rounded-xl bg-green-600 px-8 py-4 text-base font-bold text-white shadow-lg mb-8">
-                  Downloaded
-                </div>
-              ) : (
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (downloadState.localUri && Capacitor.isNativePlatform()) {
+                      try {
+                        const { Browser } = await import('@capacitor/browser');
+                        await Browser.open({ url: downloadState.localUri });
+                      } catch (err) {
+                        console.error('Failed to open local file', err);
+                      }
+                    }
+                  }}
+                  className="inline-flex items-center justify-center w-full gap-2 rounded-xl bg-green-600 px-8 py-4 text-base font-bold text-white transition-all hover:bg-green-700 active:scale-95 shadow-lg mb-8"
+                >
+                  <ArrowDownToLine className="h-5 w-5" />
+                  Read Offline
+                </button>
+              ) : chapter.sourceType !== 'IMPORTED' ? (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -539,7 +559,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                   <ArrowDownToLine className="h-5 w-5" />
                   Download Now
                 </button>
-              )}
+              ) : null}
               <div className="mt-8 pt-8 border-t border-border flex justify-between items-center">
                 {prevSlug ? (
                   <Link

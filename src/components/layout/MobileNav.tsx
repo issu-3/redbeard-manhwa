@@ -3,16 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Compass, Search, BookOpen, User } from 'lucide-react';
+import { BookOpen, Bell, History, Compass, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MOBILE_NAV_ITEMS } from '@/lib/constants';
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  Home,
-  Compass,
-  Search,
   BookOpen,
-  User,
+  Bell,
+  History,
+  Compass,
+  Settings,
 };
 
 export function MobileNav() {
@@ -26,12 +26,10 @@ export function MobileNav() {
     >
       <div className="flex items-center justify-around px-2 py-2">
         {MOBILE_NAV_ITEMS.map((item) => {
-          const Icon = ICON_MAP[item.icon] || Home;
+          const Icon = ICON_MAP[item.icon] || BookOpen;
           const isActive =
             item.href === '/'
               ? pathname === '/'
-              : item.label === 'Browse'
-              ? pathname.startsWith('/browse')
               : pathname.startsWith(item.href);
 
           return (

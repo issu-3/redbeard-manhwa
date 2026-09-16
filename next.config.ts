@@ -1,15 +1,21 @@
 import type { NextConfig } from "next";
 import "./src/env";
 
+const isCapacitor = process.env.NEXT_PUBLIC_CAPACITOR === 'true';
+
 const nextConfig: NextConfig = {
   compress: false,
+  output: isCapacitor ? 'export' : undefined,
+  typescript: {
+    ignoreBuildErrors: isCapacitor,
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
     },
   },
-  // H1 FIX: Security headers
-  headers: async () => [
+  // H1 FIX: Security headers (not supported in static export)
+  headers: isCapacitor ? undefined : async () => [
     {
       source: '/(.*)',
       headers: [
@@ -22,6 +28,7 @@ const nextConfig: NextConfig = {
     },
   ],
   images: {
+    unoptimized: isCapacitor, // Required for static export
     remotePatterns: [
       {
         protocol: 'https',

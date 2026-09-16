@@ -8,8 +8,11 @@ export interface DownloadMetadata {
   seriesTitle: string;
   seriesSlug: string;
   chapterNumber: string | number;
+  chapterId?: string;
   filename: string;
   coverImage?: string;
+  sourceType?: 'DOWNLOAD' | 'IMPORTED';
+  fileSize?: number;
 }
 
 export interface DownloadState {
@@ -20,6 +23,7 @@ export interface DownloadState {
   metadata?: DownloadMetadata;
   createdAt: number;
   completedAt?: number;
+  sourceType?: 'DOWNLOAD' | 'IMPORTED';
 }
 
 interface DownloadStore {
@@ -32,6 +36,8 @@ interface DownloadStore {
   clearDownload: (chapterId: string) => void;
   getDownloadState: (chapterId: string) => DownloadState;
   hydrateFromDisk: (chapterId: string, status: DownloadStateStatus, localUri?: string) => void;
+  importFile: (chapterId: string, metadata: DownloadMetadata, localUri: string) => void;
+  deleteLocalChapter: (chapterId: string) => Promise<void>;
 }
 
 const defaultState: DownloadState = {
@@ -44,15 +50,15 @@ export const useDownloadStore = create<DownloadStore>()(
   persist(
     (set, get) => ({
       downloads: {},
-      
+
       startDownload: (chapterId, metadata) => set((state) => ({
         downloads: {
           ...state.downloads,
-          [chapterId]: { 
-            status: 'DOWNLOADING', 
-            progress: 0, 
-            metadata, 
-            createdAt: Date.now() 
+          [chapterId]: {
+            status: 'DOWNLOADING',
+            progress: 0,
+            metadata,
+            createdAt: Date.now()
           }
         }
       })),
@@ -60,7 +66,7 @@ export const useDownloadStore = create<DownloadStore>()(
       updateProgress: (chapterId, progress) => set((state) => {
         const current = state.downloads[chapterId];
         if (!current || current.status !== 'DOWNLOADING') return state;
-        
+
         return {
           downloads: {
             ...state.downloads,
@@ -74,10 +80,10 @@ export const useDownloadStore = create<DownloadStore>()(
         return {
           downloads: {
             ...state.downloads,
-            [chapterId]: { 
-              ...(current || defaultState), 
-              status: 'COMPLETED', 
-              progress: 1, 
+            [chapterId]: {
+              ...(current || defaultState),
+              status: 'COMPLETED',
+              progress: 1,
               localUri,
               completedAt: Date.now()
             }
@@ -90,11 +96,11 @@ export const useDownloadStore = create<DownloadStore>()(
         return {
           downloads: {
             ...state.downloads,
-            [chapterId]: { 
-              ...(current || defaultState), 
-              status: 'FAILED', 
-              progress: 0, 
-              error 
+            [chapterId]: {
+              ...(current || defaultState),
+              status: 'FAILED',
+              progress: 0,
+              error
             }
           }
         };
@@ -105,9 +111,9 @@ export const useDownloadStore = create<DownloadStore>()(
         return {
           downloads: {
             ...state.downloads,
-            [chapterId]: { 
-              ...(current || defaultState), 
-              status: 'CANCELLED', 
+            [chapterId]: {
+              ...(current || defaultState),
+              status: 'CANCELLED',
               progress: 0
             }
           }
@@ -127,7 +133,7 @@ export const useDownloadStore = create<DownloadStore>()(
       hydrateFromDisk: (chapterId, status, localUri) => set((state) => {
         const current = state.downloads[chapterId];
         if (!current) return state; // Don't hydrate if we don't have metadata
-        
+
         return {
           downloads: {
             ...state.downloads,
@@ -139,7 +145,30 @@ export const useDownloadStore = create<DownloadStore>()(
             }
           }
         };
-      })
+      }),
+
+      importFile: (chapterId, metadata, localUri) => set((state) => ({
+        downloads: {
+          ...state.downloads,
+          [chapterId]: {
+            status: 'COMPLETED',
+            progress: 1,
+            localUri,
+            metadata: {
+              ...metadata,
+              sourceType: 'IMPORTED'
+            },
+            sourceType: 'IMPORTED',
+            createdAt: Date.now(),
+            completedAt: Date.now()
+          }
+        }
+      })),
+
+      deleteLocalChapter: async (chapterId) => {
+        // Just clear from state here; filesystem deletion should be handled by the caller
+        get().clearDownload(chapterId);
+      }
     }),
     {
       name: 'redbeard-downloads-storage',
@@ -149,8 +178,8 @@ export const useDownloadStore = create<DownloadStore>()(
         }
         return {
           getItem: () => null,
-          setItem: () => {},
-          removeItem: () => {},
+          setItem: () => { },
+          removeItem: () => { },
         };
       }),
       partialize: (state) => {
