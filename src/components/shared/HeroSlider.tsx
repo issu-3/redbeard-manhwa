@@ -184,55 +184,73 @@ export function HeroSlider({ slides }: HeroSliderProps) {
         </motion.div>
       </AnimatePresence>
 
-      <div className="relative z-10 flex h-full items-end px-4 pb-4 pt-6 md:px-12 md:pb-16 md:pt-16 lg:px-20 pointer-events-none">
-        <div className="max-w-2xl pointer-events-auto">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={slide.id + '-content'}
-              variants={contentContainerVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
-              <motion.div variants={itemVariants} className="mb-1 md:mb-3 flex items-center flex-wrap gap-1.5 md:gap-2">
-                <Badge variant={statusVariant[slide.status] || 'primary'} size="sm" className="font-bold uppercase tracking-wider">
-                  {slide.status}
-                </Badge>
-                {slide.genres.slice(0, 3).map((genre) => (
-                  <span
-                    key={genre.slug}
-                    className="rounded-md bg-foreground/10 px-3 py-1 text-xs font-medium text-text-primary backdrop-blur-sm border border-border/50"
-                  >
-                    {genre.name}
-                  </span>
-                ))}
+      <div className="relative z-10 flex h-full flex-col justify-end pointer-events-none">
+        
+        {/* Main Content Safe Area */}
+        <div className="px-4 pt-6 md:px-12 md:pt-16 lg:px-20 pointer-events-auto">
+          <div className="max-w-2xl">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={slide.id + '-content'}
+                variants={contentContainerVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <motion.div variants={itemVariants} className="mb-1 md:mb-3 flex items-center flex-wrap gap-1.5 md:gap-2">
+                  <Badge variant={statusVariant[slide.status] || 'primary'} size="sm" className="font-bold uppercase tracking-wider">
+                    {slide.status}
+                  </Badge>
+                  {slide.genres.slice(0, 3).map((genre) => (
+                    <span
+                      key={genre.slug}
+                      className="rounded-md bg-foreground/10 px-3 py-1 text-xs font-medium text-text-primary backdrop-blur-sm border border-border/50"
+                    >
+                      {genre.name}
+                    </span>
+                  ))}
+                </motion.div>
+
+                <motion.h1 variants={itemVariants} className="mb-1.5 md:mb-4 text-xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
+                    style={{ fontFamily: 'var(--font-heading)' }}>
+                  {slide.title}
+                </motion.h1>
+
+                <motion.p variants={itemVariants} className="mb-8 hidden md:block line-clamp-3 max-w-lg text-sm font-medium leading-relaxed text-text-secondary md:text-base md:leading-relaxed">
+                  {slide.description}
+                </motion.p>
+
+                <motion.div variants={itemVariants} className="flex items-center gap-2 md:gap-3">
+                  {slide.slug ? (
+                    <Link
+                      href={`/series/${slide.slug}`}
+                      className="inline-flex h-8 md:h-10 items-center justify-center gap-1.5 md:gap-2 rounded-xl bg-primary px-3 md:px-4 py-1 md:py-2 text-xs md:text-base font-bold text-white transition-all duration-200 hover:bg-primary-hover hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/40 active:scale-[0.97] shadow-md shadow-primary/25"
+                    >
+                      <Download className="h-4 w-4 md:h-5 md:w-5" />
+                      Download
+                    </Link>
+                  ) : null}
+                  <div className="flex h-8 md:h-10 items-center transition-all duration-200 hover:scale-[1.02] active:scale-[0.97]">
+                    <BookmarkButton seriesId={slide.id} initialBookmarked={false} />
+                  </div>
+                </motion.div>
               </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
 
-              <motion.h1 variants={itemVariants} className="mb-1.5 md:mb-4 text-xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
-                  style={{ fontFamily: 'var(--font-heading)' }}>
-                {slide.title}
-              </motion.h1>
-
-              <motion.p variants={itemVariants} className="mb-8 hidden md:block line-clamp-3 max-w-lg text-sm font-medium leading-relaxed text-text-secondary md:text-base md:leading-relaxed">
-                {slide.description}
-              </motion.p>
-
-              <motion.div variants={itemVariants} className="flex items-center gap-2 md:gap-3">
-                {slide.slug ? (
-                  <Link
-                    href={`/series/${slide.slug}`}
-                    className="inline-flex h-8 md:h-10 items-center justify-center gap-1.5 md:gap-2 rounded-xl bg-primary px-3 md:px-4 py-1 md:py-2 text-xs md:text-base font-bold text-white transition-all duration-200 hover:bg-primary-hover hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/40 active:scale-[0.97] shadow-md shadow-primary/25"
-                  >
-                    <Download className="h-4 w-4 md:h-5 md:w-5" />
-                    Download
-                  </Link>
-                ) : null}
-                <div className="flex h-8 md:h-10 items-center transition-all duration-200 hover:scale-[1.02] active:scale-[0.97]">
-                  <BookmarkButton seriesId={slide.id} initialBookmarked={false} />
-                </div>
-              </motion.div>
-            </motion.div>
-          </AnimatePresence>
+        {/* Indicator Safe Area */}
+        <div className="flex w-full justify-center gap-2 py-4 md:py-6 pointer-events-auto">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              className={`h-1.5 md:h-2 rounded-full transition-all duration-500 ease-in-out ${
+                i === current ? 'w-6 md:w-8 bg-primary shadow-sm shadow-primary/50' : 'w-1.5 md:w-2 bg-foreground/30 hover:bg-foreground/50 hover:w-3 md:hover:w-4'
+              }`}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
         </div>
       </div>
 
@@ -250,19 +268,6 @@ export function HeroSlider({ slides }: HeroSliderProps) {
       >
         <ChevronRight className="h-5 w-5" />
       </button>
-
-      <div className="absolute bottom-2 md:bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goTo(i)}
-            className={`h-1.5 md:h-2 rounded-full transition-all duration-500 ease-in-out ${
-              i === current ? 'w-6 md:w-8 bg-primary shadow-sm shadow-primary/50' : 'w-1.5 md:w-2 bg-foreground/30 hover:bg-foreground/50 hover:w-3 md:hover:w-4'
-            }`}
-            aria-label={`Go to slide ${i + 1}`}
-          />
-        ))}
-      </div>
     </section>
   );
 }

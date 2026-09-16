@@ -25,8 +25,19 @@ export const getCachedHomepageSections = async (): Promise<HomepageSection[]> =>
 export const getCachedHeroBanners = async () => {
     try {
       const banners = await prisma.heroBanner.findMany({ orderBy: { order: 'asc' } });
+      
+      const slugs = banners.map(b => normalizeSeriesLink(b.buttonUrl)).filter(Boolean) as string[];
+      
+      const seriesList = slugs.length > 0 ? await prisma.series.findMany({
+        where: { slug: { in: slugs } },
+        select: { slug: true, status: true, genres: { select: { name: true, slug: true } } }
+      }) : [];
+      
+      const seriesMap = new Map(seriesList.map(s => [s.slug, s]));
+
       return banners.map(b => {
         const slug = normalizeSeriesLink(b.buttonUrl) || null;
+        const seriesData = slug ? seriesMap.get(slug) : null;
         
         return {
           id: b.id,
@@ -35,11 +46,11 @@ export const getCachedHeroBanners = async () => {
           coverImage: b.desktopImage,
           bannerImage: b.desktopImage,
           description: b.buttonText || '',
-          genres: [],
+          genres: seriesData?.genres || [],
           averageRating: 0,
           chapterCount: 0,
           totalViews: 0,
-          status: 'ONGOING' as const
+          status: seriesData?.status || 'ONGOING'
         };
       });
     } catch (e) {
