@@ -249,9 +249,7 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                     {[
                       { id: 'homepage', label: 'Homepage' },
                       { id: 'series_detail', label: 'Series Detail' },
-                      { id: 'reader_top', label: 'Reader Top' },
-                      { id: 'reader_middle', label: 'Reader Middle' },
-                      { id: 'reader_bottom', label: 'Reader Bottom' },
+                      { id: 'download', label: 'Download' },
                       { id: 'footer', label: 'Footer' }
                     ].map(placement => (
                       <div key={placement.id}>

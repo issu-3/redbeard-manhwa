@@ -7,7 +7,6 @@ import type { ChapterData } from '@/types';
 import { auth } from '@/auth';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
-import { AdRenderer } from '@/components/ads/AdRenderer';
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 // OPT-21: Pre-render recent chapters at build time
@@ -386,9 +385,6 @@ export default async function ChapterPage({
         chapter={chapter} 
         comments={commentsData} 
         currentUserId={session?.user?.id} 
-        adSlotTop={<AdRenderer placement="reader_top" />}
-        adSlotMiddle={<AdRenderer placement="reader_middle" />}
-        adSlotBottom={<AdRenderer placement="reader_bottom" />}
         userPreferences={userPreferences}
         defaultReadingMode={settings.defaultReadingMode || 'vertical'}
         youtubeUrl={settings.youtubeUrl || null}

@@ -46,9 +46,6 @@ interface ChapterReaderProps {
   chapter: ChapterData;
   comments: CommentData[];
   currentUserId?: string;
-  adSlotTop?: React.ReactNode;
-  adSlotMiddle?: React.ReactNode;
-  adSlotBottom?: React.ReactNode;
   userPreferences?: Record<string, any>;
   defaultReadingMode?: string;
   youtubeUrl?: string | null;
@@ -65,7 +62,7 @@ function getSafeSlug(c?: { slug?: string | null; number?: number | null } | null
   return null;
 }
 
-export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adSlotMiddle, adSlotBottom, userPreferences, defaultReadingMode, youtubeUrl }: ChapterReaderProps) {
+export function ChapterReader({ chapter, comments, currentUserId, userPreferences, defaultReadingMode, youtubeUrl }: ChapterReaderProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -508,8 +505,8 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
               <p className="text-text-secondary mb-8">
                 This chapter is provided as a direct download. Click the button below to get it from {chapter.downloadProvider || 'the provider'}.
               </p>
-              <a
-                href={`/api/chapter/${chapter.id}/download`}
+              <Link
+                href={`/download/${chapter.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
@@ -517,7 +514,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
               >
                 <ArrowDownToLine className="h-5 w-5" />
                 Download Now
-              </a>
+              </Link>
               <div className="mt-8 pt-8 border-t border-border flex justify-between items-center">
                 {prevSlug ? (
                   <Link
@@ -560,22 +557,12 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
               )}
               style={filterStyle}
             >
-              {adSlotTop && (
-                <div className="max-w-[900px] mx-auto px-4 mb-8" onClick={e => e.stopPropagation()}>
-                  {adSlotTop}
-                </div>
-              )}
-              {chapter.images.map((img, index) => (
-                <React.Fragment key={img.id}>
-                  {index === Math.floor(chapter.images.length / 2) && adSlotMiddle && (
-                    <div className="max-w-[900px] mx-auto px-4 my-8" onClick={e => e.stopPropagation()}>
-                      {adSlotMiddle}
-                    </div>
-                  )}
-                  <div
-                    data-page={img.pageNumber}
-                    className="relative w-full"
-                  >
+              {chapter.images.map((img) => (
+                <div
+                  key={img.id}
+                  data-page={img.pageNumber}
+                  className="relative w-full"
+                >
                   {/* Loading skeleton */}
                   {!loadedImages.has(img.pageNumber) && (
                     <div
@@ -607,14 +594,7 @@ export function ChapterReader({ chapter, comments, currentUserId, adSlotTop, adS
                     sizes="(max-width: 900px) 100vw, 900px"
                   />
                 </div>
-                </React.Fragment>
               ))}
-
-              {adSlotBottom && (
-                <div className="max-w-[900px] mx-auto px-4 mt-8" onClick={e => e.stopPropagation()}>
-                  {adSlotBottom}
-                </div>
-              )}
 
               {/* Subscribe Card */}
               <div className="max-w-[900px] mx-auto px-4 mt-12" onClick={e => e.stopPropagation()}>

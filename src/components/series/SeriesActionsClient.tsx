@@ -37,7 +37,7 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
   const safeContinueSlug = continueChapterObj ? (typeof continueChapterObj.slug === 'string' && continueChapterObj.slug.trim() ? continueChapterObj.slug : continueChapterObj.number != null ? String(continueChapterObj.number) : null) : null;
 
   const continueLink = continueChapterObj
-    ? (continueChapterObj.sourceType === 'DOWNLOAD' && continueChapterObj.downloadUrl ? `/api/chapter/${continueChapterObj.id}/download` : safeContinueSlug ? `/series/${seriesSlug}/chapter/${safeContinueSlug}` : '#')
+    ? (continueChapterObj.sourceType === 'DOWNLOAD' && continueChapterObj.downloadUrl ? `/download/${continueChapterObj.id}` : safeContinueSlug ? `/series/${seriesSlug}/chapter/${safeContinueSlug}` : '#')
     : firstChapterLink;
 
   const hasHistory = !!continueChapterObj;

@@ -2,7 +2,7 @@ import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdsterraRenderer } from './AdsterraRenderer';
 import { MonetagRenderer } from './MonetagRenderer';
 
-type Placement = 'homepage' | 'series_detail' | 'reader_top' | 'reader_middle' | 'reader_bottom' | 'footer';
+type Placement = 'homepage' | 'series_detail' | 'download' | 'footer';
 
 export async function AdRenderer({ placement }: { placement: Placement }) {
   const settings = await getCachedSettings();
@@ -21,7 +21,7 @@ export async function AdRenderer({ placement }: { placement: Placement }) {
       return settings.ads_monetag_banner_script || settings.ads_monetag_global_script || null;
     }
     if (p === 'adsterra') {
-      const isNative = placement === 'reader_top' || placement === 'reader_middle' || placement === 'reader_bottom';
+      const isNative = placement === 'download';
       // Prefer the appropriate format but fall back to the other if empty
       const primaryScript = isNative ? settings.ads_adsterra_native_banner : settings.ads_adsterra_banner;
       const fallbackScript = isNative ? settings.ads_adsterra_banner : settings.ads_adsterra_native_banner;

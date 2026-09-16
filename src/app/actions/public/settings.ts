@@ -55,9 +55,7 @@ export async function getSettings() {
         { key: 'ads_provider_priority', value: 'adsterra,monetag' },
         { key: 'ads_placement_homepage', value: 'none' },
         { key: 'ads_placement_series_detail', value: 'none' },
-        { key: 'ads_placement_reader_top', value: 'none' },
-        { key: 'ads_placement_reader_middle', value: 'none' },
-        { key: 'ads_placement_reader_bottom', value: 'none' },
+        { key: 'ads_placement_download', value: 'none' },
         { key: 'ads_placement_footer', value: 'none' }
       ];
 
