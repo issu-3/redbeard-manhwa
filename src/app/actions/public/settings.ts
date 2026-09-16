@@ -8,7 +8,7 @@ const getCachedSettingsInternal = unstable_cache(
   async () => {
     return await getSettings();
   },
-  ['site-settings'],
+  ['site-settings-v2'],
   { tags: ['settings'], revalidate: 3600 }
 );
 
