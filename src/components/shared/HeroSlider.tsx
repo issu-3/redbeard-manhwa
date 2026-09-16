@@ -94,8 +94,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
 
   return (
     <section
-      className="relative w-full overflow-hidden"
-      style={{ height: 'clamp(340px, 45vh, 500px)' }}
+      className="relative w-full overflow-hidden aspect-[16/7.5] max-h-[260px] md:aspect-auto md:max-h-none md:h-[clamp(340px,45vh,500px)]"
       onMouseEnter={stopAutoplay}
       onMouseLeave={startAutoplay}
       role="region"
@@ -132,7 +131,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
         </motion.div>
       </AnimatePresence>
 
-      <div className="relative z-10 flex h-full items-end px-5 pb-6 pt-12 md:px-12 md:pb-16 md:pt-16 lg:px-20 pointer-events-none">
+      <div className="relative z-10 flex h-full items-end px-4 pb-4 pt-6 md:px-12 md:pb-16 md:pt-16 lg:px-20 pointer-events-none">
         <div className="max-w-2xl pointer-events-auto">
           <AnimatePresence mode="wait">
             <motion.div
@@ -142,7 +141,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <div className="mb-2 md:mb-3 flex items-center flex-wrap gap-2">
+              <div className="mb-1 md:mb-3 flex items-center flex-wrap gap-1.5 md:gap-2">
                 <Badge variant={statusVariant[slide.status] || 'primary'} size="sm" className="font-bold uppercase tracking-wider">
                   {slide.status}
                 </Badge>
@@ -156,7 +155,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                 ))}
               </div>
 
-              <h1 className="mb-2 md:mb-4 text-2xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
+              <h1 className="mb-1.5 md:mb-4 text-xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
                   style={{ fontFamily: 'var(--font-heading)' }}>
                 {slide.title}
               </h1>
@@ -165,26 +164,26 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                 {slide.description}
               </p>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 md:gap-3">
                 {slide.slug ? (
                   <>
                     <Link
                       href={`/series/${slide.slug}`}
-                      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
+                      className="inline-flex h-9 md:h-10 items-center justify-center gap-2 rounded-xl bg-primary px-3 md:px-4 py-1.5 md:py-2 text-sm md:text-base font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
                     >
                       <Download className="h-5 w-5" />
                       Download
                     </Link>
                     <Link
                       href={`/series/${slide.slug}`}
-                      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border-2 border-primary/50 bg-background/50 px-4 py-2 font-bold text-text-primary backdrop-blur-md transition-all hover:bg-primary/10 hover:border-primary hover:scale-[1.02] active:scale-95"
+                      className="inline-flex h-9 md:h-10 items-center justify-center gap-2 rounded-xl border-2 border-primary/50 bg-background/50 px-3 md:px-4 py-1.5 md:py-2 text-sm md:text-base font-bold text-text-primary backdrop-blur-md transition-all hover:bg-primary/10 hover:border-primary hover:scale-[1.02] active:scale-95"
                     >
                       <Info className="h-5 w-5" />
                       Details
                     </Link>
                   </>
                 ) : null}
-                <div className="h-[52px]">
+                <div className="h-9 md:h-[52px]">
                   {/* BookmarkButton handles its own height/padding, we just ensure it aligns by putting it in a flex context */}
                   <BookmarkButton seriesId={slide.id} initialBookmarked={false} />
                 </div>
@@ -209,7 +208,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
         <ChevronRight className="h-5 w-5" />
       </button>
 
-      <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+      <div className="absolute bottom-2 md:bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2">
         {slides.map((_, i) => (
           <button
             key={i}
