@@ -31,7 +31,7 @@ export function HomepageClient({
 }: HomepageClientProps) {
 
   return (
-    <div className="space-y-6 md:space-y-10 pb-2 md:pb-4">
+    <div className="space-y-5 md:space-y-10 pb-2 md:pb-4">
       {sections.map(sec => {
         let data = sectionData[sec.type] || [];
         
