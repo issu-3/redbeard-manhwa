@@ -8,7 +8,7 @@ const getCachedSettingsInternal = unstable_cache(
   async () => {
     return await getSettings();
   },
-  ['site-settings-v2'],
+  ['site-settings-v3'],
   { tags: ['settings'], revalidate: 3600 }
 );
 
@@ -79,8 +79,19 @@ export async function getSettings() {
     }
 
     const settingsMap: Record<string, string> = {};
+    const BAD_TEXT = 'REDESIGN AD PLACEMENT SYSTEM';
+    const BAD_TEXT_2 = 'DOWNLOAD BASED ONLY';
+    
     for (const s of settings) {
-      settingsMap[s.key] = s.value;
+      if (s.value.includes(BAD_TEXT) || s.value.includes(BAD_TEXT_2)) {
+        let fallback = '';
+        if (s.key === 'siteName') fallback = 'REDBEARD';
+        if (s.key === 'seo_site_title') fallback = 'REDBEARD - The Ultimate Reading Experience';
+        if (s.key === 'seo_site_description') fallback = 'Premium reading platform offering the best reading experience.';
+        settingsMap[s.key] = fallback;
+      } else {
+        settingsMap[s.key] = s.value;
+      }
     }
     
     return settingsMap;
