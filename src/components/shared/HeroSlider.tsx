@@ -201,14 +201,6 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                   <Badge variant={statusVariant[slide.status] || 'primary'} size="sm" className="font-bold uppercase tracking-wider">
                     {slide.status}
                   </Badge>
-                  {slide.genres.slice(0, 3).map((genre) => (
-                    <span
-                      key={genre.slug}
-                      className="rounded-md bg-foreground/10 px-3 py-1 text-xs font-medium text-text-primary backdrop-blur-sm border border-border/50"
-                    >
-                      {genre.name}
-                    </span>
-                  ))}
                 </motion.div>
 
                 <motion.h1 variants={itemVariants} className="mb-1.5 md:mb-4 text-xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
