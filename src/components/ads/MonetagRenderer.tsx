@@ -56,6 +56,8 @@ export function MonetagRenderer({ placement, html }: MonetagRendererProps) {
           html, body { 
             margin: 0 !important; 
             padding: 0 !important; 
+            width: 100% !important;
+            height: 100% !important;
             overflow: hidden !important; 
             background: transparent !important; 
             background-color: transparent !important;
