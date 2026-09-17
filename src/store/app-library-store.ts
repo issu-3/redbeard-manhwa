@@ -22,27 +22,48 @@ interface AppLibraryStore {
   setHasHydrated: (state: boolean) => void;
 }
 
+const isNativeApp = () => {
+  if (typeof window === 'undefined') return false;
+  return Capacitor.isNativePlatform() || navigator.userAgent.includes('RedbeardApp');
+};
+
 const capacitorStorage = {
   getItem: async (name: string): Promise<string | null> => {
-    if (!Capacitor.isNativePlatform()) {
+    if (!isNativeApp()) {
       return typeof window !== 'undefined' ? localStorage.getItem(name) : null;
     }
-    const { value } = await Preferences.get({ key: name });
-    return value;
+    try {
+      const { value } = await Preferences.get({ key: name });
+      console.log(`[AppLibraryStore] Preferences.get(${name}) returned:`, value ? 'data present' : 'null');
+      return value;
+    } catch (e) {
+      console.error('[AppLibraryStore] Preferences.get error:', e);
+      return null;
+    }
   },
   setItem: async (name: string, value: string): Promise<void> => {
-    if (!Capacitor.isNativePlatform()) {
+    if (!isNativeApp()) {
       if (typeof window !== 'undefined') localStorage.setItem(name, value);
       return;
     }
-    await Preferences.set({ key: name, value });
+    try {
+      await Preferences.set({ key: name, value });
+      console.log(`[AppLibraryStore] Preferences.set(${name}) completed successfully.`);
+    } catch (e) {
+      console.error('[AppLibraryStore] Preferences.set error:', e);
+    }
   },
   removeItem: async (name: string): Promise<void> => {
-    if (!Capacitor.isNativePlatform()) {
+    if (!isNativeApp()) {
       if (typeof window !== 'undefined') localStorage.removeItem(name);
       return;
     }
-    await Preferences.remove({ key: name });
+    try {
+      await Preferences.remove({ key: name });
+      console.log(`[AppLibraryStore] Preferences.remove(${name}) completed successfully.`);
+    } catch (e) {
+      console.error('[AppLibraryStore] Preferences.remove error:', e);
+    }
   },
 };
 
@@ -53,17 +74,23 @@ export const useAppLibraryStore = create<AppLibraryStore>()(
       hasHydrated: false,
       setHasHydrated: (state) => set({ hasHydrated: state }),
 
-      addToLibrary: (series) => set((state) => {
-        if (state.savedSeries[series.seriesId]) {
-          return state; // Already saved
+      addToLibrary: (series) => {
+        // Prevent adding if not hydrated yet to avoid state overwrite anomalies
+        if (!get().hasHydrated) {
+          console.warn('[AppLibraryStore] Attempted to add to library before hydration finished.');
         }
-        return {
-          savedSeries: {
-            ...state.savedSeries,
-            [series.seriesId]: { ...series, addedAt: Date.now() },
+        set((state) => {
+          if (state.savedSeries[series.seriesId]) {
+            return state; // Already saved
           }
-        };
-      }),
+          return {
+            savedSeries: {
+              ...state.savedSeries,
+              [series.seriesId]: { ...series, addedAt: Date.now() },
+            }
+          };
+        });
+      },
 
       removeFromLibrary: (seriesId) => set((state) => {
         const newSaved = { ...state.savedSeries };
@@ -89,8 +116,13 @@ export const useAppLibraryStore = create<AppLibraryStore>()(
     {
       name: 'redbeard-app-library-storage',
       storage: createJSONStorage(() => capacitorStorage),
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          console.error('[AppLibraryStore] Hydration failed:', error);
+        }
+        if (state) {
+          state.setHasHydrated(true);
+        }
       },
     }
   )

@@ -195,6 +195,8 @@ export function OfflineLibraryClient() {
 
   // Handle SSR hydration mismatch on native platform check
   if (!mounted) return null;
+  
+  const { hasHydrated } = useAppLibraryStore();
 
   return (
     <div className="space-y-6 pb-[80px]">
@@ -283,7 +285,12 @@ export function OfflineLibraryClient() {
         </div>
       ) : (
         <>
-          {groupedSeries.length === 0 ? (
+          {!hasHydrated ? (
+            <div className="text-center py-20 text-text-secondary">
+              <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-sm font-medium">Loading library...</p>
+            </div>
+          ) : groupedSeries.length === 0 ? (
             <div className="text-center py-20 text-text-secondary">
               <BookOpen className="h-16 w-16 mx-auto mb-4 opacity-50" />
               <p className="text-lg font-medium">Your offline library is empty</p>

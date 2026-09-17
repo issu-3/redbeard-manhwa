@@ -23,12 +23,12 @@ export function AppLibraryButton({ seriesId, title, slug, coverImage }: AppLibra
     setMounted(true);
   }, [store, seriesId]);
 
-  if (!mounted) {
+  if (!mounted || !store.hasHydrated) {
     // Return a placeholder that looks like the real button
     return (
-      <button className="flex flex-col items-center justify-center gap-1 opacity-50 px-4 py-2 w-full max-w-[120px]">
+      <button disabled className="flex flex-col items-center justify-center gap-1 opacity-50 px-4 py-2 w-full max-w-[120px] cursor-not-allowed">
         <Heart className="w-5 h-5" />
-        <span className="text-xs">Add to library</span>
+        <span className="text-xs">Loading...</span>
       </button>
     );
   }
