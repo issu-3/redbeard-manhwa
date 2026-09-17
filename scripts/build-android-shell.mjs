@@ -67,9 +67,10 @@ export default function BrowseFallback() {
       try {
         if (!Capacitor.isNativePlatform()) return;
         const response = await CapacitorHttp.get({
-          url: 'https://redbeard.store/api/search',
+          url: 'https://redbeard.store/api/search?_t=' + Date.now(),
           connectTimeout: 3000,
           readTimeout: 3000,
+          headers: { 'Cache-Control': 'no-cache' },
         });
         if (isMounted) {
           if (response.status >= 200 && response.status < 400 && response.data?.success) {
@@ -200,6 +201,9 @@ export const deleteReview = async () => {};`
     fs.removeSync(androidShellDir);
   }
   fs.copySync(outDir, androidShellDir);
+  if (fs.existsSync(path.join(androidShellDir, 'sw.js'))) {
+    fs.removeSync(path.join(androidShellDir, 'sw.js'));
+  }
   fs.removeSync(outDir);
 
   console.log('--- Android Shell Build Complete! ---');
