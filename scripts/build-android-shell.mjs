@@ -83,7 +83,7 @@ export default function BrowseFallback() {
       } catch (err) {
         if (isMounted) {
           // If booting offline, go straight to library!
-          router.replace('/library');
+          window.location.replace('/library.html');
         }
       }
     }

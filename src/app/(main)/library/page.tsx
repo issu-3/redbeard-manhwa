@@ -1,5 +1,10 @@
 import { Metadata } from 'next';
-import { OfflineLibraryClient } from '@/components/user/OfflineLibraryClient';
+import dynamic from 'next/dynamic';
+
+const OfflineLibraryClient = dynamic(
+  () => import('@/components/user/OfflineLibraryClient').then(mod => mod.OfflineLibraryClient),
+  { ssr: false }
+);
 
 export const metadata: Metadata = {
   title: 'Offline Library | REDBEARD',

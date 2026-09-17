@@ -101,7 +101,7 @@ export const MOBILE_NAV_ITEMS = [
   { label: 'Home', href: '/', icon: 'Home' },
   { label: 'Browse', href: '/browse/trending', icon: 'Compass' },
   { label: 'Search', href: '/search', icon: 'Search' },
-  { label: 'Library', href: '/library', icon: 'BookOpen' },
+  { label: 'Library', href: '/user/bookmarks', icon: 'BookOpen' },
   { label: 'Profile', href: '/user/profile', icon: 'User' },
 ] as const;
 
