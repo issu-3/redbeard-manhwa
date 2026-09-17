@@ -34,7 +34,7 @@ export async function toggleBookmark(seriesId: string) {
           where: { id: seriesId },
           data: { totalBookmarks: { decrement: 1 } },
         });
-        return false;
+        return { isBookmarked: false };
       } else {
         // Add bookmark
         await tx.bookmark.create({
@@ -48,13 +48,14 @@ export async function toggleBookmark(seriesId: string) {
           where: { id: seriesId },
           data: { totalBookmarks: { increment: 1 } },
         });
-        return true;
+        return { isBookmarked: true };
       }
     });
 
     revalidatePath('/user/bookmarks');
+    revalidatePath('/library');
     revalidatePath(`/series/[slug]`, 'page');
-    return { success: true, bookmarked: result };
+    return { success: true, bookmarked: result.isBookmarked };
   } catch (error) {
     console.error('Failed to toggle bookmark:', error);
     return { success: false, error: 'Failed to toggle bookmark' };

@@ -1,15 +1,25 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useDownloadStore, DownloadState } from '@/store/download-store';
+import { useAppLibraryStore } from '@/store/app-library-store';
 import { deleteLocalChapter, pickAndImportPdf, finalizeImport } from '@/lib/native-import';
 import { Capacitor } from '@capacitor/core';
-import { Trash2, Download, BookOpen, AlertCircle, FilePlus, X } from 'lucide-react';
+import { Trash2, Download, BookOpen, AlertCircle, FilePlus, X, BookmarkCheck } from 'lucide-react';
 import Image from 'next/image';
 import { ChapterReader } from '@/components/reader/ChapterReader';
+import { useRouter } from 'next/navigation';
 
 export function OfflineLibraryClient() {
+  const router = useRouter();
   const { downloads } = useDownloadStore();
+  const { savedSeries } = useAppLibraryStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [isImporting, setIsImporting] = useState(false);
   const [importData, setImportData] = useState<{
     tempFilename: string;
@@ -23,7 +33,9 @@ export function OfflineLibraryClient() {
 
   // Group by series
   const groupedSeries = useMemo(() => {
-    const groups: Record<string, { seriesTitle: string; seriesSlug: string; coverImage?: string; chapters: { chapterId: string; state: DownloadState }[] }> = {};
+    const groups: Record<string, { seriesTitle: string; seriesSlug: string; coverImage?: string; chapters: { chapterId: string; state: DownloadState }[]; isSavedLocally?: boolean }> = {};
+    
+    // Add downloaded chapters first
     Object.entries(downloads).forEach(([chapterId, state]) => {
       if (!state.metadata) return;
       const { seriesId, seriesTitle, seriesSlug, coverImage } = state.metadata;
@@ -39,6 +51,29 @@ export function OfflineLibraryClient() {
       groups[seriesId].chapters.push({ chapterId, state });
     });
 
+    if (Capacitor.isNativePlatform() && mounted) {
+      // Overlay saved local library series
+      Object.values(savedSeries).forEach(series => {
+        if (!groups[series.seriesId]) {
+          groups[series.seriesId] = {
+            seriesTitle: series.title,
+            seriesSlug: series.slug,
+            coverImage: series.cachedCoverUri || series.coverImage || undefined,
+            chapters: [],
+            isSavedLocally: true
+          };
+        } else {
+          groups[series.seriesId].isSavedLocally = true;
+          if (series.cachedCoverUri && !groups[series.seriesId].coverImage?.startsWith('http')) {
+             // prefer cached cover over http URL if we already set it, or override if the existing is a URL and we have cached
+             groups[series.seriesId].coverImage = series.cachedCoverUri;
+          } else if (series.cachedCoverUri) {
+             groups[series.seriesId].coverImage = series.cachedCoverUri;
+          }
+        }
+      });
+    }
+
     Object.values(groups).forEach(g => {
       g.chapters.sort((a, b) => {
         const numA = Number(a.state.metadata?.chapterNumber) || 0;
@@ -48,7 +83,7 @@ export function OfflineLibraryClient() {
     });
 
     return Object.values(groups).sort((a, b) => a.seriesTitle.localeCompare(b.seriesTitle));
-  }, [downloads]);
+  }, [downloads, savedSeries, mounted]);
 
   const handleImportClick = async () => {
     if (!Capacitor.isNativePlatform()) {
@@ -114,6 +149,14 @@ export function OfflineLibraryClient() {
 
   const [activeSeriesId, setActiveSeriesId] = useState<string | null>(null);
 
+  const handleSeriesClick = (slug: string, title: string, hasChapters: boolean, isSavedLocally?: boolean) => {
+    if (hasChapters) {
+      setActiveSeriesId(slug || title);
+    } else if (isSavedLocally) {
+      router.push(`/series/${slug}`);
+    }
+  };
+
   const activeGroup = activeSeriesId 
     ? groupedSeries.find(g => (g.seriesSlug || g.seriesTitle) === activeSeriesId) 
     : null;
@@ -149,6 +192,9 @@ export function OfflineLibraryClient() {
       </div>
     );
   }
+
+  // Handle SSR hydration mismatch on native platform check
+  if (!mounted) return null;
 
   return (
     <div className="space-y-6 pb-[80px]">
@@ -198,7 +244,7 @@ export function OfflineLibraryClient() {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-text-primary leading-tight mb-2">{activeGroup.seriesTitle}</h2>
-              <p className="text-sm font-medium text-text-secondary">{activeGroup.chapters.length} chapters available</p>
+              <p className="text-sm font-medium text-text-secondary">{activeGroup.chapters.length} chapters downloaded</p>
             </div>
           </div>
           
@@ -241,14 +287,14 @@ export function OfflineLibraryClient() {
             <div className="text-center py-20 text-text-secondary">
               <BookOpen className="h-16 w-16 mx-auto mb-4 opacity-50" />
               <p className="text-lg font-medium">Your offline library is empty</p>
-              <p className="text-sm">Download or import chapters to read them without an internet connection.</p>
+              <p className="text-sm mt-2">Download chapters or save series to your device.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {groupedSeries.map(group => (
                 <div 
                   key={group.seriesTitle} 
-                  onClick={() => setActiveSeriesId(group.seriesSlug || group.seriesTitle)}
+                  onClick={() => handleSeriesClick(group.seriesSlug, group.seriesTitle, group.chapters.length > 0, group.isSavedLocally)}
                   className="group cursor-pointer rounded-xl overflow-hidden bg-surface border border-border shadow-sm hover:border-primary transition-all relative"
                 >
                   <div className="aspect-[2/3] w-full relative bg-card">
@@ -259,10 +305,17 @@ export function OfflineLibraryClient() {
                         <BookOpen className="h-8 w-8" />
                       </div>
                     )}
+                    {group.isSavedLocally && group.chapters.length === 0 && (
+                      <div className="absolute top-2 right-2 bg-primary/90 text-white p-1.5 rounded-full shadow-md z-10">
+                        <BookmarkCheck className="w-4 h-4 fill-current" />
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                     <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
                       <h2 className="text-white font-bold text-sm sm:text-base line-clamp-2 leading-tight">{group.seriesTitle}</h2>
-                      <p className="text-xs font-medium text-text-secondary mt-1">{group.chapters.length} chapters</p>
+                      <p className="text-xs font-medium text-text-secondary mt-1">
+                        {group.chapters.length > 0 ? `${group.chapters.length} chapters` : 'Saved locally'}
+                      </p>
                     </div>
                   </div>
                 </div>

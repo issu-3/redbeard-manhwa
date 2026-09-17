@@ -56,7 +56,16 @@ async function validateDownloadedFile(fileName: string): Promise<boolean> {
       if (data.startsWith('UEsDB')) return true; // PK (CBZ, EPUB, ZIP)
 
       // Decode base64 header safely (must be a multiple of 4) for HTML detection
-      const decoded = atob(data.substring(0, 48));
+      let decoded = '';
+      try {
+        const safeLen = Math.floor(Math.min(data.length, 48) / 4) * 4;
+        if (safeLen > 0) {
+          decoded = atob(data.substring(0, safeLen));
+        }
+      } catch (e) {
+        // Ignore decoding errors
+      }
+      
       if (decoded.includes('<!DOCTYPE html>') || decoded.includes('<html')) return false; // HTML Error/Provider page
     } else if (data instanceof Blob) {
        // Future proofing for binary returns

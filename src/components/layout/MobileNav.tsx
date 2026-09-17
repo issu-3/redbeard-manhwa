@@ -20,9 +20,13 @@ const ICON_MAP: Record<string, React.ElementType> = {
   User,
 };
 
+// Use NEXT_PUBLIC_CAPACITOR env var as initial value so the Android shell
+// static export renders the correct 3-item nav during SSR/build.
+const IS_CAPACITOR_BUILD = process.env.NEXT_PUBLIC_CAPACITOR === 'true';
+
 export function MobileNav() {
   const pathname = usePathname();
-  const [isNative, setIsNative] = useState(false);
+  const [isNative, setIsNative] = useState(IS_CAPACITOR_BUILD);
 
   useEffect(() => {
     setIsNative(Capacitor.isNativePlatform());

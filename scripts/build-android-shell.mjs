@@ -150,6 +150,28 @@ export const postComment = async () => {};`
     path.join(srcAppDir, 'actions', 'preferences.ts'),
     `export const saveUserPreferences = async () => {};`
   );
+  
+  fs.writeFileSync(
+    path.join(srcAppDir, 'actions', 'bookmarks.ts'),
+    `export const toggleBookmark = async () => {};`
+  );
+  
+  fs.mkdirSync(path.join(srcAppDir, 'actions', 'public'), { recursive: true });
+  fs.writeFileSync(
+    path.join(srcAppDir, 'actions', 'public', 'chapters.ts'),
+    `export const getSeriesChapters = async () => { return []; };`
+  );
+  
+  fs.writeFileSync(
+    path.join(srcAppDir, 'actions', 'public', 'reviews.ts'),
+    `export const submitReview = async () => {};
+export const deleteReview = async () => {};`
+  );
+  
+  fs.writeFileSync(
+    path.join(srcAppDir, 'actions', 'public', 'settings.ts'),
+    `export const getCachedSettings = async () => { return null; };`
+  );
 
   // 3. Build Next.js with output: export
   console.log('4. Building Next.js static export...');

@@ -4,29 +4,38 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BookOpen, Share2 } from 'lucide-react';
 import { BookmarkButton } from '@/components/shared/BookmarkButton';
+import { AppLibraryButton } from '@/components/shared/AppLibraryButton';
 import { Capacitor } from '@capacitor/core';
 import { useRouter } from 'next/navigation';
 
 interface SeriesActionsProps {
   seriesId: string;
   seriesSlug: string;
+  seriesTitle: string;
+  coverImage: string | null;
   firstChapterLink: string;
   chapters: { id: string; number: number | null; label?: string | null; slug?: string; sourceType: string | null; downloadUrl: string | null }[];
   isMobile?: boolean;
 }
 
-export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, chapters, isMobile }: SeriesActionsProps) {
+export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverImage, firstChapterLink, chapters, isMobile }: SeriesActionsProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [continueReadingChapter, setContinueReadingChapter] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Start as null = unknown (not yet mounted). Never render the button before we know.
+  const [isNative, setIsNative] = useState<boolean | null>(null);
   const router = useRouter();
 
   useEffect(() => {
+    // Detect on the client — Capacitor.isNativePlatform() works on the real Android runtime.
+    // navigator.userAgent check catches the live website loaded inside the Capacitor WebView.
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    setIsNative(Capacitor.isNativePlatform() || ua.includes('RedbeardApp'));
+
     fetch(`/api/series/${seriesSlug}/user-data`)
       .then(res => res.json())
       .then(data => {
         setIsBookmarked(data.isBookmarked);
-        // continueReadingChapter might be a number or a string if label is returned in the future
         setContinueReadingChapter(data.continueReadingChapter);
       })
       .catch(console.error)
@@ -50,6 +59,15 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
     : firstChapterLink.includes('/api/chapter/');
 
   const targetLink = hasHistory ? continueLink : firstChapterLink;
+
+  // Placeholder with same dimensions — shown during SSR and before detection completes.
+  // Prevents layout shift AND prevents wrong button flashing.
+  const buttonPlaceholder = (
+    <div className={isMobile
+      ? "flex flex-col items-center justify-center gap-1 px-4 py-2 w-full max-w-[120px] opacity-0 pointer-events-none"
+      : "w-14 h-[52px] rounded-xl border-2 border-transparent opacity-0 pointer-events-none"
+    } aria-hidden="true" />
+  );
 
   if (isMobile) {
     return (
@@ -77,7 +95,12 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
             }
           </Link>
         )}
-        <BookmarkButton seriesId={seriesId} initialBookmarked={isBookmarked} />
+        {isNative === null
+          ? buttonPlaceholder
+          : isNative
+            ? <AppLibraryButton seriesId={seriesId} title={seriesTitle} slug={seriesSlug} coverImage={coverImage} />
+            : <BookmarkButton seriesId={seriesId} initialBookmarked={isBookmarked} />
+        }
       </>
     );
   }
@@ -108,7 +131,12 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
         </Link>
       )}
       
-      <BookmarkButton seriesId={seriesId} initialBookmarked={isBookmarked} />
+      {isNative === null
+        ? buttonPlaceholder
+        : isNative
+          ? <AppLibraryButton seriesId={seriesId} title={seriesTitle} slug={seriesSlug} coverImage={coverImage} />
+          : <BookmarkButton seriesId={seriesId} initialBookmarked={isBookmarked} />
+      }
       
       <button className="flex items-center justify-center rounded-xl border-2 border-border bg-card/50 backdrop-blur-sm w-[56px] text-text-primary transition-all hover:border-primary/50 hover:bg-card-hover hover:text-primary">
         <Share2 className="h-5 w-5" />
@@ -116,3 +144,4 @@ export function SeriesActionsClient({ seriesId, seriesSlug, firstChapterLink, ch
     </>
   );
 }
+

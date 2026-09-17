@@ -377,6 +377,8 @@ export default async function SeriesDetailPage({
               <SeriesActionsClient
                 seriesId={series.id}
                 seriesSlug={series.slug}
+                seriesTitle={series.title}
+                coverImage={series.coverImage}
                 firstChapterLink={firstChapterLink}
                 chapters={chaptersList}
               />
@@ -456,6 +458,8 @@ export default async function SeriesDetailPage({
           <SeriesActionsClient
             seriesId={series.id}
             seriesSlug={series.slug}
+            seriesTitle={series.title}
+            coverImage={series.coverImage}
             firstChapterLink={firstChapterLink}
             chapters={chaptersList}
             isMobile={true}
