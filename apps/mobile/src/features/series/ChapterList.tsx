@@ -32,7 +32,7 @@ export function ChapterList({ chapters, localChapters }: ChapterListProps) {
           >
             <div className="flex flex-col">
               <span className={`text-sm font-semibold ${isRead ? 'text-slate-400' : 'text-slate-200'}`}>
-                Chapter {chapter.number} {chapter.title ? `- ${chapter.title}` : ''}
+                {chapter.title || chapter.label || (chapter.number != null ? `Chapter ${chapter.number}` : 'Chapter')}
               </span>
               <div className="flex items-center gap-2 mt-1">
                 {chapter.publishedAt && (
