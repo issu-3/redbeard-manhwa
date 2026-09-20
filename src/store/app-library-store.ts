@@ -1,129 +1,113 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { Preferences } from '@capacitor/preferences';
-import { Capacitor } from '@capacitor/core';
-
-export interface LibrarySeriesEntity {
-  seriesId: string;
-  title: string;
-  slug: string;
-  coverImage: string | null;
-  cachedCoverUri?: string; // Local capacitor URI
-  addedAt: number;
-}
+import { LocalLibraryRepository, LocalLibraryData, LibrarySeriesEntity } from '@/lib/local-library';
 
 interface AppLibraryStore {
-  savedSeries: Record<string, LibrarySeriesEntity>;
-  addToLibrary: (series: Omit<LibrarySeriesEntity, 'addedAt'>) => void;
-  removeFromLibrary: (seriesId: string) => void;
-  updateLibrarySeries: (seriesId: string, data: Partial<LibrarySeriesEntity>) => void;
-  isSaved: (seriesId: string) => boolean;
+  savedSeries: LocalLibraryData;
   hasHydrated: boolean;
+  activeUserId: string | null;
+  
+  // State actions
   setHasHydrated: (state: boolean) => void;
+  setActiveUserId: (userId: string | null) => void;
+  
+  // Library actions
+  hydrateLibrary: (userId: string) => Promise<void>;
+  addToLibrary: (series: Omit<LibrarySeriesEntity, 'addedAt' | 'updatedAt' | 'isBookmarked'>) => Promise<void>;
+  removeFromLibrary: (seriesId: string) => Promise<void>;
+  updateLibrarySeries: (seriesId: string, data: Partial<LibrarySeriesEntity>) => Promise<void>;
+  syncWithServer: (userId: string, serverSeriesList: Omit<LibrarySeriesEntity, 'addedAt' | 'updatedAt' | 'isBookmarked'>[]) => Promise<void>;
+  
+  // Queries
+  isSaved: (seriesId: string) => boolean;
 }
 
-const isNativeApp = () => {
-  if (typeof window === 'undefined') return false;
-  return Capacitor.isNativePlatform() || navigator.userAgent.includes('RedbeardApp');
-};
+export const useAppLibraryStore = create<AppLibraryStore>()((set, get) => ({
+  savedSeries: {},
+  hasHydrated: false,
+  activeUserId: null,
 
-const capacitorStorage = {
-  getItem: async (name: string): Promise<string | null> => {
-    if (!isNativeApp()) {
-      return typeof window !== 'undefined' ? localStorage.getItem(name) : null;
-    }
+  setHasHydrated: (state) => set({ hasHydrated: state }),
+  setActiveUserId: (userId) => set({ activeUserId: userId }),
+
+  hydrateLibrary: async (userId: string) => {
     try {
-      const { value } = await Preferences.get({ key: name });
-      console.log(`[AppLibraryStore] Preferences.get(${name}) returned:`, value ? 'data present' : 'null');
-      return value;
+      const library = await LocalLibraryRepository.getAllSeries(userId);
+      set({ savedSeries: library, hasHydrated: true, activeUserId: userId });
+      await LocalLibraryRepository.setLastUserId(userId);
     } catch (e) {
-      console.error('[AppLibraryStore] Preferences.get error:', e);
-      return null;
+      console.error('[AppLibraryStore] Hydration failed:', e);
+      set({ hasHydrated: true });
     }
   },
-  setItem: async (name: string, value: string): Promise<void> => {
-    if (!isNativeApp()) {
-      if (typeof window !== 'undefined') localStorage.setItem(name, value);
-      return;
+
+  addToLibrary: async (series) => {
+    const { activeUserId, hasHydrated } = get();
+    if (!hasHydrated) {
+      console.warn('[AppLibraryStore] Attempted to add to library before hydration finished.');
     }
-    try {
-      await Preferences.set({ key: name, value });
-      console.log(`[AppLibraryStore] Preferences.set(${name}) completed successfully.`);
-    } catch (e) {
-      console.error('[AppLibraryStore] Preferences.set error:', e);
+    
+    // Update local UI state immediately for optimistic UI
+    set((state) => {
+      if (state.savedSeries[series.seriesId]) return state;
+      return {
+        savedSeries: {
+          ...state.savedSeries,
+          [series.seriesId]: { ...series, addedAt: Date.now(), updatedAt: Date.now(), isBookmarked: true },
+        }
+      };
+    });
+
+    // Persist if we have an active user
+    if (activeUserId) {
+      await LocalLibraryRepository.addSeries(activeUserId, series);
     }
   },
-  removeItem: async (name: string): Promise<void> => {
-    if (!isNativeApp()) {
-      if (typeof window !== 'undefined') localStorage.removeItem(name);
-      return;
-    }
-    try {
-      await Preferences.remove({ key: name });
-      console.log(`[AppLibraryStore] Preferences.remove(${name}) completed successfully.`);
-    } catch (e) {
-      console.error('[AppLibraryStore] Preferences.remove error:', e);
+
+  removeFromLibrary: async (seriesId) => {
+    const { activeUserId } = get();
+    
+    // Update UI immediately
+    set((state) => {
+      const newSaved = { ...state.savedSeries };
+      delete newSaved[seriesId];
+      return { savedSeries: newSaved };
+    });
+
+    // Persist
+    if (activeUserId) {
+      await LocalLibraryRepository.removeSeries(activeUserId, seriesId);
     }
   },
-};
-
-export const useAppLibraryStore = create<AppLibraryStore>()(
-  persist(
-    (set, get) => ({
-      savedSeries: {},
-      hasHydrated: false,
-      setHasHydrated: (state) => set({ hasHydrated: state }),
-
-      addToLibrary: (series) => {
-        // Prevent adding if not hydrated yet to avoid state overwrite anomalies
-        if (!get().hasHydrated) {
-          console.warn('[AppLibraryStore] Attempted to add to library before hydration finished.');
+  
+  updateLibrarySeries: async (seriesId, data) => {
+    const { activeUserId } = get();
+    
+    set((state) => {
+      const existing = state.savedSeries[seriesId];
+      if (!existing) return state;
+      return {
+        savedSeries: {
+          ...state.savedSeries,
+          [seriesId]: { ...existing, ...data }
         }
-        set((state) => {
-          if (state.savedSeries[series.seriesId]) {
-            return state; // Already saved
-          }
-          return {
-            savedSeries: {
-              ...state.savedSeries,
-              [series.seriesId]: { ...series, addedAt: Date.now() },
-            }
-          };
-        });
-      },
+      };
+    });
 
-      removeFromLibrary: (seriesId) => set((state) => {
-        const newSaved = { ...state.savedSeries };
-        delete newSaved[seriesId];
-        return { savedSeries: newSaved };
-      }),
-      
-      updateLibrarySeries: (seriesId, data) => set((state) => {
-        const existing = state.savedSeries[seriesId];
-        if (!existing) return state;
-        return {
-          savedSeries: {
-            ...state.savedSeries,
-            [seriesId]: { ...existing, ...data }
-          }
-        };
-      }),
-
-      isSaved: (seriesId) => {
-        return !!get().savedSeries[seriesId];
-      },
-    }),
-    {
-      name: 'redbeard-app-library-storage',
-      storage: createJSONStorage(() => capacitorStorage),
-      onRehydrateStorage: () => (state, error) => {
-        if (error) {
-          console.error('[AppLibraryStore] Hydration failed:', error);
-        }
-        if (state) {
-          state.setHasHydrated(true);
-        }
-      },
+    if (activeUserId) {
+      await LocalLibraryRepository.updateSeries(activeUserId, seriesId, data);
     }
-  )
-);
+  },
+
+  syncWithServer: async (userId: string, serverSeriesList: Omit<LibrarySeriesEntity, 'addedAt' | 'updatedAt' | 'isBookmarked'>[]) => {
+    try {
+      const syncedLibrary = await LocalLibraryRepository.syncWithServer(userId, serverSeriesList);
+      set({ savedSeries: syncedLibrary, hasHydrated: true, activeUserId: userId });
+    } catch (e) {
+      console.error('[AppLibraryStore] Sync failed:', e);
+    }
+  },
+
+  isSaved: (seriesId) => {
+    return !!get().savedSeries[seriesId];
+  },
+}));

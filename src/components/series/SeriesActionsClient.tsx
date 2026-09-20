@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BookOpen, Share2 } from 'lucide-react';
 import { BookmarkButton } from '@/components/shared/BookmarkButton';
-import { AppLibraryButton } from '@/components/shared/AppLibraryButton';
 import { Capacitor } from '@capacitor/core';
 import { useRouter } from 'next/navigation';
 
@@ -22,15 +21,12 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [continueReadingChapter, setContinueReadingChapter] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  // Start as null = unknown (not yet mounted). Never render the button before we know.
-  const [isNative, setIsNative] = useState<boolean | null>(null);
+  // We still track isNative to prevent wrong button flashing if needed, though we now always render BookmarkButton
+  const [isMounted, setIsMounted] = useState<boolean>(false);
   const router = useRouter();
 
   useEffect(() => {
-    // Detect on the client — Capacitor.isNativePlatform() works on the real Android runtime.
-    // navigator.userAgent check catches the live website loaded inside the Capacitor WebView.
-    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-    setIsNative(Capacitor.isNativePlatform() || ua.includes('RedbeardApp'));
+    setIsMounted(true);
 
     fetch(`/api/series/${seriesSlug}/user-data`)
       .then(res => res.json())
@@ -61,7 +57,6 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
   const targetLink = hasHistory ? continueLink : firstChapterLink;
 
   // Placeholder with same dimensions — shown during SSR and before detection completes.
-  // Prevents layout shift AND prevents wrong button flashing.
   const buttonPlaceholder = (
     <div className={isMobile
       ? "flex flex-col items-center justify-center gap-1 px-4 py-2 w-full max-w-[120px] opacity-0 pointer-events-none"
@@ -95,11 +90,16 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
             }
           </Link>
         )}
-        {isNative === null
+        {!isMounted
           ? buttonPlaceholder
-          : isNative
-            ? <AppLibraryButton seriesId={seriesId} title={seriesTitle} slug={seriesSlug} coverImage={coverImage} />
-            : <BookmarkButton seriesId={seriesId} initialBookmarked={isBookmarked} />
+          : <BookmarkButton 
+              seriesId={seriesId} 
+              initialBookmarked={isBookmarked} 
+              title={seriesTitle}
+              slug={seriesSlug}
+              coverImage={coverImage}
+              continueReadingChapter={continueReadingChapter}
+            />
         }
       </>
     );
@@ -131,11 +131,16 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
         </Link>
       )}
       
-      {isNative === null
+      {!isMounted
         ? buttonPlaceholder
-        : isNative
-          ? <AppLibraryButton seriesId={seriesId} title={seriesTitle} slug={seriesSlug} coverImage={coverImage} />
-          : <BookmarkButton seriesId={seriesId} initialBookmarked={isBookmarked} />
+        : <BookmarkButton 
+            seriesId={seriesId} 
+            initialBookmarked={isBookmarked} 
+            title={seriesTitle}
+            slug={seriesSlug}
+            coverImage={coverImage}
+            continueReadingChapter={continueReadingChapter}
+          />
       }
       
       <button className="flex items-center justify-center rounded-xl border-2 border-border bg-card/50 backdrop-blur-sm w-[56px] text-text-primary transition-all hover:border-primary/50 hover:bg-card-hover hover:text-primary">
@@ -144,4 +149,3 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
     </>
   );
 }
-

@@ -2,10 +2,12 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { AdRenderer } from '@/components/ads/AdRenderer';
+import { LibrarySyncProvider } from '@/components/user/LibrarySyncProvider';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col has-[#series-action-bar]:pb-[72px] md:has-[#series-action-bar]:pb-0">
+      <LibrarySyncProvider />
       {/* H3 FIX: JSON-LD removed — already defined in root layout.tsx */}
       <Header />
       <main id="main-content" className="flex-1 flex flex-col">{children}</main>
