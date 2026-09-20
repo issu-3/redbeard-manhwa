@@ -41,10 +41,6 @@ export async function GET(request: NextRequest) {
   const statusParam = searchParams.get('status');
   const sortParam = searchParams.get('sort');
 
-  if (!query && genreSlugs.length === 0 && !typeParam) {
-    return NextResponse.json({ success: true, data: [] });
-  }
-
   try {
     const whereClause: import('@prisma/client').Prisma.SeriesWhereInput = {};
     
