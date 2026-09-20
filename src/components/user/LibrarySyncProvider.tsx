@@ -53,9 +53,16 @@ export function LibrarySyncProvider() {
       // Only proceed if next-auth has finished deciding the authentication state.
       if (status === 'loading') return;
 
-      if (status === 'authenticated' && session?.user?.id && !hasSyncedRef.current) {
-        hasSyncedRef.current = true; // prevent multiple syncs in a single session
-        console.log('[Library] starting background sync');
+      if (status === 'authenticated' && session?.user?.id) {
+        if (store.activeUserId !== session.user.id) {
+          console.log('[Library] user changed or just logged in, hydrating for:', session.user.id);
+          await store.hydrateLibrary(session.user.id);
+          return;
+        }
+
+        if (!hasSyncedRef.current) {
+          hasSyncedRef.current = true; // prevent multiple syncs in a single session
+          console.log('[Library] starting background sync');
         try {
           const res = await fetch('/api/user/bookmarks/sync');
           if (res.ok) {
@@ -68,6 +75,7 @@ export function LibrarySyncProvider() {
         } catch (error) {
           console.error('[Library] Failed to sync with server:', error);
           // Crucially, DO NOT clear the local library if the network fails.
+        }
         }
       }
     };

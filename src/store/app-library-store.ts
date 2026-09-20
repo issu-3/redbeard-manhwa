@@ -36,7 +36,7 @@ export const useAppLibraryStore = create<AppLibraryStore>()((set, get) => ({
       await LocalLibraryRepository.setLastUserId(userId);
     } catch (e) {
       console.error('[AppLibraryStore] Hydration failed:', e);
-      set({ hasHydrated: true });
+      set({ hasHydrated: true, activeUserId: userId });
     }
   },
 
@@ -102,6 +102,7 @@ export const useAppLibraryStore = create<AppLibraryStore>()((set, get) => ({
     try {
       const syncedLibrary = await LocalLibraryRepository.syncWithServer(userId, serverSeriesList);
       set({ savedSeries: syncedLibrary, hasHydrated: true, activeUserId: userId });
+      await LocalLibraryRepository.setLastUserId(userId);
     } catch (e) {
       console.error('[AppLibraryStore] Sync failed:', e);
     }
