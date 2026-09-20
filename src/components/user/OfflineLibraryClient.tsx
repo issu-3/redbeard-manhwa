@@ -36,7 +36,7 @@ export function OfflineLibraryClient() {
     const groups: Record<string, { seriesTitle: string; seriesSlug: string; coverImage?: string; chapters: { chapterId: string; state: DownloadState }[]; isSavedLocally?: boolean }> = {};
     
     // Add downloaded chapters first
-    Object.entries(downloads).forEach(([chapterId, state]) => {
+    Object.entries(downloads || {}).forEach(([chapterId, state]) => {
       if (!state.metadata) return;
       const { seriesId, seriesTitle, seriesSlug, coverImage } = state.metadata;
       
@@ -53,7 +53,7 @@ export function OfflineLibraryClient() {
 
     if (Capacitor.isNativePlatform() && mounted) {
       // Overlay saved local library series
-      Object.values(savedSeries).forEach(series => {
+      Object.values(savedSeries || {}).forEach(series => {
         if (!groups[series.seriesId]) {
           groups[series.seriesId] = {
             seriesTitle: series.title,
@@ -82,7 +82,7 @@ export function OfflineLibraryClient() {
       });
     });
 
-    return Object.values(groups).sort((a, b) => a.seriesTitle.localeCompare(b.seriesTitle));
+    return Object.values(groups).sort((a, b) => (a.seriesTitle || '').localeCompare(b.seriesTitle || ''));
   }, [downloads, savedSeries, mounted]);
 
   const handleImportClick = async () => {
