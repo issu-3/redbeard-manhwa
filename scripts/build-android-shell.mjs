@@ -27,15 +27,20 @@ try {
     path.join(srcAppDir, 'layout.tsx'),
     `import '@/app-backup/globals.css';
 import { MobileNav } from '@/components/layout/MobileNav';
+import { LibrarySyncProvider } from '@/components/user/LibrarySyncProvider';
+import { SessionProvider } from 'next-auth/react';
 
 export const metadata = { title: 'REDBEARD Offline' };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="flex min-h-screen flex-col bg-background font-inter text-text-primary antialiased">
-        <main id="main-content" className="flex-1 flex flex-col">{children}</main>
-        <MobileNav />
-        <div className="h-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:hidden shrink-0" />
+        <SessionProvider>
+          <LibrarySyncProvider />
+          <main id="main-content" className="flex-1 flex flex-col">{children}</main>
+          <MobileNav />
+          <div className="h-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:hidden shrink-0" />
+        </SessionProvider>
       </body>
     </html>
   );
