@@ -1,4 +1,4 @@
-export const DB_NAME = 'redbeard_offline_db';
+export const DB_NAME = 'redbeard_offline_db_v2';
 
 export const SCHEMA_V1 = `
   CREATE TABLE IF NOT EXISTS series (
