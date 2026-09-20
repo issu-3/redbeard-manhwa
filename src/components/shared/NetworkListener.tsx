@@ -24,7 +24,7 @@ export function NetworkListener() {
         });
         
         setTimeout(() => {
-          window.location.replace('http://localhost/library');
+          window.location.replace('/library');
         }, 1500);
       }
     };
