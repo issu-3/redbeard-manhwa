@@ -14,6 +14,7 @@ export function OfflineLibraryClient() {
   const router = useRouter();
   const { downloads } = useDownloadStore();
   const { savedSeries } = useAppLibraryStore();
+  const { hasHydrated } = useAppLibraryStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -195,8 +196,6 @@ export function OfflineLibraryClient() {
 
   // Handle SSR hydration mismatch on native platform check
   if (!mounted) return null;
-  
-  const { hasHydrated } = useAppLibraryStore();
 
   return (
     <div className="space-y-6 pb-[80px]">
