@@ -70,7 +70,13 @@ export default function BrowseFallback() {
     
     async function checkReachability() {
       try {
-        if (!Capacitor.isNativePlatform()) return;
+        // Wait for Capacitor Native Bridge to inject to avoid race condition!
+        let retries = 0;
+        while (!Capacitor.isNativePlatform() && retries < 15) {
+          await new Promise(r => setTimeout(r, 100));
+          retries++;
+        }
+        
         const response = await CapacitorHttp.get({
           url: 'https://redbeard.store/api/search?_t=' + Date.now(),
           connectTimeout: 3000,
@@ -82,17 +88,20 @@ export default function BrowseFallback() {
             // SYNC BOOKMARKS BEFORE REDIRECTING!
             try {
               setStatus('Syncing Library...');
-              const syncRes = await CapacitorHttp.get({
-                url: 'https://redbeard.store/api/user/bookmarks/sync',
-                headers: { 'Cache-Control': 'no-cache' }
-              });
-              if (syncRes.status === 200 && syncRes.data?.series && syncRes.data?.userId) {
-                const { Preferences } = await import('@capacitor/preferences');
-                const userId = syncRes.data.userId;
-                const series = syncRes.data.series;
-                await Preferences.set({ key: 'last_authenticated_user_id', value: userId });
-                await Preferences.set({ key: 'redbeard_lib_' + userId, value: JSON.stringify({ series, lastUpdated: Date.now() }) });
-                console.log('[LOCAL_SHELL] Synced ' + series.length + ' bookmarks for user ' + userId);
+              // If we are native, we can sync!
+              if (Capacitor.isNativePlatform()) {
+                const syncRes = await CapacitorHttp.get({
+                  url: 'https://redbeard.store/api/user/bookmarks/sync',
+                  headers: { 'Cache-Control': 'no-cache' }
+                });
+                if (syncRes.status === 200 && syncRes.data?.series && syncRes.data?.userId) {
+                  const { Preferences } = await import('@capacitor/preferences');
+                  const userId = syncRes.data.userId;
+                  const series = syncRes.data.series;
+                  await Preferences.set({ key: 'last_authenticated_user_id', value: userId });
+                  await Preferences.set({ key: 'redbeard_lib_' + userId, value: JSON.stringify({ series, lastUpdated: Date.now() }) });
+                  console.log('[LOCAL_SHELL] Synced ' + series.length + ' bookmarks for user ' + userId);
+                }
               }
             } catch (e) {
               console.error('[LOCAL_SHELL] Sync failed', e);
