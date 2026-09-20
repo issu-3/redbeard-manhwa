@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLibraryStore } from '../../store/library';
 
 export function LibraryScreen() {
+  const navigate = useNavigate();
   const { series, isLoading, isSyncing, loadLocal, syncWithServer } = useLibraryStore();
 
   useEffect(() => {
@@ -29,7 +31,11 @@ export function LibraryScreen() {
       ) : (
         <div className="grid grid-cols-3 gap-3 md:grid-cols-4 lg:grid-cols-5">
           {series.map(s => (
-            <div key={s.id} className="flex flex-col gap-1 cursor-pointer">
+            <div 
+              key={s.id} 
+              className="flex flex-col gap-1 cursor-pointer"
+              onClick={() => navigate(`/series/${s.slug}`)}
+            >
               <div className="aspect-[2/3] w-full overflow-hidden rounded-md bg-slate-800">
                 {s.cover ? (
                   <img src={s.cover} alt={s.title} className="h-full w-full object-cover" />
