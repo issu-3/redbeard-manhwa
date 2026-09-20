@@ -31,11 +31,13 @@ export const useAppLibraryStore = create<AppLibraryStore>()((set, get) => ({
 
   hydrateLibrary: async (userId: string) => {
     try {
+      console.log(`[LIBRARY_DEBUG] AppLibraryStore.hydrateLibrary called for userId: ${userId}`);
       const library = await LocalLibraryRepository.getAllSeries(userId);
+      console.log(`[LIBRARY_DEBUG] local records READ = ${Object.keys(library).length} series`);
       set({ savedSeries: library, hasHydrated: true, activeUserId: userId });
       await LocalLibraryRepository.setLastUserId(userId);
     } catch (e) {
-      console.error('[AppLibraryStore] Hydration failed:', e);
+      console.error('[LIBRARY_DEBUG] AppLibraryStore Hydration failed:', e);
       set({ hasHydrated: true, activeUserId: userId });
     }
   },
@@ -43,7 +45,7 @@ export const useAppLibraryStore = create<AppLibraryStore>()((set, get) => ({
   addToLibrary: async (series) => {
     const { activeUserId, hasHydrated } = get();
     if (!hasHydrated) {
-      console.warn('[AppLibraryStore] Attempted to add to library before hydration finished.');
+      console.warn('[LIBRARY_DEBUG] Attempted to add to library before hydration finished.');
     }
     
     // Update local UI state immediately for optimistic UI
@@ -58,8 +60,12 @@ export const useAppLibraryStore = create<AppLibraryStore>()((set, get) => ({
     });
 
     // Persist if we have an active user
+    console.log(`[LIBRARY_DEBUG] AppLibraryStore.addToLibrary activeUserId=${activeUserId}`);
     if (activeUserId) {
       await LocalLibraryRepository.addSeries(activeUserId, series);
+      console.log(`[LIBRARY_DEBUG] AppLibraryStore.addToLibrary persist finished`);
+    } else {
+      console.warn(`[LIBRARY_DEBUG] AppLibraryStore.addToLibrary skipped persist because activeUserId is null!`);
     }
   },
 
@@ -100,11 +106,13 @@ export const useAppLibraryStore = create<AppLibraryStore>()((set, get) => ({
 
   syncWithServer: async (userId: string, serverSeriesList: Omit<LibrarySeriesEntity, 'addedAt' | 'updatedAt' | 'isBookmarked'>[]) => {
     try {
+      console.log(`[LIBRARY_DEBUG] AppLibraryStore.syncWithServer called with ${serverSeriesList.length} items from server`);
       const syncedLibrary = await LocalLibraryRepository.syncWithServer(userId, serverSeriesList);
       set({ savedSeries: syncedLibrary, hasHydrated: true, activeUserId: userId });
       await LocalLibraryRepository.setLastUserId(userId);
+      console.log(`[LIBRARY_DEBUG] AppLibraryStore.syncWithServer complete`);
     } catch (e) {
-      console.error('[AppLibraryStore] Sync failed:', e);
+      console.error('[LIBRARY_DEBUG] AppLibraryStore Sync failed:', e);
     }
   },
 

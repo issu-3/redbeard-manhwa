@@ -59,8 +59,10 @@ export function BookmarkButton({
       // --- NATIVE LOCAL LIBRARY SYNC ---
       // If we are native and have metadata, sync to the offline-first LocalLibraryRepository
       const isNative = Capacitor.isNativePlatform() || (typeof navigator !== 'undefined' && navigator.userAgent.includes('RedbeardApp'));
+      console.log(`[LIBRARY_DEBUG] Bookmark clicked: isNative=${isNative}, title=${title}, slug=${slug}, activeUserId=${store.activeUserId}`);
       if (isNative && title && slug) {
         if (newBookmarkedState) {
+          console.log(`[LIBRARY_DEBUG] writing local record = ${title}`);
           await store.addToLibrary({
             seriesId,
             title,
@@ -71,6 +73,7 @@ export function BookmarkButton({
             latestChapterNumber,
             continueReadingChapter
           });
+          console.log(`[LIBRARY_DEBUG] local records AFTER write = done adding to store`);
           
           // Background caching for cover images
           if (coverImage) {
@@ -81,8 +84,11 @@ export function BookmarkButton({
             }).catch(e => console.error("Failed to cache cover:", e));
           }
         } else {
+          console.log(`[LIBRARY_DEBUG] removing local record = ${title}`);
           await store.removeFromLibrary(seriesId);
         }
+      } else if (isNative) {
+        console.log(`[LIBRARY_DEBUG] NATIVE BUT MISSING METADATA: title=${title}, slug=${slug}`);
       }
       // ----------------------------------
 

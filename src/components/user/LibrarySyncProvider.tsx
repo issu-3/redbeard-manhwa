@@ -19,64 +19,72 @@ export function LibrarySyncProvider() {
     if (!isNative) return;
 
     const performSync = async () => {
+      const isNative = Capacitor.isNativePlatform() || (typeof navigator !== 'undefined' && navigator.userAgent.includes('RedbeardApp'));
+      console.log(`[LIBRARY_DEBUG] platform = isNative:${isNative} | Capacitor.isNativePlatform():${Capacitor.isNativePlatform()} | userAgent:${typeof navigator !== 'undefined' ? navigator.userAgent : 'undefined'}`);
+      console.log(`[LIBRARY_DEBUG] session status = ${status}`);
+      console.log(`[LIBRARY_DEBUG] session userId = ${session?.user?.id}`);
+      console.log(`[LIBRARY_DEBUG] store activeUserId = ${store.activeUserId}`);
+      console.log(`[LIBRARY_DEBUG] store hasHydrated = ${store.hasHydrated}`);
+
       // 1. Hydrate the local library into the UI immediately (Offline-First)
-      // This MUST NOT wait for next-auth to finish loading the session, because
-      // next-auth's session fetch will hang or fail when offline.
       if (!store.hasHydrated) {
         try {
-          console.log('[Library] starting local hydration');
+          console.log('[LIBRARY_DEBUG] app startup = hydrating locally');
           let currentUserId = session?.user?.id;
           
           if (!currentUserId) {
-            console.log('[Library] reading local storage for last user');
+            console.log('[LIBRARY_DEBUG] reading local storage for last user');
             const lastUserId = await LocalLibraryRepository.getLastUserId();
+            console.log(`[LIBRARY_DEBUG] lastUserId = ${lastUserId}`);
             if (lastUserId) {
               currentUserId = lastUserId;
             }
           }
 
           if (currentUserId) {
-            console.log('[Library] local storage read complete, hydrating user:', currentUserId);
+            console.log('[LIBRARY_DEBUG] local storage read complete, hydrating user:', currentUserId);
             await store.hydrateLibrary(currentUserId);
           } else {
-            console.log('[Library] no user found, marking hydration complete');
+            console.log('[LIBRARY_DEBUG] no user found, marking hydration complete');
             store.setHasHydrated(true);
           }
-          console.log('[Library] hydration complete, loading=false');
+          console.log('[LIBRARY_DEBUG] hydration complete, loading=false');
         } catch (error) {
-          console.error('[Library] hydration error:', error);
+          console.error('[LIBRARY_DEBUG] hydration error:', error);
           store.setHasHydrated(true);
         }
       }
 
       // 2. Background Sync (Server/Network dependent)
-      // Only proceed if next-auth has finished deciding the authentication state.
       if (status === 'loading') return;
 
       if (status === 'authenticated' && session?.user?.id) {
         if (store.activeUserId !== session.user.id) {
-          console.log('[Library] user changed or just logged in, hydrating for:', session.user.id);
+          console.log('[LIBRARY_DEBUG] user changed or just logged in, hydrating for:', session.user.id);
           await store.hydrateLibrary(session.user.id);
           return;
         }
 
         if (!hasSyncedRef.current) {
-          hasSyncedRef.current = true; // prevent multiple syncs in a single session
-          console.log('[Library] starting background sync');
-        try {
-          const res = await fetch('/api/user/bookmarks/sync');
-          if (res.ok) {
-            const data = await res.json();
-            if (data.series && Array.isArray(data.series)) {
-              await store.syncWithServer(session.user.id, data.series);
+          hasSyncedRef.current = true;
+          console.log('[LIBRARY_DEBUG] starting background sync');
+          try {
+            const res = await fetch('/api/user/bookmarks/sync');
+            if (res.ok) {
+              const data = await res.json();
+              if (data.series && Array.isArray(data.series)) {
+                await store.syncWithServer(session.user.id, data.series);
+              }
+            } else {
+               console.log(`[LIBRARY_DEBUG] background sync fetch failed with status: ${res.status}`);
             }
+            console.log('[LIBRARY_DEBUG] background sync complete');
+          } catch (error) {
+            console.error('[LIBRARY_DEBUG] Failed to sync with server:', error);
           }
-          console.log('[Library] background sync complete');
-        } catch (error) {
-          console.error('[Library] Failed to sync with server:', error);
-          // Crucially, DO NOT clear the local library if the network fails.
         }
-        }
+      } else if (status === 'unauthenticated') {
+        console.log('[LIBRARY_DEBUG] offline detected = unauthenticated status');
       }
     };
 

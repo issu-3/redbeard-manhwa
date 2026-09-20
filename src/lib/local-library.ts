@@ -32,9 +32,10 @@ export class LocalLibraryRepository {
   static async setLastUserId(userId: string): Promise<void> {
     if (!this.isNativeApp()) return;
     try {
+      console.log(`[LIBRARY_DEBUG] Preferences.set last_authenticated_user_id = ${userId}`);
       await Preferences.set({ key: 'last_authenticated_user_id', value: userId });
     } catch (e) {
-      console.error('[LocalLibraryRepository] failed to set last user id', e);
+      console.error('[LIBRARY_DEBUG] failed to set last user id', e);
     }
   }
 
@@ -42,20 +43,47 @@ export class LocalLibraryRepository {
     if (!this.isNativeApp()) return null;
     try {
       const { value } = await Preferences.get({ key: 'last_authenticated_user_id' });
-      return value;
+      console.log(`[LIBRARY_DEBUG] Preferences.get last_authenticated_user_id = ${value}`);
+      
+      if (value) {
+        return value;
+      }
+      
+      // Fallback: scan keys for redbeard_lib_* to recover an orphaned library
+      console.log(`[LIBRARY_DEBUG] no last_authenticated_user_id, scanning all keys...`);
+      const { keys } = await Preferences.keys();
+      const libKey = keys.find(k => k.startsWith('redbeard_lib_'));
+      if (libKey) {
+        const recoveredId = libKey.replace('redbeard_lib_', '');
+        console.log(`[LIBRARY_DEBUG] recovered user id from keys: ${recoveredId}`);
+        // Self-heal
+        await this.setLastUserId(recoveredId);
+        return recoveredId;
+      }
+      
+      return null;
     } catch (e) {
+      console.error('[LIBRARY_DEBUG] failed to get last user id', e);
       return null;
     }
   }
 
   static async getAllSeries(userId: string): Promise<LocalLibraryData> {
-    if (!this.isNativeApp()) return {};
+    if (!this.isNativeApp()) {
+      console.log(`[LIBRARY_DEBUG] getAllSeries: Not a native app`);
+      return {};
+    }
     try {
-      const { value } = await Preferences.get({ key: this.getStorageKey(userId) });
+      const key = this.getStorageKey(userId);
+      console.log(`[LIBRARY_DEBUG] Preferences.get key = ${key}`);
+      const { value } = await Preferences.get({ key });
+      console.log(`[LIBRARY_DEBUG] Preferences.get result length = ${value ? value.length : 0}`);
       if (!value) return {};
-      return JSON.parse(value) as LocalLibraryData;
+      const parsed = JSON.parse(value) as LocalLibraryData;
+      console.log(`[LIBRARY_DEBUG] Parsed record count = ${Object.keys(parsed).length}`);
+      return parsed;
     } catch (e) {
-      console.error('[LocalLibraryRepository] getAllSeries failed', e);
+      console.error('[LIBRARY_DEBUG] getAllSeries failed', e);
       return {};
     }
   }
@@ -70,20 +98,24 @@ export class LocalLibraryRepository {
     try {
       await Preferences.remove({ key: this.getStorageKey(userId) });
     } catch (e) {
-      console.error('[LocalLibraryRepository] clearUserLibrary failed', e);
+      console.error('[LIBRARY_DEBUG] clearUserLibrary failed', e);
     }
   }
 
   static async saveLibrary(userId: string, data: LocalLibraryData): Promise<void> {
     if (!this.isNativeApp()) return;
     try {
-      await Preferences.set({ key: this.getStorageKey(userId), value: JSON.stringify(data) });
+      const key = this.getStorageKey(userId);
+      const str = JSON.stringify(data);
+      console.log(`[LIBRARY_DEBUG] Preferences.set key = ${key}, length = ${str.length}`);
+      await Preferences.set({ key, value: str });
     } catch (e) {
-      console.error('[LocalLibraryRepository] saveLibrary failed', e);
+      console.error('[LIBRARY_DEBUG] saveLibrary failed', e);
     }
   }
 
   static async addSeries(userId: string, series: Omit<LibrarySeriesEntity, 'addedAt' | 'updatedAt' | 'isBookmarked'>): Promise<LocalLibraryData> {
+    console.log(`[LIBRARY_DEBUG] addSeries called for series: ${series.title}`);
     const library = await this.getAllSeries(userId);
     if (!library[series.seriesId]) {
       const now = Date.now();
