@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">redbeard</string>
+    <string name="title_activity_main">redbeard</string>
+    <string name="package_name">com.redbeard.app</string>
+    <string name="custom_url_scheme">com.redbeard.app</string>
+</resources>
