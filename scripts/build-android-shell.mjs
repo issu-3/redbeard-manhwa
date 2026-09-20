@@ -79,6 +79,25 @@ export default function BrowseFallback() {
         });
         if (isMounted) {
           if (response.status >= 200 && response.status < 400 && response.data?.success) {
+            // SYNC BOOKMARKS BEFORE REDIRECTING!
+            try {
+              setStatus('Syncing Library...');
+              const syncRes = await CapacitorHttp.get({
+                url: 'https://redbeard.store/api/user/bookmarks/sync',
+                headers: { 'Cache-Control': 'no-cache' }
+              });
+              if (syncRes.status === 200 && syncRes.data?.series && syncRes.data?.userId) {
+                const { Preferences } = await import('@capacitor/preferences');
+                const userId = syncRes.data.userId;
+                const series = syncRes.data.series;
+                await Preferences.set({ key: 'last_authenticated_user_id', value: userId });
+                await Preferences.set({ key: 'redbeard_lib_' + userId, value: JSON.stringify({ series, lastUpdated: Date.now() }) });
+                console.log('[LOCAL_SHELL] Synced ' + series.length + ' bookmarks for user ' + userId);
+              }
+            } catch (e) {
+              console.error('[LOCAL_SHELL] Sync failed', e);
+            }
+
             setStatus('Online. Connecting...');
             window.location.replace('https://redbeard.store');
             return;
@@ -88,7 +107,6 @@ export default function BrowseFallback() {
         }
       } catch (err) {
         if (isMounted) {
-          // If booting offline, go straight to library!
           window.location.replace('/library.html');
         }
       }
@@ -206,6 +224,34 @@ export const deleteReview = async () => {};`
     fs.removeSync(androidShellDir);
   }
   fs.copySync(outDir, androidShellDir);
+  
+  // Fix absolute paths in HTML files for Capacitor errorPath (file:///)
+  console.log('5.1 Fixing absolute paths for local file:/// loading...');
+  const walkSync = (dir, filelist = []) => {
+    fs.readdirSync(dir).forEach(file => {
+      const filepath = path.join(dir, file);
+      if (fs.statSync(filepath).isDirectory()) filelist = walkSync(filepath, filelist);
+      else filelist.push(filepath);
+    });
+    return filelist;
+  };
+  
+  const files = walkSync(androidShellDir);
+  for (const file of files) {
+    if (file.endsWith('.html')) {
+      let content = fs.readFileSync(file, 'utf8');
+      // Replace /_next/ with _next/ (or ./_next/ depending on depth, but since it's Next.js, _next is at root, 
+      // wait! If a file is in /library/history.html, it needs ../_next/. 
+      // Actually, errorPath only maps to library.html at the root!)
+      // Wait, let's just make it relative to root using capacitor's custom scheme?
+      // errorPath loads via file:///android_asset/public/...
+      // If we replace /_next/ with ./_next/ for files in the root directory (like library.html), it works!
+      // But wait! Next.js adds <script src="/_next/..."></script>
+      content = content.replace(/\/_next\//g, './_next/');
+      fs.writeFileSync(file, content);
+    }
+  }
+
   if (fs.existsSync(path.join(androidShellDir, 'sw.js'))) {
     fs.removeSync(path.join(androidShellDir, 'sw.js'));
   }

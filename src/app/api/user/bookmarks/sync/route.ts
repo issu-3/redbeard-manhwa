@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
       status: b.series.status,
     }));
 
-    return NextResponse.json({ series: seriesList });
+    return NextResponse.json({ series: seriesList, userId });
   } catch (error) {
     console.error('[Sync Bookmarks API] Error:', error);
     return NextResponse.json(
