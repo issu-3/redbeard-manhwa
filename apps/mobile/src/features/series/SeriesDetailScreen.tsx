@@ -138,7 +138,8 @@ export function SeriesDetailScreen() {
       }
 
     } catch (e) {
-      setError('Failed to load series details');
+      console.error('loadData error:', e);
+      setError(`Failed to load series details: ${e instanceof Error ? e.message : JSON.stringify(e)}`);
     } finally {
       setIsLoading(false);
     }
