@@ -1,6 +1,6 @@
 import type { Chapter } from '../../api/client';
 import type { Chapter as LocalChapter } from '../../db/dao';
-import { Download, CheckCircle2, MoreVertical } from 'lucide-react';
+import { Download, CircleCheck, MoreVertical } from 'lucide-react';
 
 interface ChapterListProps {
   chapters: Chapter[];
@@ -62,7 +62,7 @@ export function ChapterList({ chapters, localChapters }: ChapterListProps) {
             
             <div className="flex items-center gap-3 shrink-0">
               {local?.downloadStatus === 'COMPLETED' ? (
-                <CheckCircle2 size={20} className="text-brand-secondary" />
+                <CircleCheck size={20} className="text-brand-secondary" />
               ) : (
                 <Download size={20} className="text-brand-secondary" />
               )}
