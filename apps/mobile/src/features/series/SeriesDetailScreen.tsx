@@ -190,10 +190,16 @@ export function SeriesDetailScreen() {
           </button>
           <span className="font-semibold text-lg truncate w-48">{series.title}</span>
         </div>
-        <div className="flex items-center gap-4 text-brand-text">
-          <Download size={22} />
-          <Filter size={22} />
-          <MoreVertical size={22} />
+        <div className="flex items-center gap-2 text-brand-text">
+          <button className="p-2 active:bg-white/10 rounded-full transition-colors">
+            <Download size={22} />
+          </button>
+          <button className="p-2 active:bg-white/10 rounded-full transition-colors">
+            <Filter size={22} />
+          </button>
+          <button className="p-2 active:bg-white/10 rounded-full transition-colors">
+            <MoreVertical size={22} />
+          </button>
         </div>
       </div>
 
