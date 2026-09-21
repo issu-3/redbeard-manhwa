@@ -1,60 +1,49 @@
-import { Link } from 'react-router-dom';
-import type { SeriesCardData } from '../api/client';
+import { useNavigate } from 'react-router-dom';
+import type { Series } from '../db/dao';
 
-export function SeriesCard({ series }: { series: SeriesCardData }) {
+interface SeriesCardProps {
+  series: Series;
+  showBookmarkIndicator?: boolean;
+}
+
+export function SeriesCard({ series, showBookmarkIndicator = false }: SeriesCardProps) {
+  const navigate = useNavigate();
+
   return (
-    <Link to={`/series/${series.slug}`} className="flex flex-col group h-full">
-      <div className="relative aspect-[2/3] w-full rounded-md overflow-hidden bg-slate-800 shadow-lg">
-        {series.coverImage ? (
-          <img
-            src={series.coverImage}
-            alt={series.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+    <div 
+      className="flex flex-col gap-2 cursor-pointer active:scale-95 transition-transform"
+      onClick={() => navigate(`/series/${series.slug}`)}
+    >
+      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-brand-card ring-1 ring-white/5">
+        {series.cover ? (
+          <img 
+            src={series.cover} 
+            alt={series.title} 
+            className="h-full w-full object-cover transition-opacity" 
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs text-center p-2">
+          <div className="flex h-full w-full items-center justify-center text-xs text-brand-secondary">
             No Cover
           </div>
         )}
         
-        {/* Badges overlay */}
-        <div className="absolute top-1 right-1 flex flex-col gap-1 items-end">
-          {series.isNSFW && (
-            <span className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
-              18+
-            </span>
-          )}
-          {series.type && (
-            <span className="bg-slate-900/80 backdrop-blur-sm text-slate-200 text-[9px] font-bold px-1.5 py-0.5 rounded border border-slate-700">
-              {series.type}
-            </span>
-          )}
-        </div>
-        <div className="absolute bottom-1 right-1">
-           {series.chapterCount > 0 && (
-            <span className="bg-slate-900/90 text-white text-[10px] font-medium px-1.5 py-0.5 rounded shadow">
-              {series.chapterCount} ch
-            </span>
-          )}
-        </div>
+        {/* Optional overlay gradients can go here, but keeping it minimal as requested */}
+        {showBookmarkIndicator && series.bookmarked && (
+          <div className="absolute top-2 right-2 bg-brand-primary rounded-full p-1 shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+            </svg>
+          </div>
+        )}
       </div>
-      <div className="mt-2 flex-1 flex flex-col">
-        <h3 className="text-sm font-semibold text-slate-200 leading-tight line-clamp-2 group-hover:text-red-400 transition-colors">
+      
+      <div className="flex flex-col px-1">
+        <span className="text-sm font-medium line-clamp-2 leading-tight text-brand-text">
           {series.title}
-        </h3>
-        <div className="mt-auto pt-1 flex items-center justify-between text-xs text-slate-500">
-          <span className="flex items-center gap-1">
-            ⭐ {series.averageRating > 0 ? series.averageRating.toFixed(1) : 'N/A'}
-          </span>
-          <span className={
-            series.status === 'ONGOING' ? 'text-green-500' : 
-            series.status === 'COMPLETED' ? 'text-blue-500' : 'text-slate-500'
-          }>
-            {series.status}
-          </span>
-        </div>
+        </span>
+        {/* Optional chapter count or status can be placed here if available */}
       </div>
-    </Link>
+    </div>
   );
 }

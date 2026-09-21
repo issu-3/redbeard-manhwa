@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { useNetworkStore } from './store/network';
 import { LibraryScreen } from './features/library/LibraryScreen';
 import { SettingsScreen } from './features/settings/SettingsScreen';
@@ -9,20 +9,25 @@ import { SearchScreen } from './features/search/SearchScreen';
 import { SeriesDetailScreen } from './features/series/SeriesDetailScreen';
 
 function BottomNav() {
+  const navClass = ({ isActive }: { isActive: boolean }) => 
+    `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
+      isActive ? 'text-brand-primary' : 'text-brand-secondary hover:text-brand-text'
+    }`;
+
   return (
-    <div className="fixed bottom-0 w-full bg-slate-900 border-t border-slate-800 flex justify-around p-3 text-slate-400 z-50">
-      <Link to="/browse" className="flex flex-col items-center hover:text-white">
-        <Compass size={24} />
-        <span className="text-xs mt-1">Browse</span>
-      </Link>
-      <Link to="/library" className="flex flex-col items-center hover:text-white">
-        <BookMarked size={24} />
-        <span className="text-xs mt-1">Library</span>
-      </Link>
-      <Link to="/settings" className="flex flex-col items-center hover:text-white">
-        <Settings size={24} />
-        <span className="text-xs mt-1">More</span>
-      </Link>
+    <div className="fixed bottom-0 w-full bg-brand-surface border-t border-white/5 flex justify-around items-center h-[60px] pb-safe z-50">
+      <NavLink to="/library" className={navClass}>
+        <BookMarked size={22} strokeWidth={2.5} />
+        <span className="text-[10px] font-medium">Library</span>
+      </NavLink>
+      <NavLink to="/browse" className={navClass}>
+        <Compass size={22} strokeWidth={2.5} />
+        <span className="text-[10px] font-medium">Browse</span>
+      </NavLink>
+      <NavLink to="/settings" className={navClass}>
+        <Settings size={22} strokeWidth={2.5} />
+        <span className="text-[10px] font-medium">More</span>
+      </NavLink>
     </div>
   );
 }
@@ -36,7 +41,7 @@ export default function App() {
 
   return (
     <Router>
-      <div className="flex flex-col h-screen bg-slate-950 text-slate-100 pb-[72px] overflow-hidden">
+      <div className="flex flex-col h-screen bg-brand-bg text-brand-text pb-[60px] overflow-hidden">
         
         {/* Network Banner */}
         {!isOnline && (

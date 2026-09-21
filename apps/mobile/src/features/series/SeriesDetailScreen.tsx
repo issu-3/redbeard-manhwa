@@ -4,7 +4,7 @@ import { ApiClient, type SeriesDetail } from '../../api/client';
 import { SeriesDAO, ChapterDAO, type Chapter as LocalChapter } from '../../db/dao';
 import { useNetworkStore } from '../../store/network';
 import { ChapterList } from './ChapterList';
-import { ArrowLeft, Bookmark, Share2 } from 'lucide-react';
+import { ArrowLeft, Download, Filter, MoreVertical, Heart, Globe } from 'lucide-react';
 
 export function SeriesDetailScreen() {
   const { slug } = useParams<{ slug: string }>();
@@ -178,54 +178,101 @@ export function SeriesDetailScreen() {
     );
   }
 
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
+
   return (
-    <div className="flex flex-col h-full bg-slate-950 text-slate-100 overflow-y-auto z-50 fixed inset-0">
-      <div className="sticky top-0 z-20 bg-slate-900/90 backdrop-blur border-b border-slate-800 p-4 flex items-center justify-between">
-        <button onClick={() => navigate(-1)} className="text-slate-200 hover:text-white">
-          <ArrowLeft size={24} />
-        </button>
-        <div className="flex items-center gap-4">
-          <button onClick={toggleBookmark} className={isBookmarked ? 'text-red-500' : 'text-slate-400 hover:text-white'}>
-            <Bookmark size={24} fill={isBookmarked ? "currentColor" : "none"} />
+    <div className="flex flex-col h-full bg-brand-bg text-brand-text overflow-y-auto z-50 fixed inset-0">
+      {/* Top App Bar */}
+      <div className="sticky top-0 z-20 bg-brand-bg/95 backdrop-blur px-4 py-3 flex items-center justify-between pt-safe">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="text-brand-text">
+            <ArrowLeft size={24} />
           </button>
-          <button className="text-slate-400 hover:text-white">
-            <Share2 size={24} />
-          </button>
+          <span className="font-semibold text-lg truncate w-48">{series.title}</span>
+        </div>
+        <div className="flex items-center gap-4 text-brand-text">
+          <Download size={22} />
+          <Filter size={22} />
+          <MoreVertical size={22} />
         </div>
       </div>
 
-      <div className="relative">
-        <div className="absolute inset-0 h-64 overflow-hidden">
-          <img src={series.bannerImage || series.coverImage} className="w-full h-full object-cover blur-xl opacity-30 scale-110" alt="" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent" />
-        </div>
-        
-        <div className="relative pt-8 px-4 flex flex-col items-center text-center">
-          <div className="w-32 md:w-48 aspect-[2/3] rounded-lg overflow-hidden shadow-2xl ring-1 ring-slate-800 bg-slate-800 mb-4">
+      {/* Main Metadata Section */}
+      <div className="px-4 pt-2 pb-4">
+        <div className="flex gap-4">
+          <div className="w-28 shrink-0 aspect-[2/3] rounded-lg overflow-hidden bg-brand-card">
             <img src={series.coverImage} alt={series.title} className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-2xl font-bold mb-1">{series.title}</h1>
-          <p className="text-sm text-slate-400 mb-3">
-            {series.authors.map(a => a.name).join(', ')} • {series.type} • {series.status}
-          </p>
-          <div className="flex flex-wrap justify-center gap-2 mb-6">
+          <div className="flex flex-col justify-center">
+            <h1 className="text-xl font-bold mb-1 leading-tight">{series.title}</h1>
+            <p className="text-sm text-brand-secondary mb-1 flex items-center gap-1">
+              <span className="truncate">{series.authors.map(a => a.name).join(', ') || 'Unknown Author'}</span>
+            </p>
+            {series.artists.length > 0 && series.artists[0].name !== series.authors[0]?.name && (
+              <p className="text-sm text-brand-secondary mb-1 flex items-center gap-1">
+                <span className="truncate">{series.artists.map(a => a.name).join(', ')}</span>
+              </p>
+            )}
+            <p className="text-sm text-brand-secondary">
+              {series.status || 'Ongoing'} • {series.type || 'Manhwa'}
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 mt-5">
+          <button 
+            onClick={toggleBookmark} 
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full border text-sm font-medium transition-colors ${
+              isBookmarked 
+                ? 'border-brand-primary text-brand-primary bg-brand-primary/10' 
+                : 'border-white/10 text-brand-text bg-white/5'
+            }`}
+          >
+            <Heart size={18} fill={isBookmarked ? "currentColor" : "none"} />
+            {isBookmarked ? 'In Library' : 'Add to Library'}
+          </button>
+          <button 
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full border border-white/10 text-brand-text bg-white/5 text-sm font-medium"
+          >
+            <Globe size={18} />
+            WebView
+          </button>
+        </div>
+
+        {/* Description */}
+        {series.synopsis && (
+          <div className="mt-5">
+            <div 
+              className={`text-[13px] leading-relaxed text-brand-secondary ${!isDescExpanded ? 'line-clamp-3' : ''}`}
+              dangerouslySetInnerHTML={{ __html: series.synopsis }} 
+            />
+            {!isDescExpanded && (
+              <button 
+                onClick={() => setIsDescExpanded(true)}
+                className="text-brand-primary text-xs font-medium mt-1 flex items-center gap-1"
+              >
+                Read more <span className="text-[10px]">▼</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Genres */}
+        {series.genres && series.genres.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4">
             {series.genres.map(g => (
-              <span key={g.slug} className="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-slate-800 rounded text-slate-300">
+              <span key={g.slug} className="text-xs px-3 py-1 bg-white/5 rounded-full text-brand-text border border-white/5">
                 {g.name}
               </span>
             ))}
           </div>
-        </div>
+        )}
       </div>
 
-      {series.synopsis && (
-        <div className="px-4 pb-6 text-sm text-slate-300 leading-relaxed">
-          <div dangerouslySetInnerHTML={{ __html: series.synopsis }} />
-        </div>
-      )}
-
-      <div className="px-4 py-3 bg-slate-900 border-t border-b border-slate-800 sticky top-[68px] z-10 flex justify-between items-center">
-        <h2 className="font-semibold">{series.chapters.length} Chapters</h2>
+      <div className="px-4 py-3 sticky top-[56px] z-10 bg-brand-bg flex justify-between items-center">
+        <h2 className="font-semibold">{series.chapters.length} chapters</h2>
+        <button className="text-brand-secondary"><Filter size={18} /></button>
       </div>
 
       <ChapterList chapters={series.chapters} localChapters={localChapters} />

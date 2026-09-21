@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { ApiClient, type SeriesCardData } from '../../api/client';
-import { SeriesDAO } from '../../db/dao';
+import { ApiClient } from '../../api/client';
+import { SeriesDAO, type Series } from '../../db/dao';
 import { useNetworkStore } from '../../store/network';
 import { SeriesCard } from '../../components/SeriesCard';
 import { Search as SearchIcon, ArrowLeft } from 'lucide-react';
@@ -10,7 +10,7 @@ export function SearchScreen() {
   const navigate = useNavigate();
   const { isOnline } = useNetworkStore();
   const [query, setQuery] = useState('');
-  const [seriesList, setSeriesList] = useState<SeriesCardData[]>([]);
+  const [seriesList, setSeriesList] = useState<Series[]>([]);
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,45 +30,33 @@ export function SearchScreen() {
       if (!isOnline) {
         const cached = await SeriesDAO.search(searchQuery.trim());
         if (cached.length > 0) {
-          setSeriesList(cached.map(s => ({
-            id: s.id,
-            title: s.title,
-            slug: s.slug,
-            coverImage: s.cover || '',
-            type: s.type || '',
-            status: s.status || '',
-            isNSFW: false,
-            averageRating: 0,
-            ratingCount: 0,
-            totalViews: 0,
-            totalBookmarks: 0,
-            chapterCount: 0,
-            updatedAt: new Date(s.updatedAt).toISOString(),
-            genres: s.genres ? s.genres.split(',').map(g => ({ name: g, slug: g })) : []
-          })));
+          setSeriesList(cached);
         } else {
           setSeriesList([]);
         }
         setIsLoading(false);
         return;
       }
-      
       const results = await ApiClient.searchSeries({ q: searchQuery.trim(), limit: 30 });
-      setSeriesList(results);
+      const mappedResults: Series[] = results.map(res => ({
+        id: res.id,
+        slug: res.slug,
+        title: res.title,
+        cover: res.coverImage,
+        synopsis: null,
+        author: null,
+        artist: null,
+        type: res.type || null,
+        status: res.status || null,
+        genres: res.genres.map(g => g.name).join(','),
+        bookmarked: false,
+        updatedAt: Date.now()
+      }));
+      setSeriesList(mappedResults);
 
       // Cache the results
-      for (const res of results) {
-        await SeriesDAO.upsert({
-          id: res.id,
-          slug: res.slug,
-          title: res.title,
-          cover: res.coverImage,
-          type: res.type,
-          status: res.status,
-          genres: res.genres.map(g => g.name).join(','),
-          bookmarked: false,
-          updatedAt: Date.now()
-        });
+      for (const res of mappedResults) {
+        await SeriesDAO.upsert(res);
       }
     } catch (e) {
       setError('Failed to load search results');
