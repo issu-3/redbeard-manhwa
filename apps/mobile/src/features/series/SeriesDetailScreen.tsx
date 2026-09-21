@@ -5,6 +5,7 @@ import { SeriesDAO, ChapterDAO, type Chapter as LocalChapter } from '../../db/da
 import { useNetworkStore } from '../../store/network';
 import { ChapterList } from './ChapterList';
 import { ArrowLeft, Download, Filter, MoreVertical, Heart, Globe } from 'lucide-react';
+import { startNativeDownload } from '../../../../../src/lib/native-download';
 
 export function SeriesDetailScreen() {
   const { slug } = useParams<{ slug: string }>();
@@ -18,6 +19,52 @@ export function SeriesDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleDownloadAll = async () => {
+    if (!series || !series.chapters || series.chapters.length === 0) {
+      showToast('No chapters available');
+      return;
+    }
+
+    const downloadableChapters = series.chapters.filter(ch => ch.downloadUrl);
+    
+    if (downloadableChapters.length === 0) {
+      showToast('No downloadable chapters available.');
+      return;
+    }
+
+    if (isDownloadingAll) return;
+    setIsDownloadingAll(true);
+    showToast(`Starting download of ${downloadableChapters.length} chapters...`);
+
+    // Download sequentially or async, but don't block the UI
+    // To prevent freezing, we can just fire them off asynchronously,
+    // Capacitor's file transfer will handle queuing/concurrency.
+    (async () => {
+      for (const ch of downloadableChapters) {
+        try {
+          await startNativeDownload(
+            ch.id,
+            ch.downloadUrl!,
+            series.id,
+            series.title,
+            series.slug,
+            ch.number || '0'
+          );
+        } catch (e) {
+          console.warn(`Failed to start download for chapter ${ch.number}`, e);
+        }
+      }
+      setIsDownloadingAll(false);
+    })();
+  };
 
   const loadData = useCallback(async () => {
     if (!slug) return;
@@ -182,6 +229,13 @@ export function SeriesDetailScreen() {
 
   return (
     <div className="flex flex-col h-full bg-brand-bg text-brand-text overflow-y-auto z-50 fixed inset-0">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-brand-primary text-brand-text px-4 py-2 rounded-full shadow-lg font-medium text-sm transition-all whitespace-nowrap">
+          {toastMessage}
+        </div>
+      )}
+
       {/* Top App Bar */}
       <div className="sticky top-0 z-20 bg-brand-bg/95 backdrop-blur px-4 py-3 flex items-center justify-between pt-safe">
         <div className="flex items-center gap-3">
@@ -191,7 +245,10 @@ export function SeriesDetailScreen() {
           <span className="font-semibold text-lg truncate w-48">{series.title}</span>
         </div>
         <div className="flex items-center gap-2 text-brand-text">
-          <button className="p-2 active:bg-white/10 rounded-full transition-colors">
+          <button 
+            onClick={handleDownloadAll}
+            className={`p-2 active:bg-white/10 rounded-full transition-colors ${isDownloadingAll ? 'opacity-50' : ''}`}
+          >
             <Download size={22} />
           </button>
           <button className="p-2 active:bg-white/10 rounded-full transition-colors">

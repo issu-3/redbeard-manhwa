@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Browser } from '@capacitor/browser';
-import { useDownloadStore } from '@/store/download-store';
+import { useDownloadStore } from '../store/download-store';
 
 /**
  * Ensures the physical file existence matches the store metadata.
