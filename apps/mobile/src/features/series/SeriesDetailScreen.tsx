@@ -17,6 +17,7 @@ export function SeriesDetailScreen() {
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!slug) return;
@@ -178,7 +179,6 @@ export function SeriesDetailScreen() {
     );
   }
 
-  const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   return (
     <div className="flex flex-col h-full bg-brand-bg text-brand-text overflow-y-auto z-50 fixed inset-0">
@@ -206,9 +206,9 @@ export function SeriesDetailScreen() {
           <div className="flex flex-col justify-center">
             <h1 className="text-xl font-bold mb-1 leading-tight">{series.title}</h1>
             <p className="text-sm text-brand-secondary mb-1 flex items-center gap-1">
-              <span className="truncate">{series.authors.map(a => a.name).join(', ') || 'Unknown Author'}</span>
+              <span className="truncate">{series.authors?.map(a => a.name).join(', ') || 'Unknown Author'}</span>
             </p>
-            {series.artists.length > 0 && series.artists[0].name !== series.authors[0]?.name && (
+            {series.artists && series.artists.length > 0 && series.artists[0].name !== series.authors?.[0]?.name && (
               <p className="text-sm text-brand-secondary mb-1 flex items-center gap-1">
                 <span className="truncate">{series.artists.map(a => a.name).join(', ')}</span>
               </p>
@@ -271,11 +271,11 @@ export function SeriesDetailScreen() {
       </div>
 
       <div className="px-4 py-3 sticky top-[56px] z-10 bg-brand-bg flex justify-between items-center">
-        <h2 className="font-semibold">{series.chapters.length} chapters</h2>
+        <h2 className="font-semibold">{series.chapters?.length || 0} chapters</h2>
         <button className="text-brand-secondary"><Filter size={18} /></button>
       </div>
 
-      <ChapterList chapters={series.chapters} localChapters={localChapters} />
+      <ChapterList chapters={series.chapters || []} localChapters={localChapters} />
     </div>
   );
 }

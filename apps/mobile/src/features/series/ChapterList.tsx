@@ -22,7 +22,7 @@ export function ChapterList({ chapters, localChapters }: ChapterListProps) {
         const local = localChapters[chapter.id];
         const isRead = local?.read ?? false;
         
-        let displayTitle = chapter.title || chapter.label;
+        let displayTitle = String(chapter.title || chapter.label || '');
         if (chapter.number != null && displayTitle && !displayTitle.toLowerCase().includes('chapter')) {
           displayTitle = `Chapter ${chapter.number} - ${displayTitle}`;
         }
