@@ -4,13 +4,16 @@ import { ApiClient, type SeriesDetail } from '../../api/client';
 import { SeriesDAO, ChapterDAO, type Chapter as LocalChapter } from '../../db/dao';
 import { useNetworkStore } from '../../store/network';
 import { ChapterList } from './ChapterList';
-import { ArrowLeft, Download, Filter, MoreVertical, Heart, Globe } from 'lucide-react';
+import { ArrowLeft, Download, Filter, MoreVertical, Heart, Globe, RefreshCw, Tags, Share2, FileText } from 'lucide-react';
 import { startNativeDownload } from '../../../../../src/lib/native-download';
+import { useDownloadStore } from '../../../../../src/store/download-store';
+import { FilterSheet, type FilterState, type SortState, type DisplayState } from './FilterSheet';
 
 export function SeriesDetailScreen() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { isOnline } = useNetworkStore();
+  const { downloads } = useDownloadStore();
   
   const [series, setSeries] = useState<SeriesDetail | null>(null);
   const [localChapters, setLocalChapters] = useState<Record<string, LocalChapter>>({});
@@ -21,6 +24,50 @@ export function SeriesDetailScreen() {
   const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [showThreeDotMenu, setShowThreeDotMenu] = useState(false);
+  
+  const [filters, setFilters] = useState<FilterState>({ downloaded: false, unread: false });
+  const [sort, setSort] = useState<SortState>({ by: 'chapterNumber', desc: true });
+  const [display, setDisplay] = useState<DisplayState>({ showTitle: 'chapterNumber' });
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (showThreeDotMenu) {
+        setShowThreeDotMenu(false);
+      }
+      if (showFilterSheet) {
+        setShowFilterSheet(false);
+      }
+    };
+
+    if (showThreeDotMenu || showFilterSheet) {
+      window.history.pushState({ menu: true }, '');
+      window.addEventListener('popstate', handlePopState);
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [showThreeDotMenu, showFilterSheet]);
+
+  const closeThreeDotMenu = () => {
+    if (showThreeDotMenu) {
+      setShowThreeDotMenu(false);
+      if (window.history.state?.menu) {
+        window.history.back();
+      }
+    }
+  };
+
+  const toggleThreeDotMenu = () => {
+    if (showThreeDotMenu) {
+      closeThreeDotMenu();
+    } else {
+      setShowThreeDotMenu(true);
+    }
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -44,9 +91,6 @@ export function SeriesDetailScreen() {
     setIsDownloadingAll(true);
     showToast(`Starting download of ${downloadableChapters.length} chapters...`);
 
-    // Download sequentially or async, but don't block the UI
-    // To prevent freezing, we can just fire them off asynchronously,
-    // Capacitor's file transfer will handle queuing/concurrency.
     (async () => {
       for (const ch of downloadableChapters) {
         try {
@@ -226,6 +270,43 @@ export function SeriesDetailScreen() {
     );
   }
 
+  let filteredChapters = [...(series.chapters || [])];
+
+  // Filter
+  filteredChapters = filteredChapters.filter(ch => {
+    const local = localChapters[ch.id];
+    const isDownloaded = local?.downloadStatus === 'COMPLETED' || downloads[ch.id]?.status === 'COMPLETED';
+    
+    // Use local read state if available, fallback to server isRead
+    const isRead = local?.read ?? ch.isRead ?? false;
+
+    if (filters.downloaded && !isDownloaded) return false;
+    if (filters.unread && isRead) return false;
+    
+    return true;
+  });
+
+  // Sort
+  filteredChapters.sort((a, b) => {
+    let result = 0;
+    switch (sort.by) {
+      case 'chapterNumber':
+        result = (a.number ?? 0) - (b.number ?? 0);
+        break;
+      case 'uploadDate':
+        result = new Date(a.publishedAt || 0).getTime() - new Date(b.publishedAt || 0).getTime();
+        break;
+      case 'alphabetically':
+        result = String(a.title || a.label || '').localeCompare(String(b.title || b.label || ''));
+        break;
+      case 'source':
+        result = String(a.sourceType || '').localeCompare(String(b.sourceType || ''));
+        break;
+    }
+    return sort.desc ? -result : result;
+  });
+
+  const activeFiltersCount = (filters.downloaded ? 1 : 0) + (filters.unread ? 1 : 0);
 
   return (
     <div className="flex flex-col h-full bg-brand-bg text-brand-text overflow-y-auto z-50 fixed inset-0">
@@ -244,19 +325,78 @@ export function SeriesDetailScreen() {
           </button>
           <span className="font-semibold text-lg truncate w-48">{series.title}</span>
         </div>
-        <div className="flex items-center gap-2 text-brand-text">
+        <div className="flex items-center gap-2 text-brand-text relative">
           <button 
             onClick={handleDownloadAll}
             className={`p-2 active:bg-white/10 rounded-full transition-colors ${isDownloadingAll ? 'opacity-50' : ''}`}
           >
             <Download size={22} />
           </button>
-          <button className="p-2 active:bg-white/10 rounded-full transition-colors">
+          <button onClick={() => setShowFilterSheet(true)} className="p-2 active:bg-white/10 rounded-full transition-colors relative">
             <Filter size={22} />
+            {activeFiltersCount > 0 && <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand-primary border border-brand-bg" />}
           </button>
-          <button className="p-2 active:bg-white/10 rounded-full transition-colors">
+
+          <FilterSheet
+            isOpen={showFilterSheet}
+            onClose={() => {
+              setShowFilterSheet(false);
+              if (window.history.state?.menu) window.history.back();
+            }}
+            filters={filters}
+            onFilterChange={setFilters}
+            sort={sort}
+            onSortChange={setSort}
+            display={display}
+            onDisplayChange={setDisplay}
+          />
+
+          <button onClick={toggleThreeDotMenu} className="p-2 active:bg-white/10 rounded-full transition-colors">
             <MoreVertical size={22} />
           </button>
+
+          {showThreeDotMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={closeThreeDotMenu} />
+              
+              <div className="absolute top-[110%] right-0 w-60 bg-brand-card border border-white/5 rounded-xl shadow-2xl py-2 z-50 overflow-hidden flex flex-col origin-top-right animate-in fade-in zoom-in-95 duration-200">
+                <button 
+                  onClick={() => {
+                    closeThreeDotMenu();
+                    loadData();
+                  }}
+                  className="px-4 py-3 text-[15px] text-left text-brand-text flex items-center gap-3 active:bg-white/5 transition-colors"
+                >
+                  <RefreshCw size={18} className="text-brand-secondary" />
+                  Refresh
+                </button>
+                <button 
+                  className="px-4 py-3 text-[15px] text-left text-brand-text opacity-50 flex items-center gap-3 active:bg-white/5 transition-colors"
+                  disabled
+                >
+                  <Tags size={18} className="text-brand-secondary" />
+                  Edit categories
+                </button>
+                <button 
+                  onClick={() => {
+                    closeThreeDotMenu();
+                    showToast('Capacitor Share plugin is not installed');
+                  }}
+                  className="px-4 py-3 text-[15px] text-left text-brand-text flex items-center gap-3 active:bg-white/5 transition-colors"
+                >
+                  <Share2 size={18} className="text-brand-secondary" />
+                  Share
+                </button>
+                <button 
+                  className="px-4 py-3 text-[15px] text-left text-brand-text opacity-50 flex items-center gap-3 active:bg-white/5 transition-colors"
+                  disabled
+                >
+                  <FileText size={18} className="text-brand-secondary" />
+                  Notes
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -334,11 +474,20 @@ export function SeriesDetailScreen() {
       </div>
 
       <div className="px-4 py-3 sticky top-[56px] z-10 bg-brand-bg flex justify-between items-center">
-        <h2 className="font-semibold">{series.chapters?.length || 0} chapters</h2>
-        <button className="text-brand-secondary"><Filter size={18} /></button>
+        <h2 className="font-semibold">
+          {filteredChapters.length} {filteredChapters.length === 1 ? 'chapter' : 'chapters'}
+          {activeFiltersCount > 0 && <span className="text-brand-secondary text-sm ml-2">({activeFiltersCount} Filter{activeFiltersCount > 1 ? 's' : ''})</span>}
+        </h2>
+        <button onClick={() => setShowFilterSheet(true)} className="text-brand-secondary"><Filter size={18} /></button>
       </div>
 
-      <ChapterList chapters={series.chapters || []} localChapters={localChapters} />
+      {filteredChapters.length === 0 ? (
+        <div className="py-8 text-center text-brand-secondary text-sm">
+          {activeFiltersCount > 0 ? 'No chapters match the selected filters.' : 'No chapters available.'}
+        </div>
+      ) : (
+        <ChapterList chapters={filteredChapters} localChapters={localChapters} displayPref={display.showTitle} />
+      )}
     </div>
   );
 }

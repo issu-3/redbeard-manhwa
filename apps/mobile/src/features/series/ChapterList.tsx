@@ -5,9 +5,10 @@ import { Download, CircleCheck, MoreVertical } from 'lucide-react';
 interface ChapterListProps {
   chapters: Chapter[];
   localChapters: Record<string, LocalChapter>;
+  displayPref?: 'sourceTitle' | 'chapterNumber';
 }
 
-export function ChapterList({ chapters, localChapters }: ChapterListProps) {
+export function ChapterList({ chapters, localChapters, displayPref = 'chapterNumber' }: ChapterListProps) {
   if (chapters.length === 0) {
     return (
       <div className="py-8 text-center text-brand-secondary text-sm">
@@ -22,12 +23,13 @@ export function ChapterList({ chapters, localChapters }: ChapterListProps) {
         const local = localChapters[chapter.id];
         const isRead = local?.read ?? false;
         
-        let displayTitle = String(chapter.title || chapter.label || '');
-        if (chapter.number != null && displayTitle && !displayTitle.toLowerCase().includes('chapter')) {
-          displayTitle = `Chapter ${chapter.number} - ${displayTitle}`;
-        }
-        if (!displayTitle) {
-          displayTitle = chapter.number != null ? `Chapter ${chapter.number}` : 'Chapter';
+        let displayTitle = '';
+        
+        if (displayPref === 'sourceTitle') {
+          displayTitle = String(chapter.title || chapter.label || `Chapter ${chapter.number || 0}`);
+        } else {
+          // chapterNumber display preference
+          displayTitle = chapter.number != null ? `Chapter ${chapter.number}` : String(chapter.title || chapter.label || 'Chapter');
         }
 
         return (
