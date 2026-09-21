@@ -14,11 +14,11 @@ export function SeriesDetailScreen() {
   const navigate = useNavigate();
   const { isOnline } = useNetworkStore();
   const { downloads } = useDownloadStore();
-  
+
   const [series, setSeries] = useState<SeriesDetail | null>(null);
   const [localChapters, setLocalChapters] = useState<Record<string, LocalChapter>>({});
   const [isBookmarked, setIsBookmarked] = useState(false);
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDescExpanded, setIsDescExpanded] = useState(false);
@@ -27,7 +27,7 @@ export function SeriesDetailScreen() {
 
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [showThreeDotMenu, setShowThreeDotMenu] = useState(false);
-  
+
   const [filters, setFilters] = useState<FilterState>({ downloaded: false, unread: false });
   const [sort, setSort] = useState<SortState>({ by: 'chapterNumber', desc: true });
   const [display, setDisplay] = useState<DisplayState>({ showTitle: 'chapterNumber' });
@@ -81,7 +81,7 @@ export function SeriesDetailScreen() {
     }
 
     const downloadableChapters = series.chapters.filter(ch => ch.downloadUrl);
-    
+
     if (downloadableChapters.length === 0) {
       showToast('No downloadable chapters available.');
       return;
@@ -114,7 +114,7 @@ export function SeriesDetailScreen() {
     if (!slug) return;
     setIsLoading(true);
     setError(null);
-    
+
     try {
       let data: SeriesDetail | null = null;
 
@@ -123,12 +123,12 @@ export function SeriesDetailScreen() {
       }
 
       const localSeries = await SeriesDAO.getBySlug(slug);
-      
+
       // If API succeeded, cache it
       if (data) {
         // Keep existing bookmark state if we have it locally
         const bookmarked = localSeries ? localSeries.bookmarked : false;
-        
+
         await SeriesDAO.upsert({
           id: data.id,
           slug: data.slug,
@@ -144,35 +144,51 @@ export function SeriesDetailScreen() {
           updatedAt: Date.now()
         });
 
-        // Upsert chapters
-        if (data.chapters) {
-          for (const ch of data.chapters) {
-            await ChapterDAO.upsert({
-              id: ch.id,
-              seriesId: data.id,
-              title: ch.title || ch.label || null,
-              chapterNumber: ch.number ?? null,
-              slug: ch.slug || null,
-              totalPages: ch.totalPages ?? null,
-              publishedAt: ch.publishedAt || null,
-              downloadStatus: null,
-              localFilePath: null,
-              read: false,
-              readingProgress: 0,
-              updatedAt: Date.now()
-            });
-          }
-        }
-        
         setIsBookmarked(bookmarked);
         setSeries(data);
+
+        // Fetch existing local chapters to immediately update UI state (fast 1 query)
+        const localChaps = await ChapterDAO.getBySeriesId(data.id);
+        const map: Record<string, LocalChapter> = {};
+        localChaps.forEach(lc => {
+          map[lc.id] = lc;
+        });
+        setLocalChapters(map);
+
+        // Defer the massive chapter upserts to prevent freezing the UI thread
+        setTimeout(async () => {
+          if (data && data.chapters) {
+            for (const ch of data.chapters) {
+              try {
+                await ChapterDAO.upsert({
+                  id: ch.id,
+                  seriesId: data.id,
+                  title: ch.title || ch.label || null,
+                  chapterNumber: ch.number ?? null,
+                  slug: ch.slug || null,
+                  totalPages: ch.totalPages ?? null,
+                  publishedAt: ch.publishedAt || null,
+                  downloadStatus: null,
+                  localFilePath: null,
+                  read: false,
+                  readingProgress: 0,
+                  updatedAt: Date.now()
+                });
+                // Small yield to let React and the browser breathe during huge loops
+                await new Promise(r => setTimeout(r, 0));
+              } catch (err) {
+                console.error('Failed to upsert chapter:', err);
+              }
+            }
+          }
+        }, 100);
       } else if (localSeries) {
         // Fallback to offline
         // Reconstruct SeriesDetail from SQLite
         setIsBookmarked(localSeries.bookmarked);
-        
+
         const cachedChapters = await ChapterDAO.getBySeriesId(localSeries.id);
-        
+
         setSeries({
           id: localSeries.id,
           title: localSeries.title,
@@ -216,9 +232,9 @@ export function SeriesDetailScreen() {
         setError('You are offline and this series is not cached.');
       }
 
-      // Load local chapter states (read, downloaded)
-      if (data || localSeries) {
-        const id = data?.id || localSeries?.id;
+      // Load local chapter states (read, downloaded) if we didn't already
+      if (!data && localSeries) {
+        const id = localSeries?.id;
         if (id) {
           const localChaps = await ChapterDAO.getBySeriesId(id);
           const map: Record<string, LocalChapter> = {};
@@ -276,13 +292,13 @@ export function SeriesDetailScreen() {
   filteredChapters = filteredChapters.filter(ch => {
     const local = localChapters[ch.id];
     const isDownloaded = local?.downloadStatus === 'COMPLETED' || downloads[ch.id]?.status === 'COMPLETED';
-    
+
     // Use local read state if available, fallback to server isRead
     const isRead = local?.read ?? ch.isRead ?? false;
 
     if (filters.downloaded && !isDownloaded) return false;
     if (filters.unread && isRead) return false;
-    
+
     return true;
   });
 
@@ -309,7 +325,7 @@ export function SeriesDetailScreen() {
   const activeFiltersCount = (filters.downloaded ? 1 : 0) + (filters.unread ? 1 : 0);
 
   return (
-    <div className="flex flex-col h-full bg-brand-bg text-brand-text overflow-y-auto z-50 fixed inset-0">
+    <div id="series-detail-root" className="flex flex-col min-h-full bg-brand-bg text-brand-text">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-brand-primary text-brand-text px-4 py-2 rounded-full shadow-lg font-medium text-sm transition-all whitespace-nowrap">
@@ -318,7 +334,7 @@ export function SeriesDetailScreen() {
       )}
 
       {/* Top App Bar */}
-      <div className="sticky top-0 z-20 bg-brand-bg/95 backdrop-blur px-4 py-3 flex items-center justify-between pt-safe">
+      <div className="sticky top-0 z-20 bg-brand-bg px-4 py-3 flex items-center justify-between pt-safe border-b border-white/5">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="text-brand-text">
             <ArrowLeft size={24} />
@@ -326,7 +342,7 @@ export function SeriesDetailScreen() {
           <span className="font-semibold text-lg truncate w-48">{series.title}</span>
         </div>
         <div className="flex items-center gap-2 text-brand-text relative">
-          <button 
+          <button
             onClick={handleDownloadAll}
             className={`p-2 active:bg-white/10 rounded-full transition-colors ${isDownloadingAll ? 'opacity-50' : ''}`}
           >
@@ -358,9 +374,9 @@ export function SeriesDetailScreen() {
           {showThreeDotMenu && (
             <>
               <div className="fixed inset-0 z-40" onClick={closeThreeDotMenu} />
-              
+
               <div className="absolute top-[110%] right-0 w-60 bg-brand-card border border-white/5 rounded-xl shadow-2xl py-2 z-50 overflow-hidden flex flex-col origin-top-right animate-in fade-in zoom-in-95 duration-200">
-                <button 
+                <button
                   onClick={() => {
                     closeThreeDotMenu();
                     loadData();
@@ -370,14 +386,14 @@ export function SeriesDetailScreen() {
                   <RefreshCw size={18} className="text-brand-secondary" />
                   Refresh
                 </button>
-                <button 
+                <button
                   className="px-4 py-3 text-[15px] text-left text-brand-text opacity-50 flex items-center gap-3 active:bg-white/5 transition-colors"
                   disabled
                 >
                   <Tags size={18} className="text-brand-secondary" />
                   Edit categories
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     closeThreeDotMenu();
                     showToast('Capacitor Share plugin is not installed');
@@ -387,7 +403,7 @@ export function SeriesDetailScreen() {
                   <Share2 size={18} className="text-brand-secondary" />
                   Share
                 </button>
-                <button 
+                <button
                   className="px-4 py-3 text-[15px] text-left text-brand-text opacity-50 flex items-center gap-3 active:bg-white/5 transition-colors"
                   disabled
                 >
@@ -424,18 +440,17 @@ export function SeriesDetailScreen() {
 
         {/* Action Buttons */}
         <div className="flex gap-3 mt-5">
-          <button 
-            onClick={toggleBookmark} 
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full border text-sm font-medium transition-colors ${
-              isBookmarked 
-                ? 'border-brand-primary text-brand-primary bg-brand-primary/10' 
+          <button
+            onClick={toggleBookmark}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full border text-sm font-medium transition-colors ${isBookmarked
+                ? 'border-brand-primary text-brand-primary bg-brand-primary/10'
                 : 'border-white/10 text-brand-text bg-white/5'
-            }`}
+              }`}
           >
             <Heart size={18} fill={isBookmarked ? "currentColor" : "none"} />
             {isBookmarked ? 'In Library' : 'Add to Library'}
           </button>
-          <button 
+          <button
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full border border-white/10 text-brand-text bg-white/5 text-sm font-medium"
           >
             <Globe size={18} />
@@ -446,12 +461,12 @@ export function SeriesDetailScreen() {
         {/* Description */}
         {series.synopsis && (
           <div className="mt-5">
-            <div 
+            <div
               className={`text-[13px] leading-relaxed text-brand-secondary ${!isDescExpanded ? 'line-clamp-3' : ''}`}
-              dangerouslySetInnerHTML={{ __html: series.synopsis }} 
+              dangerouslySetInnerHTML={{ __html: series.synopsis }}
             />
             {!isDescExpanded && (
-              <button 
+              <button
                 onClick={() => setIsDescExpanded(true)}
                 className="text-brand-primary text-xs font-medium mt-1 flex items-center gap-1"
               >

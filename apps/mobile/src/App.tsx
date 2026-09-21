@@ -48,7 +48,7 @@ export default function App() {
           <div className="bg-red-600/20 text-red-500 text-center text-xs py-1">You are currently offline</div>
         )}
 
-        <div className="flex-1 overflow-y-auto">
+        <div id="series-scroll-container" className="flex-1 overflow-y-auto relative">
           <Routes>
             <Route path="/browse" element={<BrowseScreen />} />
             <Route path="/library" element={<LibraryScreen />} />
