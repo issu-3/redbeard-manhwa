@@ -5,8 +5,8 @@ import { SeriesDAO, ChapterDAO, type Chapter as LocalChapter } from '../../db/da
 import { useNetworkStore } from '../../store/network';
 import { ChapterList } from './ChapterList';
 import { ArrowLeft, Download, Filter, MoreVertical, Heart, Globe, RefreshCw, Tags, Share2, FileText } from 'lucide-react';
-import { startNativeDownload } from '../../../../../src/lib/native-download';
-import { useDownloadStore } from '../../../../../src/store/download-store';
+import { startNativeDownload } from '../../lib/native-download';
+import { useDownloadStore } from '../../store/download-store';
 import { FilterSheet, type FilterState, type SortState, type DisplayState } from './FilterSheet';
 
 export function SeriesDetailScreen() {
