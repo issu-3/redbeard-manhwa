@@ -1,0 +1,2 @@
+[    7051ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://redbeard.store/icons/icon-144.png:0
+[    7055ms] [WARNING] Error while trying to use the following icon from the Manifest: https://redbeard.store/icons/icon-144.png (Download error or resource isn't a valid image) @ https://redbeard.store/series/secret-class:0

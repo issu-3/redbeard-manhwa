@@ -207,3 +207,43 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Native App Utility Classes ───────────────────────── */
+
+.native-only {
+  display: none !important;
+}
+
+html.is-native .native-only {
+  display: inherit !important;
+}
+
+html.is-native .native-only-flex {
+  display: flex !important;
+}
+
+html.is-native .native-only-block {
+  display: block !important;
+}
+
+html.is-native .native-hidden {
+  display: none !important;
+}
+
+/* ── Mihon-Inspired Native Theme Overrides ──────────────── */
+
+html.is-native, html.is-native.dark {
+  --background: #141414;
+  --surface: #1C1C1D;
+  --card: #252526;
+  --card-hover: #2D2D2E;
+  --border: #333333;
+  --border-subtle: #252525;
+  
+  --text-primary: #F3F4F6;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  
+  --foreground: #FFFFFF;
+  --glass-bg: rgba(20, 20, 20, 0.85);
+}

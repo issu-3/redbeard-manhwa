@@ -1,12 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Plus_Jakarta_Sans, Poppins } from 'next/font/google';
-import { ThemeProvider } from 'next-themes';
-import { SessionProvider } from '@/providers/session-provider';
-import { Toaster } from 'sonner';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
-import { AdGlobalScripts } from '@/components/ads/AdGlobalScripts';
-import { MonetagHeadScript } from '@/components/ads/MonetagHeadScript';
 import './globals.css';
 
 const inter = Inter({
@@ -88,82 +83,19 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
-import { NetworkListener } from '@/components/shared/NetworkListener';
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const settings = await getCachedSettings();
-  const theme = settings.defaultTheme || 'system';
-  
-  const siteUrl = APP_URL || 'http://localhost:3000';
-  const siteName = settings.siteName || 'REDBEARD';
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'WebSite',
-        url: siteUrl,
-        name: siteName,
-        description: settings.seo_site_description || 'Premium reading platform.',
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: `${siteUrl}/search?q={search_term_string}`,
-          'query-input': 'required name=search_term_string',
-        },
-      },
-      {
-        '@type': 'Organization',
-        url: siteUrl,
-        name: siteName,
-        logo: `${siteUrl}/logo.png`, // Assuming a standard logo path
-        sameAs: [
-          settings.seo_twitter_handle ? `https://twitter.com/${settings.seo_twitter_handle.replace('@', '')}` : '',
-          settings.youtubeUrl || '',
-        ].filter(Boolean),
-      }
-    ],
-  };
-
   return (
     <html
       lang="en"
       suppressHydrationWarning
       className={`${inter.variable} ${plusJakarta.variable} ${poppins.variable}`}
     >
-      <head>
-        <MonetagHeadScript 
-          scriptString={settings.ads_enabled_monetag === 'true' ? settings.ads_monetag_global_script : null} 
-        />
-      </head>
-      <AdGlobalScripts 
-        adsterraPopunder={settings.ads_enabled_adsterra === 'true' && settings.ads_adsterra_popunder ? Buffer.from(settings.ads_adsterra_popunder).toString('base64') : null}
-        adsterraSocialBar={settings.ads_enabled_adsterra === 'true' && settings.ads_adsterra_social_bar ? Buffer.from(settings.ads_adsterra_social_bar).toString('base64') : null}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
       <body className="flex min-h-screen flex-col bg-background font-inter text-text-primary antialiased selection:bg-primary/30 selection:text-white">
-        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-primary focus:text-white">
-          Skip to main content
-        </a>
-        <SessionProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme={theme}
-            enableSystem={theme === 'system'}
-            forcedTheme={theme !== 'system' ? theme : undefined}
-            disableTransitionOnChange
-          >
-            <NetworkListener />
-            {children}
-            <Toaster position="bottom-right" />
-          </ThemeProvider>
-        </SessionProvider>
+        {children}
       </body>
     </html>
   );

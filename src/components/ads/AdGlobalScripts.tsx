@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 export function AdGlobalScripts({
   adsterraPopunder,
@@ -46,6 +47,11 @@ export function AdGlobalScripts({
   useEffect(() => {
     if (injectedRef.current) return;
     injectedRef.current = true;
+    
+    // Disable aggressive global ads on Native Android app for a premium experience
+    if (Capacitor.isNativePlatform()) {
+      return;
+    }
 
     // Small delay to ensure body is fully parsed
     const timer = setTimeout(() => {

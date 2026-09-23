@@ -72,10 +72,48 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
             href={targetLink}
             target={isExternal ? '_blank' : undefined}
             rel={isExternal ? 'noopener noreferrer' : undefined}
-            onClick={(e) => {
+            onClick={async (e) => {
               if (isExternal && Capacitor.isNativePlatform()) {
                 e.preventDefault();
-                router.push(targetLink);
+
+                const targetChapter = hasHistory ? continueChapterObj : (chapters.length > 0 ? chapters[0] : null);
+                const chapterLabel = targetChapter?.label || targetChapter?.number?.toString() || '1';
+
+                const handleDownload = (urlToDownload: string) => {
+                  if (targetChapter) {
+                    import('@/lib/native-download').then(({ startNativeDownload }) => {
+                      startNativeDownload(targetChapter.id, urlToDownload, seriesId, seriesTitle, seriesSlug, chapterLabel);
+                    });
+                  }
+                };
+
+                if (targetLink.startsWith('/api/')) {
+                  try {
+                    const resolveUrl = targetLink + (targetLink.includes('?') ? '&' : '?') + 'resolve=true';
+                    const res = await fetch(resolveUrl);
+                    if (res.ok) {
+                      const data = await res.json();
+                      if (data.url) {
+                        handleDownload(data.url);
+                        return;
+                      }
+                    }
+                  } catch (err) {
+                    console.error('Failed to resolve API URL', err);
+                  }
+                  const absoluteUrl = new URL(targetLink, window.location.origin).toString();
+                  handleDownload(absoluteUrl);
+                } else if (targetLink.startsWith('http')) {
+                  if (targetLink.toLowerCase().endsWith('.pdf')) {
+                    handleDownload(targetLink);
+                  } else {
+                    import('@capacitor/browser').then(({ Browser }) => {
+                      Browser.open({ url: targetLink });
+                    });
+                  }
+                } else {
+                  router.push(targetLink);
+                }
               }
             }}
             className="flex-1 flex items-center justify-center gap-1.5 md:gap-2 rounded-xl bg-primary px-3 py-2.5 md:px-4 md:py-3.5 font-bold text-sm md:text-base text-white active:scale-95 transition-transform shadow-lg shadow-primary/25"
@@ -112,10 +150,48 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
           href={targetLink}
           target={isExternal ? '_blank' : undefined}
           rel={isExternal ? 'noopener noreferrer' : undefined}
-          onClick={(e) => {
+          onClick={async (e) => {
             if (isExternal && Capacitor.isNativePlatform()) {
               e.preventDefault();
-              router.push(targetLink);
+
+              const targetChapter = hasHistory ? continueChapterObj : (chapters.length > 0 ? chapters[0] : null);
+              const chapterLabel = targetChapter?.label || targetChapter?.number?.toString() || '1';
+
+              const handleDownload = (urlToDownload: string) => {
+                if (targetChapter) {
+                  import('@/lib/native-download').then(({ startNativeDownload }) => {
+                    startNativeDownload(targetChapter.id, urlToDownload, seriesId, seriesTitle, seriesSlug, chapterLabel);
+                  });
+                }
+              };
+
+              if (targetLink.startsWith('/api/')) {
+                try {
+                  const resolveUrl = targetLink + (targetLink.includes('?') ? '&' : '?') + 'resolve=true';
+                  const res = await fetch(resolveUrl);
+                  if (res.ok) {
+                    const data = await res.json();
+                    if (data.url) {
+                      handleDownload(data.url);
+                      return;
+                    }
+                  }
+                } catch (err) {
+                  console.error('Failed to resolve API URL', err);
+                }
+                const absoluteUrl = new URL(targetLink, window.location.origin).toString();
+                handleDownload(absoluteUrl);
+              } else if (targetLink.startsWith('http')) {
+                if (targetLink.toLowerCase().endsWith('.pdf')) {
+                  handleDownload(targetLink);
+                } else {
+                  import('@capacitor/browser').then(({ Browser }) => {
+                    Browser.open({ url: targetLink });
+                  });
+                }
+              } else {
+                router.push(targetLink);
+              }
             }
           }}
           className="flex items-center gap-2 rounded-xl bg-primary px-10 py-4 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"

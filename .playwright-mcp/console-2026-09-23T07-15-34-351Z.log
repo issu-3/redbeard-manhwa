@@ -1,0 +1,13 @@
+[    1315ms] Error: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at rX (https://redbeard.store/_next/static/chunks/34oyci46fsc5w.js:1:47244)
+    at iu (https://redbeard.store/_next/static/chunks/34oyci46fsc5w.js:1:98285)
+    at sd (https://redbeard.store/_next/static/chunks/34oyci46fsc5w.js:1:138975)
+    at https://redbeard.store/_next/static/chunks/34oyci46fsc5w.js:1:138820
+    at sf (https://redbeard.store/_next/static/chunks/34oyci46fsc5w.js:1:138828)
+    at se (https://redbeard.store/_next/static/chunks/34oyci46fsc5w.js:1:133968)
+    at sQ (https://redbeard.store/_next/static/chunks/34oyci46fsc5w.js:1:160647)
+    at sU (https://redbeard.store/_next/static/chunks/34oyci46fsc5w.js:1:158861)
+    at sV (https://redbeard.store/_next/static/chunks/34oyci46fsc5w.js:1:159205)
+    at https://redbeard.store/_next/static/chunks/34oyci46fsc5w.js:1:158490
+[    1722ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://redbeard.store/icons/icon-144.png:0
+[    1759ms] [WARNING] Error while trying to use the following icon from the Manifest: https://redbeard.store/icons/icon-144.png (Download error or resource isn't a valid image) @ https://redbeard.store/:0

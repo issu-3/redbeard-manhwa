@@ -5,7 +5,7 @@ import { unstable_cache } from 'next/cache';
 import { cache } from 'react';
 
 const getCachedSettingsInternal = unstable_cache(
-  async () => {
+  async (): Promise<Record<string, string>> => {
     return await getSettings();
   },
   ['site-settings-v3'],
@@ -14,9 +14,9 @@ const getCachedSettingsInternal = unstable_cache(
 
 // OPT-08/09: React cache() deduplicates within the same request render,
 // so generateMetadata + page component share a single cache lookup.
-export const getCachedSettings = cache(getCachedSettingsInternal);
+export const getCachedSettings: () => Promise<Record<string, string>> = cache(getCachedSettingsInternal);
 
-export async function getSettings() {
+export async function getSettings(): Promise<Record<string, string>> {
   try {
     const settings = await prisma.siteSetting.findMany();
     

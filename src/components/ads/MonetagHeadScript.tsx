@@ -1,7 +1,15 @@
+'use client';
+
 import Script from 'next/script';
+import { Capacitor } from '@capacitor/core';
 
 export function MonetagHeadScript({ scriptString }: { scriptString?: string | null }) {
   if (!scriptString) return null;
+
+  // Disable aggressive global ads on Native Android app for a premium experience
+  if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
+    return null;
+  }
 
   // Safely parse the DB script string: <script src="..." data-zone="..." async data-cfasync="false"></script>
   const srcMatch = scriptString.match(/src=["']([^"']+)["']/);

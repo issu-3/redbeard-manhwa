@@ -1,0 +1,779 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "REDBEARD Logo REDBEARD" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - img "REDBEARD Logo" [ref=e8]
+          - generic [ref=e9]: REDBEARD
+        - navigation [ref=e10]:
+          - link "Home" [ref=e11] [cursor=pointer]:
+            - /url: /
+          - link "Browse" [ref=e13] [cursor=pointer]:
+            - /url: /browse/trending
+          - link "Genres" [ref=e14] [cursor=pointer]:
+            - /url: /browse/genres
+          - link "Latest" [ref=e15] [cursor=pointer]:
+            - /url: /browse/latest
+          - link "Popular" [ref=e16] [cursor=pointer]:
+            - /url: /browse/popular
+        - generic [ref=e17]:
+          - link "Search" [ref=e18] [cursor=pointer]:
+            - /url: /search
+          - link "Sign In" [ref=e23] [cursor=pointer]:
+            - /url: /login
+    - main [ref=e27]:
+      - heading "REDBEARD - The Ultimate Reading Experience" [level=1] [ref=e28]
+      - generic [ref=e31]:
+        - region "Featured series" [ref=e32]:
+          - generic [ref=e33]:
+            - generic:
+              - img "LOVE QUEST"
+          - generic:
+            - generic [ref=e36]:
+              - generic [ref=e37]: ONGOING
+              - heading "LOVE QUEST" [level=1] [ref=e39]
+              - paragraph
+              - generic [ref=e40]:
+                - link "Download" [ref=e41] [cursor=pointer]:
+                  - /url: /series/love-quest
+                - button "Bookmark" [ref=e46]
+            - generic [ref=e49]:
+              - button "Go to slide 1" [ref=e50]
+              - button "Go to slide 2" [ref=e51]
+              - button "Go to slide 3" [ref=e52]
+              - button "Go to slide 4" [ref=e53]
+              - button "Go to slide 5" [ref=e54]
+          - button "Previous slide" [ref=e55]
+          - button "Next slide" [ref=e58]
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - generic [ref=e64]:
+              - heading "🔥 Most Popular Series All Time" [level=2] [ref=e65]
+              - paragraph [ref=e66]: Top-rated and most-read series on REDBEARD
+            - link "View All" [ref=e67] [cursor=pointer]:
+              - /url: /browse/popular
+          - generic [ref=e71]:
+            - generic [ref=e73]:
+              - generic [ref=e74]: "#1"
+              - link "I'll Eat Your Mom First ONGOING 4.0 1 🔞 NSFW 🔞 Pornhwa HAREM ADULT 5 Ch I'll Eat Your Mom First" [ref=e76] [cursor=pointer]:
+                - /url: /series/ill-eat-your-mom-first
+                - generic [ref=e77]:
+                  - img "I'll Eat Your Mom First" [ref=e78]
+                  - generic [ref=e79]: ONGOING
+                  - generic [ref=e81]:
+                    - generic [ref=e82]: "4.0"
+                    - generic [ref=e85]: "1"
+                  - generic [ref=e88]:
+                    - generic [ref=e89]:
+                      - generic [ref=e90]: 🔞 NSFW
+                      - generic [ref=e91]: 🔞 Pornhwa
+                      - generic [ref=e92]: HAREM
+                      - generic [ref=e93]: ADULT
+                    - generic [ref=e94]: 5 Ch
+                - heading "I'll Eat Your Mom First" [level=3] [ref=e99]
+            - generic [ref=e101]:
+              - generic [ref=e102]: "#2"
+              - link "SECRET CLASS ONGOING 5.0 1 🔞 NSFW 🔞 Pornhwa HAREM ADULT 15 Ch SECRET CLASS" [ref=e104] [cursor=pointer]:
+                - /url: /series/secret-class
+                - generic [ref=e105]:
+                  - img "SECRET CLASS" [ref=e106]
+                  - generic [ref=e107]: ONGOING
+                  - generic [ref=e109]:
+                    - generic [ref=e110]: "5.0"
+                    - generic [ref=e113]: "1"
+                  - generic [ref=e116]:
+                    - generic [ref=e117]:
+                      - generic [ref=e118]: 🔞 NSFW
+                      - generic [ref=e119]: 🔞 Pornhwa
+                      - generic [ref=e120]: HAREM
+                      - generic [ref=e121]: ADULT
+                    - generic [ref=e122]: 15 Ch
+                - heading "SECRET CLASS" [level=3] [ref=e127]
+            - generic [ref=e129]:
+              - generic [ref=e130]: "#3"
+              - link "MILF Hunting In Another World ONGOING 0.0 0 🔞 NSFW 🔞 Pornhwa FANTASY HAREM 1 Ch MILF Hunting In Another World" [ref=e132] [cursor=pointer]:
+                - /url: /series/milf-hunting-in-another-world
+                - generic [ref=e133]:
+                  - img "MILF Hunting In Another World" [ref=e134]
+                  - generic [ref=e135]: ONGOING
+                  - generic [ref=e137]:
+                    - generic [ref=e138]: "0.0"
+                    - generic [ref=e141]: "0"
+                  - generic [ref=e144]:
+                    - generic [ref=e145]:
+                      - generic [ref=e146]: 🔞 NSFW
+                      - generic [ref=e147]: 🔞 Pornhwa
+                      - generic [ref=e148]: FANTASY
+                      - generic [ref=e149]: HAREM
+                    - generic [ref=e150]: 1 Ch
+                - heading "MILF Hunting In Another World" [level=3] [ref=e155]
+            - generic [ref=e157]:
+              - generic [ref=e158]: "#4"
+              - link "The Hole is Open COMPLETED 5.0 1 🔞 NSFW 🔞 Pornhwa HAREM ADULT 8 Ch The Hole is Open" [ref=e160] [cursor=pointer]:
+                - /url: /series/the-hole-is-open
+                - generic [ref=e161]:
+                  - img "The Hole is Open" [ref=e162]
+                  - generic [ref=e163]: COMPLETED
+                  - generic [ref=e165]:
+                    - generic [ref=e166]: "5.0"
+                    - generic [ref=e169]: "1"
+                  - generic [ref=e172]:
+                    - generic [ref=e173]:
+                      - generic [ref=e174]: 🔞 NSFW
+                      - generic [ref=e175]: 🔞 Pornhwa
+                      - generic [ref=e176]: HAREM
+                      - generic [ref=e177]: ADULT
+                    - generic [ref=e178]: 8 Ch
+                - heading "The Hole is Open" [level=3] [ref=e183]
+            - generic [ref=e185]:
+              - generic [ref=e186]: "#5"
+              - link "Love Quest ONGOING 5.0 1 🔞 NSFW 🔞 Pornhwa HAREM ADULT 1 Ch Love Quest" [ref=e188] [cursor=pointer]:
+                - /url: /series/love-quest
+                - generic [ref=e189]:
+                  - img "Love Quest" [ref=e190]
+                  - generic [ref=e191]: ONGOING
+                  - generic [ref=e193]:
+                    - generic [ref=e194]: "5.0"
+                    - generic [ref=e197]: "1"
+                  - generic [ref=e200]:
+                    - generic [ref=e201]:
+                      - generic [ref=e202]: 🔞 NSFW
+                      - generic [ref=e203]: 🔞 Pornhwa
+                      - generic [ref=e204]: HAREM
+                      - generic [ref=e205]: ADULT
+                    - generic [ref=e206]: 1 Ch
+                - heading "Love Quest" [level=3] [ref=e211]
+            - generic [ref=e213]:
+              - generic [ref=e214]: "#6"
+              - link "Mother and Daughter’s Home ONGOING 0.0 0 🔞 NSFW 🔞 Pornhwa HAREM 2 Ch Mother and Daughter’s Home" [ref=e216] [cursor=pointer]:
+                - /url: /series/mother-and-daughters-home
+                - generic [ref=e217]:
+                  - img "Mother and Daughter’s Home" [ref=e218]
+                  - generic [ref=e219]: ONGOING
+                  - generic [ref=e221]:
+                    - generic [ref=e222]: "0.0"
+                    - generic [ref=e225]: "0"
+                  - generic [ref=e228]:
+                    - generic [ref=e229]:
+                      - generic [ref=e230]: 🔞 NSFW
+                      - generic [ref=e231]: 🔞 Pornhwa
+                      - generic [ref=e232]: HAREM
+                    - generic [ref=e233]: 2 Ch
+                - heading "Mother and Daughter’s Home" [level=3] [ref=e238]
+            - generic [ref=e240]:
+              - generic [ref=e241]: "#7"
+              - link "CITY MILFS COMPLETED 0.0 0 🔞 NSFW 🔞 Pornhwa ROMANCE ADULT 3 Ch CITY MILFS" [ref=e243] [cursor=pointer]:
+                - /url: /series/city-milfs
+                - generic [ref=e244]:
+                  - img "CITY MILFS" [ref=e245]
+                  - generic [ref=e246]: COMPLETED
+                  - generic [ref=e248]:
+                    - generic [ref=e249]: "0.0"
+                    - generic [ref=e252]: "0"
+                  - generic [ref=e255]:
+                    - generic [ref=e256]:
+                      - generic [ref=e257]: 🔞 NSFW
+                      - generic [ref=e258]: 🔞 Pornhwa
+                      - generic [ref=e259]: ROMANCE
+                      - generic [ref=e260]: ADULT
+                    - generic [ref=e261]: 3 Ch
+                - heading "CITY MILFS" [level=3] [ref=e266]
+            - generic [ref=e268]:
+              - generic [ref=e269]: "#8"
+              - link "My Stepmom Has Returned COMPLETED 0.0 0 🔞 NSFW 🔞 Pornhwa HAREM 4 Ch My Stepmom Has Returned" [ref=e271] [cursor=pointer]:
+                - /url: /series/my-stepmom-has-returned
+                - generic [ref=e272]:
+                  - img "My Stepmom Has Returned" [ref=e273]
+                  - generic [ref=e274]: COMPLETED
+                  - generic [ref=e276]:
+                    - generic [ref=e277]: "0.0"
+                    - generic [ref=e280]: "0"
+                  - generic [ref=e283]:
+                    - generic [ref=e284]:
+                      - generic [ref=e285]: 🔞 NSFW
+                      - generic [ref=e286]: 🔞 Pornhwa
+                      - generic [ref=e287]: HAREM
+                    - generic [ref=e288]: 4 Ch
+                - heading "My Stepmom Has Returned" [level=3] [ref=e293]
+            - generic [ref=e295]:
+              - generic [ref=e296]: "#9"
+              - link "I Shouldn't Have Gone To The Doujinshi Convertion Without Telling My Wife COMPLETED 0.0 0 🔞 NSFW 🔞 Doujinshi DOUJINSHI 1 Ch I Shouldn't Have Gone To The Doujinshi Convertion Without Telling My Wife" [ref=e298] [cursor=pointer]:
+                - /url: /series/i-shouldnt-have-gone-to-the-doujinshi-convertion-without-telling-my-wife
+                - generic [ref=e299]:
+                  - img "I Shouldn't Have Gone To The Doujinshi Convertion Without Telling My Wife" [ref=e300]
+                  - generic [ref=e301]: COMPLETED
+                  - generic [ref=e303]:
+                    - generic [ref=e304]: "0.0"
+                    - generic [ref=e307]: "0"
+                  - generic [ref=e310]:
+                    - generic [ref=e311]:
+                      - generic [ref=e312]: 🔞 NSFW
+                      - generic [ref=e313]: 🔞 Doujinshi
+                      - generic [ref=e314]: DOUJINSHI
+                    - generic [ref=e315]: 1 Ch
+                - heading "I Shouldn't Have Gone To The Doujinshi Convertion Without Telling My Wife" [level=3] [ref=e320]
+            - generic [ref=e322]:
+              - generic [ref=e323]: "#10"
+              - link "YOUNG HOUSEMAID COMPLETED 5.0 1 🔞 NSFW 🔞 Pornhwa HAREM ADULT 2 Ch YOUNG HOUSEMAID" [ref=e325] [cursor=pointer]:
+                - /url: /series/young-housemaid
+                - generic [ref=e326]:
+                  - img "YOUNG HOUSEMAID" [ref=e327]
+                  - generic [ref=e328]: COMPLETED
+                  - generic [ref=e330]:
+                    - generic [ref=e331]: "5.0"
+                    - generic [ref=e334]: "1"
+                  - generic [ref=e337]:
+                    - generic [ref=e338]:
+                      - generic [ref=e339]: 🔞 NSFW
+                      - generic [ref=e340]: 🔞 Pornhwa
+                      - generic [ref=e341]: HAREM
+                      - generic [ref=e342]: ADULT
+                    - generic [ref=e343]: 2 Ch
+                - heading "YOUNG HOUSEMAID" [level=3] [ref=e348]
+        - generic [ref=e350]:
+          - generic [ref=e351]:
+            - generic [ref=e352]:
+              - heading "Manga" [level=2] [ref=e353]
+              - paragraph [ref=e354]: Popular manga series
+            - link "View All" [ref=e355] [cursor=pointer]:
+              - /url: /search?type=MANGA
+          - generic [ref=e359]:
+            - link "Hajimete no Gal (My First Girlfriend Is a Gal) COMPLETED 0.0 0 🇯🇵 Manga COMEDY ECCHI 5 Ch Hajimete no Gal (My First Girlfriend Is a Gal) Chapter 5" [ref=e362] [cursor=pointer]:
+              - /url: /series/hajimete-no-gal-my-first-girlfriend-is-a-gal
+              - generic [ref=e363]:
+                - img "Hajimete no Gal (My First Girlfriend Is a Gal)" [ref=e364]
+                - generic [ref=e365]: COMPLETED
+                - generic [ref=e367]:
+                  - generic [ref=e368]: "0.0"
+                  - generic [ref=e371]: "0"
+                - generic [ref=e374]:
+                  - generic [ref=e375]:
+                    - generic [ref=e376]: 🇯🇵 Manga
+                    - generic [ref=e377]: COMEDY
+                    - generic [ref=e378]: ECCHI
+                  - generic [ref=e379]: 5 Ch
+              - generic [ref=e383]:
+                - heading "Hajimete no Gal (My First Girlfriend Is a Gal)" [level=3] [ref=e384]
+                - paragraph [ref=e385]: Chapter 5
+            - link "Why the Hell Are You Here, Teacher!? COMPLETED 0.0 0 🇯🇵 Manga ECCHI HAREM 3 Ch Why the Hell Are You Here, Teacher!? Chapter 3" [ref=e388] [cursor=pointer]:
+              - /url: /series/why-the-hell-are-you-here-teacher
+              - generic [ref=e389]:
+                - img "Why the Hell Are You Here, Teacher!?" [ref=e390]
+                - generic [ref=e391]: COMPLETED
+                - generic [ref=e393]:
+                  - generic [ref=e394]: "0.0"
+                  - generic [ref=e397]: "0"
+                - generic [ref=e400]:
+                  - generic [ref=e401]:
+                    - generic [ref=e402]: 🇯🇵 Manga
+                    - generic [ref=e403]: ECCHI
+                    - generic [ref=e404]: HAREM
+                  - generic [ref=e405]: 3 Ch
+              - generic [ref=e409]:
+                - heading "Why the Hell Are You Here, Teacher!?" [level=3] [ref=e410]
+                - paragraph [ref=e411]: Chapter 3
+            - link "Domestic na Kanojo COMPLETED 0.0 0 🇯🇵 Manga COMEDY DRAMA 6 Ch Domestic na Kanojo Chapter 6" [ref=e414] [cursor=pointer]:
+              - /url: /series/domestic-na-kanojo
+              - generic [ref=e415]:
+                - img "Domestic na Kanojo" [ref=e416]
+                - generic [ref=e417]: COMPLETED
+                - generic [ref=e419]:
+                  - generic [ref=e420]: "0.0"
+                  - generic [ref=e423]: "0"
+                - generic [ref=e426]:
+                  - generic [ref=e427]:
+                    - generic [ref=e428]: 🇯🇵 Manga
+                    - generic [ref=e429]: COMEDY
+                    - generic [ref=e430]: DRAMA
+                  - generic [ref=e431]: 6 Ch
+              - generic [ref=e435]:
+                - heading "Domestic na Kanojo" [level=3] [ref=e436]
+                - paragraph [ref=e437]: Chapter 6
+            - link "Onepunch-Man ONGOING 0.0 0 🇯🇵 Manga ACTION ADVENTURE 5 Ch Onepunch-Man Chapter 5" [ref=e440] [cursor=pointer]:
+              - /url: /series/onepunch-man
+              - generic [ref=e441]:
+                - img "Onepunch-Man" [ref=e442]
+                - generic [ref=e443]: ONGOING
+                - generic [ref=e445]:
+                  - generic [ref=e446]: "0.0"
+                  - generic [ref=e449]: "0"
+                - generic [ref=e452]:
+                  - generic [ref=e453]:
+                    - generic [ref=e454]: 🇯🇵 Manga
+                    - generic [ref=e455]: ACTION
+                    - generic [ref=e456]: ADVENTURE
+                  - generic [ref=e457]: 5 Ch
+              - generic [ref=e461]:
+                - heading "Onepunch-Man" [level=3] [ref=e462]
+                - paragraph [ref=e463]: Chapter 5
+            - 'link "Boruto: Naruto Next Generations ONGOING 0.0 0 🇯🇵 Manga ACTION ADVENTURE 2 Ch Boruto: Naruto Next Generations Chapter 2" [ref=e466] [cursor=pointer]':
+              - /url: /series/boruto-naruto-next-generations
+              - generic [ref=e467]:
+                - 'img "Boruto: Naruto Next Generations" [ref=e468]'
+                - generic [ref=e469]: ONGOING
+                - generic [ref=e471]:
+                  - generic [ref=e472]: "0.0"
+                  - generic [ref=e475]: "0"
+                - generic [ref=e478]:
+                  - generic [ref=e479]:
+                    - generic [ref=e480]: 🇯🇵 Manga
+                    - generic [ref=e481]: ACTION
+                    - generic [ref=e482]: ADVENTURE
+                  - generic [ref=e483]: 2 Ch
+              - generic [ref=e487]:
+                - 'heading "Boruto: Naruto Next Generations" [level=3] [ref=e488]'
+                - paragraph [ref=e489]: Chapter 2
+        - generic [ref=e491]:
+          - generic [ref=e492]:
+            - generic [ref=e493]:
+              - heading "Manhwa" [level=2] [ref=e494]
+              - paragraph [ref=e495]: Popular manhwa series
+            - link "View All" [ref=e496] [cursor=pointer]:
+              - /url: /search?type=MANHWA
+          - generic [ref=e500]:
+            - link "Mother Hunting COMPLETED 0.0 0 🇰🇷 Manhwa DRAMA ROMANCE 2 Ch Mother Hunting Chapter 2" [ref=e503] [cursor=pointer]:
+              - /url: /series/mother-hunting
+              - generic [ref=e504]:
+                - img "Mother Hunting" [ref=e505]
+                - generic [ref=e506]: COMPLETED
+                - generic [ref=e508]:
+                  - generic [ref=e509]: "0.0"
+                  - generic [ref=e512]: "0"
+                - generic [ref=e515]:
+                  - generic [ref=e516]:
+                    - generic [ref=e517]: 🇰🇷 Manhwa
+                    - generic [ref=e518]: DRAMA
+                    - generic [ref=e519]: ROMANCE
+                  - generic [ref=e520]: 2 Ch
+              - generic [ref=e524]:
+                - heading "Mother Hunting" [level=3] [ref=e525]
+                - paragraph [ref=e526]: Chapter 2
+            - link "Sex Lottery COMPLETED 0.0 0 🇰🇷 Manhwa DRAMA FANTASY 1 Ch Sex Lottery Chapter 1" [ref=e529] [cursor=pointer]:
+              - /url: /series/sex-lottery
+              - generic [ref=e530]:
+                - img "Sex Lottery" [ref=e531]
+                - generic [ref=e532]: COMPLETED
+                - generic [ref=e534]:
+                  - generic [ref=e535]: "0.0"
+                  - generic [ref=e538]: "0"
+                - generic [ref=e541]:
+                  - generic [ref=e542]:
+                    - generic [ref=e543]: 🇰🇷 Manhwa
+                    - generic [ref=e544]: DRAMA
+                    - generic [ref=e545]: FANTASY
+                  - generic [ref=e546]: 1 Ch
+              - generic [ref=e550]:
+                - heading "Sex Lottery" [level=3] [ref=e551]
+                - paragraph [ref=e552]: Chapter 1
+            - link "Solo Leveling COMPLETED 0.0 0 🇰🇷 Manhwa ACTION ADVENTURE 10 Ch Solo Leveling Chapter 10" [ref=e555] [cursor=pointer]:
+              - /url: /series/solo-leveling
+              - generic [ref=e556]:
+                - img "Solo Leveling" [ref=e557]
+                - generic [ref=e558]: COMPLETED
+                - generic [ref=e560]:
+                  - generic [ref=e561]: "0.0"
+                  - generic [ref=e564]: "0"
+                - generic [ref=e567]:
+                  - generic [ref=e568]:
+                    - generic [ref=e569]: 🇰🇷 Manhwa
+                    - generic [ref=e570]: ACTION
+                    - generic [ref=e571]: ADVENTURE
+                  - generic [ref=e572]: 10 Ch
+              - generic [ref=e576]:
+                - heading "Solo Leveling" [level=3] [ref=e577]
+                - paragraph [ref=e578]: Chapter 10
+            - link "Nano Machine ONGOING 0.0 0 🇰🇷 Manhwa ACTION ADVENTURE 4 Ch Nano Machine Chapter 4" [ref=e581] [cursor=pointer]:
+              - /url: /series/nano-machine
+              - generic [ref=e582]:
+                - img "Nano Machine" [ref=e583]
+                - generic [ref=e584]: ONGOING
+                - generic [ref=e586]:
+                  - generic [ref=e587]: "0.0"
+                  - generic [ref=e590]: "0"
+                - generic [ref=e593]:
+                  - generic [ref=e594]:
+                    - generic [ref=e595]: 🇰🇷 Manhwa
+                    - generic [ref=e596]: ACTION
+                    - generic [ref=e597]: ADVENTURE
+                  - generic [ref=e598]: 4 Ch
+              - generic [ref=e602]:
+                - heading "Nano Machine" [level=3] [ref=e603]
+                - paragraph [ref=e604]: Chapter 4
+            - link "The Greatest Estate Developer COMPLETED 0.0 0 🇰🇷 Manhwa ACTION ADVENTURE 5 Ch The Greatest Estate Developer Chapter 5" [ref=e607] [cursor=pointer]:
+              - /url: /series/the-greatest-estate-developer
+              - generic [ref=e608]:
+                - img "The Greatest Estate Developer" [ref=e609]
+                - generic [ref=e610]: COMPLETED
+                - generic [ref=e612]:
+                  - generic [ref=e613]: "0.0"
+                  - generic [ref=e616]: "0"
+                - generic [ref=e619]:
+                  - generic [ref=e620]:
+                    - generic [ref=e621]: 🇰🇷 Manhwa
+                    - generic [ref=e622]: ACTION
+                    - generic [ref=e623]: ADVENTURE
+                  - generic [ref=e624]: 5 Ch
+              - generic [ref=e628]:
+                - heading "The Greatest Estate Developer" [level=3] [ref=e629]
+                - paragraph [ref=e630]: Chapter 5
+            - link "Swordmaster’s Youngest Son ONGOING 0.0 0 🇰🇷 Manhwa ACTION FANTASY 5 Ch Swordmaster’s Youngest Son Chapter 5" [ref=e633] [cursor=pointer]:
+              - /url: /series/swordmasters-youngest-son
+              - generic [ref=e634]:
+                - img "Swordmaster’s Youngest Son" [ref=e635]
+                - generic [ref=e636]: ONGOING
+                - generic [ref=e638]:
+                  - generic [ref=e639]: "0.0"
+                  - generic [ref=e642]: "0"
+                - generic [ref=e645]:
+                  - generic [ref=e646]:
+                    - generic [ref=e647]: 🇰🇷 Manhwa
+                    - generic [ref=e648]: ACTION
+                    - generic [ref=e649]: FANTASY
+                  - generic [ref=e650]: 5 Ch
+              - generic [ref=e654]:
+                - heading "Swordmaster’s Youngest Son" [level=3] [ref=e655]
+                - paragraph [ref=e656]: Chapter 5
+            - link "Absolute Sword Sense ONGOING 0.0 0 🇰🇷 Manhwa ACTION ADVENTURE 4 Ch Absolute Sword Sense Chapter 4" [ref=e659] [cursor=pointer]:
+              - /url: /series/absolute-sword-sense
+              - generic [ref=e660]:
+                - img "Absolute Sword Sense" [ref=e661]
+                - generic [ref=e662]: ONGOING
+                - generic [ref=e664]:
+                  - generic [ref=e665]: "0.0"
+                  - generic [ref=e668]: "0"
+                - generic [ref=e671]:
+                  - generic [ref=e672]:
+                    - generic [ref=e673]: 🇰🇷 Manhwa
+                    - generic [ref=e674]: ACTION
+                    - generic [ref=e675]: ADVENTURE
+                  - generic [ref=e676]: 4 Ch
+              - generic [ref=e680]:
+                - heading "Absolute Sword Sense" [level=3] [ref=e681]
+                - paragraph [ref=e682]: Chapter 4
+            - 'link "Undead Catastrophe: A Sea of Bones at My Command ONGOING 0.0 0 🇰🇷 Manhwa ACTION ADVENTURE 1 Ch Undead Catastrophe: A Sea of Bones at My Command Chapter 1" [ref=e685] [cursor=pointer]':
+              - /url: /series/undead-catastrophe-a-sea-of-bones-at-my-command
+              - generic [ref=e686]:
+                - 'img "Undead Catastrophe: A Sea of Bones at My Command" [ref=e687]'
+                - generic [ref=e688]: ONGOING
+                - generic [ref=e690]:
+                  - generic [ref=e691]: "0.0"
+                  - generic [ref=e694]: "0"
+                - generic [ref=e697]:
+                  - generic [ref=e698]:
+                    - generic [ref=e699]: 🇰🇷 Manhwa
+                    - generic [ref=e700]: ACTION
+                    - generic [ref=e701]: ADVENTURE
+                  - generic [ref=e702]: 1 Ch
+              - generic [ref=e706]:
+                - 'heading "Undead Catastrophe: A Sea of Bones at My Command" [level=3] [ref=e707]'
+                - paragraph [ref=e708]: Chapter 1
+        - generic [ref=e710]:
+          - generic [ref=e711]:
+            - generic [ref=e712]:
+              - heading "🆕 Recently Updated" [level=2] [ref=e713]
+              - paragraph [ref=e714]: Fresh chapters just dropped
+            - link "View All" [ref=e715] [cursor=pointer]:
+              - /url: /browse/latest
+          - generic [ref=e719]:
+            - link "A lucky man CHAPTER 51-73 1w ago A lucky man" [ref=e721] [cursor=pointer]:
+              - /url: /series/a-lucky-man/chapter/chapter-chapter-51-73
+              - generic [ref=e722]:
+                - img "A lucky man" [ref=e723]
+                - generic [ref=e725]:
+                  - generic [ref=e726]: CHAPTER 51-73
+                  - generic [ref=e728]: 1w ago
+              - heading "A lucky man" [level=3] [ref=e734]
+            - link "Onepunch-Man CHAPTER 201-237 1w ago Onepunch-Man" [ref=e736] [cursor=pointer]:
+              - /url: /series/onepunch-man/chapter/chapter-chapter-201-237
+              - generic [ref=e737]:
+                - img "Onepunch-Man" [ref=e738]
+                - generic [ref=e740]:
+                  - generic [ref=e741]: CHAPTER 201-237
+                  - generic [ref=e743]: 1w ago
+              - heading "Onepunch-Man" [level=3] [ref=e749]
+            - link "NPC Kan MOD 2 | NPC Rape MOD 2 COMPLETE CHAPTERS 1w ago NPC Kan MOD 2 | NPC Rape MOD 2" [ref=e751] [cursor=pointer]:
+              - /url: /series/npc-kan-mod-2-npc-rape-mod-2/chapter/chapter-complete-chapters
+              - generic [ref=e752]:
+                - img "NPC Kan MOD 2 | NPC Rape MOD 2" [ref=e753]
+                - generic [ref=e755]:
+                  - generic [ref=e756]: COMPLETE CHAPTERS
+                  - generic [ref=e758]: 1w ago
+              - heading "NPC Kan MOD 2 | NPC Rape MOD 2" [level=3] [ref=e764]
+            - link "Ane to no Nichijō Kaiwa | Everyday Conversations With My Big Sister COMPLETE CHAPTERS 1w ago Ane to no Nichijō Kaiwa | Everyday Conversations With My Big Sister" [ref=e766] [cursor=pointer]:
+              - /url: /series/ane-to-no-nichij-kaiwa-everyday-conversations-with-my-big-sister/chapter/chapter-complete-chapters
+              - generic [ref=e767]:
+                - img "Ane to no Nichijō Kaiwa | Everyday Conversations With My Big Sister" [ref=e768]
+                - generic [ref=e770]:
+                  - generic [ref=e771]: COMPLETE CHAPTERS
+                  - generic [ref=e773]: 1w ago
+              - heading "Ane to no Nichijō Kaiwa | Everyday Conversations With My Big Sister" [level=3] [ref=e779]
+            - link "Hitozuma Akunkun COMPLETE CHAPTERS 1mo ago Hitozuma Akunkun" [ref=e781] [cursor=pointer]:
+              - /url: /series/hitozuma-akunkun/chapter/chapter-complete-chapters
+              - generic [ref=e782]:
+                - img "Hitozuma Akunkun" [ref=e783]
+                - generic [ref=e785]:
+                  - generic [ref=e786]: COMPLETE CHAPTERS
+                  - generic [ref=e788]: 1mo ago
+              - heading "Hitozuma Akunkun" [level=3] [ref=e794]
+            - link "Good for Eating! Immoral Fruit | Tabegoro! Haitoku no Kajitsu COMPLETE CHAPTERS 1mo ago Good for Eating! Immoral Fruit | Tabegoro! Haitoku no Kajitsu" [ref=e796] [cursor=pointer]:
+              - /url: /series/good-for-eating-immoral-fruit-tabegoro-haitoku-no-kajitsu/chapter/chapter-complete-chapters
+              - generic [ref=e797]:
+                - img "Good for Eating! Immoral Fruit | Tabegoro! Haitoku no Kajitsu" [ref=e798]
+                - generic [ref=e800]:
+                  - generic [ref=e801]: COMPLETE CHAPTERS
+                  - generic [ref=e803]: 1mo ago
+              - heading "Good for Eating! Immoral Fruit | Tabegoro! Haitoku no Kajitsu" [level=3] [ref=e809]
+            - link "Torokase Orgasm COMPLETE CHAPTERS 1mo ago Torokase Orgasm" [ref=e811] [cursor=pointer]:
+              - /url: /series/torokase-orgasm/chapter/chapter-complete-chapters
+              - generic [ref=e812]:
+                - img "Torokase Orgasm" [ref=e813]
+                - generic [ref=e815]:
+                  - generic [ref=e816]: COMPLETE CHAPTERS
+                  - generic [ref=e818]: 1mo ago
+              - heading "Torokase Orgasm" [level=3] [ref=e824]
+            - 'link "Boruto: Naruto Next Generations CHAPTER 51-80 1mo ago Boruto: Naruto Next Generations" [ref=e826] [cursor=pointer]':
+              - /url: /series/boruto-naruto-next-generations/chapter/chapter-chapter-51-80
+              - generic [ref=e827]:
+                - 'img "Boruto: Naruto Next Generations" [ref=e828]'
+                - generic [ref=e830]:
+                  - generic [ref=e831]: CHAPTER 51-80
+                  - generic [ref=e833]: 1mo ago
+              - 'heading "Boruto: Naruto Next Generations" [level=3] [ref=e839]'
+            - 'link "Undead Catastrophe: A Sea of Bones at My Command CHAPTER 1-25 1mo ago Undead Catastrophe: A Sea of Bones at My Command" [ref=e841] [cursor=pointer]':
+              - /url: /series/undead-catastrophe-a-sea-of-bones-at-my-command/chapter/chapter-chapter-1-25
+              - generic [ref=e842]:
+                - 'img "Undead Catastrophe: A Sea of Bones at My Command" [ref=e843]'
+                - generic [ref=e845]:
+                  - generic [ref=e846]: CHAPTER 1-25
+                  - generic [ref=e848]: 1mo ago
+              - 'heading "Undead Catastrophe: A Sea of Bones at My Command" [level=3] [ref=e854]'
+            - link "Swordmaster’s Youngest Son CHAPTER 201-205 1mo ago Swordmaster’s Youngest Son" [ref=e856] [cursor=pointer]:
+              - /url: /series/swordmasters-youngest-son/chapter/chapter-chapter-201-205
+              - generic [ref=e857]:
+                - img "Swordmaster’s Youngest Son" [ref=e858]
+                - generic [ref=e860]:
+                  - generic [ref=e861]: CHAPTER 201-205
+                  - generic [ref=e863]: 1mo ago
+              - heading "Swordmaster’s Youngest Son" [level=3] [ref=e869]
+        - generic [ref=e871]:
+          - generic [ref=e872]:
+            - generic [ref=e873]:
+              - heading "🆕 New Releases" [level=2] [ref=e874]
+              - paragraph [ref=e875]: Latest additions to our catalog
+            - link "View All" [ref=e876] [cursor=pointer]:
+              - /url: /browse/new-releases
+          - generic [ref=e880]:
+            - generic [ref=e882]:
+              - generic [ref=e883]: NEW
+              - link "A lucky man COMPLETED 0.0 0 🔞 NSFW 🔞 Pornhwa HAREM ADULT 2 Ch A lucky man" [ref=e885] [cursor=pointer]:
+                - /url: /series/a-lucky-man
+                - generic [ref=e886]:
+                  - img "A lucky man" [ref=e887]
+                  - generic [ref=e888]: COMPLETED
+                  - generic [ref=e890]:
+                    - generic [ref=e891]: "0.0"
+                    - generic [ref=e894]: "0"
+                  - generic [ref=e897]:
+                    - generic [ref=e898]:
+                      - generic [ref=e899]: 🔞 NSFW
+                      - generic [ref=e900]: 🔞 Pornhwa
+                      - generic [ref=e901]: HAREM
+                      - generic [ref=e902]: ADULT
+                    - generic [ref=e903]: 2 Ch
+                - heading "A lucky man" [level=3] [ref=e908]
+            - generic [ref=e910]:
+              - generic [ref=e911]: NEW
+              - link "Onepunch-Man ONGOING 0.0 0 🇯🇵 Manga ACTION ADVENTURE 5 Ch Onepunch-Man" [ref=e913] [cursor=pointer]:
+                - /url: /series/onepunch-man
+                - generic [ref=e914]:
+                  - img "Onepunch-Man" [ref=e915]
+                  - generic [ref=e916]: ONGOING
+                  - generic [ref=e918]:
+                    - generic [ref=e919]: "0.0"
+                    - generic [ref=e922]: "0"
+                  - generic [ref=e925]:
+                    - generic [ref=e926]:
+                      - generic [ref=e927]: 🇯🇵 Manga
+                      - generic [ref=e928]: ACTION
+                      - generic [ref=e929]: ADVENTURE
+                    - generic [ref=e930]: 5 Ch
+                - heading "Onepunch-Man" [level=3] [ref=e935]
+            - generic [ref=e937]:
+              - generic [ref=e938]: NEW
+              - link "NPC Kan MOD 2 | NPC Rape MOD 2 COMPLETED 0.0 0 🔞 NSFW 🔞 Doujinshi DOUJINSHI ADULT 1 Ch NPC Kan MOD 2 | NPC Rape MOD 2" [ref=e940] [cursor=pointer]:
+                - /url: /series/npc-kan-mod-2-npc-rape-mod-2
+                - generic [ref=e941]:
+                  - img "NPC Kan MOD 2 | NPC Rape MOD 2" [ref=e942]
+                  - generic [ref=e943]: COMPLETED
+                  - generic [ref=e945]:
+                    - generic [ref=e946]: "0.0"
+                    - generic [ref=e949]: "0"
+                  - generic [ref=e952]:
+                    - generic [ref=e953]:
+                      - generic [ref=e954]: 🔞 NSFW
+                      - generic [ref=e955]: 🔞 Doujinshi
+                      - generic [ref=e956]: DOUJINSHI
+                      - generic [ref=e957]: ADULT
+                    - generic [ref=e958]: 1 Ch
+                - heading "NPC Kan MOD 2 | NPC Rape MOD 2" [level=3] [ref=e963]
+            - generic [ref=e965]:
+              - generic [ref=e966]: NEW
+              - link "Ane to no Nichijō Kaiwa | Everyday Conversations With My Big Sister COMPLETED 0.0 0 🔞 NSFW 🔞 Doujinshi DOUJINSHI ADULT 1 Ch Ane to no Nichijō Kaiwa | Everyday Conversations With My Big Sister" [ref=e968] [cursor=pointer]:
+                - /url: /series/ane-to-no-nichij-kaiwa-everyday-conversations-with-my-big-sister
+                - generic [ref=e969]:
+                  - img "Ane to no Nichijō Kaiwa | Everyday Conversations With My Big Sister" [ref=e970]
+                  - generic [ref=e971]: COMPLETED
+                  - generic [ref=e973]:
+                    - generic [ref=e974]: "0.0"
+                    - generic [ref=e977]: "0"
+                  - generic [ref=e980]:
+                    - generic [ref=e981]:
+                      - generic [ref=e982]: 🔞 NSFW
+                      - generic [ref=e983]: 🔞 Doujinshi
+                      - generic [ref=e984]: DOUJINSHI
+                      - generic [ref=e985]: ADULT
+                    - generic [ref=e986]: 1 Ch
+                - heading "Ane to no Nichijō Kaiwa | Everyday Conversations With My Big Sister" [level=3] [ref=e991]
+            - generic [ref=e993]:
+              - generic [ref=e994]: NEW
+              - link "Oshikake Bakunyuu Gal Harem Seikatsu! COMPLETED 0.0 0 🔞 NSFW 🔞 Doujinshi DOUJINSHI ADULT 1 Ch Oshikake Bakunyuu Gal Harem Seikatsu!" [ref=e996] [cursor=pointer]:
+                - /url: /series/oshikake-bakunyuu-gal-harem-seikatsu
+                - generic [ref=e997]:
+                  - img "Oshikake Bakunyuu Gal Harem Seikatsu!" [ref=e998]
+                  - generic [ref=e999]: COMPLETED
+                  - generic [ref=e1001]:
+                    - generic [ref=e1002]: "0.0"
+                    - generic [ref=e1005]: "0"
+                  - generic [ref=e1008]:
+                    - generic [ref=e1009]:
+                      - generic [ref=e1010]: 🔞 NSFW
+                      - generic [ref=e1011]: 🔞 Doujinshi
+                      - generic [ref=e1012]: DOUJINSHI
+                      - generic [ref=e1013]: ADULT
+                    - generic [ref=e1014]: 1 Ch
+                - heading "Oshikake Bakunyuu Gal Harem Seikatsu!" [level=3] [ref=e1019]
+            - generic [ref=e1021]:
+              - generic [ref=e1022]: NEW
+              - link "Tonde Hi ni Iru | A Moth To Flame COMPLETED 0.0 0 🔞 NSFW 🔞 Doujinshi DOUJINSHI ADULT 1 Ch Tonde Hi ni Iru | A Moth To Flame" [ref=e1024] [cursor=pointer]:
+                - /url: /series/tonde-hi-ni-iru-a-moth-to-flame
+                - generic [ref=e1025]:
+                  - img "Tonde Hi ni Iru | A Moth To Flame" [ref=e1026]
+                  - generic [ref=e1027]: COMPLETED
+                  - generic [ref=e1029]:
+                    - generic [ref=e1030]: "0.0"
+                    - generic [ref=e1033]: "0"
+                  - generic [ref=e1036]:
+                    - generic [ref=e1037]:
+                      - generic [ref=e1038]: 🔞 NSFW
+                      - generic [ref=e1039]: 🔞 Doujinshi
+                      - generic [ref=e1040]: DOUJINSHI
+                      - generic [ref=e1041]: ADULT
+                    - generic [ref=e1042]: 1 Ch
+                - heading "Tonde Hi ni Iru | A Moth To Flame" [level=3] [ref=e1047]
+            - generic [ref=e1049]:
+              - generic [ref=e1050]: NEW
+              - link "Absolute Sword Sense ONGOING 0.0 0 🇰🇷 Manhwa ACTION ADVENTURE 4 Ch Absolute Sword Sense" [ref=e1052] [cursor=pointer]:
+                - /url: /series/absolute-sword-sense
+                - generic [ref=e1053]:
+                  - img "Absolute Sword Sense" [ref=e1054]
+                  - generic [ref=e1055]: ONGOING
+                  - generic [ref=e1057]:
+                    - generic [ref=e1058]: "0.0"
+                    - generic [ref=e1061]: "0"
+                  - generic [ref=e1064]:
+                    - generic [ref=e1065]:
+                      - generic [ref=e1066]: 🇰🇷 Manhwa
+                      - generic [ref=e1067]: ACTION
+                      - generic [ref=e1068]: ADVENTURE
+                    - generic [ref=e1069]: 4 Ch
+                - heading "Absolute Sword Sense" [level=3] [ref=e1074]
+            - generic [ref=e1076]:
+              - generic [ref=e1077]: NEW
+              - 'link "Jukujo Daisuki : Naomi-san 1-5 + Epilogue COMPLETED 0.0 0 🔞 NSFW 🔞 Doujinshi DOUJINSHI ADULT 1 Ch Jukujo Daisuki : Naomi-san 1-5 + Epilogue" [ref=e1079] [cursor=pointer]':
+                - /url: /series/jukujo-daisuki-naomi-san-1-5-epilogue
+                - generic [ref=e1080]:
+                  - 'img "Jukujo Daisuki : Naomi-san 1-5 + Epilogue" [ref=e1081]'
+                  - generic [ref=e1082]: COMPLETED
+                  - generic [ref=e1084]:
+                    - generic [ref=e1085]: "0.0"
+                    - generic [ref=e1088]: "0"
+                  - generic [ref=e1091]:
+                    - generic [ref=e1092]:
+                      - generic [ref=e1093]: 🔞 NSFW
+                      - generic [ref=e1094]: 🔞 Doujinshi
+                      - generic [ref=e1095]: DOUJINSHI
+                      - generic [ref=e1096]: ADULT
+                    - generic [ref=e1097]: 1 Ch
+                - 'heading "Jukujo Daisuki : Naomi-san 1-5 + Epilogue" [level=3] [ref=e1102]'
+            - generic [ref=e1104]:
+              - generic [ref=e1105]: NEW
+              - link "Kanojo no Mama to Deaikei de COMPLETED 0.0 0 🔞 NSFW 🔞 Doujinshi DOUJINSHI ADULT 1 Ch Kanojo no Mama to Deaikei de" [ref=e1107] [cursor=pointer]:
+                - /url: /series/kanojo-no-mama-to-deaikei-de
+                - generic [ref=e1108]:
+                  - img "Kanojo no Mama to Deaikei de" [ref=e1109]
+                  - generic [ref=e1110]: COMPLETED
+                  - generic [ref=e1112]:
+                    - generic [ref=e1113]: "0.0"
+                    - generic [ref=e1116]: "0"
+                  - generic [ref=e1119]:
+                    - generic [ref=e1120]:
+                      - generic [ref=e1121]: 🔞 NSFW
+                      - generic [ref=e1122]: 🔞 Doujinshi
+                      - generic [ref=e1123]: DOUJINSHI
+                      - generic [ref=e1124]: ADULT
+                    - generic [ref=e1125]: 1 Ch
+                - heading "Kanojo no Mama to Deaikei de" [level=3] [ref=e1130]
+            - generic [ref=e1132]:
+              - generic [ref=e1133]: NEW
+              - link "Teacher’s Efforts COMPLETED 0.0 0 🔞 NSFW 🔞 Pornhwa ROMANCE ADULT 2 Ch Teacher’s Efforts" [ref=e1135] [cursor=pointer]:
+                - /url: /series/teachers-efforts
+                - generic [ref=e1136]:
+                  - img "Teacher’s Efforts" [ref=e1137]
+                  - generic [ref=e1138]: COMPLETED
+                  - generic [ref=e1140]:
+                    - generic [ref=e1141]: "0.0"
+                    - generic [ref=e1144]: "0"
+                  - generic [ref=e1147]:
+                    - generic [ref=e1148]:
+                      - generic [ref=e1149]: 🔞 NSFW
+                      - generic [ref=e1150]: 🔞 Pornhwa
+                      - generic [ref=e1151]: ROMANCE
+                      - generic [ref=e1152]: ADULT
+                    - generic [ref=e1153]: 2 Ch
+                - heading "Teacher’s Efforts" [level=3] [ref=e1158]
+      - generic [ref=e1163]:
+        - generic [ref=e1168]:
+          - heading "Subscribe to REDBEARD" [level=3] [ref=e1169]
+          - paragraph [ref=e1170]: Get notified about new series, behind-the-scenes content, and exclusive series recommendations.
+        - link "Subscribe Now" [ref=e1172] [cursor=pointer]:
+          - /url: https://www.youtube.com/@RedBeardShort
+    - contentinfo [ref=e1179]:
+      - generic [ref=e1182]:
+        - link "REDBEARD Logo REDBEARD" [ref=e1183] [cursor=pointer]:
+          - /url: /
+          - img "REDBEARD Logo" [ref=e1185]
+          - generic [ref=e1186]: REDBEARD
+        - paragraph [ref=e1187]: The Ultimate Reading Experience. Discover thousands of series titles with the smoothest reading experience.
+        - generic [ref=e1188]:
+          - link "YouTube" [ref=e1189] [cursor=pointer]:
+            - /url: https://www.youtube.com/@RedBeardShort
+          - link "Telegram" [ref=e1193] [cursor=pointer]:
+            - /url: https://t.me/carryanime20
+        - navigation "Browse" [ref=e1197]:
+          - link "Trending" [ref=e1198] [cursor=pointer]:
+            - /url: /browse/trending
+          - link "Popular" [ref=e1199] [cursor=pointer]:
+            - /url: /browse/popular
+          - link "Latest" [ref=e1200] [cursor=pointer]:
+            - /url: /browse/latest
+          - link "Completed" [ref=e1201] [cursor=pointer]:
+            - /url: /browse/completed
+          - link "New Releases" [ref=e1202] [cursor=pointer]:
+            - /url: /browse/new-releases
+          - link "Genres" [ref=e1203] [cursor=pointer]:
+            - /url: /browse/genres
+  - region "Notifications alt+T"
+  - alert [ref=e1204]

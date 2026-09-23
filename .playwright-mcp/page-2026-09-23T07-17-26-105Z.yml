@@ -1,0 +1,65 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "REDBEARD Logo REDBEARD" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - img "REDBEARD Logo" [ref=e8]
+          - generic [ref=e9]: REDBEARD
+        - navigation [ref=e10]:
+          - link "Home" [ref=e11] [cursor=pointer]:
+            - /url: /
+          - link "Browse" [ref=e12] [cursor=pointer]:
+            - /url: /browse/trending
+          - link "Genres" [ref=e13] [cursor=pointer]:
+            - /url: /browse/genres
+          - link "Latest" [ref=e14] [cursor=pointer]:
+            - /url: /browse/latest
+          - link "Popular" [ref=e15] [cursor=pointer]:
+            - /url: /browse/popular
+        - generic [ref=e16]:
+          - link "Search" [ref=e17] [cursor=pointer]:
+            - /url: /search
+          - link "Sign In" [ref=e22] [cursor=pointer]:
+            - /url: /login
+    - main [ref=e26]:
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - heading "Library" [level=1] [ref=e31]
+          - paragraph [ref=e35]: Offline library and import features are only available in the native app.
+        - paragraph [ref=e38]: Loading library...
+    - iframe [ref=e41]:
+      - iframe [ref=f1e2]:
+        - link [ref=f2e3] [cursor=pointer]:
+          - /url: https://clicks.pipaffiliates.com/c?c=873073&l=en&p=0
+    - contentinfo [ref=e42]:
+      - generic [ref=e45]:
+        - link "REDBEARD Logo REDBEARD" [ref=e46] [cursor=pointer]:
+          - /url: /
+          - img "REDBEARD Logo" [ref=e48]
+          - generic [ref=e49]: REDBEARD
+        - paragraph [ref=e50]: The Ultimate Reading Experience. Discover thousands of series titles with the smoothest reading experience.
+        - generic [ref=e51]:
+          - link "YouTube" [ref=e52] [cursor=pointer]:
+            - /url: https://www.youtube.com/@RedBeardShort
+          - link "Telegram" [ref=e56] [cursor=pointer]:
+            - /url: https://t.me/carryanime20
+        - navigation "Browse" [ref=e60]:
+          - link "Trending" [ref=e61] [cursor=pointer]:
+            - /url: /browse/trending
+          - link "Popular" [ref=e62] [cursor=pointer]:
+            - /url: /browse/popular
+          - link "Latest" [ref=e63] [cursor=pointer]:
+            - /url: /browse/latest
+          - link "Completed" [ref=e64] [cursor=pointer]:
+            - /url: /browse/completed
+          - link "New Releases" [ref=e65] [cursor=pointer]:
+            - /url: /browse/new-releases
+          - link "Genres" [ref=e66] [cursor=pointer]:
+            - /url: /browse/genres
+  - region "Notifications alt+T"
+  - alert [ref=e67]
+  - link [ref=e69] [cursor=pointer]:
+    - /url: https://workdeadlinededicate.com/r5ytvr3nn?rssvq=52&refer=https%3A%2F%2Fredbeard.store%2Flibrary&kw=%5B%22offline%22%2C%22library%22%2C%22redbeard%22%5D&key=476fc06da76b232ba8018b7e3d494cc6&scrWidth=1536&scrHeight=864&tz=5.5&ship=1&v=2026.9.10_8705&sub3=invoke_layer&res=14.31&dev=r&ifid=01a0cd20-59e5-7052-957b-b73c19084b4c&ibid=01a0cd20-5104-7443-a8ce-f361d6c0fda3&uuid=01a0cd1e-b118-7bcf-8a78-81de4a228348%3A3%3A1

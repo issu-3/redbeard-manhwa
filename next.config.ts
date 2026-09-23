@@ -9,11 +9,12 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: isCapacitor,
   },
-  experimental: {
+  experimental: isCapacitor ? undefined : {
     serverActions: {
       bodySizeLimit: '10mb',
     },
   },
+  allowedDevOrigins: ['10.156.22.77'],
   // H1 FIX: Security headers (not supported in static export)
   headers: isCapacitor ? undefined : async () => [
     {
