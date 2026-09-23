@@ -100,11 +100,22 @@ export const ApiClient = {
 
   async getSeriesDetail(slug: string): Promise<SeriesDetail | null> {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/series/${slug}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+      const res = await fetch(`${API_BASE_URL}/api/series/${slug}`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
       const json = await res.json();
       return json.success ? json.data : null;
     } catch (e) {
-      console.warn('Failed to fetch series detail', e);
+      if (e instanceof DOMException && e.name === 'AbortError') {
+        console.warn('Series detail request timed out for:', slug);
+      } else {
+        console.warn('Failed to fetch series detail', e);
+      }
       return null;
     }
   }

@@ -7,6 +7,7 @@ import { BookMarked, Compass, Settings } from 'lucide-react';
 import { BrowseScreen } from './features/browse/BrowseScreen';
 import { SearchScreen } from './features/search/SearchScreen';
 import { SeriesDetailScreen } from './features/series/SeriesDetailScreen';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function BottomNav() {
   const navClass = ({ isActive }: { isActive: boolean }) => 
@@ -54,7 +55,7 @@ export default function App() {
             <Route path="/library" element={<LibraryScreen />} />
             <Route path="/settings" element={<SettingsScreen />} />
             <Route path="/search" element={<SearchScreen />} />
-            <Route path="/series/:slug" element={<SeriesDetailScreen />} />
+            <Route path="/series/:slug" element={<ErrorBoundary><SeriesDetailScreen /></ErrorBoundary>} />
             
             {/* Default redirect to library or browse */}
             <Route path="/" element={<Navigate to="/library" replace />} />

@@ -247,7 +247,8 @@ export function SeriesDetailScreen() {
 
     } catch (e) {
       console.error('loadData error:', e);
-      setError(`Failed to load series details: ${e instanceof Error ? e.message : JSON.stringify(e)}`);
+      const errMsg = e instanceof Error ? e.message : (typeof e === 'string' ? e : 'Unknown error');
+      setError(`Failed to load series details: ${errMsg}`);
     } finally {
       setIsLoading(false);
     }
@@ -266,21 +267,29 @@ export function SeriesDetailScreen() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center bg-slate-950">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+      <div className="flex flex-col h-full items-center justify-center bg-brand-bg gap-3">
+        <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-brand-primary border-t-transparent"></div>
+        <span className="text-sm text-brand-secondary">Loading series...</span>
       </div>
     );
   }
 
   if (error || !series) {
     return (
-      <div className="flex flex-col h-full bg-slate-950 text-slate-100">
-        <div className="p-4 border-b border-slate-800 flex items-center">
-          <button onClick={() => navigate(-1)} className="mr-4"><ArrowLeft size={24} /></button>
+      <div className="flex flex-col h-full bg-brand-bg text-brand-text">
+        <div className="p-4 border-b border-white/5 flex items-center">
+          <button onClick={() => navigate(-1)} className="mr-4 text-brand-text"><ArrowLeft size={24} /></button>
           <span className="font-semibold">Error</span>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400">
-          <p>{error || 'Series not found'}</p>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-4">
+          <p className="text-brand-secondary">{error || 'Series not found'}</p>
+          <button
+            onClick={() => loadData()}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-primary text-white text-sm font-medium active:scale-95 transition-transform"
+          >
+            <RefreshCw size={16} />
+            Retry
+          </button>
         </div>
       </div>
     );
