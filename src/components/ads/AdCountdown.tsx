@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowDownToLine, Clock } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
-import { startNativeDownload } from '@/lib/native-download';
+import { useDownloadStore } from '@/store/download-store';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -20,6 +20,7 @@ export function AdCountdown({ redirectUrl, chapterId, seriesId, seriesTitle, ser
   const [timeLeft, setTimeLeft] = useState(5);
   const [isProcessing, setIsProcessing] = useState(false);
   const router = useRouter();
+  const queueDownload = useDownloadStore(state => state.queueDownload);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -50,30 +51,17 @@ export function AdCountdown({ redirectUrl, chapterId, seriesId, seriesTitle, ser
         if (Capacitor.isNativePlatform() && chapterId && seriesId && seriesTitle && seriesSlug) {
           setIsProcessing(true);
           
-          try {
-            // Hit the API to resolve the URL and register the view
-            const resolveUrl = redirectUrl + (redirectUrl.includes('?') ? '&' : '?') + 'resolve=true';
-            const res = await fetch(resolveUrl);
-            
-            if (!res.ok) throw new Error('Failed to resolve download URL');
-            
-            const data = await res.json();
-            
-            if (data.url) {
-              // Start the background transfer and validation process
-              startNativeDownload(chapterId, data.url, seriesId, seriesTitle, seriesSlug, chapterNumber || '1', resolveUrl);
-              
-              // Immediately send user back to the reader while it downloads in the background
-              toast.success('Download started in background');
-              router.back();
-              return;
-            }
-          } catch (error) {
-            console.error('Failed native resolve flow:', error);
-            toast.error('Download failed to start');
-          }
+          queueDownload(chapterId, {
+            seriesId,
+            seriesTitle,
+            seriesSlug,
+            chapterNumber: chapterNumber || '1',
+            filename: `${seriesSlug}-chapter-${chapterNumber || '1'}.pdf`,
+          });
           
-          setIsProcessing(false);
+          toast.success('Download queued in background');
+          router.back();
+          return;
         }
         
         // Fallback to normal web flow (or if native fails)
