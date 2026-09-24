@@ -93,7 +93,7 @@ export function AndroidReaderView({
 
   if (loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-black">
+      <div className="flex h-[100dvh] w-full items-center justify-center bg-black">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -101,11 +101,11 @@ export function AndroidReaderView({
 
   if (!localUrl) {
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-black text-white px-4 text-center">
+      <div className="flex h-[100dvh] w-full flex-col items-center justify-center bg-black text-white px-4 text-center">
         <p className="mb-4">This chapter is not downloaded.</p>
         <button
           onClick={() => router.back()}
-          className="rounded-full bg-surface px-6 py-2"
+          className="rounded-full bg-[#1C1C1C] font-bold px-6 py-2"
         >
           Go Back
         </button>
@@ -114,7 +114,7 @@ export function AndroidReaderView({
   }
 
   return (
-    <div className="relative h-screen w-full bg-black text-white overflow-hidden select-none">
+    <div className="relative h-[100dvh] w-full bg-black text-white overflow-hidden select-none">
 
       {/* ── Top App Bar ────────────────────────────────────────── */}
       <div

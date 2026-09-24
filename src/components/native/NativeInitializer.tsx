@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
+import { App as CapacitorApp } from '@capacitor/app';
 import { initSQLiteDB } from '@/lib/sqlite/connection';
 
 // Global state to hold the active user ID on native.
@@ -40,14 +41,49 @@ export function NativeInitializer({ children }: { children: React.ReactNode }) {
       // Mark the HTML element so CSS native-hidden / native-only rules work
       document.documentElement.classList.add('is-native');
 
+      // Setup hardware back button handler
+      CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        // 1. If keyboard is open, close it and return
+        if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+          (document.activeElement as HTMLElement).blur();
+          return;
+        }
+
+        // 2. Dispatch a custom event to allow overlays or local state to consume the back press
+        const backEvent = new CustomEvent('hardwareBackPress', { cancelable: true });
+        document.dispatchEvent(backEvent);
+
+        if (backEvent.defaultPrevented) {
+          // Handled by an overlay (e.g., bottom sheet, tab change)
+          return;
+        }
+
+        // 3. Navigate back or exit app
+        if (window.location.pathname === '/android-app' || window.location.pathname === '/') {
+          CapacitorApp.exitApp();
+        } else if (canGoBack || window.history.length > 1) {
+          window.history.back();
+        } else {
+          CapacitorApp.exitApp();
+        }
+      });
+
       try {
         await initSQLiteDB();
         console.log('[NativeInit] SQLite initialized');
+        console.log('[REDBEARD_PERSIST] DB_INIT_COMPLETE');
 
         // Always use the persistent device-local ID for Android no-login architecture
         const deviceId = await getOrCreateDeviceUserId();
         nativeUserId = deviceId;
         console.log('[NativeInit] Using device guest userId:', nativeUserId);
+        console.log(`[REDBEARD_PERSIST] RESTART_CHECK userId=${nativeUserId}`);
+        
+        // Hydrate local library
+        console.log('[NativeInit] Hydrating local library for:', nativeUserId);
+        const { useAppLibraryStore } = await import('@/store/app-library-store');
+        await useAppLibraryStore.getState().hydrateLibrary(nativeUserId);
+        console.log('[NativeInit] Library hydration complete');
         
       } catch (error) {
         console.error('[NativeInit] Failed to initialize:', error);
@@ -55,9 +91,13 @@ export function NativeInitializer({ children }: { children: React.ReactNode }) {
         try {
           const deviceId = await getOrCreateDeviceUserId();
           nativeUserId = deviceId;
+          const { useAppLibraryStore } = await import('@/store/app-library-store');
+          useAppLibraryStore.getState().setHasHydrated(true); // unblock UI
         } catch {
           // Last resort: generate an in-memory ID (won't persist but app won't crash)
           nativeUserId = `dev_fallback_${Date.now()}`;
+          const { useAppLibraryStore } = await import('@/store/app-library-store');
+          useAppLibraryStore.getState().setHasHydrated(true); // unblock UI
         }
       }
 

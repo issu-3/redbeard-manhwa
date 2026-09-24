@@ -18,7 +18,7 @@ export function AndroidBottomNav() {
   if (!isNative) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-[calc(4.5rem+env(safe-area-inset-bottom,0px))] items-center justify-around bg-surface border-t border-border-subtle pb-[env(safe-area-inset-bottom,0px)] px-2 native-only-flex shadow-[0_-4px_20px_rgba(0,0,0,0.2)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-[calc(4.5rem+env(safe-area-inset-bottom,0px))] items-center justify-around bg-[#0B0D10]/95 backdrop-blur-md border-t border-white/5 pb-[env(safe-area-inset-bottom,0px)] px-2 native-only-flex shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
       <NavItem
         href="/library"
         icon={<Library className="h-[22px] w-[22px]" strokeWidth={2.5} />}
@@ -47,18 +47,18 @@ function NavItem({ href, icon, label, isActive }: { href: string; icon: React.Re
       href={href}
       className={cn(
         "flex flex-col items-center justify-center gap-1 min-w-[64px] h-full transition-colors active:scale-95",
-        isActive ? "text-primary" : "text-text-muted hover:text-text-primary"
+        isActive ? "text-[#E5092F]" : "text-neutral-500 hover:text-white"
       )}
     >
       <div className={cn(
         "flex items-center justify-center px-4 py-1 rounded-full transition-all duration-200",
-        isActive ? "bg-primary/20 text-primary" : "bg-transparent"
+        isActive ? "bg-[#E5092F]/20 text-[#E5092F]" : "bg-transparent text-neutral-400"
       )}>
         {icon}
       </div>
       <span className={cn(
         "text-[11px] font-semibold tracking-wide transition-all",
-        isActive ? "font-bold text-primary" : "font-medium"
+        isActive ? "font-bold text-[#E5092F]" : "font-medium"
       )}>{label}</span>
     </Link>
   );

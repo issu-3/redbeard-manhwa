@@ -7,6 +7,7 @@ import { SeriesRepository } from '@/lib/sqlite/repository';
 import Image from 'next/image';
 import { nativeUserId } from '@/components/native/NativeInitializer';
 import { Capacitor } from '@capacitor/core';
+import { useDownloadStore } from '@/store/download-store';
 
 interface DownloadItem {
   id: string;
@@ -19,92 +20,58 @@ interface DownloadItem {
   progress?: number;
 }
 
-export function AndroidDownloadQueueView() {
+export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
   const router = useRouter();
-  const [downloads, setDownloads] = useState<DownloadItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const downloadsMap = useDownloadStore(state => state.downloads);
 
-  useEffect(() => {
-    const activeUserId = nativeUserId || 'guest';
-    if (activeUserId) {
-      loadQueue(activeUserId);
-      // In a real app, this would subscribe to a Capacitor event listener or native download manager
-      const interval = setInterval(() => loadQueue(activeUserId), 3000);
-      return () => clearInterval(interval);
-    }
-  }, []);
-
-  const loadQueue = async (userId: string) => {
-    if (!userId) return;
-    try {
-      const queue = await SeriesRepository.getDownloadQueue(userId);
-      
-      // Map SQLite chapters to DownloadItem
-      const items = queue.map(q => ({
-        id: q.id,
-        serverChapterId: q.serverChapterId,
-        seriesTitle: q.seriesTitle || 'Unknown Series',
-        title: q.title || `Chapter ${q.chapterNumber}`,
-        chapterNumber: String(q.chapterNumber),
-        seriesCover: q.seriesCover,
-        downloadState: q.downloadState,
-        // Mock progress for DOWNLOADING state
-        progress: q.downloadState === 'DOWNLOADING' ? Math.floor(Math.random() * 80) + 10 : 0
-      }));
-      
-      setDownloads(items as DownloadItem[]);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const downloads = Object.entries(downloadsMap)
+    .filter(([_, state]) => state.status === 'DOWNLOADING' || state.status === 'QUEUED')
+    .map(([chapterId, state]) => ({
+      id: chapterId,
+      serverChapterId: chapterId,
+      seriesTitle: state.metadata?.seriesTitle || 'Unknown Series',
+      title: `Chapter ${state.metadata?.chapterNumber}`,
+      chapterNumber: String(state.metadata?.chapterNumber),
+      seriesCover: state.metadata?.coverImage || null,
+      downloadState: state.status,
+      progress: Math.floor((state.progress || 0) * 100)
+    }));
 
   const handlePauseResume = async (item: DownloadItem) => {
-    const activeUserId = nativeUserId || 'guest';
-    if (!activeUserId) return;
-    const newState = item.downloadState === 'PAUSED' ? 'PENDING' : 'PAUSED';
-    await SeriesRepository.updateDownloadState(activeUserId, item.serverChapterId, newState);
-    await loadQueue(activeUserId);
+    console.log('Pause/resume not fully supported by Capacitor FileTransfer yet');
   };
 
   const handleCancel = async (item: DownloadItem) => {
-    const activeUserId = nativeUserId || 'guest';
-    if (!activeUserId) return;
-    await SeriesRepository.updateDownloadState(activeUserId, item.serverChapterId, 'IDLE');
-    await loadQueue(activeUserId);
+    useDownloadStore.getState().markCancelled(item.serverChapterId);
+    useDownloadStore.getState().clearDownload(item.serverChapterId);
   };
 
   return (
-    <div className="flex h-screen w-full flex-col bg-surface pt-[env(safe-area-inset-top,0px)]">
+    <div className="flex h-[100dvh] w-full flex-col bg-[#0B0D10] pt-[env(safe-area-inset-top,0px)]">
       {/* App Bar */}
-      <div className="flex h-14 items-center gap-4 px-4 border-b border-border-subtle bg-surface/90 backdrop-blur">
+      <div className="flex h-14 items-center gap-4 px-4 border-b border-white/5 bg-[#0B0D10]/95 backdrop-blur-md">
         <button 
-          onClick={() => router.back()}
-          className="rounded-full p-2 hover:bg-white/10 active:bg-white/20 transition-colors"
+          onClick={() => onBack ? onBack() : router.back()}
+          className="rounded-full p-2 -ml-2 active:bg-neutral-800 transition-colors"
         >
-          <ArrowLeft className="h-6 w-6 text-text-primary" />
+          <ArrowLeft className="h-6 w-6 text-white" />
         </button>
-        <h1 className="text-xl font-bold text-text-primary">Download queue</h1>
+        <h1 className="text-[20px] font-bold text-white tracking-tight">Download Queue</h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        {loading ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : downloads.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center p-8 text-center text-text-muted">
+      <div className="flex-1 overflow-y-auto pt-4 px-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] no-scrollbar">
+        {downloads.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center p-8 text-center text-neutral-500">
             <CloudDownload className="mb-4 h-16 w-16 opacity-20" />
-            <p className="text-lg font-medium">No active downloads</p>
+            <p className="text-lg font-bold text-white">No active downloads</p>
             <p className="mt-2 text-sm">Chapters you download will appear here.</p>
           </div>
         ) : (
-          <div className="divide-y divide-border-subtle">
+          <div className="flex flex-col gap-3">
             {downloads.map((item) => (
-              <div key={item.id} className="flex items-center gap-4 p-4 hover:bg-white/5">
+              <div key={item.id} className="flex items-center gap-4 p-3 bg-[#1C1C1C] rounded-[14px] border border-white/5 active:scale-[0.98] transition-transform">
                 {/* Cover */}
-                <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded bg-surface-elevated">
+                <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded bg-neutral-900 shadow-md">
                   {item.seriesCover ? (
                     <Image 
                       src={item.seriesCover} 
@@ -112,9 +79,10 @@ export function AndroidDownloadQueueView() {
                       fill 
                       className="object-cover"
                       sizes="48px"
+                      unoptimized={item.seriesCover.startsWith('file://')}
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center bg-surface-elevated text-[10px] text-text-muted">
+                    <div className="flex h-full items-center justify-center bg-neutral-900 text-[10px] text-neutral-600">
                       No img
                     </div>
                   )}
@@ -122,31 +90,31 @@ export function AndroidDownloadQueueView() {
 
                 {/* Details */}
                 <div className="flex flex-1 flex-col overflow-hidden">
-                  <h3 className="truncate font-medium text-text-primary">{item.seriesTitle}</h3>
-                  <p className="truncate text-sm text-text-muted">{item.title}</p>
+                  <h3 className="truncate font-semibold text-[15px] text-white leading-snug">{item.seriesTitle}</h3>
+                  <p className="truncate text-sm text-neutral-400">{item.title}</p>
                   
                   {/* Progress Bar */}
                   {item.downloadState === 'DOWNLOADING' && (
-                    <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-surface-elevated">
+                    <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-neutral-800">
                       <div 
-                        className="h-full bg-primary transition-all duration-300" 
+                        className="h-full bg-[#E5092F] transition-all duration-300" 
                         style={{ width: `${item.progress}%` }} 
                       />
                     </div>
                   )}
                   {item.downloadState === 'PAUSED' && (
-                    <p className="mt-1 text-xs font-medium text-orange-500">Paused</p>
+                    <p className="mt-1 text-xs font-bold text-orange-500 uppercase tracking-wide">Paused</p>
                   )}
                   {item.downloadState === 'PENDING' && (
-                    <p className="mt-1 text-xs font-medium text-text-muted">Waiting...</p>
+                    <p className="mt-1 text-xs font-bold text-neutral-500 uppercase tracking-wide">Waiting...</p>
                   )}
                 </div>
 
                 {/* Actions */}
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-1">
                   <button 
                     onClick={() => handlePauseResume(item)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full text-text-muted hover:bg-white/10 active:bg-white/20 transition-colors"
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-400 active:bg-neutral-800 transition-colors"
                   >
                     {item.downloadState === 'PAUSED' ? (
                       <Play className="h-5 w-5" />
@@ -156,7 +124,7 @@ export function AndroidDownloadQueueView() {
                   </button>
                   <button 
                     onClick={() => handleCancel(item)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full text-text-muted hover:bg-white/10 hover:text-red-500 active:bg-white/20 transition-colors"
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-400 active:bg-neutral-800 active:text-[#E5092F] transition-colors"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -170,5 +138,3 @@ export function AndroidDownloadQueueView() {
   );
 }
 
-// Ensure icon is defined since I used it in empty state
-import { DownloadCloud } from 'lucide-react';

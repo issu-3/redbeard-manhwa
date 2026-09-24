@@ -64,5 +64,12 @@ export const SQLiteMigrations: capSQLiteVersionUpgrade[] = [
       `ALTER TABLE series ADD COLUMN notes TEXT;`,
       `ALTER TABLE series ADD COLUMN categories TEXT;`
     ]
+  },
+  {
+    toVersion: 3,
+    statements: [
+      `ALTER TABLE chapters ADD COLUMN label TEXT;`,
+      `ALTER TABLE chapters ADD COLUMN slug TEXT;`
+    ]
   }
 ];

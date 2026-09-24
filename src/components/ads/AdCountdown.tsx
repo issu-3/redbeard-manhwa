@@ -61,7 +61,7 @@ export function AdCountdown({ redirectUrl, chapterId, seriesId, seriesTitle, ser
             
             if (data.url) {
               // Start the background transfer and validation process
-              startNativeDownload(chapterId, data.url, seriesId, seriesTitle, seriesSlug, chapterNumber || '1');
+              startNativeDownload(chapterId, data.url, seriesId, seriesTitle, seriesSlug, chapterNumber || '1', resolveUrl);
               
               // Immediately send user back to the reader while it downloads in the background
               toast.success('Download started in background');

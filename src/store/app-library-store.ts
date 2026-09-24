@@ -16,6 +16,7 @@ interface AppLibraryStore {
   removeFromLibrary: (seriesId: string) => Promise<void>;
   updateLibrarySeries: (seriesId: string, data: Partial<LibrarySeriesEntity>) => Promise<void>;
   syncWithServer: (userId: string, serverSeriesList: Omit<LibrarySeriesEntity, 'addedAt' | 'updatedAt' | 'isBookmarked'>[]) => Promise<void>;
+  saveChaptersToLibrary: (seriesId: string, chapters: any[]) => Promise<void>;
   
   // Queries
   isSaved: (seriesId: string) => boolean;
@@ -66,6 +67,13 @@ export const useAppLibraryStore = create<AppLibraryStore>()((set, get) => ({
       console.log(`[LIBRARY_DEBUG] AppLibraryStore.addToLibrary persist finished`);
     } else {
       console.warn(`[LIBRARY_DEBUG] AppLibraryStore.addToLibrary skipped persist because activeUserId is null!`);
+    }
+  },
+
+  saveChaptersToLibrary: async (seriesId, chapters) => {
+    const { activeUserId } = get();
+    if (activeUserId) {
+      await LocalLibraryRepository.saveChapters(activeUserId, seriesId, chapters);
     }
   },
 

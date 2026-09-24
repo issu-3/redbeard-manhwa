@@ -6,8 +6,12 @@ export class SeriesRepository {
    * Fetch library series for a specific user from SQLite
    */
   static async getLibrary(userId: string): Promise<LibrarySeriesEntity[]> {
+    console.log(`[REDBEARD_PERSIST] GET_LIBRARY_START userId=${userId}`);
     const db = await getDB();
-    if (!db) return [];
+    if (!db) {
+      console.log(`[REDBEARD_PERSIST] GET_LIBRARY_RESULT count=0 (no db)`);
+      return [];
+    }
 
     try {
       const result = await db.query(
@@ -15,8 +19,12 @@ export class SeriesRepository {
         [userId]
       );
 
-      if (!result.values) return [];
+      if (!result.values) {
+        console.log(`[REDBEARD_PERSIST] GET_LIBRARY_RESULT count=0`);
+        return [];
+      }
 
+      console.log(`[REDBEARD_PERSIST] GET_LIBRARY_RESULT count=${result.values.length}`);
       return result.values.map(row => ({
         seriesId: row.serverSeriesId,
         title: row.title,
@@ -29,6 +37,8 @@ export class SeriesRepository {
         genres: row.genres ? JSON.parse(row.genres) : undefined,
         notes: row.notes,
         categories: row.categories ? JSON.parse(row.categories) : undefined,
+        addedAt: row.addedAt || Date.now(),
+        updatedAt: row.lastSyncedAt || row.addedAt || Date.now(),
       } as unknown as LibrarySeriesEntity));
     } catch (e) {
       console.error('Failed to get library from SQLite', e);
@@ -40,8 +50,12 @@ export class SeriesRepository {
    * Save a series to the library
    */
   static async saveToLibrary(userId: string, series: LibrarySeriesEntity): Promise<void> {
+    console.log(`[REDBEARD_PERSIST] SAVE_START seriesId=${series.seriesId} slug=${series.slug} userId=${userId}`);
     const db = await getDB();
-    if (!db) return;
+    if (!db) {
+      console.log(`[REDBEARD_PERSIST] SAVE_FAILED (no db)`);
+      return;
+    }
 
     try {
       const localId = `${userId}_${series.seriesId}`;
@@ -59,8 +73,8 @@ export class SeriesRepository {
           inLibrary = 1,
           title = excluded.title,
           coverUrl = excluded.coverUrl,
-          notes = COALESCE(excluded.notes, series.notes),
-          categories = COALESCE(excluded.categories, series.categories),
+          notes = COALESCE(excluded.notes, notes),
+          categories = COALESCE(excluded.categories, categories),
           addedAt = excluded.addedAt`,
         [
           localId, userId, series.seriesId, series.title, series.slug, series.coverImage || null,
@@ -69,8 +83,9 @@ export class SeriesRepository {
           series.status || null, genresStr, series.notes || null, categoriesStr, addedAt
         ]
       );
+      console.log(`[REDBEARD_PERSIST] SAVE_COMPLETE`);
     } catch (e) {
-      console.error('Failed to save to library', e);
+      console.error('[REDBEARD_PERSIST] SAVE_FAILED Exception:', e);
     }
   }
 
@@ -164,6 +179,39 @@ export class SeriesRepository {
   }
 
   /**
+   * Get single series metadata by slug
+   */
+  static async getSeriesBySlug(userId: string, slug: string): Promise<LibrarySeriesEntity | null> {
+    const db = await getDB();
+    if (!db) return null;
+
+    try {
+      const res = await db.query(
+        'SELECT * FROM series WHERE userId = ? AND slug = ? LIMIT 1',
+        [userId, slug]
+      );
+      if (!res.values || res.values.length === 0) return null;
+      const row = res.values[0];
+      return {
+        seriesId: row.serverSeriesId,
+        title: row.title,
+        slug: row.slug,
+        coverImage: row.coverUrl,
+        author: row.author,
+        artist: row.artist,
+        description: row.description,
+        status: row.status,
+        genres: row.genres ? JSON.parse(row.genres) : undefined,
+        notes: row.notes,
+        categories: row.categories ? JSON.parse(row.categories) : undefined,
+      } as unknown as LibrarySeriesEntity;
+    } catch (e) {
+      console.error('Failed to get series by slug', e);
+      return null;
+    }
+  }
+
+  /**
    * Save read state
    */
   static async saveReadState(userId: string, serverSeriesId: string, serverChapterId: string, isRead: boolean): Promise<void> {
@@ -185,6 +233,33 @@ export class SeriesRepository {
       );
     } catch (e) {
       console.error('Failed to save read state', e);
+    }
+  }
+
+  /**
+   * Save chapters offline cache
+   */
+  static async saveChapters(userId: string, serverSeriesId: string, chapters: any[]): Promise<void> {
+    const db = await getDB();
+    if (!db) return;
+
+    try {
+      const localSeriesId = `${userId}_${serverSeriesId}`;
+      await db.execute('BEGIN TRANSACTION');
+      for (const ch of chapters) {
+        const chapterId = `${userId}_${ch.id}`;
+        await db.run(
+          `INSERT INTO chapters (id, userId, seriesId, serverChapterId, title, chapterNumber, publishedAt, label, slug)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(userId, serverChapterId) DO UPDATE SET
+           title = excluded.title, chapterNumber = excluded.chapterNumber, publishedAt = excluded.publishedAt, label = excluded.label, slug = excluded.slug`,
+          [chapterId, userId, localSeriesId, ch.id, ch.title || null, ch.number != null ? String(ch.number) : '0', ch.publishedAt || null, ch.label || null, ch.slug || null]
+        );
+      }
+      await db.execute('COMMIT');
+    } catch (e) {
+      await db.execute('ROLLBACK');
+      console.error('Failed to save chapters cache', e);
     }
   }
 

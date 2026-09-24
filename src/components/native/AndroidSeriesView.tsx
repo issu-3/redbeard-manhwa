@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { 
   ArrowLeft, Share2, MoreVertical, Download, Bookmark, Play, Check, 
-  ChevronDown, ChevronUp, Filter, List, RefreshCcw, FileText, Tags, ExternalLink, X, BookOpen, Trash2
+  ChevronDown, ChevronUp, Filter, List, RefreshCcw, FileText, Tags, ExternalLink, X, BookOpen, Trash2, FileUp
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -22,8 +22,8 @@ type DisplayMode = 'compact' | 'comfortable';
 
 export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }: { series: any, chapters: any[], onRefresh: () => void, isRefreshing: boolean }) {
   const router = useRouter();
-  const { savedSeries, addToLibrary, removeFromLibrary, activeUserId } = useAppLibraryStore();
-  const { downloads, startDownload } = useDownloadStore();
+  const { savedSeries, addToLibrary, removeFromLibrary, saveChaptersToLibrary, activeUserId } = useAppLibraryStore();
+  const { downloads, queueDownload } = useDownloadStore();
 
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [localChapters, setLocalChapters] = useState<Record<string, any>>({});
@@ -42,11 +42,26 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
   
   // Modals / Sheets state
   const [activeSheet, setActiveSheet] = useState<'filter' | 'sort' | 'display' | 'more' | 'notes' | 'categories' | 'chapterMenu' | null>(null);
+
+  useEffect(() => {
+    const onBackPress = (e: Event) => {
+      if (activeSheet) {
+        e.preventDefault();
+        setActiveSheet(null);
+      }
+    };
+    document.addEventListener('hardwareBackPress', onBackPress);
+    return () => document.removeEventListener('hardwareBackPress', onBackPress);
+  }, [activeSheet]);
+
   const [selectedChapter, setSelectedChapter] = useState<any>(null);
   const [draftNotes, setDraftNotes] = useState('');
   const [draftCategories, setDraftCategories] = useState('');
 
-  const inLibrary = !!savedSeries[series.id];
+  // Check if series is in library by either exact ID match or slug match (to handle legacy ghost IDs)
+  const savedSeriesEntry = savedSeries[series.id] || Object.values(savedSeries).find((s: any) => s.slug === series.slug);
+  const inLibrary = !!savedSeriesEntry;
+  const localSeriesId = savedSeriesEntry ? savedSeriesEntry.seriesId : series.id;
 
   // Load preferences
   useEffect(() => {
@@ -78,7 +93,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
         if (!userId) return;
         
         // Chapters
-        const sqliteChapters = await SeriesRepository.getChapters(userId, series.id);
+        const sqliteChapters = await SeriesRepository.getChapters(userId, localSeriesId);
         const chapterMap: Record<string, any> = {};
         sqliteChapters.forEach(c => {
           chapterMap[c.serverChapterId] = c;
@@ -86,7 +101,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
         setLocalChapters(chapterMap);
         
         // Series Metadata (Notes, Categories)
-        const localSeries = await SeriesRepository.getSeries(userId, series.id);
+        const localSeries = await SeriesRepository.getSeries(userId, localSeriesId);
         if (localSeries) {
           setNotes(localSeries.notes || '');
           setCategories(localSeries.categories || []);
@@ -94,14 +109,14 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
       };
       fetchLocalData();
     }
-  }, [series.id, activeUserId]);
+  }, [localSeriesId, activeUserId]);
 
   const handleToggleLibrary = () => {
     if (inLibrary) {
-      removeFromLibrary(series.id);
+      removeFromLibrary(localSeriesId);
     } else {
       addToLibrary({
-        seriesId: series.id,
+        seriesId: localSeriesId,
         title: series.title,
         slug: series.slug,
         coverImage: series.coverImage,
@@ -111,22 +126,34 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
         status: series.status,
         genres: series.genres,
       });
+      if (chapters && chapters.length > 0) {
+        saveChaptersToLibrary(localSeriesId, chapters);
+      }
     }
   };
 
-  const handleDownload = (chapter: any) => {
-    startDownload(chapter.id, {
+  const handleDownload = async (chapter: any) => {
+    const chapterLabel = chapter.label || chapter.number?.toString() || chapter.title || '1';
+
+    // Immediately show queued status in UI
+    queueDownload(chapter.id, {
       seriesId: series.id,
       seriesTitle: series.title,
       seriesSlug: series.slug,
-      chapterNumber: chapter.number,
+      chapterNumber: chapterLabel,
       chapterId: chapter.id,
-      filename: `chapter_${chapter.number}_${chapter.id}`,
+      filename: `chapter_${chapterLabel}_${chapter.id}`,
       coverImage: series.coverImage,
       sourceType: chapter.sourceType,
     });
+
+    // Always hit our backend API to let the backend resolve any Terabox or protected links
+    const downloadUrl = `/api/chapter/${chapter.id}/download`;
+
+    import('@/lib/native-download').then(({ processDownloadQueue }) => {
+      processDownloadQueue(chapter.id, downloadUrl, series.id, series.title, series.slug, chapterLabel);
+    });
   };
-  
   const handleOpenWebsite = async () => {
     const url = `https://redbeard.store/series/${series.slug}`;
     if (Capacitor.isNativePlatform()) {
@@ -134,6 +161,41 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
     } else {
       window.open(url, '_blank');
     }
+  };
+
+  const handleImportLocalPdf = async (chapter: any) => {
+    const chapterLabel = chapter.label || chapter.number?.toString() || chapter.title || '1';
+    
+    const onReplaceConfirm = () => new Promise<boolean>((resolve) => {
+      if (window.confirm("Replace downloaded PDF?")) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    });
+
+    const onSuccess = () => {
+      setActiveSheet(null);
+      router.push(`/android-reader?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`);
+    };
+
+    const onError = (msg: string) => {
+      alert(msg);
+      setActiveSheet(null);
+    };
+
+    import('@/lib/native-download').then(({ importLocalPdf }) => {
+      importLocalPdf(
+        chapter.id,
+        series.id,
+        series.title,
+        series.slug,
+        chapterLabel,
+        onReplaceConfirm,
+        onSuccess,
+        onError
+      );
+    });
   };
   
   const handleShare = async () => {
@@ -241,10 +303,10 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
           className="fixed inset-0 bg-black/60 z-[100] transition-opacity" 
           onClick={() => setActiveSheet(null)}
         />
-        <div className="fixed bottom-0 left-0 right-0 bg-[#1c1c1c] rounded-t-2xl z-[100] flex flex-col max-h-[85dvh] shadow-2xl overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+        <div className="fixed bottom-0 left-0 right-0 bg-[#1C1C1C] rounded-t-2xl z-[100] flex flex-col max-h-[85dvh] shadow-2xl overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
           
           {/* Header */}
-          <div className="shrink-0 flex items-center justify-between p-4 border-b border-neutral-800 bg-[#1c1c1c] z-10">
+          <div className="shrink-0 flex items-center justify-between p-4 border-b border-neutral-800 bg-[#1C1C1C] z-10">
             <h3 className="font-bold text-white capitalize">{activeSheet}</h3>
             <button onClick={() => setActiveSheet(null)} className="p-1 active:bg-neutral-800 rounded-full text-neutral-400">
               <X className="h-6 w-6" />
@@ -256,11 +318,11 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
               <div className="flex flex-col gap-4">
                 <label className="flex items-center justify-between p-2 rounded hover:bg-neutral-800 active:bg-neutral-800">
                   <span className="text-white">Unread</span>
-                  <input type="checkbox" checked={filterUnread} onChange={e => setFilterUnread(e.target.checked)} className="w-5 h-5 accent-[#ff0000]" />
+                  <input type="checkbox" checked={filterUnread} onChange={e => setFilterUnread(e.target.checked)} className="w-5 h-5 accent-[#E5092F]" />
                 </label>
                 <label className="flex items-center justify-between p-2 rounded hover:bg-neutral-800 active:bg-neutral-800">
                   <span className="text-white">Downloaded</span>
-                  <input type="checkbox" checked={filterDownloaded} onChange={e => setFilterDownloaded(e.target.checked)} className="w-5 h-5 accent-[#ff0000]" />
+                  <input type="checkbox" checked={filterDownloaded} onChange={e => setFilterDownloaded(e.target.checked)} className="w-5 h-5 accent-[#E5092F]" />
                 </label>
               </div>
             )}
@@ -279,7 +341,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                       name="sort"
                       checked={sortOption === opt.id}
                       onChange={() => saveSortOption(opt.id as SortOption)}
-                      className="w-5 h-5 accent-[#ff0000]"
+                      className="w-5 h-5 accent-[#E5092F]"
                     />
                     <span className="text-white">{opt.label}</span>
                   </label>
@@ -299,7 +361,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                       name="display"
                       checked={displayMode === opt.id}
                       onChange={() => saveDisplayMode(opt.id as DisplayMode)}
-                      className="w-5 h-5 accent-[#ff0000]"
+                      className="w-5 h-5 accent-[#E5092F]"
                     />
                     <span className="text-white">{opt.label}</span>
                   </label>
@@ -334,9 +396,9 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                   value={draftNotes} 
                   onChange={e => setDraftNotes(e.target.value)} 
                   placeholder="Add notes for this series..."
-                  className="w-full h-32 bg-neutral-900 text-white p-3 rounded outline-none border border-neutral-700 focus:border-[#ff0000] resize-none"
+                  className="w-full h-32 bg-neutral-900 text-white p-3 rounded outline-none border border-neutral-700 focus:border-[#E5092F] resize-none"
                 />
-                <button onClick={handleSaveNotes} className="bg-[#ff0000] text-white py-3 rounded font-bold">Save Notes</button>
+                <button onClick={handleSaveNotes} className="bg-[#E5092F] text-white py-3 rounded font-bold">Save Notes</button>
               </div>
             )}
             
@@ -348,9 +410,9 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                   value={draftCategories} 
                   onChange={e => setDraftCategories(e.target.value)} 
                   placeholder="e.g. Action, Reading, Favorites"
-                  className="w-full bg-neutral-900 text-white p-3 rounded outline-none border border-neutral-700 focus:border-[#ff0000]"
+                  className="w-full bg-neutral-900 text-white p-3 rounded outline-none border border-neutral-700 focus:border-[#E5092F]"
                 />
-                <button onClick={handleSaveCategories} className="bg-[#ff0000] text-white py-3 rounded font-bold">Save Categories</button>
+                <button onClick={handleSaveCategories} className="bg-[#E5092F] text-white py-3 rounded font-bold">Save Categories</button>
               </div>
             )}
 
@@ -369,11 +431,11 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                 {selectedChapter.downloadState === 'COMPLETED' ? (
                   <button 
                     onClick={() => {
-                      // Currently we only have a startDownload in the store. Let's just simulate Delete or skip if not supported.
-                      // For now, if we had a deleteDownload method, we would call it. 
-                      // If we don't, this button can just be a placeholder.
-                      alert("Delete download functionality to be implemented");
-                      setActiveSheet(null);
+                      import('@/lib/native-download').then(({ deleteDownloadedChapter }) => {
+                        deleteDownloadedChapter(selectedChapter.id).then(() => {
+                          setActiveSheet(null);
+                        });
+                      });
                     }}
                     className="flex items-center gap-4 p-3 rounded hover:bg-neutral-800 active:bg-neutral-800 text-white w-full text-left"
                   >
@@ -392,6 +454,15 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                     <span>Download Chapter</span>
                   </button>
                 )}
+                <button 
+                  onClick={() => {
+                    handleImportLocalPdf(selectedChapter);
+                  }}
+                  className="flex items-center gap-4 p-3 rounded hover:bg-neutral-800 active:bg-neutral-800 text-white w-full text-left"
+                >
+                  <FileUp className="h-5 w-5" />
+                  <span>Import Local PDF</span>
+                </button>
                 <button 
                   onClick={async () => {
                     setActiveSheet(null);
@@ -423,9 +494,10 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0f0f0f] text-foreground pb-20 relative">
+    <div className="flex flex-col h-[100dvh] w-full bg-[#0B0D10] text-gray-100 relative overflow-hidden">
       {/* ── App Bar ────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-transparent flex items-center justify-between px-2 py-3 transition-colors duration-300">
+      <header className="absolute top-0 left-0 right-0 z-40 bg-transparent flex items-center justify-between px-2 py-[env(safe-area-inset-top,0px)] transition-colors duration-300">
+        <div className="px-2 py-3 flex items-center justify-between w-full">
         <button
           onClick={() => router.back()}
           className="p-2 bg-black/40 backdrop-blur rounded-full text-white"
@@ -437,21 +509,25 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
             <MoreVertical className="h-5 w-5" />
           </button>
         </div>
+        </div>
       </header>
 
-      {/* ── Hero Banner ────────────────────────────────────── */}
-      <div className="relative h-[40vh] w-full overflow-hidden shrink-0 bg-neutral-900">
-        <Image
-          src={series.bannerImage || series.coverImage || ''}
-          alt={series.title}
-          fill
-          className="object-cover blur-xl opacity-30 scale-125"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f0f] via-[#0f0f0f]/60 to-transparent" />
-
-        <div className="absolute bottom-4 left-4 right-4 flex gap-4 items-end">
-          <div className="relative w-28 aspect-[2/3] rounded-md overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.5)] ring-1 ring-white/10 shrink-0 bg-neutral-800">
+      {/* ── Scrollable Content ─────────────────────────────── */}
+      <main className="flex-1 overflow-y-auto no-scrollbar pb-[calc(6rem+env(safe-area-inset-bottom,0px))]">
+        {/* ── Hero Banner ────────────────────────────────────── */}
+        <div className="relative pt-[25%] pb-4 px-4 w-full shrink-0 flex flex-col items-center">
+          <div className="absolute inset-0 overflow-hidden bg-black">
+            <Image
+              src={series.bannerImage || series.coverImage || ''}
+              alt={series.title}
+              fill
+              className="object-cover blur-[50px] opacity-40 scale-150"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0B0D10]/20 via-[#0B0D10]/80 to-[#0B0D10]" />
+          </div>
+          
+          <div className="relative z-10 w-32 aspect-[2/3] rounded-lg overflow-hidden shadow-2xl shadow-black ring-1 ring-white/10 mb-5">
             {series.coverImage && (
               <Image
                 src={series.coverImage}
@@ -461,61 +537,54 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
               />
             )}
           </div>
-          <div className="flex flex-col pb-1">
-            <h1 className="text-2xl font-bold text-white leading-tight line-clamp-3 drop-shadow-md">
-              {series.title}
-            </h1>
-            <p className="text-sm text-neutral-300 mt-1 font-medium drop-shadow">
-              {series.authors?.[0]?.name || 'Unknown Author'}
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-[10px] uppercase font-bold bg-neutral-800/80 px-2 py-0.5 rounded text-neutral-300">{series.status || 'UNKNOWN'}</span>
-              <span className="text-[10px] uppercase font-bold bg-neutral-800/80 px-2 py-0.5 rounded text-neutral-300">{series.type || 'MANGA'}</span>
-            </div>
+          <h1 className="relative z-10 text-[24px] font-black tracking-tight leading-tight text-white text-center drop-shadow-md max-w-[95%] mb-1.5">
+            {series.title}
+          </h1>
+          <p className="relative z-10 text-[13px] font-medium text-neutral-400 text-center mb-4 drop-shadow">
+            {series.authors?.[0]?.name || 'Unknown Author'}
+          </p>
+          <div className="relative z-10 flex items-center justify-center gap-2">
+            <span className="text-[10px] tracking-wider uppercase font-bold bg-white/10 backdrop-blur-md px-2.5 py-1 rounded text-white">{series.status || 'UNKNOWN'}</span>
+            <span className="text-[10px] tracking-wider uppercase font-bold bg-[#E5092F]/20 backdrop-blur-md px-2.5 py-1 rounded text-[#E5092F]">{series.type || 'MANGA'}</span>
           </div>
         </div>
-      </div>
 
       {/* ── Action Buttons ──────────────────────────────────── */}
-      <div className="px-4 py-4 flex gap-3">
+      <div className="px-4 py-2 mt-2 flex gap-3 relative z-10">
         <button
           onClick={handleToggleLibrary}
           className={cn(
-            "flex-1 py-3 rounded flex flex-col items-center justify-center transition-colors shadow-sm",
-            inLibrary ? "bg-[#ff0000]/10 text-[#ff0000]" : "bg-[#1c1c1c] text-white"
+            "flex-1 py-3.5 rounded-full flex items-center justify-center gap-2 transition-transform active:scale-95",
+            inLibrary 
+              ? "bg-[#1C1C1C] text-[#E5092F] ring-1 ring-[#1C1C1C]" 
+              : "bg-[#E5092F] text-white"
           )}
         >
-          <Bookmark className="h-5 w-5 mb-1" fill={inLibrary ? "currentColor" : "none"} />
-          <span className="text-[11px] font-semibold">{inLibrary ? 'In Library' : 'Add to Library'}</span>
+          <Bookmark className="h-5 w-5" fill={inLibrary ? "currentColor" : "none"} />
+          <span className="text-[13px] font-bold tracking-wide">{inLibrary ? 'In Library' : 'Add to Library'}</span>
         </button>
 
         <button
           onClick={handleOpenWebsite}
-          className="flex-1 bg-[#1c1c1c] text-white py-3 rounded flex flex-col items-center justify-center transition-transform shadow-sm"
+          className="flex-1 bg-[#1C1C1C] text-white py-3.5 rounded-full flex items-center justify-center gap-2 transition-transform active:scale-95 ring-1 ring-white/5"
         >
-          <ExternalLink className="h-5 w-5 mb-1" />
-          <span className="font-semibold text-[11px]">Website</span>
+          <ExternalLink className="h-5 w-5" />
+          <span className="text-[13px] font-bold tracking-wide">Website</span>
         </button>
       </div>
 
       {/* ── Info & Description ──────────────────────────────── */}
-      <div className="px-4 py-2">
-        {series.alternativeNames && series.alternativeNames.length > 0 && (
-          <div className="text-sm text-neutral-400 italic mb-3 line-clamp-1">
-            {series.alternativeNames.map((n: any) => n.name).join(' • ')}
-          </div>
-        )}
-        
-        <div className="flex flex-wrap gap-2 mb-4">
+      <div className="px-4 py-4 relative z-10">
+        <div className="flex flex-wrap gap-1.5 mb-5">
           {series.genres?.map((g: any) => (
-            <span key={g.slug || g.name} className="px-2 py-1 bg-[#1c1c1c] text-neutral-300 text-xs rounded border border-neutral-800">
+            <span key={g.slug || g.name} className="px-3 py-1 bg-white/5 text-neutral-300 text-[11px] font-semibold rounded-full border border-white/5">
               {g.name}
             </span>
           ))}
         </div>
 
         <div
-          className="relative text-sm text-neutral-300 leading-relaxed"
+          className="relative text-[13px] text-neutral-300 leading-relaxed font-medium"
           onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
         >
           <div className={cn(
@@ -525,7 +594,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
             {series.synopsis || series.description || 'No description available.'}
           </div>
           {!isDescriptionExpanded && (
-            <div className="absolute bottom-0 right-0 bg-gradient-to-l from-[#0f0f0f] via-[#0f0f0f] pl-8 text-[#ff0000] font-bold">
+            <div className="absolute bottom-0 right-0 bg-gradient-to-l from-[#0B0D10] via-[#0B0D10] to-transparent pl-12 pt-1 text-[#E5092F] font-bold cursor-pointer">
               More
             </div>
           )}
@@ -535,14 +604,14 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
       {/* ── Chapters ────────────────────────────────────────── */}
       <div className="mt-4">
         {/* Sticky Header */}
-        <div className="sticky top-0 z-30 bg-[#0f0f0f] border-b border-neutral-900 py-2">
+        <div className="sticky top-0 z-30 bg-[#0B0D10] border-b border-neutral-900 py-2">
           <div className="flex items-center justify-between px-4 mb-2">
             <h2 className="text-[15px] font-bold text-white">
               {processedChapters.length} {processedChapters.length === 1 ? 'Chapter' : 'Chapters'}
             </h2>
           </div>
           <div className="flex items-center gap-4 px-4 text-neutral-400">
-            <button onClick={() => setActiveSheet('filter')} className={cn("flex items-center gap-1.5 p-1", (filterUnread || filterDownloaded) && "text-[#ff0000]")}>
+            <button onClick={() => setActiveSheet('filter')} className={cn("flex items-center gap-1.5 p-1", (filterUnread || filterDownloaded) && "text-[#E5092F]")}>
               <Filter className="h-5 w-5" />
             </button>
             <button onClick={() => setActiveSheet('sort')} className="flex items-center gap-1.5 p-1">
@@ -575,7 +644,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                   </span>
                   {/* NEW Badge if chapter is less than 7 days old */}
                   {!ch.isRead && ch.publishedAt && (new Date().getTime() - new Date(ch.publishedAt).getTime() < 7 * 24 * 60 * 60 * 1000) && (
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#ff0000] text-white">NEW</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#E5092F] text-white">NEW</span>
                   )}
                 </div>
                 {displayMode === 'comfortable' && ch.publishedAt && (
@@ -588,7 +657,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
               <div className="flex items-center gap-2 shrink-0">
                 {ch.downloadState === 'COMPLETED' ? (
                   <div className="p-2 text-neutral-500"><Check className="h-5 w-5" /></div>
-                ) : ch.downloadState === 'DOWNLOADING' ? (
+                ) : ch.downloadState === 'DOWNLOADING' || ch.downloadState === 'QUEUED' ? (
                   <div className="p-2"><div className="w-5 h-5 border-2 border-neutral-500 border-t-transparent rounded-full animate-spin" /></div>
                 ) : (
                   <button
@@ -622,6 +691,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
           )}
         </div>
       </div>
+      </main>
       
       {/* Floating Resume / Start Button */}
       {firstChapterToRead && (
@@ -631,7 +701,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
               const target = resumeChapter || firstChapterToRead;
               router.push(`/android-reader?seriesSlug=${series.slug}&chapterSlug=${target.slug}&id=${target.id}&seriesId=${series.id}`);
             }}
-            className="bg-[#ff0000] text-white px-6 py-4 rounded-full font-bold shadow-lg flex items-center gap-2 active:scale-95 transition-transform"
+            className="bg-[#E5092F] text-white px-6 py-4 rounded-full font-bold shadow-lg flex items-center gap-2 active:scale-95 transition-transform"
           >
             <Play className="h-5 w-5" fill="currentColor" />
             {resumeChapter ? 'Resume' : 'Start'}

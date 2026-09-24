@@ -6,6 +6,7 @@ const isCapacitor = process.env.NEXT_PUBLIC_CAPACITOR === 'true';
 const nextConfig: NextConfig = {
   compress: false,
   output: isCapacitor ? 'export' : undefined,
+  trailingSlash: isCapacitor,
   typescript: {
     ignoreBuildErrors: isCapacitor,
   },

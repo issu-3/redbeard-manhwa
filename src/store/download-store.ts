@@ -28,7 +28,8 @@ export interface DownloadState {
 
 interface DownloadStore {
   downloads: Record<string, DownloadState>;
-  startDownload: (chapterId: string, metadata: DownloadMetadata) => void;
+  queueDownload: (chapterId: string, metadata: DownloadMetadata) => void;
+  startDownload: (chapterId: string, metadata?: DownloadMetadata) => void;
   updateProgress: (chapterId: string, progress: number) => void;
   markCompleted: (chapterId: string, localUri: string) => void;
   markFailed: (chapterId: string, error: string) => void;
@@ -51,17 +52,33 @@ export const useDownloadStore = create<DownloadStore>()(
     (set, get) => ({
       downloads: {},
 
-      startDownload: (chapterId, metadata) => set((state) => ({
+      queueDownload: (chapterId, metadata) => set((state) => ({
         downloads: {
           ...state.downloads,
           [chapterId]: {
-            status: 'DOWNLOADING',
+            status: 'QUEUED',
             progress: 0,
             metadata,
             createdAt: Date.now()
           }
         }
       })),
+
+      startDownload: (chapterId, metadata) => set((state) => {
+        const current = state.downloads[chapterId];
+        return {
+          downloads: {
+            ...state.downloads,
+            [chapterId]: {
+              ...(current || {}),
+              status: 'DOWNLOADING',
+              progress: 0,
+              metadata: metadata || current?.metadata,
+              createdAt: current?.createdAt || Date.now()
+            }
+          }
+        };
+      }),
 
       updateProgress: (chapterId, progress) => set((state) => {
         const current = state.downloads[chapterId];

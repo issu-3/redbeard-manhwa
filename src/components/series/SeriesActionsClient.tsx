@@ -28,14 +28,16 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
   useEffect(() => {
     setIsMounted(true);
 
-    fetch(`/api/series/${seriesSlug}/user-data`)
-      .then(res => res.json())
-      .then(data => {
-        setIsBookmarked(data.isBookmarked);
-        setContinueReadingChapter(data.continueReadingChapter);
-      })
-      .catch(console.error)
-      .finally(() => setIsLoading(false));
+    import('@/lib/native/api').then(({ nativeFetch }) => {
+      nativeFetch(`/api/series/${seriesSlug}/user-data`)
+        .then(res => res.json())
+        .then(data => {
+          setIsBookmarked(data.isBookmarked);
+          setContinueReadingChapter(data.continueReadingChapter);
+        })
+        .catch(console.error)
+        .finally(() => setIsLoading(false));
+    });
   }, [seriesSlug]);
 
   const continueChapterObj = continueReadingChapter 
@@ -79,29 +81,39 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
                 const targetChapter = hasHistory ? continueChapterObj : (chapters.length > 0 ? chapters[0] : null);
                 const chapterLabel = targetChapter?.label || targetChapter?.number?.toString() || '1';
 
-                const handleDownload = (urlToDownload: string) => {
+                if (targetChapter) {
+                  const { useDownloadStore } = await import('@/store/download-store');
+                  const state = useDownloadStore.getState().downloads[targetChapter.id];
+                  if (state && state.status === 'COMPLETED' && state.localUri) {
+                    router.push(`/android-reader?seriesSlug=${seriesSlug}&chapterSlug=${chapterLabel}&id=${targetChapter.id}&seriesId=${seriesId}`);
+                    return;
+                  }
+                }
+
+                const handleDownload = (urlToDownload: string, apiDownloadUrl?: string) => {
                   if (targetChapter) {
                     import('@/lib/native-download').then(({ startNativeDownload }) => {
-                      startNativeDownload(targetChapter.id, urlToDownload, seriesId, seriesTitle, seriesSlug, chapterLabel);
+                      startNativeDownload(targetChapter.id, urlToDownload, seriesId, seriesTitle, seriesSlug, chapterLabel, apiDownloadUrl);
                     });
                   }
                 };
 
                 if (targetLink.startsWith('/api/')) {
+                  const resolveUrl = targetLink + (targetLink.includes('?') ? '&' : '?') + 'resolve=true';
                   try {
-                    const resolveUrl = targetLink + (targetLink.includes('?') ? '&' : '?') + 'resolve=true';
-                    const res = await fetch(resolveUrl);
+                    const { nativeFetch } = await import('@/lib/native/api');
+                    const res = await nativeFetch(resolveUrl);
                     if (res.ok) {
                       const data = await res.json();
                       if (data.url) {
-                        handleDownload(data.url);
+                        handleDownload(data.url, resolveUrl);
                         return;
                       }
                     }
                   } catch (err) {
                     console.error('Failed to resolve API URL', err);
                   }
-                  const absoluteUrl = new URL(targetLink, window.location.origin).toString();
+                  const absoluteUrl = `https://redbeard.store${targetLink}`;
                   handleDownload(absoluteUrl);
                 } else if (targetLink.startsWith('http')) {
                   if (targetLink.toLowerCase().endsWith('.pdf')) {
@@ -157,29 +169,39 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
               const targetChapter = hasHistory ? continueChapterObj : (chapters.length > 0 ? chapters[0] : null);
               const chapterLabel = targetChapter?.label || targetChapter?.number?.toString() || '1';
 
-              const handleDownload = (urlToDownload: string) => {
+              if (targetChapter) {
+                const { useDownloadStore } = await import('@/store/download-store');
+                const state = useDownloadStore.getState().downloads[targetChapter.id];
+                if (state && state.status === 'COMPLETED' && state.localUri) {
+                  router.push(`/android-reader?seriesSlug=${seriesSlug}&chapterSlug=${chapterLabel}&id=${targetChapter.id}&seriesId=${seriesId}`);
+                  return;
+                }
+              }
+
+              const handleDownload = (urlToDownload: string, apiDownloadUrl?: string) => {
                 if (targetChapter) {
                   import('@/lib/native-download').then(({ startNativeDownload }) => {
-                    startNativeDownload(targetChapter.id, urlToDownload, seriesId, seriesTitle, seriesSlug, chapterLabel);
+                    startNativeDownload(targetChapter.id, urlToDownload, seriesId, seriesTitle, seriesSlug, chapterLabel, apiDownloadUrl);
                   });
                 }
               };
 
               if (targetLink.startsWith('/api/')) {
+                const resolveUrl = targetLink + (targetLink.includes('?') ? '&' : '?') + 'resolve=true';
                 try {
-                  const resolveUrl = targetLink + (targetLink.includes('?') ? '&' : '?') + 'resolve=true';
-                  const res = await fetch(resolveUrl);
+                  const { nativeFetch } = await import('@/lib/native/api');
+                  const res = await nativeFetch(resolveUrl);
                   if (res.ok) {
                     const data = await res.json();
                     if (data.url) {
-                      handleDownload(data.url);
+                      handleDownload(data.url, resolveUrl);
                       return;
                     }
                   }
                 } catch (err) {
                   console.error('Failed to resolve API URL', err);
                 }
-                const absoluteUrl = new URL(targetLink, window.location.origin).toString();
+                const absoluteUrl = `https://redbeard.store${targetLink}`;
                 handleDownload(absoluteUrl);
               } else if (targetLink.startsWith('http')) {
                 if (targetLink.toLowerCase().endsWith('.pdf')) {

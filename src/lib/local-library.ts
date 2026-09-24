@@ -70,9 +70,11 @@ export class LocalLibraryRepository {
           slug: s.slug,
           coverImage: s.coverImage || null,
           status: s.status,
+          genres: s.genres,
+          categories: s.categories,
           isBookmarked: true,
-          addedAt: Date.now(), // we might want to read this from sqlite later
-          updatedAt: Date.now(),
+          addedAt: s.addedAt || Date.now(),
+          updatedAt: s.updatedAt || Date.now(),
         };
       }
       return data;
@@ -82,9 +84,9 @@ export class LocalLibraryRepository {
     }
   }
 
-  static async getSeries(userId: string, seriesId: string): Promise<LibrarySeriesEntity | null> {
+  static async getSeriesBySlug(userId: string, slug: string): Promise<LibrarySeriesEntity | null> {
     if (!this.isNativeApp()) return null;
-    const series = await SeriesRepository.getSeries(userId, seriesId);
+    const series = await SeriesRepository.getSeriesBySlug(userId, slug);
     if (!series) return null;
     
     return {
@@ -93,10 +95,32 @@ export class LocalLibraryRepository {
       slug: series.slug,
       coverImage: series.coverImage || null,
       status: series.status,
+      author: series.author,
+      artist: series.artist,
+      description: series.description,
+      genres: series.genres,
       isBookmarked: true,
       addedAt: Date.now(),
       updatedAt: Date.now(),
     };
+  }
+
+  static async getChapters(userId: string, seriesId: string): Promise<any[]> {
+    if (!this.isNativeApp()) return [];
+    const chapters = await SeriesRepository.getChapters(userId, seriesId);
+    return chapters.map(ch => ({
+      id: ch.serverChapterId,
+      title: ch.title,
+      number: parseFloat(ch.chapterNumber) || 0,
+      label: ch.label,
+      slug: ch.slug,
+      publishedAt: ch.publishedAt,
+    }));
+  }
+
+  static async saveChapters(userId: string, seriesId: string, chapters: any[]): Promise<void> {
+    if (!this.isNativeApp()) return;
+    await SeriesRepository.saveChapters(userId, seriesId, chapters);
   }
 
   static async clearUserLibrary(userId: string): Promise<void> {
@@ -118,11 +142,15 @@ export class LocalLibraryRepository {
     if (!this.isNativeApp()) return {};
     
     await SeriesRepository.saveToLibrary(userId, {
-      id: series.seriesId,
+      seriesId: series.seriesId,
       title: series.title,
       slug: series.slug,
-      coverImage: series.coverImage || undefined,
-      status: series.status || undefined,
+      coverImage: series.coverImage || null,
+      status: series.status || null,
+      author: series.author || null,
+      artist: series.artist || null,
+      description: series.description || null,
+      genres: series.genres || null,
     } as any);
 
     return this.getAllSeries(userId);

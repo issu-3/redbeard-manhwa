@@ -1,26 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Library, Compass, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 
 const AndroidLibraryView = dynamic(() => import('@/components/native/AndroidLibraryView').then(mod => mod.AndroidLibraryView), { ssr: false });
 const AndroidBrowseView = dynamic(() => import('@/components/native/AndroidBrowseView').then(mod => mod.AndroidBrowseView), { ssr: false });
+const AndroidMoreView = dynamic(() => import('@/components/native/AndroidMoreView').then(mod => mod.AndroidMoreView), { ssr: false });
 
 export default function AndroidAppRoot() {
   const [currentTab, setCurrentTab] = useState<'library' | 'browse' | 'more'>('library');
 
+  useEffect(() => {
+    const onBackPress = (e: Event) => {
+      if (currentTab !== 'library') {
+        e.preventDefault();
+        setCurrentTab('library');
+      }
+    };
+    document.addEventListener('hardwareBackPress', onBackPress);
+    return () => document.removeEventListener('hardwareBackPress', onBackPress);
+  }, [currentTab]);
+
   return (
-    <div className="flex min-h-screen flex-col bg-background pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]">
-      <main className="flex-1 flex flex-col">
+    <div className="flex h-[100dvh] overflow-hidden flex-col bg-background pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]">
+      <main className="flex-1 flex flex-col relative overflow-hidden">
         {currentTab === 'library' && <AndroidLibraryView />}
         {currentTab === 'browse' && <AndroidBrowseView />}
-        {currentTab === 'more' && (
-          <div className="flex-1 flex items-center justify-center p-4">
-            <h1 className="text-2xl font-bold text-text-muted">More Settings Coming Soon</h1>
-          </div>
-        )}
+        {currentTab === 'more' && <AndroidMoreView />}
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-[calc(4.5rem+env(safe-area-inset-bottom,0px))] items-center justify-around bg-surface border-t border-border-subtle pb-[env(safe-area-inset-bottom,0px)] px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.2)]">

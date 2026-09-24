@@ -83,7 +83,8 @@ export async function GET(
         id: true, 
         seriesId: true, 
         downloadUrl: true, 
-        sourceType: true 
+        sourceType: true,
+        downloadProvider: true
       }
     });
 
@@ -140,9 +141,37 @@ export async function GET(
     // 3. Check for native resolve parameter
     const { searchParams } = new URL(request.url);
     if (searchParams.get('resolve') === 'true') {
+      try {
+        const { resolverManager } = await import('@/lib/providers/factory');
+        const resolver = resolverManager.getResolver(chapter.downloadUrl);
+
+        if (resolver) {
+          const resolved = await resolver.resolve(chapter.downloadUrl);
+          
+          if (!resolved.success) {
+             return NextResponse.json({ success: false, error: resolved.error }, { status: 400 });
+          }
+
+          return NextResponse.json({
+            success: true,
+            url: resolved.downloadUrl, // For backward compatibility
+            fileName: resolved.fileName,
+            mimeType: resolved.mimeType,
+            size: resolved.size,
+            downloadUrl: resolved.downloadUrl,
+            expiresAt: resolved.expiresAt,
+            provider: chapter.downloadProvider
+          });
+        }
+      } catch (err: any) {
+        return NextResponse.json({ success: false, error: { message: err.message } }, { status: 500 });
+      }
+
       return NextResponse.json({
+        success: true,
         url: chapter.downloadUrl,
-        provider: chapter.sourceType
+        downloadUrl: chapter.downloadUrl,
+        provider: chapter.downloadProvider || chapter.sourceType
       });
     }
 
