@@ -7,7 +7,7 @@ import { SeriesRepository } from '@/lib/sqlite/repository';
 import Image from 'next/image';
 import { nativeUserId } from '@/components/native/NativeInitializer';
 import { Capacitor } from '@capacitor/core';
-import { useDownloadStore } from '@/store/download-store';
+import { useDownloadStore, DownloadStateStatus } from '@/store/download-store';
 
 interface DownloadItem {
   id: string;
@@ -16,7 +16,7 @@ interface DownloadItem {
   title: string;
   chapterNumber: string;
   seriesCover: string | null;
-  downloadState: 'PENDING' | 'DOWNLOADING' | 'PAUSED' | 'DOWNLOADED' | 'IDLE';
+  downloadState: DownloadStateStatus;
   progress?: number;
 }
 
@@ -102,10 +102,10 @@ export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
                       />
                     </div>
                   )}
-                  {item.downloadState === 'PAUSED' && (
-                    <p className="mt-1 text-xs font-bold text-orange-500 uppercase tracking-wide">Paused</p>
+                  {item.downloadState === 'FAILED' && (
+                    <p className="mt-1 text-xs font-bold text-orange-500 uppercase tracking-wide">Failed</p>
                   )}
-                  {item.downloadState === 'PENDING' && (
+                  {item.downloadState === 'QUEUED' && (
                     <p className="mt-1 text-xs font-bold text-neutral-500 uppercase tracking-wide">Waiting...</p>
                   )}
                 </div>
@@ -116,7 +116,7 @@ export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
                     onClick={() => handlePauseResume(item)}
                     className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-400 active:bg-neutral-800 transition-colors"
                   >
-                    {item.downloadState === 'PAUSED' ? (
+                    {item.downloadState === 'FAILED' || item.downloadState === 'CANCELLED' ? (
                       <Play className="h-5 w-5" />
                     ) : (
                       <Pause className="h-5 w-5" />
