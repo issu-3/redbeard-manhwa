@@ -92,8 +92,14 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
 
                 const handleDownload = (urlToDownload: string, apiDownloadUrl?: string) => {
                   if (targetChapter) {
-                    import('@/lib/native-download').then(({ startNativeDownload }) => {
-                      startNativeDownload(targetChapter.id, urlToDownload, seriesId, seriesTitle, seriesSlug, chapterLabel, apiDownloadUrl);
+                    import('@/store/download-store').then(({ useDownloadStore }) => {
+                      useDownloadStore.getState().queueDownload(targetChapter.id, {
+                        seriesId,
+                        seriesTitle,
+                        seriesSlug,
+                        chapterNumber: chapterLabel,
+                        filename: `${seriesSlug}-chapter-${chapterLabel}.pdf`,
+                      });
                     });
                   }
                 };
@@ -180,8 +186,14 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
 
               const handleDownload = (urlToDownload: string, apiDownloadUrl?: string) => {
                 if (targetChapter) {
-                  import('@/lib/native-download').then(({ startNativeDownload }) => {
-                    startNativeDownload(targetChapter.id, urlToDownload, seriesId, seriesTitle, seriesSlug, chapterLabel, apiDownloadUrl);
+                  import('@/store/download-store').then(({ useDownloadStore }) => {
+                    useDownloadStore.getState().queueDownload(targetChapter.id, {
+                      seriesId,
+                      seriesTitle,
+                      seriesSlug,
+                      chapterNumber: chapterLabel,
+                      filename: `${seriesSlug}-chapter-${chapterLabel}.pdf`,
+                    });
                   });
                 }
               };
