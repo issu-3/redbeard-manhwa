@@ -4,15 +4,26 @@ export class TeraBoxResolver implements FileResolver {
   canResolve(url: string): boolean {
     try {
       const parsed = new URL(url);
-      return parsed.hostname.includes('terabox.com') || parsed.hostname.includes('teraboxapp.com');
+      const host = parsed.hostname;
+      return host.includes('terabox.com') || 
+             host.includes('teraboxapp.com') ||
+             host.includes('1024tera.com') ||
+             host.includes('terafileshare.com') ||
+             host.includes('freeterabox.com') ||
+             host.includes('terabox.app') ||
+             host.includes('mirrobox.com') ||
+             host.includes('nephobox.com');
     } catch {
       return false;
     }
   }
 
   async resolve(shareUrl: string): Promise<ResolvedFile> {
-    const token = process.env.TERAGRAB_API_TOKEN;
-    if (!token) {
+    // The NDUS cookie is required for the TeraBox API to work.
+    // It should be provided via environment variables.
+    const ndusCookie = process.env.TERABOX_NDUS_COOKIE;
+    
+    if (!ndusCookie) {
       return {
         success: false,
         fileName: '',
@@ -22,36 +33,22 @@ export class TeraBoxResolver implements FileResolver {
         expiresAt: null,
         error: {
           code: 'RESOLVER_UNAVAILABLE',
-          message: 'TERAGRAB_API_TOKEN is not configured on the server'
+          message: 'TERABOX_NDUS_COOKIE is not configured on the server'
         }
       };
     }
 
     try {
-      const response = await fetch(`https://teragrab.com/api/v1/resolve?url=${encodeURIComponent(shareUrl)}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        // Do not cache these requests permanently
-        next: { revalidate: 60 }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        let message = 'Failed to resolve TeraBox URL';
-        let code = 'RESOLVE_FAILED';
-
-        switch (response.status) {
-          case 400: message = 'Invalid TeraBox URL'; code = 'INVALID_URL'; break;
-          case 401: message = 'Unauthorized (TeraGrab API)'; code = 'RESOLVER_UNAUTHORIZED'; break;
-          case 402: message = 'Insufficient credits (TeraGrab API)'; code = 'RESOLVER_QUOTA_EXCEEDED'; break;
-          case 403: message = 'Plan required (TeraGrab API)'; code = 'RESOLVER_QUOTA_EXCEEDED'; break;
-          case 404: message = 'File not found or deleted on TeraBox'; code = 'FILE_NOT_FOUND'; break;
-          case 429: message = 'Rate limited (TeraGrab API)'; code = 'RATE_LIMITED'; break;
-          case 500: message = 'TeraGrab server error'; code = 'RESOLVER_ERROR'; break;
+      const parsedUrl = new URL(shareUrl);
+      let surl = parsedUrl.searchParams.get("surl");
+      if (!surl) {
+        const match = parsedUrl.pathname.match(/\/s\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          surl = match[1];
         }
+      }
 
+      if (!surl) {
         return {
           success: false,
           fileName: '',
@@ -60,15 +57,31 @@ export class TeraBoxResolver implements FileResolver {
           downloadUrl: '',
           expiresAt: null,
           error: {
-            code,
-            message: errorData.error || message
+            code: 'INVALID_URL',
+            message: 'Could not extract surl from TeraBox URL'
           }
         };
       }
 
-      const data = await response.json();
+      let shortUrl = surl;
+      if (surl.startsWith("1")) {
+        shortUrl = surl.substring(1);
+      }
 
-      if (!data.ok || !data.download_url) {
+      const cookieString = `ndus=${ndusCookie}`;
+      const headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/145.0.0.0 Safari/537.36",
+        "Cookie": cookieString,
+      };
+
+      const firstUrl = `https://dm.terabox.app/sharing/link?surl=${surl}`;
+      
+      const response = await fetch(firstUrl, { 
+        headers,
+        next: { revalidate: 0 } // no cache
+      });
+      
+      if (!response.ok) {
         return {
           success: false,
           fileName: '',
@@ -77,20 +90,130 @@ export class TeraBoxResolver implements FileResolver {
           downloadUrl: '',
           expiresAt: null,
           error: {
-            code: 'INVALID_RESPONSE',
-            message: 'Invalid response from TeraGrab'
+            code: 'RESOLVE_FAILED',
+            message: `Failed to fetch TeraBox link page (HTTP ${response.status})`
+          }
+        };
+      }
+
+      const text = await response.text();
+      const match = text.match(/fn%28%22(.*?)%22%29/);
+      
+      if (!match || !match[1]) {
+        return {
+          success: false,
+          fileName: '',
+          mimeType: '',
+          size: null,
+          downloadUrl: '',
+          expiresAt: null,
+          error: {
+            code: 'TOKEN_NOT_FOUND',
+            message: 'Failed to extract jsToken. Verification might be required or the cookie expired.'
+          }
+        };
+      }
+      
+      const jsToken = match[1];
+
+      const apiUrl = new URL("https://dm.terabox.app/share/list");
+      apiUrl.searchParams.append("app_id", "250528");
+      apiUrl.searchParams.append("jsToken", jsToken);
+      apiUrl.searchParams.append("site_referer", "https://www.terabox.app/");
+      apiUrl.searchParams.append("shorturl", shortUrl);
+      apiUrl.searchParams.append("root", "1");
+
+      const apiHeaders = {
+        "Host": "dm.terabox.app",
+        "User-Agent": headers["User-Agent"],
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "X-Requested-With": "XMLHttpRequest",
+        "Referer": `https://dm.terabox.app/sharing/link?surl=${shortUrl}&clearCache=1`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Origin": "https://dm.terabox.app",
+        "Cookie": cookieString,
+      };
+
+      const apiResponse = await fetch(apiUrl.toString(), {
+        headers: apiHeaders,
+        next: { revalidate: 0 }
+      });
+
+      if (!apiResponse.ok) {
+        return {
+          success: false,
+          fileName: '',
+          mimeType: '',
+          size: null,
+          downloadUrl: '',
+          expiresAt: null,
+          error: {
+            code: 'API_FAILED',
+            message: `TeraBox API request failed (HTTP ${apiResponse.status})`
+          }
+        };
+      }
+
+      const data = await apiResponse.json();
+
+      if (data && data.error_code !== 0 && data.errno !== 0) {
+        return {
+          success: false,
+          fileName: '',
+          mimeType: '',
+          size: null,
+          downloadUrl: '',
+          expiresAt: null,
+          error: {
+            code: 'API_ERROR',
+            message: `TeraBox returned error code ${data.errno || data.error_code}`
+          }
+        };
+      }
+
+      if (!data || !data.list || data.list.length === 0) {
+        return {
+          success: false,
+          fileName: '',
+          mimeType: '',
+          size: null,
+          downloadUrl: '',
+          expiresAt: null,
+          error: {
+            code: 'FILE_NOT_FOUND',
+            message: 'No files found or file was deleted'
+          }
+        };
+      }
+
+      const firstItem = data.list[0];
+      const downloadLink = firstItem.dlink;
+
+      if (!downloadLink) {
+        return {
+          success: false,
+          fileName: '',
+          mimeType: '',
+          size: null,
+          downloadUrl: '',
+          expiresAt: null,
+          error: {
+            code: 'NO_DLINK',
+            message: 'Direct download link missing from TeraBox response'
           }
         };
       }
 
       return {
         success: true,
-        fileName: data.filename || 'chapter.pdf',
+        fileName: firstItem.server_filename || 'chapter.pdf',
         mimeType: 'application/pdf',
-        size: data.size_bytes || null,
-        downloadUrl: data.download_url,
-        expiresAt: data.expires_at || null,
+        size: firstItem.size || null,
+        downloadUrl: downloadLink,
+        expiresAt: null, // TeraBox download links often don't have an explicit expiry returned
       };
+
     } catch (error: any) {
       console.error('TeraBox Resolution Error:', error);
       return {
