@@ -27,6 +27,8 @@ export class SeriesRepository {
         description: row.description,
         status: row.status,
         genres: row.genres ? JSON.parse(row.genres) : undefined,
+        notes: row.notes,
+        categories: row.categories ? JSON.parse(row.categories) : undefined,
       } as unknown as LibrarySeriesEntity));
     } catch (e) {
       console.error('Failed to get library from SQLite', e);
@@ -46,22 +48,25 @@ export class SeriesRepository {
       const addedAt = Date.now();
       // @ts-ignore
       const genresStr = series.genres ? JSON.stringify(series.genres) : null;
+      const categoriesStr = series.categories ? JSON.stringify(series.categories) : null;
 
       await db.run(
         `INSERT INTO series (
           localId, userId, serverSeriesId, title, slug, coverUrl, 
-          author, artist, description, status, genres, inLibrary, addedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+          author, artist, description, status, genres, notes, categories, inLibrary, addedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
         ON CONFLICT(userId, serverSeriesId) DO UPDATE SET
           inLibrary = 1,
           title = excluded.title,
           coverUrl = excluded.coverUrl,
+          notes = COALESCE(excluded.notes, series.notes),
+          categories = COALESCE(excluded.categories, series.categories),
           addedAt = excluded.addedAt`,
         [
           localId, userId, series.seriesId, series.title, series.slug, series.coverImage || null,
           // @ts-ignore
           series.author || null, series.artist || null, series.description || null,
-          series.status || null, genresStr, addedAt
+          series.status || null, genresStr, series.notes || null, categoriesStr, addedAt
         ]
       );
     } catch (e) {
@@ -129,6 +134,8 @@ export class SeriesRepository {
         description: row.description,
         status: row.status,
         genres: row.genres ? JSON.parse(row.genres) : undefined,
+        notes: row.notes,
+        categories: row.categories ? JSON.parse(row.categories) : undefined,
       } as unknown as LibrarySeriesEntity;
     } catch (e) {
       console.error('Failed to get series', e);
@@ -251,6 +258,41 @@ export class SeriesRepository {
     } catch (e) {
       await db.execute('ROLLBACK TRANSACTION');
       console.error('Failed to sync library', e);
+    }
+  }
+
+  /**
+   * Update notes for a series
+   */
+  static async updateNotes(userId: string, serverSeriesId: string, notes: string | null): Promise<void> {
+    const db = await getDB();
+    if (!db) return;
+
+    try {
+      await db.run(
+        'UPDATE series SET notes = ? WHERE userId = ? AND serverSeriesId = ?',
+        [notes, userId, serverSeriesId]
+      );
+    } catch (e) {
+      console.error('Failed to update notes', e);
+    }
+  }
+
+  /**
+   * Update categories for a series
+   */
+  static async updateCategories(userId: string, serverSeriesId: string, categories: string[] | null): Promise<void> {
+    const db = await getDB();
+    if (!db) return;
+
+    try {
+      const categoriesStr = categories ? JSON.stringify(categories) : null;
+      await db.run(
+        'UPDATE series SET categories = ? WHERE userId = ? AND serverSeriesId = ?',
+        [categoriesStr, userId, serverSeriesId]
+      );
+    } catch (e) {
+      console.error('Failed to update categories', e);
     }
   }
 

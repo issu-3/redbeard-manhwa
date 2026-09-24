@@ -5,7 +5,6 @@ import { ArrowLeft, Settings, MoreVertical, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useDownloadStore } from '@/store/download-store';
 import { SeriesRepository } from '@/lib/sqlite/repository';
-import { useSession } from 'next-auth/react';
 import { Capacitor } from '@capacitor/core';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { nativeUserId } from '@/components/native/NativeInitializer';
@@ -27,7 +26,6 @@ export function AndroidReaderView({
   seriesId: string
 }) {
   const router = useRouter();
-  const { data: session } = useSession();
   const { getDownloadState } = useDownloadStore();
 
   const [showUI, setShowUI] = useState(true);
@@ -60,7 +58,7 @@ export function AndroidReaderView({
   useEffect(() => {
     // If not on native, or if we somehow don't have an ID, do nothing.
     // On native, nativeUserId will be either the device guest ID or the authenticated user ID.
-    const activeUserId = Capacitor.isNativePlatform() ? nativeUserId : session?.user?.id;
+    const activeUserId = nativeUserId || 'guest';
 
     if (!activeUserId || !numPages) return;
 
@@ -71,7 +69,7 @@ export function AndroidReaderView({
     // Save progress periodically or on page change
     const timer = setTimeout(saveProgress, 1000);
     return () => clearTimeout(timer);
-  }, [pageNumber, numPages, session?.user?.id, chapterId, seriesId]);
+  }, [pageNumber, numPages, chapterId, seriesId]);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);

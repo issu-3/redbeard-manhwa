@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 import type { SeriesCardData } from '@/types';
 import { useDebounce } from '@/hooks';
 import { searchSeries } from '@/lib/native/api';
+import { TYPE_OPTIONS } from '@/lib/content-types';
+import { STATUS_OPTIONS } from '@/lib/constants';
 
 const CATEGORIES = [
   { id: 'trending', label: 'Trending', params: { sort: 'popular' } },
@@ -25,15 +27,52 @@ export function AndroidBrowseView() {
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 400);
 
-  // Filter State
+  // Filter State (Applied)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [genreFilter, setGenreFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
+  // Draft Filter State
+  const [draftCategory, setDraftCategory] = useState(CATEGORIES[0]);
+  const [draftGenre, setDraftGenre] = useState('');
+  const [draftType, setDraftType] = useState('');
+  const [draftStatus, setDraftStatus] = useState('');
+
+  // Genres Data
+  const [genres, setGenres] = useState<{name: string, slug: string}[]>([]);
+
+  useEffect(() => {
+    import('@/lib/native/api').then(({ nativeFetch }) => {
+      nativeFetch('/api/genres')
+        .then(res => res.json())
+        .then(json => {
+          if (json.success) setGenres(json.data);
+        })
+        .catch(console.error);
+    });
+  }, []);
+
+  const openFilter = () => {
+    setDraftCategory(activeCategory);
+    setDraftGenre(genreFilter);
+    setDraftType(typeFilter);
+    setDraftStatus(statusFilter);
+    setIsFilterOpen(true);
+  };
+
+  const applyFilters = () => {
+    setActiveCategory(draftCategory);
+    setGenreFilter(draftGenre);
+    setTypeFilter(draftType);
+    setStatusFilter(draftStatus);
+    setIsFilterOpen(false);
+  };
+
   // Data State
   const [results, setResults] = useState<SeriesCardData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [errorState, setErrorState] = useState<'none' | 'network' | 'api'>('none');
   const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -41,7 +80,9 @@ export function AndroidBrowseView() {
 
   const fetchResults = useCallback(async (isLoadMore = false) => {
     try {
-      if (!isLoadMore) {
+      if (isLoadMore) {
+        setIsFetchingMore(true);
+      } else {
         setIsLoading(true);
         setErrorState('none');
       }
@@ -54,18 +95,26 @@ export function AndroidBrowseView() {
 
       if (isSearchMode && debouncedSearchQuery.trim()) {
         params.append('q', debouncedSearchQuery.trim());
-      } else if (!isSearchMode) {
-        // Apply category params
-        Object.entries(activeCategory.params).forEach(([k, v]) => {
-          params.append(k, v as string);
-        });
-      } else {
+      } else if (isSearchMode && !debouncedSearchQuery.trim()) {
         // Search mode but empty query
         setResults([]);
         setHasMore(false);
         setIsLoading(false);
         return;
       }
+
+      // Category base params
+      const categoryParams = { ...activeCategory.params };
+
+      // Overrides
+      if (statusFilter) {
+         delete (categoryParams as any).status; // user dropdown overrides category status
+      }
+
+      // Apply category params
+      Object.entries(categoryParams).forEach(([k, v]) => {
+        params.append(k, v as string);
+      });
 
       // Apply Filters
       if (genreFilter) params.append('genre', genreFilter);
@@ -82,7 +131,10 @@ export function AndroidBrowseView() {
 
       if (json.success) {
         if (isLoadMore) {
-          setResults(prev => [...prev, ...json.data]);
+          setResults(prev => {
+            const merged = [...prev, ...json.data];
+            return Array.from(new Map(merged.map(item => [item.id, item])).values());
+          });
         } else {
           setResults(json.data);
           if (scrollRef.current) scrollRef.current.scrollTop = 0;
@@ -101,6 +153,7 @@ export function AndroidBrowseView() {
       }
     } finally {
       setIsLoading(false);
+      setIsFetchingMore(false);
     }
   }, [activeCategory, isSearchMode, debouncedSearchQuery, skip, genreFilter, typeFilter, statusFilter]);
 
@@ -113,15 +166,23 @@ export function AndroidBrowseView() {
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    if (scrollHeight - scrollTop <= clientHeight * 1.5 && hasMore && !isLoading && errorState === 'none') {
+    if (scrollHeight - scrollTop <= clientHeight * 1.5 && hasMore && !isLoading && !isFetchingMore && errorState === 'none') {
       fetchResults(true);
     }
   };
 
   const resetFilters = () => {
+    setDraftCategory(CATEGORIES[0]);
+    setDraftGenre('');
+    setDraftType('');
+    setDraftStatus('');
+    
+    setActiveCategory(CATEGORIES[0]);
     setGenreFilter('');
     setTypeFilter('');
     setStatusFilter('');
+    setSearchQuery('');
+    setIsSearchMode(false);
     setIsFilterOpen(false);
   };
 
@@ -139,7 +200,7 @@ export function AndroidBrowseView() {
       );
     }
 
-    if (errorState === 'network') {
+    if (errorState === 'network' && results.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-32 px-4 text-center">
           <WifiOff className="h-16 w-16 mb-6 text-neutral-600" />
@@ -155,7 +216,7 @@ export function AndroidBrowseView() {
       );
     }
 
-    if (errorState === 'api') {
+    if (errorState === 'api' && results.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-32 px-4 text-center">
           <Loader2 className="h-16 w-16 mb-6 text-neutral-600" />
@@ -228,9 +289,33 @@ export function AndroidBrowseView() {
         ))}
         
         {/* Load More Indicator */}
-        {isLoading && hasMore && (
+        {isFetchingMore && hasMore && errorState === 'none' && (
           <div className="col-span-2 flex justify-center py-6">
             <Loader2 className="h-6 w-6 animate-spin text-[#ff0000]" />
+          </div>
+        )}
+
+        {/* Pagination Error State */}
+        {errorState !== 'none' && results.length > 0 && (
+          <div className="col-span-2 flex flex-col items-center justify-center py-6 gap-2">
+            <span className="text-sm text-neutral-400">
+              {errorState === 'network' ? 'Connection lost' : 'Failed to load more'}
+            </span>
+            <button 
+              onClick={() => fetchResults(true)}
+              className="flex items-center gap-2 bg-neutral-800 text-white px-4 py-2 rounded-full text-xs font-medium active:bg-neutral-700"
+            >
+              <RefreshCcw className="h-3 w-3" /> Retry
+            </button>
+          </div>
+        )}
+
+        {/* End of results indicator */}
+        {!isFetchingMore && !isLoading && !hasMore && results.length > 0 && (
+          <div className="col-span-2 flex justify-center py-8">
+            <span className="text-xs text-neutral-500 font-semibold tracking-widest uppercase">
+              No more series
+            </span>
           </div>
         )}
       </div>
@@ -253,10 +338,11 @@ export function AndroidBrowseView() {
                   <Search className="h-6 w-6" />
                 </button>
                 <button 
-                  onClick={() => setIsFilterOpen(true)}
-                  className="p-1 active:bg-neutral-800 rounded-full transition-colors relative"
+                  onClick={openFilter}
+                  className="flex items-center gap-1.5 p-1 px-2 active:bg-neutral-800 rounded-full transition-colors relative"
                 >
-                  <Filter className="h-6 w-6" />
+                  <Filter className="h-5 w-5" />
+                  <span className="text-sm font-medium">{activeCategory.label}</span>
                   {(genreFilter || typeFilter || statusFilter) && (
                     <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#ff0000] rounded-full border border-[#121212]" />
                   )}
@@ -293,29 +379,6 @@ export function AndroidBrowseView() {
             </div>
           )}
         </div>
-
-        {/* Category Tabs */}
-        {!isSearchMode && (
-          <div className="flex overflow-x-auto no-scrollbar border-b border-neutral-800/50">
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat)}
-                className={cn(
-                  "relative px-5 py-3 text-sm font-semibold whitespace-nowrap transition-colors",
-                  activeCategory.id === cat.id
-                    ? "text-[#ff0000]"
-                    : "text-neutral-400 active:text-neutral-300"
-                )}
-              >
-                {cat.label}
-                {activeCategory.id === cat.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#ff0000] rounded-t-full" />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
       </header>
 
       {/* Main Content Area */}
@@ -331,42 +394,81 @@ export function AndroidBrowseView() {
       {isFilterOpen && (
         <>
           <div 
-            className="fixed inset-0 bg-black/60 z-50 transition-opacity" 
+            className="fixed inset-0 bg-black/60 z-[100] transition-opacity" 
             onClick={() => setIsFilterOpen(false)}
           />
-          <div className="fixed bottom-0 left-0 right-0 bg-[#1c1c1c] rounded-t-2xl z-50 flex flex-col max-h-[85vh] shadow-2xl">
-            {/* Sheet Header */}
-            <div className="flex items-center justify-between p-4 border-b border-neutral-800">
+          <div className="fixed bottom-0 left-0 right-0 bg-[#1c1c1c] rounded-t-2xl z-[100] flex flex-col max-h-[85dvh] shadow-2xl">
+            {/* Sheet Header - Sticky */}
+            <div className="shrink-0 flex items-center justify-between p-4 border-b border-neutral-800 bg-[#1c1c1c] rounded-t-2xl z-10">
               <button 
                 onClick={resetFilters}
-                className="text-[#4b7bec] font-medium px-2 py-1 active:bg-neutral-800 rounded"
+                className="text-neutral-400 font-medium px-2 py-1 active:bg-neutral-800 rounded transition-colors"
               >
                 Reset
               </button>
               <button 
-                onClick={() => setIsFilterOpen(false)}
-                className="bg-[#b3c7ff] text-blue-900 font-bold px-6 py-1.5 rounded-full active:opacity-80"
+                onClick={applyFilters}
+                className="bg-[#ff0000] text-white font-bold px-6 py-1.5 rounded-full active:opacity-80 transition-opacity"
               >
-                Filter
+                Apply
               </button>
             </div>
             
-            {/* Sheet Content */}
-            <div className="p-4 overflow-y-auto flex flex-col gap-6">
+            {/* Sheet Content - Scrollable */}
+            <div className="p-4 overflow-y-auto flex flex-col gap-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))]">
               
+              {/* Category / Sort */}
+              <div className="flex flex-col gap-3">
+                <label className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Sort / Category</label>
+                <div className="flex flex-col gap-1">
+                  {CATEGORIES.map(cat => (
+                    <label key={cat.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-800/50 active:bg-neutral-800">
+                      <input 
+                        type="radio" 
+                        name="category" 
+                        checked={draftCategory.id === cat.id}
+                        onChange={() => setDraftCategory(cat)}
+                        className="w-4 h-4 accent-[#ff0000] bg-transparent border-neutral-600"
+                      />
+                      <span className="text-sm font-medium text-white">{cat.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Genres Filter */}
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Genre</label>
+                <div className="relative">
+                  <select 
+                    value={draftGenre}
+                    onChange={e => setDraftGenre(e.target.value)}
+                    className="w-full bg-[#2a2a2a] text-white p-3 rounded-lg appearance-none outline-none border border-neutral-700 focus:border-[#4b7bec]"
+                  >
+                    <option value="">All Genres</option>
+                    {genres.map(g => (
+                      <option key={g.slug} value={g.slug}>{g.name}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
+                    ▼
+                  </div>
+                </div>
+              </div>
+
               {/* Type Filter */}
               <div className="flex flex-col gap-2">
                 <label className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Manga Type</label>
                 <div className="relative">
                   <select 
-                    value={typeFilter}
-                    onChange={e => setTypeFilter(e.target.value)}
+                    value={draftType}
+                    onChange={e => setDraftType(e.target.value)}
                     className="w-full bg-[#2a2a2a] text-white p-3 rounded-lg appearance-none outline-none border border-neutral-700 focus:border-[#4b7bec]"
                   >
-                    <option value="">Both</option>
-                    <option value="MANGA">Manga</option>
-                    <option value="MANHWA">Manhwa</option>
-                    <option value="MANHUA">Manhua</option>
+                    <option value="">Both / All</option>
+                    {TYPE_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
                     ▼
@@ -379,15 +481,14 @@ export function AndroidBrowseView() {
                 <label className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Manga Status</label>
                 <div className="relative">
                   <select 
-                    value={statusFilter}
-                    onChange={e => setStatusFilter(e.target.value)}
+                    value={draftStatus}
+                    onChange={e => setDraftStatus(e.target.value)}
                     className="w-full bg-[#2a2a2a] text-white p-3 rounded-lg appearance-none outline-none border border-neutral-700 focus:border-[#4b7bec]"
                   >
-                    <option value="">Both</option>
-                    <option value="ONGOING">Ongoing</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="HIATUS">Hiatus</option>
-                    <option value="CANCELLED">Cancelled</option>
+                    <option value="">All Statuses</option>
+                    {STATUS_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
                     ▼

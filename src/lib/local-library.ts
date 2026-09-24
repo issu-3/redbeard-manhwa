@@ -13,6 +13,8 @@ export interface LibrarySeriesEntity {
   artist?: string | null;
   description?: string | null;
   genres?: any;
+  notes?: string | null;
+  categories?: string[] | null;
   isBookmarked: boolean;
   latestChapterId?: string | null;
   latestChapterNumber?: number | null;

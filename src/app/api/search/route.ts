@@ -68,21 +68,24 @@ export async function GET(request: NextRequest) {
       whereClause.status = statusParam as import('@prisma/client').SeriesStatus;
     }
 
-    let orderByClause: import('@prisma/client').Prisma.SeriesOrderByWithRelationInput = { totalViews: 'desc' };
+    let orderByClause: import('@prisma/client').Prisma.SeriesOrderByWithRelationInput | import('@prisma/client').Prisma.SeriesOrderByWithRelationInput[] = [
+      { totalViews: 'desc' },
+      { id: 'asc' }
+    ];
     if (sortParam === 'latest') {
-      orderByClause = { updatedAt: 'desc' };
+      orderByClause = [{ updatedAt: 'desc' }, { id: 'asc' }];
     } else if (sortParam === 'newest') {
-      orderByClause = { createdAt: 'desc' };
+      orderByClause = [{ createdAt: 'desc' }, { id: 'asc' }];
     } else if (sortParam === 'rating') {
-      orderByClause = { averageRating: 'desc' };
+      orderByClause = [{ averageRating: 'desc' }, { id: 'asc' }];
     } else if (sortParam === 'popular' || sortParam === 'views') {
-      orderByClause = { totalViews: 'desc' };
+      orderByClause = [{ totalViews: 'desc' }, { id: 'asc' }];
     } else if (sortParam === 'bookmarks') {
-      orderByClause = { totalBookmarks: 'desc' };
+      orderByClause = [{ totalBookmarks: 'desc' }, { id: 'asc' }];
     } else if (sortParam === 'alphabetical') {
-      orderByClause = { title: 'asc' };
+      orderByClause = [{ title: 'asc' }, { id: 'asc' }];
     } else if (sortParam === 'updated') {
-      orderByClause = { updatedAt: 'desc' };
+      orderByClause = [{ updatedAt: 'desc' }, { id: 'asc' }];
     }
 
     const results = await prisma.series.findMany({

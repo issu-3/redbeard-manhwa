@@ -11,29 +11,33 @@ export function AndroidSeriesClientWrapper({ slug }: { slug: string }) {
   const [chapters, setChapters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadData = async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      
+      const res = await fetch(`/api/public/series/${slug}`);
+      if (!res.ok) throw new Error('Not found');
+      const data = await res.json();
+      
+      setSeries(data.series);
+      setChapters(data.chapters || []);
+      setError(false);
+    } catch (err) {
+      console.error(err);
+      setError(true);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        // We will fetch from public API. Even in offline mode, we might eventually fall back to SQLite,
-        // but for now the web/native wrapper relies on this API fetch.
-        
-        // Fetch from public API
-        const res = await fetch(`/api/public/series/${slug}`);
-        if (!res.ok) throw new Error('Not found');
-        const data = await res.json();
-        
-        setSeries(data.series);
-        setChapters(data.chapters || []);
-      } catch (err) {
-        console.error(err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadData();
   }, [slug]);
 
@@ -49,5 +53,12 @@ export function AndroidSeriesClientWrapper({ slug }: { slug: string }) {
     return notFound();
   }
 
-  return <AndroidSeriesView series={series} chapters={chapters} />;
+  return (
+    <AndroidSeriesView 
+      series={series} 
+      chapters={chapters} 
+      onRefresh={() => loadData(true)} 
+      isRefreshing={refreshing} 
+    />
+  );
 }

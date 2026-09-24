@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Pause, Play, X, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, Pause, Play, X, Check, Loader2, CloudDownload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { SeriesRepository } from '@/lib/sqlite/repository';
-import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { nativeUserId } from '@/components/native/NativeInitializer';
 import { Capacitor } from '@capacitor/core';
@@ -22,19 +21,18 @@ interface DownloadItem {
 
 export function AndroidDownloadQueueView() {
   const router = useRouter();
-  const { data: session } = useSession();
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const activeUserId = Capacitor.isNativePlatform() ? nativeUserId : session?.user?.id;
+    const activeUserId = nativeUserId || 'guest';
     if (activeUserId) {
       loadQueue(activeUserId);
       // In a real app, this would subscribe to a Capacitor event listener or native download manager
       const interval = setInterval(() => loadQueue(activeUserId), 3000);
       return () => clearInterval(interval);
     }
-  }, [session?.user?.id]);
+  }, []);
 
   const loadQueue = async (userId: string) => {
     if (!userId) return;
@@ -63,7 +61,7 @@ export function AndroidDownloadQueueView() {
   };
 
   const handlePauseResume = async (item: DownloadItem) => {
-    const activeUserId = Capacitor.isNativePlatform() ? nativeUserId : session?.user?.id;
+    const activeUserId = nativeUserId || 'guest';
     if (!activeUserId) return;
     const newState = item.downloadState === 'PAUSED' ? 'PENDING' : 'PAUSED';
     await SeriesRepository.updateDownloadState(activeUserId, item.serverChapterId, newState);
@@ -71,7 +69,7 @@ export function AndroidDownloadQueueView() {
   };
 
   const handleCancel = async (item: DownloadItem) => {
-    const activeUserId = Capacitor.isNativePlatform() ? nativeUserId : session?.user?.id;
+    const activeUserId = nativeUserId || 'guest';
     if (!activeUserId) return;
     await SeriesRepository.updateDownloadState(activeUserId, item.serverChapterId, 'IDLE');
     await loadQueue(activeUserId);
@@ -97,7 +95,7 @@ export function AndroidDownloadQueueView() {
           </div>
         ) : downloads.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center p-8 text-center text-text-muted">
-            <DownloadCloud className="mb-4 h-16 w-16 opacity-20" />
+            <CloudDownload className="mb-4 h-16 w-16 opacity-20" />
             <p className="text-lg font-medium">No active downloads</p>
             <p className="mt-2 text-sm">Chapters you download will appear here.</p>
           </div>

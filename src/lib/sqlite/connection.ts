@@ -7,7 +7,7 @@ let db: SQLiteDBConnection;
 let isInitialized = false;
 
 const DB_NAME = 'redbeard_db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export async function initSQLiteDB(): Promise<SQLiteDBConnection | null> {
   if (isInitialized && db) return db;

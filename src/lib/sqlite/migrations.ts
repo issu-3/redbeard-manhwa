@@ -57,5 +57,12 @@ export const SQLiteMigrations: capSQLiteVersionUpgrade[] = [
           PRIMARY KEY(userId, key)
       );`
     ]
+  },
+  {
+    toVersion: 2,
+    statements: [
+      `ALTER TABLE series ADD COLUMN notes TEXT;`,
+      `ALTER TABLE series ADD COLUMN categories TEXT;`
+    ]
   }
 ];
