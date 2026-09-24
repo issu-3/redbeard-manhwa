@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { App as CapacitorApp } from '@capacitor/app';
 import { initSQLiteDB } from '@/lib/sqlite/connection';
+import { usePathname, useRouter } from 'next/navigation';
 
 // Global state to hold the active user ID on native.
 // Since Android is NO-LOGIN, this is always a persistent device-generated guest ID.
@@ -30,6 +31,13 @@ async function getOrCreateDeviceUserId(): Promise<string> {
 
 export function NativeInitializer({ children }: { children: React.ReactNode }) {
   const [isInitializing, setIsInitializing] = useState(true);
+  const pathname = usePathname();
+  const router = useRouter();
+  const pathnameRef = useRef(pathname);
+
+  useEffect(() => {
+    pathnameRef.current = pathname;
+  }, [pathname]);
 
   useEffect(() => {
     async function setupNative() {
@@ -42,6 +50,7 @@ export function NativeInitializer({ children }: { children: React.ReactNode }) {
       document.documentElement.classList.add('is-native');
 
       // Setup hardware back button handler
+      let backButtonListener: any = null;
       CapacitorApp.addListener('backButton', ({ canGoBack }) => {
         // 1. If keyboard is open, close it and return
         if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
@@ -59,13 +68,14 @@ export function NativeInitializer({ children }: { children: React.ReactNode }) {
         }
 
         // 3. Navigate back or exit app
-        if (window.location.pathname === '/android-app' || window.location.pathname === '/') {
+        const currentPath = pathnameRef.current;
+        if (currentPath === '/android-app' || currentPath === '/' || currentPath === '/android-app/') {
           CapacitorApp.exitApp();
-        } else if (canGoBack || window.history.length > 1) {
-          window.history.back();
         } else {
-          CapacitorApp.exitApp();
+          router.back();
         }
+      }).then(listener => {
+        backButtonListener = listener;
       });
 
       try {
@@ -103,9 +113,24 @@ export function NativeInitializer({ children }: { children: React.ReactNode }) {
 
       // Finish initializing
       setIsInitializing(false);
+
+      return () => {
+        if (backButtonListener) {
+          backButtonListener.remove();
+        }
+      };
     }
 
-    setupNative();
+    let cleanupFn: any = null;
+    setupNative().then(fn => {
+      if (typeof fn === 'function') {
+        cleanupFn = fn;
+      }
+    });
+
+    return () => {
+      if (cleanupFn) cleanupFn();
+    };
   }, []);
 
   if (isInitializing && Capacitor.isNativePlatform()) {
