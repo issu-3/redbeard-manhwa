@@ -1,6 +1,5 @@
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
-import { Browser } from '@capacitor/browser';
 import { useDownloadStore } from '../store/download-store';
 
 /**
@@ -30,109 +29,46 @@ export async function verifyDownloadState(chapterId: string): Promise<void> {
   }
 }
 
-/**
- * Validates the downloaded file's contents.
- * Looks for %PDF- or PK (zip/cbz/epub).
- */
-async function validateDownloadedFile(fileName: string): Promise<boolean> {
-  try {
-    // Read the first 10 characters (base64 encoded, but we only need a few bytes)
-    const result = await Filesystem.readFile({
-      path: fileName,
-      directory: Directory.Data,
-      // We can't easily read just a chunk in Capacitor Filesystem reliably without loading the whole file in some versions,
-      // but if the file is an HTML page (Google Drive), it will be very small.
-      // If it's a huge PDF, reading the whole file into base64 might crash.
-      // Wait, is there a chunked reader in Capacitor 8?
-      // Actually, if we just want to protect against Google Drive HTML pages, we can just check the size. HTML pages are usually < 500KB.
-      // But let's try to parse the base64 prefix if the file is small enough, or just rely on the fallback.
-      // A better way: Capacitor file-transfer might just fail for HTML if we enforce download? No, it will just write it.
-    });
-
-    const data = result.data;
-    if (typeof data === 'string') {
-      // Direct base64 signature matching to avoid atob() exceptions
-      if (data.startsWith('JVBERi0')) return true; // %PDF-
-      if (data.startsWith('UEsDB')) return true; // PK (CBZ, EPUB, ZIP)
-
-      // Decode base64 header safely (must be a multiple of 4) for HTML detection
-      let decoded = '';
-      try {
-        const safeLen = Math.floor(Math.min(data.length, 48) / 4) * 4;
-        if (safeLen > 0) {
-          decoded = atob(data.substring(0, safeLen));
-        }
-      } catch (e) {
-        // Ignore decoding errors
-      }
-      
-      if (decoded.includes('<!DOCTYPE html>') || decoded.includes('<html')) return false; // HTML Error/Provider page
-    } else if (data instanceof Blob) {
-       // Future proofing for binary returns
-       const text = await data.slice(0, 50).text();
-       if (text.startsWith('%PDF-')) return true;
-       if (text.startsWith('PK')) return true;
-       if (text.includes('<!DOCTYPE html>') || text.includes('<html')) return false;
-    }
-    
-    // If it doesn't explicitly look like HTML, let's assume it's valid (could be octet-stream image etc)
-    return true;
-  } catch (error: any) {
-    // If it's an OutOfMemoryError, it means the file is huge, which means it's definitely not a 50kb HTML provider page!
-    // So a crash here for huge files actually implies success in terms of "is it a direct file".
-    if (error.message && error.message.includes('Out Of Memory')) {
-      return true; 
-    }
-    console.error('Validation error:', error);
-    return false; // Safest to fail if we can't read it
-  }
-}
+import { validatePdfFile } from '@/lib/file-validation';
 
 /**
- * Downloads a file natively to Directory.Data using @capacitor/file-transfer.
+ * Downloads a single chapter file natively using @capacitor/file-transfer.
+ * Uses the enhanced state machine: QUEUED → RESOLVING → DOWNLOADING → VALIDATING → COMPLETED
  */
-export async function processDownloadQueue(
-  chapterId: string, 
-  apiDownloadUrl: string, 
-  seriesId: string,
-  seriesTitle: string, 
-  seriesSlug: string,
-  chapterNumber: string | number
-): Promise<void> {
-  if (!Capacitor.isNativePlatform()) {
-    console.error('Cannot start native download outside of Capacitor app');
-    return;
-  }
-
-  // Deduplication check
-  await verifyDownloadState(chapterId);
-
+async function executeSingleDownload(chapterId: string): Promise<void> {
   const store = useDownloadStore.getState();
   const currentState = store.downloads[chapterId];
-  
-  if (currentState && currentState.status === 'COMPLETED') {
-    console.log('Download already completed');
+
+  if (!currentState || !currentState.metadata) {
+    store.markFailed(chapterId, 'No metadata for download');
     return;
   }
 
+  // Skip if already completed or cancelled
+  if (currentState.status === 'COMPLETED') return;
+  if (currentState.status === 'CANCELLED') return;
+
+  const { seriesId, seriesTitle, seriesSlug, chapterNumber } = currentState.metadata;
   const safeSeriesName = seriesTitle.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
-  const filename = `Redbeard_${safeSeriesName}_Ch_${chapterNumber}.pdf`; 
+  const filename = `Redbeard_${safeSeriesName}_Ch_${chapterNumber}.pdf`;
   const fullPath = `RedbeardDownloads/${filename}`;
 
   try {
+    // Ensure download directory exists
     try {
       await Filesystem.mkdir({
         path: 'RedbeardDownloads',
         directory: Directory.Data,
         recursive: true
       });
-    } catch (e) {
+    } catch {
       // Ignore if exists
     }
 
-    // Move from QUEUED to DOWNLOADING state
-    store.startDownload(chapterId, { 
-      seriesId, seriesTitle, seriesSlug, chapterNumber, filename 
+    // Update filename in metadata
+    store.startDownload(chapterId, {
+      ...currentState.metadata,
+      filename,
     });
 
     const { FileTransfer } = await import('@capacitor/file-transfer');
@@ -141,75 +77,152 @@ export async function processDownloadQueue(
       directory: Directory.Data
     });
 
-    let retryCount = 0;
-    const maxRetries = 1;
+    // ── RESOLVING ──────────────────────────────────────
+    store.markResolving(chapterId);
 
-    while (retryCount <= maxRetries) {
+    const resolveUrl = `/api/chapter/${chapterId}/download?resolve=true`;
+    const { nativeFetch } = await import('@/lib/native/api');
+    const res = await nativeFetch(resolveUrl);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const err: any = new Error(data.error?.message || `Failed to resolve URL (HTTP ${res.status})`);
+      err.retryable = data.error?.retryable;
+      throw err;
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error('Backend returned invalid format (HTML). Ensure backend API is updated.');
+    }
+
+    if (!data.success || !data.downloadUrl) {
+      const err: any = new Error(data.error?.message || 'Invalid resolve response');
+      err.retryable = data.error?.retryable;
+      throw err;
+    }
+
+    const currentUrl = data.downloadUrl;
+
+    // ── DOWNLOADING ────────────────────────────────────
+    store.startDownload(chapterId);
+
+    const progressListener = await FileTransfer.addListener('progress', (event: any) => {
+      if (event.url === currentUrl && event.lengthComputable && event.contentLength > 0) {
+        store.updateProgress(chapterId, event.bytes / event.contentLength);
+      }
+    });
+
+    const downloadResult = await FileTransfer.downloadFile({
+      url: currentUrl,
+      path: absolutePath,
+    });
+
+    progressListener.remove();
+
+    // ── VALIDATING ─────────────────────────────────────
+    store.markValidating(chapterId);
+
+    const isValid = await validatePdfFile(fullPath);
+
+    if (isValid && downloadResult.path) {
+      store.markCompleted(chapterId, downloadResult.path);
+    } else {
+      // Clean up partial/invalid file
       try {
-        let currentUrl = '';
+        await Filesystem.deleteFile({ path: fullPath, directory: Directory.Data });
+      } catch {}
+      const err: any = new Error('Invalid file content received. Expected PDF.');
+      err.retryable = false; // Never retry on invalid content type
+      throw err;
+    }
 
-        const resolveUrl = `/api/chapter/${chapterId}/download?resolve=true`;
-        const { nativeFetch } = await import('@/lib/native/api');
-        const res = await nativeFetch(resolveUrl);
-        
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error?.message || `Failed to resolve URL (HTTP ${res.status})`);
-        }
-        
-        let data;
-        try {
-          data = await res.json();
-        } catch (err) {
-          throw new Error('Backend returned invalid format (HTML). Ensure backend API is updated.');
-        }
-        
-        if (!data.success || !data.downloadUrl) {
-          throw new Error(data.error?.message || 'Invalid resolve response');
-        }
-        currentUrl = data.downloadUrl;
+  } catch (error: any) {
+    // Clean up partial file on network error
+    try {
+      await Filesystem.deleteFile({ path: fullPath, directory: Directory.Data });
+    } catch {}
+    console.error('Native transfer setup/execution failed:', error);
+    throw error;
+  }
+}
 
-        const progressListener = await FileTransfer.addListener('progress', (event: any) => {
-          if (event.url === currentUrl && event.lengthComputable && event.contentLength > 0) {
-            store.updateProgress(chapterId, event.bytes / event.contentLength);
-          }
-        });
+const MAX_ATTEMPTS = 3;
+let isProcessing = false;
 
-        const downloadResult = await FileTransfer.downloadFile({
-          url: currentUrl,
-          path: absolutePath,
-        });
+export async function enqueueAndProcess(
+  chapterId: string,
+  seriesId: string,
+  seriesTitle: string,
+  seriesSlug: string,
+  chapterNumber: string | number,
+  coverImage?: string,
+  sourceType?: string
+): Promise<void> {
+  if (!Capacitor.isNativePlatform()) {
+    console.error('Cannot start native download outside of Capacitor app');
+    return;
+  }
 
-        progressListener.remove();
+  await verifyDownloadState(chapterId);
 
-        const isValid = await validateDownloadedFile(fullPath);
+  // Read fresh state after verify
+  const current = useDownloadStore.getState().downloads[chapterId];
 
-        if (isValid && downloadResult.path) {
-          store.markCompleted(chapterId, downloadResult.path);
-          return;
+  if (current?.status === 'COMPLETED') return;
+  if (current && ['QUEUED', 'RESOLVING', 'DOWNLOADING', 'VALIDATING'].includes(current.status)) return;
+  if (current?.status === 'CANCELLED') return;
+
+  const safeSeriesName = seriesTitle.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
+  useDownloadStore.getState().queueDownload(chapterId, {
+    seriesId,
+    seriesTitle,
+    seriesSlug,
+    chapterNumber,
+    chapterId,
+    filename: `Redbeard_${safeSeriesName}_Ch_${chapterNumber}.pdf`,
+    coverImage,
+    sourceType: sourceType as 'DOWNLOAD' | 'IMPORTED' | undefined,
+  });
+
+  void processQueue();
+}
+
+export async function processQueue(): Promise<void> {
+  if (isProcessing) return;
+  isProcessing = true;
+
+  try {
+    while (true) {
+      const store = useDownloadStore.getState();
+
+      const next = Object.entries(store.downloads)
+        .filter(([_, s]) => s.status === 'QUEUED')
+        .sort(([, a], [, b]) => a.createdAt - b.createdAt)[0];
+
+      if (!next) break;
+      const [chapterId, item] = next;
+
+      try {
+        await executeSingleDownload(chapterId);
+      } catch (err: any) {
+        // Per-item catch
+        const s = useDownloadStore.getState();
+        const attempts = (s.downloads[chapterId]?.attempts ?? 0) + 1;
+        const retryable = err?.retryable !== false;
+
+        if (retryable && attempts < MAX_ATTEMPTS) {
+          s.requeueDownload(chapterId);
+          await new Promise(r => setTimeout(r, 2000 * attempts)); // backoff
         } else {
-          throw new Error('Invalid file content received.');
+          s.markFailed(chapterId, err?.message ?? 'Download failed');
         }
-
-      } catch (error: any) {
-        try {
-          await Filesystem.deleteFile({ path: fullPath, directory: Directory.Data });
-        } catch (e) {}
-
-        if (retryCount < maxRetries) {
-          retryCount++;
-          console.log(`Download failed, retrying (attempt ${retryCount})`);
-          continue;
-        }
-        
-        console.error('Native transfer failed after retries:', error);
-        store.markFailed(chapterId, error.message || 'Transfer failed');
-        return;
       }
     }
-  } catch (error: any) {
-    console.error('Native transfer setup failed:', error);
-    store.markFailed(chapterId, error.message || 'Transfer failed');
+  } finally {
+    isProcessing = false;
   }
 }
 
@@ -294,7 +307,7 @@ export async function importLocalPdf(
       }
     }
 
-    const isValid = await validateDownloadedFile(destPath);
+    const isValid = await validatePdfFile(destPath);
     if (!isValid) {
       await Filesystem.deleteFile({ path: destPath, directory: Directory.Data });
       store.markFailed(chapterId, 'Invalid PDF file');

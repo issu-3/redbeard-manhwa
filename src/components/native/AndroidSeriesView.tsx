@@ -23,7 +23,7 @@ type DisplayMode = 'compact' | 'comfortable';
 export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }: { series: any, chapters: any[], onRefresh: () => void, isRefreshing: boolean }) {
   const router = useRouter();
   const { savedSeries, addToLibrary, removeFromLibrary, saveChaptersToLibrary, activeUserId } = useAppLibraryStore();
-  const { downloads, queueDownload } = useDownloadStore();
+  const { downloads } = useDownloadStore();
 
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [localChapters, setLocalChapters] = useState<Record<string, any>>({});
@@ -54,6 +54,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
     return () => document.removeEventListener('hardwareBackPress', onBackPress);
   }, [activeSheet]);
 
+  const [pendingOpenChapter, setPendingOpenChapter] = useState<string | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<any>(null);
   const [draftNotes, setDraftNotes] = useState('');
   const [draftCategories, setDraftCategories] = useState('');
@@ -135,25 +136,77 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
   const handleDownload = async (chapter: any) => {
     const chapterLabel = chapter.label || chapter.number?.toString() || chapter.title || '1';
 
-    // Immediately show queued status in UI
-    queueDownload(chapter.id, {
-      seriesId: series.id,
-      seriesTitle: series.title,
-      seriesSlug: series.slug,
-      chapterNumber: chapterLabel,
-      chapterId: chapter.id,
-      filename: `chapter_${chapterLabel}_${chapter.id}`,
-      coverImage: series.coverImage,
-      sourceType: chapter.sourceType,
-    });
-
-    // Always hit our backend API to let the backend resolve any Terabox or protected links
-    const downloadUrl = `/api/chapter/${chapter.id}/download`;
-
-    import('@/lib/native-download').then(({ processDownloadQueue }) => {
-      processDownloadQueue(chapter.id, downloadUrl, series.id, series.title, series.slug, chapterLabel);
+    // Use the new sequential queue pipeline
+    import('@/lib/native-download').then(({ enqueueAndProcess }) => {
+      enqueueAndProcess(
+        chapter.id,
+        series.id,
+        series.title,
+        series.slug,
+        chapterLabel,
+        series.coverImage,
+        chapter.sourceType
+      );
     });
   };
+
+  const localChapterFileExists = async (chapterId: string) => {
+    const dl = downloads[chapterId];
+    if (!dl?.metadata?.filename) return false;
+    try {
+      const { Filesystem, Directory } = await import('@capacitor/filesystem');
+      const stat = await Filesystem.stat({
+        path: `RedbeardDownloads/${dl.metadata.filename}`,
+        directory: Directory.Data
+      });
+      return stat.size > 0;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleChapterOpen = async (chapter: any) => {
+    const dl = downloads[chapter.id];
+
+    // 1. Verify local file if marked completed
+    if (dl?.status === 'COMPLETED') {
+      const exists = await localChapterFileExists(chapter.id);
+      if (exists) {
+        router.push(`/android-reader?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`);
+        return;
+      }
+      // Missing file -> fall through to download
+    }
+
+    // 2. Download source -> queue + auto-open
+    if (chapter.sourceType === 'DOWNLOAD' && chapter.downloadUrl) {
+      setPendingOpenChapter(chapter.id);
+      handleDownload(chapter);
+      // Removed toast/alert to not block UI, visual indicator on button is enough
+      return;
+    }
+
+    // 3. Fallback online reader
+    router.push(`/android-reader?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`);
+  };
+
+  // Auto-open effect
+  useEffect(() => {
+    const pending = pendingOpenChapter;
+    if (pending && downloads[pending]?.status === 'COMPLETED') {
+      setPendingOpenChapter(null);
+      // Need to find the chapter slug for the url
+      const ch = chapters.find((c: any) => c.id === pending);
+      if (ch) {
+        router.push(`/android-reader?seriesSlug=${series.slug}&chapterSlug=${ch.slug}&id=${ch.id}&seriesId=${series.id}`);
+      }
+    }
+    if (pending && downloads[pending]?.status === 'FAILED') {
+      setPendingOpenChapter(null);
+      alert('Download failed. Please try again.');
+    }
+  }, [downloads, pendingOpenChapter, chapters, series.id, series.slug, router]);
+
   const handleOpenWebsite = async () => {
     const url = `https://redbeard.store/series/${series.slug}`;
     if (Capacitor.isNativePlatform()) {
@@ -627,7 +680,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
           {processedChapters.map(ch => (
             <div
               key={ch.id}
-              onClick={() => router.push(`/android-reader?seriesSlug=${series.slug}&chapterSlug=${ch.slug}&id=${ch.id}&seriesId=${series.id}`)}
+              onClick={() => handleChapterOpen(ch)}
               className={cn(
                 "flex items-center justify-between px-4 border-b border-neutral-900 active:bg-neutral-900 transition-colors",
                 displayMode === 'compact' ? "py-2" : "py-3.5",
@@ -657,7 +710,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
               <div className="flex items-center gap-2 shrink-0">
                 {ch.downloadState === 'COMPLETED' ? (
                   <div className="p-2 text-neutral-500"><Check className="h-5 w-5" /></div>
-                ) : ch.downloadState === 'DOWNLOADING' || ch.downloadState === 'QUEUED' ? (
+                ) : ch.downloadState === 'DOWNLOADING' || ch.downloadState === 'QUEUED' || ch.downloadState === 'RESOLVING' || ch.downloadState === 'VALIDATING' ? (
                   <div className="p-2"><div className="w-5 h-5 border-2 border-neutral-500 border-t-transparent rounded-full animate-spin" /></div>
                 ) : (
                   <button

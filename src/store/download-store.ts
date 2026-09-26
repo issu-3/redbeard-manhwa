@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-export type DownloadStateStatus = 'IDLE' | 'QUEUED' | 'DOWNLOADING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+export type DownloadStateStatus = 'IDLE' | 'QUEUED' | 'RESOLVING' | 'DOWNLOADING' | 'VALIDATING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
 export interface DownloadMetadata {
   seriesId: string;
@@ -19,7 +19,8 @@ export interface DownloadState {
   status: DownloadStateStatus;
   progress: number;
   localUri?: string;
-  error?: string;
+  error?: string | null;
+  attempts?: number;
   metadata?: DownloadMetadata;
   createdAt: number;
   completedAt?: number;
@@ -30,10 +31,13 @@ interface DownloadStore {
   downloads: Record<string, DownloadState>;
   queueDownload: (chapterId: string, metadata: DownloadMetadata) => void;
   startDownload: (chapterId: string, metadata?: DownloadMetadata) => void;
+  markResolving: (chapterId: string) => void;
+  markValidating: (chapterId: string) => void;
   updateProgress: (chapterId: string, progress: number) => void;
   markCompleted: (chapterId: string, localUri: string) => void;
   markFailed: (chapterId: string, error: string) => void;
   markCancelled: (chapterId: string) => void;
+  requeueDownload: (chapterId: string) => void;
   clearDownload: (chapterId: string) => void;
   getDownloadState: (chapterId: string) => DownloadState;
   hydrateFromDisk: (chapterId: string, status: DownloadStateStatus, localUri?: string) => void;
@@ -76,6 +80,28 @@ export const useDownloadStore = create<DownloadStore>()(
               metadata: metadata || current?.metadata,
               createdAt: current?.createdAt || Date.now()
             }
+          }
+        };
+      }),
+
+      markResolving: (chapterId) => set((state) => {
+        const current = state.downloads[chapterId];
+        if (!current) return state;
+        return {
+          downloads: {
+            ...state.downloads,
+            [chapterId]: { ...current, status: 'RESOLVING' }
+          }
+        };
+      }),
+
+      markValidating: (chapterId) => set((state) => {
+        const current = state.downloads[chapterId];
+        if (!current) return state;
+        return {
+          downloads: {
+            ...state.downloads,
+            [chapterId]: { ...current, status: 'VALIDATING' }
           }
         };
       }),
@@ -137,6 +163,21 @@ export const useDownloadStore = create<DownloadStore>()(
         };
       }),
 
+      requeueDownload: (chapterId) => set((state) => {
+        const current = state.downloads[chapterId];
+        if (!current) return state;
+        return {
+          downloads: {
+            ...state.downloads,
+            [chapterId]: {
+              ...current,
+              status: 'QUEUED',
+              attempts: (current.attempts ?? 0) + 1
+            }
+          }
+        };
+      }),
+
       clearDownload: (chapterId) => set((state) => {
         const newDownloads = { ...state.downloads };
         delete newDownloads[chapterId];
@@ -189,9 +230,22 @@ export const useDownloadStore = create<DownloadStore>()(
     }),
     {
       name: 'redbeard-downloads-storage',
+      version: 2,
+      migrate: (persisted: any, version: number) => {
+        if (version < 2) {
+          const downloads = persisted.downloads || {};
+          Object.values(downloads).forEach((d: any) => {
+            d.attempts = d.attempts ?? 0;
+            if (['DOWNLOADING', 'RESOLVING', 'VALIDATING'].includes(d.status)) {
+              d.status = 'QUEUED';
+            }
+          });
+        }
+        return persisted;
+      },
       storage: createJSONStorage(() => {
         if (typeof window !== 'undefined') {
-          return localStorage; // or IndexedDB if preferred, but localStorage works for simple metadata
+          return localStorage;
         }
         return {
           getItem: () => null,
@@ -199,19 +253,23 @@ export const useDownloadStore = create<DownloadStore>()(
           removeItem: () => { },
         };
       }),
-      partialize: (state) => {
-        const persistedDownloads: Record<string, DownloadState> = {};
-        for (const [key, value] of Object.entries(state.downloads)) {
-          // Persist all metadata so we can verify files on boot,
-          // but don't persist active downloading states as they are dead if app died
-          if (value.status === 'DOWNLOADING') {
-            persistedDownloads[key] = { ...value, status: 'FAILED', error: 'Download interrupted' };
-          } else {
-            persistedDownloads[key] = value;
-          }
-        }
-        return { downloads: persistedDownloads };
-      },
+      partialize: (state) => ({ downloads: state.downloads }),
     }
   )
 );
+
+export function reconcileInterruptedDownloads(): void {
+  const { downloads } = useDownloadStore.getState();
+  let changed = false;
+  const fixed = { ...downloads };
+  for (const [id, d] of Object.entries(fixed)) {
+    if (['DOWNLOADING', 'RESOLVING', 'VALIDATING'].includes(d.status)) {
+      fixed[id] = { ...d, status: 'QUEUED', attempts: 0, error: null };
+      changed = true;
+    }
+  }
+  if (changed) {
+    useDownloadStore.setState({ downloads: fixed });
+  }
+}
+

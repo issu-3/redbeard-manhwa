@@ -152,6 +152,22 @@ export async function GET(
              return NextResponse.json({ success: false, error: resolved.error }, { status: 400 });
           }
 
+          // PDF-ONLY GATE — CBZ/ZIP/EPUB yahin reject hote hain
+          const isPdfCompatible =
+            resolved.mimeType === 'application/pdf' ||
+            resolved.fileName.toLowerCase().endsWith('.pdf');
+
+          if (!isPdfCompatible) {
+            return NextResponse.json({
+              success: false,
+              error: {
+                code: 'INVALID_FILE_TYPE',
+                message: `Expected PDF chapter, got ${resolved.mimeType} (${resolved.fileName})`,
+                retryable: false,
+              }
+            }, { status: 400 });
+          }
+
           return NextResponse.json({
             success: true,
             url: resolved.downloadUrl, // For backward compatibility
@@ -160,7 +176,7 @@ export async function GET(
             size: resolved.size,
             downloadUrl: resolved.downloadUrl,
             expiresAt: resolved.expiresAt,
-            provider: chapter.downloadProvider
+            provider: resolved.provider || chapter.downloadProvider
           });
         }
       } catch (err: any) {

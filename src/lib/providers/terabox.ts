@@ -1,4 +1,4 @@
-import { FileResolver, ResolvedFile } from './base';
+import { FileResolver, ResolvedFile, inferMimeType } from './base';
 
 export class TeraBoxResolver implements FileResolver {
   canResolve(url: string): boolean {
@@ -31,9 +31,11 @@ export class TeraBoxResolver implements FileResolver {
         size: null,
         downloadUrl: '',
         expiresAt: null,
+        provider: 'TERABOX',
         error: {
           code: 'RESOLVER_UNAVAILABLE',
-          message: 'TERABOX_NDUS_COOKIE is not configured on the server'
+          message: 'TERABOX_NDUS_COOKIE is not configured on the server',
+          retryable: false
         }
       };
     }
@@ -56,9 +58,11 @@ export class TeraBoxResolver implements FileResolver {
           size: null,
           downloadUrl: '',
           expiresAt: null,
+          provider: 'TERABOX',
           error: {
             code: 'INVALID_URL',
-            message: 'Could not extract surl from TeraBox URL'
+            message: 'Could not extract surl from TeraBox URL',
+            retryable: false
           }
         };
       }
@@ -89,9 +93,11 @@ export class TeraBoxResolver implements FileResolver {
           size: null,
           downloadUrl: '',
           expiresAt: null,
+          provider: 'TERABOX',
           error: {
             code: 'RESOLVE_FAILED',
-            message: `Failed to fetch TeraBox link page (HTTP ${response.status})`
+            message: `Failed to fetch TeraBox link page (HTTP ${response.status})`,
+            retryable: true
           }
         };
       }
@@ -107,9 +113,11 @@ export class TeraBoxResolver implements FileResolver {
           size: null,
           downloadUrl: '',
           expiresAt: null,
+          provider: 'TERABOX',
           error: {
             code: 'TOKEN_NOT_FOUND',
-            message: 'Failed to extract jsToken. Verification might be required or the cookie expired.'
+            message: 'Failed to extract jsToken. Verification might be required or the cookie expired.',
+            retryable: false
           }
         };
       }
@@ -148,9 +156,11 @@ export class TeraBoxResolver implements FileResolver {
           size: null,
           downloadUrl: '',
           expiresAt: null,
+          provider: 'TERABOX',
           error: {
             code: 'API_FAILED',
-            message: `TeraBox API request failed (HTTP ${apiResponse.status})`
+            message: `TeraBox API request failed (HTTP ${apiResponse.status})`,
+            retryable: true
           }
         };
       }
@@ -165,9 +175,11 @@ export class TeraBoxResolver implements FileResolver {
           size: null,
           downloadUrl: '',
           expiresAt: null,
+          provider: 'TERABOX',
           error: {
             code: 'API_ERROR',
-            message: `TeraBox returned error code ${data.errno || data.error_code}`
+            message: `TeraBox returned error code ${data.errno || data.error_code}`,
+            retryable: true
           }
         };
       }
@@ -180,9 +192,11 @@ export class TeraBoxResolver implements FileResolver {
           size: null,
           downloadUrl: '',
           expiresAt: null,
+          provider: 'TERABOX',
           error: {
             code: 'FILE_NOT_FOUND',
-            message: 'No files found or file was deleted'
+            message: 'No files found or file was deleted',
+            retryable: false
           }
         };
       }
@@ -198,20 +212,25 @@ export class TeraBoxResolver implements FileResolver {
           size: null,
           downloadUrl: '',
           expiresAt: null,
+          provider: 'TERABOX',
           error: {
             code: 'NO_DLINK',
-            message: 'Direct download link missing from TeraBox response'
+            message: 'Direct download link missing from TeraBox response',
+            retryable: true
           }
         };
       }
 
+      const resolvedFilename = firstItem.server_filename || 'chapter.pdf';
+
       return {
         success: true,
-        fileName: firstItem.server_filename || 'chapter.pdf',
-        mimeType: 'application/pdf',
+        fileName: resolvedFilename,
+        mimeType: inferMimeType(resolvedFilename),
         size: firstItem.size || null,
         downloadUrl: downloadLink,
         expiresAt: null, // TeraBox download links often don't have an explicit expiry returned
+        provider: 'TERABOX',
       };
 
     } catch (error: any) {
@@ -223,9 +242,11 @@ export class TeraBoxResolver implements FileResolver {
         size: null,
         downloadUrl: '',
         expiresAt: null,
+        provider: 'TERABOX',
         error: {
           code: 'NETWORK_ERROR',
-          message: error.message || 'Unknown network error'
+          message: error.message || 'Unknown network error',
+          retryable: true
         }
       };
     }

@@ -94,6 +94,12 @@ export function NativeInitializer({ children }: { children: React.ReactNode }) {
         const { useAppLibraryStore } = await import('@/store/app-library-store');
         await useAppLibraryStore.getState().hydrateLibrary(nativeUserId);
         console.log('[NativeInit] Library hydration complete');
+
+        const { useDownloadStore, reconcileInterruptedDownloads } = await import('@/store/download-store');
+        const { processQueue } = await import('@/lib/native-download');
+        useDownloadStore.persist.rehydrate();
+        reconcileInterruptedDownloads();
+        void processQueue();
         
       } catch (error) {
         console.error('[NativeInit] Failed to initialize:', error);

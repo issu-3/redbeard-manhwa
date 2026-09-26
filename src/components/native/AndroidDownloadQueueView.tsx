@@ -25,7 +25,7 @@ export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
   const downloadsMap = useDownloadStore(state => state.downloads);
 
   const downloads = Object.entries(downloadsMap)
-    .filter(([_, state]) => state.status === 'DOWNLOADING' || state.status === 'QUEUED')
+    .filter(([_, state]) => state.status === 'DOWNLOADING' || state.status === 'QUEUED' || state.status === 'RESOLVING' || state.status === 'VALIDATING')
     .map(([chapterId, state]) => ({
       id: chapterId,
       serverChapterId: chapterId,
@@ -107,6 +107,12 @@ export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
                   )}
                   {item.downloadState === 'QUEUED' && (
                     <p className="mt-1 text-xs font-bold text-neutral-500 uppercase tracking-wide">Waiting...</p>
+                  )}
+                  {item.downloadState === 'RESOLVING' && (
+                    <p className="mt-1 text-xs font-bold text-blue-400 uppercase tracking-wide">Resolving...</p>
+                  )}
+                  {item.downloadState === 'VALIDATING' && (
+                    <p className="mt-1 text-xs font-bold text-amber-400 uppercase tracking-wide">Validating...</p>
                   )}
                 </div>
 

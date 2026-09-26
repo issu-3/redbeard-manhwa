@@ -2,39 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { useDownloadStore, DownloadMetadata } from '@/store/download-store';
 
-/**
- * Validates if the file is a PDF by reading its base64 signature.
- * Prevents OOM by handling large file crashes gracefully.
- */
-async function validatePdfFile(fileName: string): Promise<boolean> {
-  try {
-    const result = await Filesystem.readFile({
-      path: fileName,
-      directory: Directory.Data,
-    });
-
-    const data = result.data;
-    if (typeof data === 'string') {
-      // JVBERi0 is base64 for %PDF-
-      if (data.startsWith('JVBERi0')) return true;
-      return false; // Reject anything that isn't explicitly a PDF for imported files
-    } else if (data instanceof Blob) {
-      const text = await data.slice(0, 50).text();
-      if (text.startsWith('%PDF-')) return true;
-      return false;
-    }
-    
-    return false;
-  } catch (error: any) {
-    if (error.message && error.message.includes('Out Of Memory')) {
-      // If it OOMs, it's a huge binary file, likely a valid PDF given the file picker filter.
-      // Not an HTML error page.
-      return true;
-    }
-    console.error('Validation error:', error);
-    return false;
-  }
-}
+import { validatePdfFile } from '@/lib/file-validation';
 
 /**
  * Parses a filename to infer the Series Title and Chapter Number.
