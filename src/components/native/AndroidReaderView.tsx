@@ -238,7 +238,7 @@ export function AndroidReaderView({
                   'bg-black text-white';
 
   return (
-    <div className={cn("relative h-[100dvh] w-full overflow-hidden select-none", bgClass)}>
+    <div className={cn("relative w-full h-full overflow-hidden select-none", bgClass)}>
       
       {/* Brightness Overlay (Below UI) */}
       <div 
@@ -246,118 +246,119 @@ export function AndroidReaderView({
         style={{ backgroundColor: `rgba(0, 0, 0, ${1 - (store.brightness / 100)})` }}
       />
 
-      {/* --- UI BARS --- */}
-      <AnimatePresence>
-        {showUI && (
-          <>
-            {/* Top Bar */}
-            <motion.header
-              initial={{ y: '-100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '-100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute top-0 inset-x-0 z-50 bg-[#0F1115]/90 backdrop-blur-xl border-b border-white/5 pt-safe"
-            >
-              <div className="flex h-14 items-center px-4 justify-between">
-                <button onClick={() => router.back()} className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
-                  <ArrowLeft className="h-6 w-6" />
-                </button>
-                <div className="flex-1 px-4 flex flex-col items-center overflow-hidden">
-                  <h1 className="text-white font-bold text-[15px] truncate w-full text-center tracking-wide">{seriesSlug}</h1>
-                  <span className="text-[#E53935] text-[11px] font-semibold tracking-wider uppercase truncate w-full text-center">{chapterSlug}</span>
-                </div>
-                <div className="flex items-center gap-1 -mr-2">
-                  <button className="p-2 text-white hover:bg-[#E53935]/20 hover:text-[#E53935] rounded-full transition-colors">
-                    <Bookmark className="w-5 h-5" />
-                  </button>
-                  <button onClick={() => setSettingsOpen(true)} className="p-2 text-white hover:bg-white/10 rounded-full transition-colors">
-                    <Settings className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 text-white hover:bg-white/10 rounded-full transition-colors">
-                    <MoreVertical className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            </motion.header>
-
-            {/* Bottom Bar / Page Indicator */}
-            {store.showPageNumber && (
-              <motion.footer
-                initial={{ y: '100%', opacity: 0 }}
+      {/* --- UI LAYER (Pointer events none on wrapper, auto on children) --- */}
+      <div className="fixed inset-0 z-[100] pointer-events-none">
+        <AnimatePresence>
+          {showUI && (
+            <>
+              {/* Top Bar */}
+              <motion.header
+                initial={{ y: '-100%', opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                exit={{ y: '100%', opacity: 0 }}
+                exit={{ y: '-100%', opacity: 0 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="absolute bottom-0 inset-x-0 z-50 bg-gradient-to-t from-[#0F1115] to-transparent pb-safe pointer-events-none"
+                className="absolute top-0 inset-x-0 bg-[#0F1115]/90 backdrop-blur-xl border-b border-white/5 pt-safe pointer-events-auto"
               >
-                <div className="px-4 pb-6 pt-12 flex items-center justify-center">
-                  <div className="bg-[#1A1D24]/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 text-white/90 text-[11px] font-bold tracking-widest uppercase shadow-xl pointer-events-auto">
-                    {store.currentPage} / {numPages}
+                <div className="flex h-14 items-center px-4 justify-between">
+                  <button onClick={() => router.back()} className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
+                    <ArrowLeft className="h-6 w-6" />
+                  </button>
+                  <div className="flex-1 px-4 flex flex-col items-center overflow-hidden">
+                    <h1 className="text-white font-bold text-[15px] truncate w-full text-center tracking-wide">{seriesSlug}</h1>
+                    <span className="text-[#E53935] text-[11px] font-semibold tracking-wider uppercase truncate w-full text-center">{chapterSlug}</span>
+                  </div>
+                  <div className="flex items-center gap-1 -mr-2">
+                    <button className="p-2 text-white hover:bg-[#E53935]/20 hover:text-[#E53935] rounded-full transition-colors">
+                      <Bookmark className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setSettingsOpen(true)} className="p-2 text-white hover:bg-white/10 rounded-full transition-colors">
+                      <Settings className="w-5 h-5" />
+                    </button>
+                    <button className="p-2 text-white hover:bg-white/10 rounded-full transition-colors">
+                      <MoreVertical className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
-              </motion.footer>
-            )}
+              </motion.header>
 
-            {/* Vertical Page/Chapter Navigator */}
-            <motion.div
-              initial={{ opacity: 0, x: store.verticalNavigatorPosition === 'right' ? 20 : -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: store.verticalNavigatorPosition === 'right' ? 20 : -20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className={cn(
-                "absolute top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-3",
-                store.verticalNavigatorPosition === 'right' ? "right-4" : "left-4"
+              {/* Bottom Bar / Page Indicator */}
+              {store.showPageNumber && (
+                <motion.footer
+                  initial={{ y: '100%', opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: '100%', opacity: 0 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#0F1115] to-transparent pb-safe pointer-events-none"
+                >
+                  <div className="px-4 pb-6 pt-12 flex items-center justify-center">
+                    <div className="bg-[#1A1D24]/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 text-white/90 text-[11px] font-bold tracking-widest uppercase shadow-xl pointer-events-auto">
+                      {store.currentPage} / {numPages}
+                    </div>
+                  </div>
+                </motion.footer>
               )}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button 
-                onClick={() => goToPage(1)} 
-                className="w-10 h-10 rounded-full bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white shadow-2xl active:scale-95 transition-all hover:bg-[#E53935]"
-              >
-                <ChevronLeft className="w-5 h-5 rotate-90" />
-              </button>
-              
-              <div 
-                className="relative w-10 bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl py-4 flex justify-center transition-all"
-                style={{ height: `${store.navigatorHeight}vh`, maxHeight: '400px' }}
-              >
-                <input
-                  type="range"
-                  min={1}
-                  max={numPages}
-                  value={numPages - store.currentPage + 1}
-                  onChange={(e) => {
-                    const val = numPages - parseInt(e.target.value) + 1;
-                    goToPage(val);
-                  }}
-                  className="w-full h-full appearance-none bg-transparent cursor-pointer outline-none slider-vertical"
-                  style={{ writingMode: 'vertical-rl', direction: 'rtl', WebkitAppearance: 'slider-vertical' }}
-                />
-              </div>
 
-              <button 
-                onClick={() => goToPage(numPages)} 
-                className="w-10 h-10 rounded-full bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white shadow-2xl active:scale-95 transition-all hover:bg-[#E53935]"
+              {/* Vertical Page/Chapter Navigator */}
+              <motion.div
+                initial={{ opacity: 0, x: store.verticalNavigatorPosition === 'right' ? 20 : -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: store.verticalNavigatorPosition === 'right' ? 20 : -20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className={cn(
+                  "absolute top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 pointer-events-auto",
+                  store.verticalNavigatorPosition === 'right' ? "right-4" : "left-4"
+                )}
               >
-                <ChevronRight className="w-5 h-5 rotate-90" />
-              </button>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                <button 
+                  onClick={() => goToPage(1)} 
+                  className="w-10 h-10 rounded-full bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white shadow-2xl active:scale-95 transition-all hover:bg-[#E53935]"
+                >
+                  <ChevronLeft className="w-5 h-5 rotate-90" />
+                </button>
+                
+                <div 
+                  className="relative w-10 bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl py-4 flex justify-center transition-all"
+                  style={{ height: `${store.navigatorHeight}vh`, maxHeight: '400px' }}
+                >
+                  <input
+                    type="range"
+                    min={1}
+                    max={numPages}
+                    value={numPages - store.currentPage + 1}
+                    onChange={(e) => {
+                      const val = numPages - parseInt(e.target.value) + 1;
+                      goToPage(val);
+                    }}
+                    className="w-full h-full appearance-none bg-transparent cursor-pointer outline-none slider-vertical"
+                    style={{ writingMode: 'vertical-rl', direction: 'rtl', WebkitAppearance: 'slider-vertical' }}
+                  />
+                </div>
 
-      {/* --- QUICK SETTINGS BOTTOM SHEET --- */}
+                <button 
+                  onClick={() => goToPage(numPages)} 
+                  className="w-10 h-10 rounded-full bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white shadow-2xl active:scale-95 transition-all hover:bg-[#E53935]"
+                >
+                  <ChevronRight className="w-5 h-5 rotate-90" />
+                </button>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* --- MODAL LAYER --- */}
       <AnimatePresence>
         {settingsOpen && (
-          <>
+          <div className="fixed inset-0 z-[200]">
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-sm" 
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
               onClick={() => setSettingsOpen(false)} 
             />
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute bottom-0 inset-x-0 z-[70] bg-[#0F1115] rounded-t-[32px] flex flex-col pb-safe shadow-2xl overflow-hidden border-t border-white/10"
+              className="absolute bottom-0 inset-x-0 bg-[#0F1115] rounded-t-[32px] flex flex-col pb-safe shadow-2xl overflow-hidden border-t border-white/10"
               onClick={e => e.stopPropagation()}
             >
               <div className="p-6 flex justify-between items-center border-b border-white/5 shrink-0 bg-[#1A1D24]/50">
@@ -492,16 +493,17 @@ export function AndroidReaderView({
 
               </div>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
 
-      {/* --- READER CANVAS --- */}
+      {/* --- MANGA SCROLL LAYER --- */}
       <div 
-        className="relative w-full h-full z-10"
+        className="relative w-full h-full z-10 overflow-hidden"
         style={{
           filter: `contrast(${store.contrast}%) sepia(${store.sepia}%) ${store.grayscale ? 'grayscale(100%)' : ''} ${store.inverted ? 'invert(100%)' : ''}`
         }}
+        onClick={handleContainerClick}
       >
         {/* Color Filter Overlay */}
         {store.colorFilter !== 'transparent' && (
@@ -513,7 +515,7 @@ export function AndroidReaderView({
 
         {!isCbz ? (
           /* PDF Rendering (Currently simple react-pdf, can enhance later) */
-          <div className="w-full h-full overflow-auto thin-scrollbar" onClick={handleContainerClick}>
+          <div className="w-full h-full overflow-auto thin-scrollbar flex items-center justify-center">
             <Document
               file={localUrl}
               onLoadSuccess={({ numPages }) => setNumPages(numPages)}
@@ -535,25 +537,26 @@ export function AndroidReaderView({
             {store.mode === 'longStrip' && (
               <div ref={scrollRef} className="h-full w-full overflow-y-auto overflow-x-hidden thin-scrollbar bg-[#0F1115]" style={{ scrollBehavior: 'smooth' }}>
                 <div 
-                  className={cn("w-full mx-auto flex flex-col items-center", store.longStripGap ? "gap-4 py-4" : "")}
+                  className={cn("w-full mx-auto pb-safe", store.longStripGap ? "py-4 space-y-4" : "")}
                 >
                   {cbzImages.map((img, i) => (
-                    <img
-                      key={i}
-                      ref={(el) => { pageRefs.current[i] = el; }}
-                      data-index={i}
-                      src={img.url}
-                      alt={`Page ${i + 1}`}
-                      className={cn(
-                        "block m-0 p-0 h-auto",
-                        store.fitMode === 'original' 
-                          ? "w-auto object-none" // Original size
-                          : store.fitMode === 'width' 
-                            ? "w-full max-w-full" // Full width
-                            : "w-full max-w-[56rem]" // Smart fit (default)
-                      )}
-                      loading={i <= 3 ? 'eager' : 'lazy'}
-                    />
+                    <div key={i} className="w-full flex justify-center">
+                      <img
+                        ref={(el) => { pageRefs.current[i] = el; }}
+                        data-index={i}
+                        src={img.url}
+                        alt={`Page ${i + 1}`}
+                        className={cn(
+                          "block m-0 p-0",
+                          store.fitMode === 'original' 
+                            ? "w-auto object-none"
+                            : store.fitMode === 'width' 
+                              ? "w-full h-auto"
+                              : "w-full max-w-[56rem] h-auto"
+                        )}
+                        loading={i <= 3 ? 'eager' : 'lazy'}
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -573,27 +576,25 @@ export function AndroidReaderView({
               >
                 {({ state }) => (
                   <TransformComponent wrapperClass="w-full h-full" contentClass="w-full h-full flex items-center justify-center">
-                    <div className="flex w-full h-full items-center justify-center" onClick={(e) => {
-                      if (state.scale <= 1) handleContainerClick(e);
-                    }}>
+                    <div className="flex w-full h-full items-center justify-center">
                     {store.mode === 'doublePage' ? (
                       <>
                         {store.direction === 'rtl' ? (
                           <>
                             {cbzImages[store.currentPage] && (
-                              <img src={cbzImages[store.currentPage].url} alt="Left" className="w-1/2 h-full object-contain pointer-events-none" />
+                               <img src={cbzImages[store.currentPage].url} alt="Left" className="w-1/2 h-full object-contain pointer-events-none" />
                             )}
                             {cbzImages[store.currentPage - 1] && (
-                              <img src={cbzImages[store.currentPage - 1].url} alt="Right" className="w-1/2 h-full object-contain pointer-events-none" />
+                               <img src={cbzImages[store.currentPage - 1].url} alt="Right" className="w-1/2 h-full object-contain pointer-events-none" />
                             )}
                           </>
                         ) : (
                           <>
                             {cbzImages[store.currentPage - 1] && (
-                              <img src={cbzImages[store.currentPage - 1].url} alt="Left" className="w-1/2 h-full object-contain pointer-events-none" />
+                               <img src={cbzImages[store.currentPage - 1].url} alt="Left" className="w-1/2 h-full object-contain pointer-events-none" />
                             )}
                             {cbzImages[store.currentPage] && (
-                              <img src={cbzImages[store.currentPage].url} alt="Right" className="w-1/2 h-full object-contain pointer-events-none" />
+                               <img src={cbzImages[store.currentPage].url} alt="Right" className="w-1/2 h-full object-contain pointer-events-none" />
                             )}
                           </>
                         )}
@@ -604,10 +605,10 @@ export function AndroidReaderView({
                           src={cbzImages[store.currentPage - 1].url}
                           alt={`Page ${store.currentPage}`}
                           className={cn(
-                            "max-w-full max-h-screen pointer-events-none",
+                            "max-w-full max-h-[100dvh] pointer-events-none object-contain",
                             store.fitMode === 'width' && "w-full h-auto",
                             store.fitMode === 'height' && "h-full w-auto",
-                            store.fitMode === 'smart' && "w-auto h-[100dvh] object-contain",
+                            store.fitMode === 'smart' && "w-auto h-[100dvh]",
                             store.cropBorders && "scale-105"
                           )}
                         />
@@ -621,6 +622,8 @@ export function AndroidReaderView({
           </>
         )}
       </div>
+
+    </div>div>
 
     </div>
   );
