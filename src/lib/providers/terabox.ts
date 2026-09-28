@@ -239,6 +239,7 @@ export class TeraBoxResolver implements FileResolver {
         serverHeaders: {
           'Cookie': cookieString,
           'User-Agent': headers['User-Agent'],
+          'Referer': 'https://www.terabox.com/',
         },
         requiresProxy: true,
       };

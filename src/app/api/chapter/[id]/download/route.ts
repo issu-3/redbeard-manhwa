@@ -162,6 +162,9 @@ export async function GET(
         });
 
         if (!upstream.ok || !upstream.body) {
+          console.error(`Proxy upstream fetch failed: HTTP ${upstream.status} ${upstream.statusText}`);
+          const text = await upstream.text().catch(() => 'No text');
+          console.error(`Proxy upstream response body: ${text.substring(0, 500)}`);
           return new NextResponse(`Upstream fetch failed (HTTP ${upstream.status})`, { status: 502 });
         }
 
