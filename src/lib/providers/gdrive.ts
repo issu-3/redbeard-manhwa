@@ -12,6 +12,12 @@ export class GoogleDriveResolver implements FileResolver {
       if (!fileId) {
         return {
           success: false,
+          fileName: '',
+          mimeType: '',
+          size: null,
+          downloadUrl: '',
+          expiresAt: null,
+          provider: 'GDRIVE',
           error: {
             code: 'INVALID_URL',
             message: 'Could not extract Google Drive file ID from URL',
@@ -37,6 +43,12 @@ export class GoogleDriveResolver implements FileResolver {
     } catch (e: any) {
       return {
         success: false,
+        fileName: '',
+        mimeType: '',
+        size: null,
+        downloadUrl: '',
+        expiresAt: null,
+        provider: 'GDRIVE',
         error: {
           code: 'GDRIVE_ERROR',
           message: e.message,
