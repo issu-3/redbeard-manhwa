@@ -622,9 +622,6 @@ export function AndroidReaderView({
           </>
         )}
       </div>
-
-    </div>div>
-
     </div>
   );
 }
