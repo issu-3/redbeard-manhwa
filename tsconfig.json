@@ -26,9 +26,6 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ],
-      "@/app/actions/*": [
-        "./src/mock-actions/*"
       ]
     }
   },
