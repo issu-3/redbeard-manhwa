@@ -28,7 +28,7 @@
   
   --color-foreground: var(--foreground);
 
-  /* 🖋️ Typography 🖋️ */
+  /* 🖋️ Typography — single family (Inter) for the whole product 🖋️ */
   --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-heading: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
 

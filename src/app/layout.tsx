@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Plus_Jakarta_Sans, Poppins } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import './globals.css';
@@ -7,19 +7,6 @@ import './globals.css';
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
-  display: 'swap',
-});
-
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  variable: '--font-jakarta',
-  display: 'swap',
-});
-
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
-  variable: '--font-poppins',
   display: 'swap',
 });
 
@@ -92,9 +79,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} ${plusJakarta.variable} ${poppins.variable}`}
+      className={inter.variable}
     >
-      <body className="flex min-h-screen flex-col bg-background font-inter text-text-primary antialiased selection:bg-primary/30 selection:text-white">
+      <body className="flex min-h-screen flex-col bg-background font-sans text-text-primary antialiased selection:bg-primary/30 selection:text-white">
         {children}
       </body>
     </html>

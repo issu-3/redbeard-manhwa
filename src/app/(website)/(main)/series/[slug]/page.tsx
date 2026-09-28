@@ -291,6 +291,20 @@ export default async function SeriesDetailPage({
     downloadUrl: c.downloadUrl
   }));
 
+  // Only show metadata that actually has a value — never render
+  // placeholder noise like "Unknown", "N/A" or "None".
+  const metaItems = [
+    { label: 'Type', value: typeLabel },
+    { label: 'Release Year', value: series.releaseYear?.toString() || '' },
+    { label: 'Author', value: series.authors.map((a: { name: string }) => a.name).join(', ') },
+    { label: 'Artist', value: series.artists.map((a: { name: string }) => a.name).join(', ') },
+    { label: 'Reading Direction', value: series.readingDirection === 'VERTICAL' ? 'Vertical' : (series.readingDirection || '') },
+    { label: 'Alt Names', value: series.alternativeTitles[0] || '' },
+  ].filter((item) => {
+    const v = item.value.trim().toLowerCase();
+    return v !== '' && v !== 'unknown' && v !== 'n/a' && v !== 'none';
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
@@ -387,16 +401,15 @@ export default async function SeriesDetailPage({
         </div>
 
         {/* ── Metadata Grid ──────────────────────────────────── */}
-        <div className="mt-6 mb-6 md:mt-12 md:mb-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4 p-4 md:p-6 rounded-2xl bg-card border border-border">
-            <MetaItem label="Type" value={series.type} />
-            <MetaItem label="Release Year" value={series.releaseYear?.toString() || 'N/A'} />
-            <MetaItem label="Author" value={series.authors.map((a: { name: string }) => a.name).join(', ') || 'Unknown'} />
-            <MetaItem label="Artist" value={series.artists.map((a: { name: string }) => a.name).join(', ') || 'Unknown'} />
-            <MetaItem label="Direction" value={series.readingDirection === 'VERTICAL' ? 'Vertical' : series.readingDirection} />
-            <MetaItem label="Alt Names" value={series.alternativeTitles[0] || 'None'} />
+        {metaItems.length > 0 && (
+          <div className="mt-6 mb-6 md:mt-12 md:mb-12">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4 p-4 md:p-6 rounded-2xl bg-card border border-border">
+              {metaItems.map((item) => (
+                <MetaItem key={item.label} label={item.label} value={item.value} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Chapter List ──────────────────────────────────── */}
         <section className="mt-8 md:mt-12">

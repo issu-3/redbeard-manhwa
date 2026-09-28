@@ -61,6 +61,10 @@ export async function Footer() {
             <Link href="/browse/new-releases" className="text-xs text-text-muted hover:text-text-primary transition-colors">New Releases</Link>
             <Link href="/browse/genres" className="text-xs text-text-muted hover:text-text-primary transition-colors">Genres</Link>
           </nav>
+
+          <p className="mt-6 text-xs text-text-muted">
+            &copy; 2026 {APP_NAME}. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>

@@ -108,6 +108,7 @@ export default function SearchClient({ dynamicGenres, dynamicTrending }: SearchC
   };
 
   const hasQuery = query.trim().length > 0 || selectedGenres.length > 0;
+  const activeFilterCount = selectedGenres.length + (selectedStatus ? 1 : 0);
 
   return (
     <div className="min-h-screen px-4 pb-16 pt-8 md:px-8 lg:px-16 xl:px-20">
@@ -136,7 +137,7 @@ export default function SearchClient({ dynamicGenres, dynamicTrending }: SearchC
               if (e.key === 'Enter' && query.trim()) addRecentSearch(query.trim());
             }}
             placeholder="Search series, authors..."
-            className="w-full rounded-2xl border border-border bg-card py-4 pl-12 pr-24 text-base text-text-primary placeholder:text-text-muted transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-2xl border border-border bg-card py-4 pl-12 pr-36 text-base text-text-primary placeholder:text-text-muted transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             autoFocus
           />
           <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2">
@@ -147,9 +148,15 @@ export default function SearchClient({ dynamicGenres, dynamicTrending }: SearchC
             )}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`rounded-lg p-2 transition-colors ${showFilters ? 'bg-primary text-white' : 'text-text-muted hover:bg-surface'}`}
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold transition-colors ${showFilters ? 'bg-primary text-white' : 'text-text-muted hover:bg-surface hover:text-text-secondary'}`}
             >
               <SlidersHorizontal className="h-4 w-4" />
+              Filters
+              {activeFilterCount > 0 && (
+                <span className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${showFilters ? 'bg-white text-primary' : 'bg-primary text-white'}`}>
+                  {activeFilterCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
