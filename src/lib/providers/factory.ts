@@ -1,5 +1,6 @@
 import { FileResolver, ResolvedFile, inferMimeType } from './base';
 import { TeraBoxResolver } from './terabox';
+import { GoogleDriveResolver } from './gdrive';
 
 /**
  * Catch-all resolver for direct HTTP/HTTPS URLs.
@@ -40,6 +41,7 @@ export class ResolverManager {
 
   constructor() {
     // Order matters: specific providers first, catch-all last
+    this.resolvers.push(new GoogleDriveResolver());
     this.resolvers.push(new TeraBoxResolver());
     this.resolvers.push(new DirectResolver());
     // Future resolvers: GoogleDriveResolver, R2Resolver, etc.
