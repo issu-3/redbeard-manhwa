@@ -180,7 +180,7 @@ export function AndroidReaderView({
 
     if (isCenter) {
       setShowUI(prev => !prev);
-      store.setUIHidden(!showUI);
+      store.toggleUI();
       return;
     }
 
