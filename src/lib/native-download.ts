@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
-import { useDownloadStore } from '../store/download-store';
+import { useDownloadStore, MAX_LIFETIME_ATTEMPTS } from '../store/download-store';
 
 /**
  * Ensures the physical file existence matches the store metadata.
@@ -32,6 +32,12 @@ export async function verifyDownloadState(chapterId: string): Promise<void> {
 import { validatePdfFile } from '@/lib/file-validation';
 
 /**
+ * Tracks in-flight transfers so they can be aborted on cancel.
+ * Maps chapterId → AbortController (or a cleanup function).
+ */
+const activeTransfers = new Map<string, { abort: () => void }>();
+
+/**
  * Downloads a single chapter file natively using @capacitor/file-transfer.
  * Uses the enhanced state machine: QUEUED → RESOLVING → DOWNLOADING → VALIDATING → COMPLETED
  */
@@ -52,6 +58,8 @@ async function executeSingleDownload(chapterId: string): Promise<void> {
   const safeSeriesName = seriesTitle.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
   const filename = `Redbeard_${safeSeriesName}_Ch_${chapterNumber}.pdf`;
   const fullPath = `RedbeardDownloads/${filename}`;
+
+  let progressListener: { remove: () => void } | null = null;
 
   try {
     // Ensure download directory exists
@@ -84,6 +92,9 @@ async function executeSingleDownload(chapterId: string): Promise<void> {
     const { nativeFetch } = await import('@/lib/native/api');
     const res = await nativeFetch(resolveUrl);
 
+    // Check if cancelled during resolve
+    if (useDownloadStore.getState().downloads[chapterId]?.status === 'CANCELLED') return;
+
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       const err: any = new Error(data.error?.message || `Failed to resolve URL (HTTP ${res.status})`);
@@ -104,23 +115,48 @@ async function executeSingleDownload(chapterId: string): Promise<void> {
       throw err;
     }
 
-    const currentUrl = data.downloadUrl;
+    // If the server returned a relative proxy URL, prepend the API base
+    let currentUrl = data.downloadUrl;
+    if (currentUrl.startsWith('/')) {
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://redbeard.store';
+      currentUrl = `${API_BASE_URL}${currentUrl}`;
+    }
+    const downloadHeaders: Record<string, string> = data.downloadHeaders || {};
 
     // ── DOWNLOADING ────────────────────────────────────
     store.startDownload(chapterId);
 
-    const progressListener = await FileTransfer.addListener('progress', (event: any) => {
+    progressListener = await FileTransfer.addListener('progress', (event: any) => {
       if (event.url === currentUrl && event.lengthComputable && event.contentLength > 0) {
         store.updateProgress(chapterId, event.bytes / event.contentLength);
+      }
+    });
+
+    // Register for cancellation
+    activeTransfers.set(chapterId, {
+      abort: () => {
+        // FileTransfer doesn't expose a native abort, but we can mark it
+        // and the post-download check will clean up.
       }
     });
 
     const downloadResult = await FileTransfer.downloadFile({
       url: currentUrl,
       path: absolutePath,
+      progress: true,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/145.0.0.0 Mobile Safari/537.36',
+        ...downloadHeaders,
+      },
     });
 
-    progressListener.remove();
+    // Check if cancelled during download
+    if (useDownloadStore.getState().downloads[chapterId]?.status === 'CANCELLED') {
+      try {
+        await Filesystem.deleteFile({ path: fullPath, directory: Directory.Data });
+      } catch {}
+      return;
+    }
 
     // ── VALIDATING ─────────────────────────────────────
     store.markValidating(chapterId);
@@ -146,10 +182,16 @@ async function executeSingleDownload(chapterId: string): Promise<void> {
     } catch {}
     console.error('Native transfer setup/execution failed:', error);
     throw error;
+  } finally {
+    // Always clean up the progress listener
+    if (progressListener) {
+      progressListener.remove();
+    }
+    activeTransfers.delete(chapterId);
   }
 }
 
-const MAX_ATTEMPTS = 3;
+const MAX_ATTEMPTS_PER_CYCLE = 3;
 let isProcessing = false;
 
 export async function enqueueAndProcess(
@@ -203,7 +245,7 @@ export async function processQueue(): Promise<void> {
         .sort(([, a], [, b]) => a.createdAt - b.createdAt)[0];
 
       if (!next) break;
-      const [chapterId, item] = next;
+      const [chapterId] = next;
 
       try {
         await executeSingleDownload(chapterId);
@@ -213,9 +255,9 @@ export async function processQueue(): Promise<void> {
         const attempts = (s.downloads[chapterId]?.attempts ?? 0) + 1;
         const retryable = err?.retryable !== false;
 
-        if (retryable && attempts < MAX_ATTEMPTS) {
+        if (retryable && attempts < MAX_ATTEMPTS_PER_CYCLE && attempts < MAX_LIFETIME_ATTEMPTS) {
           s.requeueDownload(chapterId);
-          await new Promise(r => setTimeout(r, 2000 * attempts)); // backoff
+          await new Promise(r => setTimeout(r, Math.min(1000 * Math.pow(2, attempts), 16000))); // exponential backoff, capped at 16s
         } else {
           s.markFailed(chapterId, err?.message ?? 'Download failed');
         }
@@ -224,6 +266,34 @@ export async function processQueue(): Promise<void> {
   } finally {
     isProcessing = false;
   }
+}
+
+/**
+ * Cancel an in-progress or queued download.
+ * Marks the download as CANCELLED and cleans up partial files.
+ */
+export function cancelDownload(chapterId: string): void {
+  const store = useDownloadStore.getState();
+  const state = store.downloads[chapterId];
+  if (!state) return;
+
+  // Mark cancelled first — executeSingleDownload checks this
+  store.markCancelled(chapterId);
+
+  // Abort any in-flight transfer
+  const active = activeTransfers.get(chapterId);
+  if (active) {
+    active.abort();
+    activeTransfers.delete(chapterId);
+  }
+
+  // Clean up partial file if we have metadata
+  if (state.metadata?.filename) {
+    const fullPath = `RedbeardDownloads/${state.metadata.filename}`;
+    Filesystem.deleteFile({ path: fullPath, directory: Directory.Data }).catch(() => {});
+  }
+
+  store.clearDownload(chapterId);
 }
 
 /**

@@ -1,11 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Pause, Play, X, Check, Loader2, CloudDownload } from 'lucide-react';
+import { ArrowLeft, X, Check, Loader2, CloudDownload, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { SeriesRepository } from '@/lib/sqlite/repository';
 import Image from 'next/image';
-import { nativeUserId } from '@/components/native/NativeInitializer';
 import { Capacitor } from '@capacitor/core';
 import { useDownloadStore, DownloadStateStatus } from '@/store/download-store';
 
@@ -18,6 +16,7 @@ interface DownloadItem {
   seriesCover: string | null;
   downloadState: DownloadStateStatus;
   progress?: number;
+  error?: string | null;
 }
 
 export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
@@ -25,7 +24,7 @@ export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
   const downloadsMap = useDownloadStore(state => state.downloads);
 
   const downloads = Object.entries(downloadsMap)
-    .filter(([_, state]) => state.status === 'DOWNLOADING' || state.status === 'QUEUED' || state.status === 'RESOLVING' || state.status === 'VALIDATING')
+    .filter(([_, state]) => state.status === 'DOWNLOADING' || state.status === 'QUEUED' || state.status === 'RESOLVING' || state.status === 'VALIDATING' || state.status === 'FAILED')
     .map(([chapterId, state]) => ({
       id: chapterId,
       serverChapterId: chapterId,
@@ -34,16 +33,32 @@ export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
       chapterNumber: String(state.metadata?.chapterNumber),
       seriesCover: state.metadata?.coverImage || null,
       downloadState: state.status,
-      progress: Math.floor((state.progress || 0) * 100)
+      progress: Math.floor((state.progress || 0) * 100),
+      error: state.error,
     }));
 
-  const handlePauseResume = async (item: DownloadItem) => {
-    console.log('Pause/resume not fully supported by Capacitor FileTransfer yet');
+  const handleCancel = async (item: DownloadItem) => {
+    const { cancelDownload } = await import('@/lib/native-download');
+    cancelDownload(item.serverChapterId);
   };
 
-  const handleCancel = async (item: DownloadItem) => {
-    useDownloadStore.getState().markCancelled(item.serverChapterId);
-    useDownloadStore.getState().clearDownload(item.serverChapterId);
+  const handleRetry = async (item: DownloadItem) => {
+    const store = useDownloadStore.getState();
+    const state = store.downloads[item.serverChapterId];
+    if (!state || !state.metadata) return;
+
+    // Clear the failed state and re-queue
+    store.clearDownload(item.serverChapterId);
+    const { enqueueAndProcess } = await import('@/lib/native-download');
+    enqueueAndProcess(
+      item.serverChapterId,
+      state.metadata.seriesId,
+      state.metadata.seriesTitle,
+      state.metadata.seriesSlug,
+      state.metadata.chapterNumber,
+      state.metadata.coverImage,
+      state.metadata.sourceType,
+    );
   };
 
   return (
@@ -103,7 +118,9 @@ export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
                     </div>
                   )}
                   {item.downloadState === 'FAILED' && (
-                    <p className="mt-1 text-xs font-bold text-orange-500 uppercase tracking-wide">Failed</p>
+                    <p className="mt-1 text-xs font-bold text-orange-500 uppercase tracking-wide truncate" title={item.error || undefined}>
+                      Failed{item.error ? `: ${item.error}` : ''}
+                    </p>
                   )}
                   {item.downloadState === 'QUEUED' && (
                     <p className="mt-1 text-xs font-bold text-neutral-500 uppercase tracking-wide">Waiting...</p>
@@ -118,19 +135,19 @@ export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
 
                 {/* Actions */}
                 <div className="flex shrink-0 items-center gap-1">
-                  <button 
-                    onClick={() => handlePauseResume(item)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-400 active:bg-neutral-800 transition-colors"
-                  >
-                    {item.downloadState === 'FAILED' || item.downloadState === 'CANCELLED' ? (
-                      <Play className="h-5 w-5" />
-                    ) : (
-                      <Pause className="h-5 w-5" />
-                    )}
-                  </button>
+                  {item.downloadState === 'FAILED' ? (
+                    <button 
+                      onClick={() => handleRetry(item)}
+                      className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-400 active:bg-neutral-800 transition-colors"
+                      title="Retry"
+                    >
+                      <RotateCcw className="h-5 w-5" />
+                    </button>
+                  ) : null}
                   <button 
                     onClick={() => handleCancel(item)}
                     className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-400 active:bg-neutral-800 active:text-[#E5092F] transition-colors"
+                    title="Cancel"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -143,4 +160,3 @@ export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
     </div>
   );
 }
-

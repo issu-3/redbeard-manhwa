@@ -392,7 +392,10 @@ export class SeriesRepository {
   }
 
   /**
-   * Get chapters in the download queue (PENDING, DOWNLOADING, PAUSED)
+   * @deprecated Download state is managed by Zustand (useDownloadStore), NOT SQLite.
+   * This method queries SQLite's downloadState column which is never written to by
+   * the download engine and will always return empty results.
+   * Kept for potential future migration to SQLite as download state backend.
    */
   static async getDownloadQueue(userId: string): Promise<any[]> {
     const db = await getDB();
@@ -415,7 +418,10 @@ export class SeriesRepository {
   }
 
   /**
-   * Update download state for a chapter
+   * Update download state for a chapter in SQLite.
+   * Note: The primary download state is managed by Zustand (useDownloadStore).
+   * This is only called during cleanup operations (e.g., bulk delete in StorageView)
+   * to keep SQLite roughly in sync. It is NOT called by the download engine itself.
    */
   static async updateDownloadState(userId: string, serverChapterId: string, state: 'IDLE' | 'PENDING' | 'DOWNLOADING' | 'PAUSED' | 'DOWNLOADED', progress: number = 0): Promise<void> {
     const db = await getDB();

@@ -98,13 +98,15 @@ export async function finalizeImport(
   originalFilename: string,
   fileSize: number
 ): Promise<void> {
-  const safeSeriesName = seriesSlug.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
-  const finalFilename = `RedbeardDownloads/${safeSeriesName}/Chapter-${chapterNumber}.pdf`;
+  // Use flat structure consistent with the download engine and importLocalPdf
+  const safeSeriesName = seriesTitle.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
+  const flatFilename = `Redbeard_${safeSeriesName}_Ch_${chapterNumber}.pdf`;
+  const finalPath = `RedbeardDownloads/${flatFilename}`;
 
-  // Ensure series directory exists
+  // Ensure download directory exists
   try {
     await Filesystem.mkdir({
-      path: `RedbeardDownloads/${safeSeriesName}`,
+      path: 'RedbeardDownloads',
       directory: Directory.Data,
       recursive: true
     });
@@ -115,12 +117,12 @@ export async function finalizeImport(
   // Move from temp to final
   await Filesystem.rename({
     from: `RedbeardDownloads/temp/${tempFilename}`,
-    to: finalFilename,
+    to: finalPath,
     directory: Directory.Data
   });
 
   const { uri } = await Filesystem.getUri({
-    path: finalFilename,
+    path: finalPath,
     directory: Directory.Data
   });
 
@@ -131,7 +133,7 @@ export async function finalizeImport(
     seriesSlug,
     chapterNumber,
     chapterId,
-    filename: finalFilename.replace('RedbeardDownloads/', ''),
+    filename: flatFilename,
     sourceType: 'IMPORTED',
     fileSize
   };

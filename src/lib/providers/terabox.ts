@@ -215,7 +215,7 @@ export class TeraBoxResolver implements FileResolver {
           provider: 'TERABOX',
           error: {
             code: 'NO_DLINK',
-            message: 'Direct download link missing from TeraBox response',
+            message: 'Direct download link missing. Your TERABOX_NDUS_COOKIE has likely expired. Please get a fresh ndus cookie from your browser and update your environment variables.',
             retryable: true
           }
         };
@@ -231,6 +231,16 @@ export class TeraBoxResolver implements FileResolver {
         downloadUrl: downloadLink,
         expiresAt: null, // TeraBox download links often don't have an explicit expiry returned
         provider: 'TERABOX',
+        // Only non-sensitive headers go to the client
+        downloadHeaders: {
+          'User-Agent': headers['User-Agent'],
+        },
+        // Server-side only headers (not exposed to client)
+        serverHeaders: {
+          'Cookie': cookieString,
+          'User-Agent': headers['User-Agent'],
+        },
+        requiresProxy: true,
       };
 
     } catch (error: any) {

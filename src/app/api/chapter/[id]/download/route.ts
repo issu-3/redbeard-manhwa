@@ -140,6 +140,50 @@ export async function GET(
 
     // 3. Check for native resolve parameter
     const { searchParams } = new URL(request.url);
+
+    // 3a. Server-side proxy streaming for providers that need secret headers (e.g. TeraBox)
+    if (searchParams.get('proxy') === 'true') {
+      try {
+        const { resolverManager } = await import('@/lib/providers/factory');
+        const resolver = resolverManager.getResolver(chapter.downloadUrl);
+        if (!resolver) {
+          return new NextResponse('No resolver for this chapter', { status: 400 });
+        }
+
+        const resolved = await resolver.resolve(chapter.downloadUrl);
+        if (!resolved.success || !resolved.downloadUrl) {
+          return NextResponse.json({ success: false, error: resolved.error }, { status: 400 });
+        }
+
+        // Fetch the file server-side with full headers (including secrets)
+        const upstream = await fetch(resolved.downloadUrl, {
+          headers: resolved.serverHeaders || resolved.downloadHeaders || {},
+          redirect: 'follow',
+        });
+
+        if (!upstream.ok || !upstream.body) {
+          return new NextResponse(`Upstream fetch failed (HTTP ${upstream.status})`, { status: 502 });
+        }
+
+        // Stream through to the client
+        const responseHeaders = new Headers();
+        responseHeaders.set('Content-Type', resolved.mimeType || 'application/pdf');
+        if (resolved.size) {
+          responseHeaders.set('Content-Length', String(resolved.size));
+        }
+        const upstreamCL = upstream.headers.get('content-length');
+        if (upstreamCL && !resolved.size) {
+          responseHeaders.set('Content-Length', upstreamCL);
+        }
+        responseHeaders.set('Content-Disposition', `attachment; filename="${resolved.fileName}"`);
+
+        return new NextResponse(upstream.body, { status: 200, headers: responseHeaders });
+      } catch (err: any) {
+        console.error('Proxy download error:', err);
+        return new NextResponse('Proxy download failed', { status: 500 });
+      }
+    }
+
     if (searchParams.get('resolve') === 'true') {
       try {
         const { resolverManager } = await import('@/lib/providers/factory');
@@ -168,6 +212,34 @@ export async function GET(
             }, { status: 400 });
           }
 
+          // Strip sensitive headers (cookies, auth tokens) before sending to client.
+          const safeHeaders: Record<string, string> = {};
+          if (resolved.downloadHeaders) {
+            for (const [key, value] of Object.entries(resolved.downloadHeaders)) {
+              const lk = key.toLowerCase();
+              if (lk !== 'cookie' && lk !== 'authorization' && lk !== 'set-cookie') {
+                safeHeaders[key] = value;
+              }
+            }
+          }
+
+          // If the provider requires server-side proxy (e.g. TeraBox needs cookies),
+          // return a proxy URL instead of the raw download URL.
+          if (resolved.requiresProxy) {
+            const proxyUrl = `/api/chapter/${id}/download?proxy=true`;
+            return NextResponse.json({
+              success: true,
+              url: proxyUrl,
+              fileName: resolved.fileName,
+              mimeType: resolved.mimeType,
+              size: resolved.size,
+              downloadUrl: proxyUrl,
+              expiresAt: resolved.expiresAt,
+              provider: resolved.provider || chapter.downloadProvider,
+              downloadHeaders: Object.keys(safeHeaders).length > 0 ? safeHeaders : null,
+            });
+          }
+
           return NextResponse.json({
             success: true,
             url: resolved.downloadUrl, // For backward compatibility
@@ -176,7 +248,8 @@ export async function GET(
             size: resolved.size,
             downloadUrl: resolved.downloadUrl,
             expiresAt: resolved.expiresAt,
-            provider: resolved.provider || chapter.downloadProvider
+            provider: resolved.provider || chapter.downloadProvider,
+            downloadHeaders: Object.keys(safeHeaders).length > 0 ? safeHeaders : null,
           });
         }
       } catch (err: any) {

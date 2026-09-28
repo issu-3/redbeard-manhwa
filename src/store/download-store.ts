@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
+/** After this many total attempts (across restarts), the download is permanently failed. */
+export const MAX_LIFETIME_ATTEMPTS = 9;
+
 export type DownloadStateStatus = 'IDLE' | 'QUEUED' | 'RESOLVING' | 'DOWNLOADING' | 'VALIDATING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
 export interface DownloadMetadata {
@@ -224,7 +227,8 @@ export const useDownloadStore = create<DownloadStore>()(
       })),
 
       deleteLocalChapter: async (chapterId) => {
-        // Just clear from state here; filesystem deletion should be handled by the caller
+        // Filesystem deletion is handled by deleteDownloadedChapter in native-download.ts.
+        // This only clears the Zustand entry; prefer calling deleteDownloadedChapter directly.
         get().clearDownload(chapterId);
       }
     }),
@@ -258,13 +262,24 @@ export const useDownloadStore = create<DownloadStore>()(
   )
 );
 
+/**
+ * On app startup, re-queue any downloads that were interrupted mid-flight.
+ * Preserves the attempt counter so downloads that consistently fail
+ * will eventually hit MAX_LIFETIME_ATTEMPTS and stop retrying.
+ */
 export function reconcileInterruptedDownloads(): void {
   const { downloads } = useDownloadStore.getState();
   let changed = false;
   const fixed = { ...downloads };
   for (const [id, d] of Object.entries(fixed)) {
     if (['DOWNLOADING', 'RESOLVING', 'VALIDATING'].includes(d.status)) {
-      fixed[id] = { ...d, status: 'QUEUED', attempts: 0, error: null };
+      const attempts = (d.attempts ?? 0) + 1;
+      if (attempts >= MAX_LIFETIME_ATTEMPTS) {
+        // Permanently fail after too many total attempts across restarts
+        fixed[id] = { ...d, status: 'FAILED', error: 'Too many failed attempts. Tap to retry manually.', attempts };
+      } else {
+        fixed[id] = { ...d, status: 'QUEUED', error: null, attempts };
+      }
       changed = true;
     }
   }

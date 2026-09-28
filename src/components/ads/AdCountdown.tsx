@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowDownToLine, Clock } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
-import { useDownloadStore } from '@/store/download-store';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -20,7 +19,6 @@ export function AdCountdown({ redirectUrl, chapterId, seriesId, seriesTitle, ser
   const [timeLeft, setTimeLeft] = useState(5);
   const [isProcessing, setIsProcessing] = useState(false);
   const router = useRouter();
-  const queueDownload = useDownloadStore(state => state.queueDownload);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -51,13 +49,14 @@ export function AdCountdown({ redirectUrl, chapterId, seriesId, seriesTitle, ser
         if (Capacitor.isNativePlatform() && chapterId && seriesId && seriesTitle && seriesSlug) {
           setIsProcessing(true);
           
-          queueDownload(chapterId, {
+          const { enqueueAndProcess } = await import('@/lib/native-download');
+          enqueueAndProcess(
+            chapterId,
             seriesId,
             seriesTitle,
             seriesSlug,
-            chapterNumber: chapterNumber || '1',
-            filename: `${seriesSlug}-chapter-${chapterNumber || '1'}.pdf`,
-          });
+            chapterNumber || '1',
+          );
           
           toast.success('Download queued in background');
           router.back();
@@ -75,3 +74,4 @@ export function AdCountdown({ redirectUrl, chapterId, seriesId, seriesTitle, ser
     </button>
   );
 }
+
