@@ -29,7 +29,7 @@ export async function verifyDownloadState(chapterId: string): Promise<void> {
   }
 }
 
-import { validatePdfFile } from '@/lib/file-validation';
+import { validateDownloadedFile, SupportedFileType } from '@/lib/file-validation';
 
 /**
  * Tracks in-flight transfers so they can be aborted on cancel.
@@ -56,8 +56,9 @@ async function executeSingleDownload(chapterId: string): Promise<void> {
 
   const { seriesId, seriesTitle, seriesSlug, chapterNumber } = currentState.metadata;
   const safeSeriesName = seriesTitle.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
-  const filename = `Redbeard_${safeSeriesName}_Ch_${chapterNumber}.pdf`;
-  const fullPath = `RedbeardDownloads/${filename}`;
+  // Initially save as .tmp to validate later
+  const tempFilename = `Redbeard_${safeSeriesName}_Ch_${chapterNumber}.tmp`;
+  const fullPath = `RedbeardDownloads/${tempFilename}`;
 
   let progressListener: { remove: () => void } | null = null;
 
@@ -72,12 +73,6 @@ async function executeSingleDownload(chapterId: string): Promise<void> {
     } catch {
       // Ignore if exists
     }
-
-    // Update filename in metadata
-    store.startDownload(chapterId, {
-      ...currentState.metadata,
-      filename,
-    });
 
     const { FileTransfer } = await import('@capacitor/file-transfer');
     const { uri: absolutePath } = await Filesystem.getUri({
@@ -134,10 +129,7 @@ async function executeSingleDownload(chapterId: string): Promise<void> {
 
     // Register for cancellation
     activeTransfers.set(chapterId, {
-      abort: () => {
-        // FileTransfer doesn't expose a native abort, but we can mark it
-        // and the post-download check will clean up.
-      }
+      abort: () => {}
     });
 
     const downloadResult = await FileTransfer.downloadFile({
@@ -161,16 +153,36 @@ async function executeSingleDownload(chapterId: string): Promise<void> {
     // ── VALIDATING ─────────────────────────────────────
     store.markValidating(chapterId);
 
-    const isValid = await validatePdfFile(fullPath);
+    const fileType = await validateDownloadedFile(fullPath);
 
-    if (isValid && downloadResult.path) {
-      store.markCompleted(chapterId, downloadResult.path);
+    if (fileType && downloadResult.path) {
+      // Rename based on type
+      const finalFilename = `Redbeard_${safeSeriesName}_Ch_${chapterNumber}.${fileType}`;
+      const finalPath = `RedbeardDownloads/${finalFilename}`;
+      
+      await Filesystem.rename({
+        from: fullPath,
+        to: finalPath,
+        directory: Directory.Data
+      });
+
+      // Update filename in metadata
+      store.startDownload(chapterId, {
+        ...currentState.metadata,
+        filename: finalFilename,
+      });
+
+      const { uri: finalUri } = await Filesystem.getUri({
+        path: finalPath,
+        directory: Directory.Data
+      });
+      store.markCompleted(chapterId, finalUri);
     } else {
       // Clean up partial/invalid file
       try {
         await Filesystem.deleteFile({ path: fullPath, directory: Directory.Data });
       } catch {}
-      const err: any = new Error('Invalid file content received. Expected PDF.');
+      const err: any = new Error('Invalid file content received. Expected PDF or CBZ.');
       err.retryable = false; // Never retry on invalid content type
       throw err;
     }
@@ -297,7 +309,7 @@ export function cancelDownload(chapterId: string): void {
 }
 
 /**
- * Imports a local PDF file using the device file picker.
+ * Imports a local PDF or CBZ file using the device file picker.
  */
 export async function importLocalPdf(
   chapterId: string,
@@ -321,19 +333,24 @@ export async function importLocalPdf(
   try {
     // Dynamic import to avoid errors on web
     const { FilePicker } = await import('@capawesome/capacitor-file-picker');
-    const result = await FilePicker.pickFiles({ types: ['application/pdf'], limit: 1, readData: false });
+    // On some Android versions, mime types like application/zip or application/x-cbz might not map well, so we use general types
+    const result = await FilePicker.pickFiles({ types: ['application/pdf', 'application/zip', 'application/x-cbz', 'application/vnd.comicbook+zip', 'application/octet-stream'], limit: 1, readData: false });
     const file = result.files[0];
     if (!file || !file.path) {
       return; // Cancelled
     }
 
-    if (file.mimeType !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      onError('Invalid PDF file');
+    const nameLower = file.name.toLowerCase();
+    const isPdf = file.mimeType === 'application/pdf' || nameLower.endsWith('.pdf');
+    const isCbz = nameLower.endsWith('.cbz') || nameLower.endsWith('.zip') || file.mimeType?.includes('zip') || file.mimeType?.includes('cbz');
+
+    if (!isPdf && !isCbz) {
+      onError('Invalid file type. Please select a PDF or CBZ file.');
       return;
     }
 
-    const filename = `chapter_${chapterId}.pdf`;
-    const destPath = `RedbeardDownloads/${filename}`;
+    const tempFilename = `chapter_${chapterId}.tmp`;
+    const destPath = `RedbeardDownloads/${tempFilename}`;
 
     store.startDownload(chapterId, {
       seriesId,
@@ -341,7 +358,7 @@ export async function importLocalPdf(
       seriesSlug,
       chapterNumber,
       chapterId,
-      filename,
+      filename: tempFilename,
       sourceType: 'IMPORTED',
       fileSize: file.size
     });
@@ -377,22 +394,31 @@ export async function importLocalPdf(
       }
     }
 
-    const isValid = await validatePdfFile(destPath);
-    if (!isValid) {
+    const fileType = await validateDownloadedFile(destPath);
+    if (!fileType) {
       await Filesystem.deleteFile({ path: destPath, directory: Directory.Data });
-      store.markFailed(chapterId, 'Invalid PDF file');
-      onError('Invalid PDF file');
+      store.markFailed(chapterId, 'Invalid file content');
+      onError('Invalid file content. Not a valid PDF or CBZ.');
       return;
     }
 
-    const finalUri = await Filesystem.getUri({ path: destPath, directory: Directory.Data });
+    const finalFilename = `chapter_${chapterId}.${fileType}`;
+    const finalPath = `RedbeardDownloads/${finalFilename}`;
+    
+    await Filesystem.rename({
+      from: destPath,
+      to: finalPath,
+      directory: Directory.Data
+    });
+
+    const finalUri = await Filesystem.getUri({ path: finalPath, directory: Directory.Data });
     store.importFile(chapterId, {
       seriesId,
       seriesTitle,
       seriesSlug,
       chapterNumber,
       chapterId,
-      filename,
+      filename: finalFilename,
       sourceType: 'IMPORTED',
       fileSize: file.size
     }, finalUri.uri);

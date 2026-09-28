@@ -5,58 +5,26 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import {
-  ArrowLeft,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  Maximize,
-  Minimize,
-  Sun,
-  Contrast,
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
-  X,
-  Monitor,
-  Smartphone,
-  Scroll,
-  FileImage,
-  ArrowDownToLine,
-  ArrowRightToLine,
-  ArrowLeftToLine,
-  SkipForward,
-  Play,
-  Gauge,
-  MessageSquare,
+  ArrowLeft, Settings, ChevronLeft, ChevronRight, Share2, MoreVertical,
+  Download, AlertTriangle, Monitor, Smartphone, Scroll, FileImage,
+  ArrowRightToLine, ArrowLeftToLine, ArrowDownToLine, Maximize,
+  Sun, Contrast, X, Play, SkipForward, RotateCcw, Columns, MessageSquare,
+  Bookmark, Layout, Palette, Check
 } from 'lucide-react';
-import { useReaderStore, type ReaderMode, type FitMode, type ReadingDirection } from '@/store/reader-store';
+import { useReaderStore, type ReaderMode, type FitMode, type ReadingDirection, type BackgroundColor } from '@/store/reader-store';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { useSwipeGestures } from '@/hooks/useSwipeGestures';
 import { cn } from '@/lib/utils';
 import type { ChapterData } from '@/types';
 import { Capacitor } from '@capacitor/core';
 import { useDownloadStore } from '@/store/download-store';
-
+import { saveUserPreferences } from '@/app/actions/preferences';
 import { CommentSection } from '@/components/shared/CommentSection';
-import type { CommentData } from '@/components/shared/CommentItem';
 import { SubscribeCard } from '@/components/shared/SubscribeCard';
 
-// ─── Types ─────────────────────────────────────────────────────
-
-interface ChapterReaderProps {
-  chapter: ChapterData;
-  comments: CommentData[];
-  currentUserId?: string;
-  userPreferences?: Record<string, any>;
-  defaultReadingMode?: string;
-  youtubeUrl?: string | null;
-}
-
-// ─── Main Component ────────────────────────────────────────────
-
-import { saveUserPreferences } from '@/app/actions/preferences';
-
+// Helper to safely get the slug
 function getSafeSlug(c?: { slug?: string | null; number?: number | null } | null) {
   if (!c) return null;
   if (typeof c.slug === 'string' && c.slug.trim()) return c.slug;
@@ -64,1149 +32,646 @@ function getSafeSlug(c?: { slug?: string | null; number?: number | null } | null
   return null;
 }
 
-export function ChapterReader({ chapter, comments, currentUserId, userPreferences, defaultReadingMode, youtubeUrl }: ChapterReaderProps) {
+export function ChapterReader({ chapter, comments, currentUserId, userPreferences, defaultReadingMode, youtubeUrl }: any) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const autoScrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const uiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
   const isInitializedRef = useRef(false);
 
-  // Reader store
-  const {
-    mode,
-    direction,
-    fitMode,
-    currentPage,
-    totalPages,
-    isFullscreen,
-    isUIHidden,
-    brightness,
-    contrast,
-    sepia,
-    autoScroll,
-    autoScrollSpeed,
-    autoNextChapter,
-    zoom,
-    setMode,
-    setDirection,
-    setFitMode,
-    setCurrentPage,
-    setTotalPages,
-    toggleFullscreen,
-    setBrightness,
-    setContrast,
-    setSepia,
-    toggleAutoScroll,
-    setAutoScrollSpeed,
-    toggleAutoNextChapter,
-    setZoom,
-    resetFilters,
-    nextPage,
-    prevPage,
-  } = useReaderStore();
-
-  // Local state
+  // Zustand Store
+  const store = useReaderStore();
+  
+  // UI State
+  const [showUI, setShowUI] = useState(!store.isUIHidden);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [showSeekbar, setShowSeekbar] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
-  const [showUI, setShowUI] = useState(true);
-  const [mounted, setMounted] = useState(false);
-  const downloadState = useDownloadStore(state => state.downloads[chapter.id]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Compute safe slugs for adjacent chapters
+  
+  // Slugs
   const nextSlug = getSafeSlug(chapter.nextChapter);
   const prevSlug = getSafeSlug(chapter.prevChapter);
 
-  // ─── Initialization ────────────────────────────────────────────
-
+  // Initialize
   useEffect(() => {
-    setTotalPages(chapter.images.length);
-    setCurrentPage(1);
+    store.setTotalPages(chapter.images.length);
+    store.setCurrentPage(1);
 
     if (!isInitializedRef.current) {
       if (userPreferences && Object.keys(userPreferences).length > 0) {
-        if (userPreferences.mode) setMode(userPreferences.mode);
-        if (userPreferences.direction) setDirection(userPreferences.direction);
-        if (userPreferences.fitMode) setFitMode(userPreferences.fitMode);
-        if (userPreferences.brightness !== undefined) setBrightness(userPreferences.brightness);
-        if (userPreferences.contrast !== undefined) setContrast(userPreferences.contrast);
-        if (userPreferences.sepia !== undefined) setSepia(userPreferences.sepia);
-        if (userPreferences.autoScrollSpeed !== undefined) setAutoScrollSpeed(userPreferences.autoScrollSpeed);
-        if (userPreferences.autoNextChapter !== undefined) {
-           if (userPreferences.autoNextChapter !== useReaderStore.getState().autoNextChapter) {
-             toggleAutoNextChapter();
-           }
-        }
+        if (userPreferences.mode) store.setMode(userPreferences.mode);
+        if (userPreferences.direction) store.setDirection(userPreferences.direction);
+        if (userPreferences.fitMode) store.setFitMode(userPreferences.fitMode);
+        if (userPreferences.backgroundColor) store.setBackgroundColor(userPreferences.backgroundColor);
+        if (userPreferences.brightness !== undefined) store.setBrightness(userPreferences.brightness);
+        if (userPreferences.contrast !== undefined) store.setContrast(userPreferences.contrast);
+        if (userPreferences.sepia !== undefined) store.setSepia(userPreferences.sepia);
+        if (userPreferences.grayscale !== undefined && userPreferences.grayscale !== store.grayscale) store.toggleGrayscale();
+        if (userPreferences.autoNextChapter !== undefined && userPreferences.autoNextChapter !== store.autoNextChapter) store.toggleAutoNextChapter();
       } else if (defaultReadingMode && !localStorage.getItem('redbeard-reader-preferences')) {
-         // Only apply default if they don't have local preferences and no server preferences
-         setMode(defaultReadingMode as ReaderMode);
+         store.setMode(defaultReadingMode as ReaderMode);
       }
       
-      // Fire and forget view tracking to avoid blocking server-side rendering
+      // Tracking
       fetch('/api/tracking/view', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chapterId: chapter.id,
-          seriesId: chapter.seriesId,
-          userId: currentUserId
-        })
+        body: JSON.stringify({ chapterId: chapter.id, seriesId: chapter.seriesId, userId: currentUserId })
       }).catch(err => console.error('Failed to track view:', err));
 
       isInitializedRef.current = true;
     }
-  }, [chapter.id, chapter.images.length, setTotalPages, setCurrentPage, userPreferences, defaultReadingMode, setMode, setDirection, setFitMode, setBrightness, setContrast, setSepia, setAutoScrollSpeed, toggleAutoNextChapter, chapter.seriesId]);
+    setMounted(true);
+  }, []);
+
+  // Container Resize Observer for accurate virtualization
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      setContainerWidth(entries[0].contentRect.width);
+    });
+    observer.observe(scrollRef.current);
+    return () => observer.disconnect();
+  }, [store.mode]);
 
   // Sync back to server
   useEffect(() => {
     if (!isInitializedRef.current || !currentUserId) return;
     const timeout = setTimeout(() => {
       saveUserPreferences({
-        mode,
-        direction,
-        fitMode,
-        brightness,
-        contrast,
-        sepia,
-        autoScrollSpeed,
-        autoNextChapter,
+        mode: store.mode,
+        direction: store.direction,
+        fitMode: store.fitMode,
+        backgroundColor: store.backgroundColor,
+        brightness: store.brightness,
+        contrast: store.contrast,
+        sepia: store.sepia,
+        grayscale: store.grayscale,
+        autoNextChapter: store.autoNextChapter,
       });
     }, 1000);
     return () => clearTimeout(timeout);
-  }, [mode, direction, fitMode, brightness, contrast, sepia, autoScrollSpeed, autoNextChapter, currentUserId]);
+  }, [store.mode, store.direction, store.fitMode, store.backgroundColor, store.brightness, store.contrast, store.sepia, store.grayscale, store.autoNextChapter, currentUserId]);
 
-  // ─── UI Auto-hide ──────────────────────────────────────────
-
-  const resetUITimer = useCallback(() => {
-    setShowUI(true);
-    if (uiTimeoutRef.current) clearTimeout(uiTimeoutRef.current);
-    uiTimeoutRef.current = setTimeout(() => {
-      if (!settingsOpen && !commentsOpen) setShowUI(false);
-    }, 3000);
-  }, [settingsOpen, commentsOpen]);
-
-  useEffect(() => {
-    setTimeout(() => resetUITimer(), 0);
-    return () => {
-      if (uiTimeoutRef.current) clearTimeout(uiTimeoutRef.current);
-    };
-  }, [resetUITimer]);
-
-  const handleMouseMove = useCallback(() => {
-    resetUITimer();
-  }, [resetUITimer]);
-
-  // ─── Fullscreen ────────────────────────────────────────────
-
-  const handleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen?.();
-    } else {
-      document.exitFullscreen?.();
-    }
-    toggleFullscreen();
-  }, [toggleFullscreen]);
-
-  // ─── Auto-scroll ───────────────────────────────────────────
-
-  useEffect(() => {
-    if (autoScrollIntervalRef.current) {
-      clearInterval(autoScrollIntervalRef.current);
-      autoScrollIntervalRef.current = null;
-    }
-
-    if (autoScroll && (mode === 'vertical' || mode === 'longStrip') && scrollRef.current) {
-      const speed = autoScrollSpeed; // 1-10
-      autoScrollIntervalRef.current = setInterval(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop += speed;
-
-          // Check if reached bottom
-          const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-          if (scrollTop + clientHeight >= scrollHeight - 10) {
-            if (autoNextChapter && nextSlug) {
-              router.push(
-                `/series/${chapter.seriesSlug}/chapter/${nextSlug}`
-              );
-            }
-          }
-        }
-      }, 16);
-    }
-
-    return () => {
-      if (autoScrollIntervalRef.current) {
-        clearInterval(autoScrollIntervalRef.current);
-      }
-    };
-  }, [autoScroll, autoScrollSpeed, mode, autoNextChapter, nextSlug, chapter.seriesSlug, router]);
-
-  // ─── Scroll-based page tracking ───────────────────────────
-
-  useEffect(() => {
-    if (mode !== 'vertical' && mode !== 'longStrip') return;
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const page = parseInt(entry.target.getAttribute('data-page') || '1', 10);
-            setCurrentPage(page);
-          }
-        });
-      },
-      {
-        root: el,
-        rootMargin: '-20% 0px -40% 0px', // Trigger when an element is near the top/middle of the viewport
-        threshold: 0,
-      }
-    );
-
-    // Defer observation slightly to ensure elements are mounted
-    const timeout = setTimeout(() => {
-      const elements = el.querySelectorAll('[data-page]');
-      elements.forEach((element) => observer.observe(element));
-    }, 100);
-
-    return () => {
-      clearTimeout(timeout);
-      observer.disconnect();
-    };
-  }, [mode, setCurrentPage]);
-
-  // ─── Navigation helpers ────────────────────────────────────
-
-  const goToPage = useCallback(
-    (page: number) => {
-      const clamped = Math.max(1, Math.min(page, chapter.images.length));
-      setCurrentPage(clamped);
-
-      if (mode === 'vertical' || mode === 'longStrip') {
-        const el = scrollRef.current?.querySelector(`[data-page="${clamped}"]`);
-        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+  // Virtualizer for Webtoon mode
+  const rowVirtualizer = useVirtualizer({
+    count: chapter.images.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: (i) => {
+      const img = chapter.images[i];
+      if (!img.width || !img.height || !containerWidth) return 600;
+      if (store.fitMode === 'original') return img.height;
+      return (containerWidth * img.height) / img.width;
     },
-    [chapter.images.length, mode, setCurrentPage]
-  );
+    overscan: 3,
+  });
+
+  // Track virtual items to update currentPage
+  useEffect(() => {
+    if (store.mode !== 'longStrip') return;
+    const items = rowVirtualizer.getVirtualItems();
+    if (items.length > 0) {
+      // Find the item that is most prominent in the viewport
+      const topItem = items[0];
+      store.setCurrentPage(topItem.index + 1);
+    }
+  }, [rowVirtualizer.getVirtualItems(), store.mode]);
+
+  // Navigation
+  const goToPage = useCallback((page: number) => {
+    const p = Math.max(1, Math.min(page, chapter.images.length));
+    store.setCurrentPage(p);
+    if (store.mode === 'longStrip') {
+      rowVirtualizer.scrollToIndex(p - 1, { align: 'start' });
+    }
+  }, [chapter.images.length, store.mode, rowVirtualizer]);
 
   const goNext = useCallback(() => {
-    if (mode === 'singlePage' || mode === 'horizontal') {
-      if (currentPage < chapter.images.length) {
-        nextPage();
-      } else if (autoNextChapter && nextSlug) {
-        router.push(`/series/${chapter.seriesSlug}/chapter/${nextSlug}`);
-      }
+    const jump = store.mode === 'doublePage' ? 2 : 1;
+    if (store.currentPage + jump - 1 < chapter.images.length) {
+      goToPage(store.currentPage + jump);
+    } else if (store.autoNextChapter && nextSlug) {
+      router.push(`/series/${chapter.seriesSlug}/chapter/${nextSlug}`);
     }
-  }, [mode, currentPage, chapter.images.length, nextSlug, chapter.seriesSlug, autoNextChapter, nextPage, router]);
+  }, [store.currentPage, chapter.images.length, store.autoNextChapter, nextSlug, chapter.seriesSlug, router, goToPage, store.mode]);
 
   const goPrev = useCallback(() => {
-    if (mode === 'singlePage' || mode === 'horizontal') {
-      if (currentPage > 1) {
-        prevPage();
-      } else if (prevSlug) {
-        router.push(`/series/${chapter.seriesSlug}/chapter/${prevSlug}`);
-      }
+    const jump = store.mode === 'doublePage' ? 2 : 1;
+    if (store.currentPage > jump) {
+      goToPage(store.currentPage - jump);
+    } else if (prevSlug) {
+      router.push(`/series/${chapter.seriesSlug}/chapter/${prevSlug}`);
     }
-  }, [mode, currentPage, prevSlug, chapter.seriesSlug, prevPage, router]);
+  }, [store.currentPage, prevSlug, chapter.seriesSlug, router, goToPage, store.mode]);
 
-  // ─── Keyboard Shortcuts ────────────────────────────────────
-
+  // Keyboard Shortcuts
   useKeyboardShortcuts([
     {
       key: 'ArrowRight',
-      handler: () => (direction === 'rtl' ? goPrev() : goNext()),
-      enabled: mode === 'singlePage' || mode === 'horizontal',
+      handler: () => (store.direction === 'rtl' ? goPrev() : goNext()),
+      enabled: store.mode !== 'longStrip' && store.mode !== 'vertical',
     },
     {
       key: 'ArrowLeft',
-      handler: () => (direction === 'rtl' ? goNext() : goPrev()),
-      enabled: mode === 'singlePage' || mode === 'horizontal',
+      handler: () => (store.direction === 'rtl' ? goNext() : goPrev()),
+      enabled: store.mode !== 'longStrip' && store.mode !== 'vertical',
     },
-    { key: 'f', handler: handleFullscreen },
-    { key: 'h', handler: () => setShowUI((p) => !p) },
-    {
-      key: 'Escape',
-      handler: () => {
-        if (settingsOpen) {
-          setSettingsOpen(false);
-        } else if (commentsOpen) {
-          setCommentsOpen(false);
-        } else {
-          router.push(`/series/${chapter.seriesSlug}`);
-        }
-      },
-    },
+    { key: 'f', handler: () => document.fullscreenElement ? document.exitFullscreen() : containerRef.current?.requestFullscreen() },
+    { key: ' ', handler: goNext },
   ]);
 
-  // ─── Swipe Gestures ───────────────────────────────────────
+  // Tap Zones
+  const handleContainerClick = useCallback((e: React.MouseEvent) => {
+    // If settings are open, don't do anything here, settings backdrop handles it
+    if (settingsOpen) return;
 
-  const { touchHandlers } = useSwipeGestures({
-    onSwipeLeft: () => {
-      if (mode === 'singlePage' || mode === 'horizontal') {
-        if (direction === 'rtl') goPrev(); else goNext();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const w = rect.width;
+    const h = rect.height;
+
+    const isCenter = (x > w * 0.33 && x < w * 0.66) && (y > h * 0.33 && y < h * 0.66);
+    const isLeft = x <= w * 0.33;
+    const isRight = x >= w * 0.66;
+    const isTop = y <= h * 0.33;
+    const isBottom = y >= h * 0.66;
+
+    if (isCenter) {
+      setShowUI(prev => !prev);
+      return;
+    }
+
+    if (store.mode === 'singlePage' || store.mode === 'doublePage') {
+      if (store.direction === 'rtl') {
+        if (isLeft) goNext();
+        else if (isRight) goPrev();
+      } else {
+        if (isLeft) goPrev();
+        else if (isRight) goNext();
       }
-    },
-    onSwipeRight: () => {
-      if (mode === 'singlePage' || mode === 'horizontal') {
-        if (direction === 'rtl') goNext(); else goPrev();
-      }
-    },
-  });
+    } else if (store.mode === 'vertical') {
+      if (isTop) goPrev();
+      else if (isBottom) goNext();
+    }
+  }, [settingsOpen, store.mode, store.direction, goNext, goPrev]);
 
-  // ─── Center-tap to toggle UI ──────────────────────────────
+  // CSS Filter
+  const contentFilterStyle = useMemo(() => ({
+    filter: `contrast(${store.contrast}%) sepia(${store.sepia}%) ${store.grayscale ? 'grayscale(100%)' : ''} ${store.inverted ? 'invert(100%)' : ''}`,
+  }), [store.contrast, store.sepia, store.grayscale, store.inverted]);
 
-  const handleContainerClick = useCallback(
-    (e: React.MouseEvent) => {
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const width = rect.width;
-      const centerStart = width * 0.33;
-      const centerEnd = width * 0.66;
+  // Background
+  const bgClass = {
+    'black': 'bg-[#000000]',
+    'white': 'bg-[#FFFFFF]',
+    'gray': 'bg-[#1e1e1e]',
+  }[store.backgroundColor] || 'bg-black';
 
-      if (x >= centerStart && x <= centerEnd) {
-        setShowUI((p) => !p);
-      } else if (mode === 'singlePage' || mode === 'horizontal') {
-        if (x < centerStart) {
-          if (direction === 'rtl') goNext(); else goPrev();
-        } else {
-          if (direction === 'rtl') goPrev(); else goNext();
-        }
-      }
-    },
-    [mode, direction, goNext, goPrev]
-  );
-
-  // ─── Image load tracking ──────────────────────────────────
-
-  const handleImageLoad = useCallback((pageNumber: number) => {
-    setLoadedImages((prev) => new Set(prev).add(pageNumber));
-  }, []);
-
-  // ─── CSS filter style ─────────────────────────────────────
-
-  const filterStyle = useMemo(
-    () => ({
-      filter: `brightness(${brightness}%) contrast(${contrast}%) sepia(${sepia}%)`,
-      transform: `scale(${zoom / 100})`,
-      transformOrigin: 'center top' as const,
-    }),
-    [brightness, contrast, sepia, zoom]
-  );
-
-  // ─── Progress percentage ──────────────────────────────────
-
-  const progress = totalPages > 0 ? ((currentPage) / totalPages) * 100 : 0;
-
-  // Determine UI visibility
-  const uiVisible = showUI && !isUIHidden;
-
-  if (!mounted) {
-    return (
-      <div className="h-screen w-screen bg-black flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  if (!mounted) return <div className="h-screen w-screen bg-black" />;
 
   return (
-    <div
-      ref={containerRef}
-      className="relative h-screen w-screen bg-black overflow-hidden select-none"
-      onMouseMove={handleMouseMove}
-      {...touchHandlers}
-    >
-      {/* ── Top Bar ────────────────────────────────────────── */}
-      <AnimatePresence>
-        {uiVisible && (
-          <motion.header
-            initial={{ y: -60, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -60, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="absolute top-0 left-0 right-0 z-50 glass border-b border-white/5"
-          >
-            <div className="flex items-center justify-between px-4 py-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <Link
-                  href={`/series/${chapter.seriesSlug}`}
-                  className="flex items-center justify-center w-9 h-9 rounded-lg bg-foreground/5 text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Link>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-text-primary truncate">
-                    {chapter.seriesTitle}
-                  </p>
-                  <p className="text-xs text-white/50 truncate">
-                    {chapter.number !== null ? `Ch. ${chapter.number}` : (chapter.title || 'Oneshot')}
-                    {chapter.number !== null && chapter.title && ` — ${chapter.title}`}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleFullscreen}
-                  className="flex items-center justify-center w-9 h-9 rounded-lg bg-foreground/5 text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
-                  title="Toggle Fullscreen (F)"
-                >
-                  {isFullscreen ? (
-                    <Minimize className="h-4 w-4" />
-                  ) : (
-                    <Maximize className="h-4 w-4" />
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    setCommentsOpen(true);
-                    resetUITimer();
-                  }}
-                  className="flex items-center justify-center w-9 h-9 rounded-lg bg-foreground/5 text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all relative"
-                  title="Comments"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  {comments.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center text-[9px] font-bold text-white">
-                      {comments.length}
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    setSettingsOpen(true);
-                    resetUITimer();
-                  }}
-                  className="flex items-center justify-center w-9 h-9 rounded-lg bg-foreground/5 text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
-                  title="Settings"
-                >
-                  <Settings className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </motion.header>
-        )}
-      </AnimatePresence>
+    <div className={cn("relative h-screen w-screen overflow-hidden select-none", bgClass)}>
+      
+      {/* --- OVERLAYS --- */}
+      {/* Brightness Overlay (Darkens everything below it, pointer-events-none) */}
+      <div 
+        className="pointer-events-none fixed inset-0 z-[40]" 
+        style={{ backgroundColor: `rgba(0, 0, 0, ${1 - (store.brightness / 100)})` }} 
+      />
 
-      {/* ── Reader Content ─────────────────────────────────── */}
-      <div
-        className="h-full w-full"
+      {/* Color Filter Overlay */}
+      {store.colorFilter !== 'transparent' && (
+        <div 
+          className="absolute inset-0 z-20 pointer-events-none mix-blend-multiply" 
+          style={{ backgroundColor: store.colorFilter, opacity: 0.3 }} 
+        />
+      )}
+
+      {/* --- CONTENT AREA --- */}
+      <div 
+        ref={containerRef}
+        className="absolute inset-0 z-10 flex items-center justify-center"
         onClick={handleContainerClick}
+        style={contentFilterStyle}
       >
-        {chapter.sourceType === 'DOWNLOAD' || chapter.sourceType === 'IMPORTED' ? (
-          <div className="flex flex-col items-center justify-center h-full w-full p-4">
-            <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 text-center shadow-2xl">
-              <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
-                <ArrowDownToLine className="h-8 w-8" />
-              </div>
-              
-              <h2 className="text-2xl font-black text-text-primary mb-2">
-                {chapter.sourceType === 'IMPORTED' ? 'Imported Chapter' : 'Download Available'}
-              </h2>
-              <p className="text-text-secondary mb-8">
-                {chapter.sourceType === 'IMPORTED' 
-                  ? 'This chapter was imported from your device and is available for offline reading.' 
-                  : 'This chapter is available as a high-quality PDF download for offline reading.'}
-              </p>
-              
-              {downloadState?.status === 'DOWNLOADING' ? (
-                <div className="w-full text-center mb-8">
-                  <div className="w-full bg-foreground/10 rounded-full h-4 mb-2 overflow-hidden">
-                    <div 
-                      className="bg-primary h-4 transition-all duration-300 rounded-full" 
-                      style={{ width: `${Math.round(downloadState.progress * 100)}%` }} 
+        {/* Webtoon / Long Strip */}
+        {store.mode === 'longStrip' && (
+          <div ref={scrollRef} className="h-full w-full overflow-y-auto overflow-x-hidden thin-scrollbar" style={{ scrollBehavior: 'smooth' }}>
+            <div 
+              style={{
+                height: `${rowVirtualizer.getTotalSize()}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+              className={cn("w-full mx-auto", store.longStripGap ? "py-4" : "")}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const img = chapter.images[virtualRow.index];
+                return (
+                  <div
+                    key={virtualRow.index}
+                    data-index={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                    className={cn("flex justify-center bg-transparent", store.longStripGap ? "py-2" : "py-0")}
+                  >
+                    {/* Using standard img for webtoon for perfectly seamless stacking without layout shifts when width/height are known */}
+                    {/* We can use Next.js Image if we configure it correctly, but simple img is often better for zero-gap webtoons if unoptimized anyway */}
+                    <img
+                      src={img.imageUrl}
+                      alt={`Page ${img.pageNumber}`}
+                      width={img.width || 800}
+                      height={img.height || 1200}
+                      className={cn(
+                        "block m-0 p-0 h-auto", // Zero gap guarantee
+                        store.fitMode === 'original' 
+                          ? "w-auto object-none"
+                          : store.fitMode === 'width'
+                            ? "w-full max-w-full"
+                            : "w-full max-w-[56rem]"
+                      )}
+                      loading={virtualRow.index <= 3 ? 'eager' : 'lazy'}
                     />
                   </div>
-                  <p className="text-sm font-bold text-primary">
-                    Downloading {Math.round(downloadState.progress * 100)}%
-                  </p>
-                </div>
-              ) : downloadState?.status === 'COMPLETED' ? (
-                <button
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    if (downloadState.localUri && Capacitor.isNativePlatform()) {
-                      try {
-                        const { Browser } = await import('@capacitor/browser');
-                        await Browser.open({ url: downloadState.localUri });
-                      } catch (err) {
-                        console.error('Failed to open local file', err);
-                      }
-                    }
-                  }}
-                  className="inline-flex items-center justify-center w-full gap-2 rounded-xl bg-green-600 px-8 py-4 text-base font-bold text-white transition-all hover:bg-green-700 active:scale-95 shadow-lg mb-8"
-                >
-                  <ArrowDownToLine className="h-5 w-5" />
-                  Read Offline
-                </button>
-              ) : chapter.sourceType !== 'IMPORTED' ? (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (Capacitor.isNativePlatform()) {
-                      router.push(`/download/${chapter.id}`);
-                    } else {
-                      window.open(`/download/${chapter.id}`, '_blank');
-                    }
-                  }}
-                  className="inline-flex items-center justify-center w-full gap-2 rounded-xl bg-primary px-8 py-4 text-base font-bold text-white transition-all hover:bg-primary-hover active:scale-95 shadow-lg shadow-primary/25 mb-8"
-                >
-                  <ArrowDownToLine className="h-5 w-5" />
-                  Download Now
-                </button>
-              ) : null}
-              <div className="mt-8 pt-8 border-t border-border flex justify-between items-center">
-                {prevSlug ? (
-                  <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${prevSlug}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-sm font-medium text-text-muted hover:text-primary transition-colors flex items-center gap-1"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Link>
-                ) : <div />}
-                {nextSlug ? (
-                  <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${nextSlug}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-sm font-medium text-text-muted hover:text-primary transition-colors flex items-center gap-1"
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                ) : <div />}
-              </div>
+                );
+              })}
             </div>
-          </div>
-        ) : (
-          <>
-
-        {/* Vertical / Long Strip Mode */}
-        {(mode === 'vertical' || mode === 'longStrip') && (
-          <div
-            ref={scrollRef}
-            className="h-full w-full overflow-y-auto overflow-x-hidden thin-scrollbar"
-          >
-            <div
-              className={cn(
-                'mx-auto',
-                fitMode === 'width' && 'w-full max-w-[900px]',
-                fitMode === 'height' && 'w-auto',
-                fitMode === 'original' && 'w-auto'
-              )}
-              style={filterStyle}
-            >
-              {chapter.images.map((img) => (
-                <div
-                  key={img.id}
-                  data-page={img.pageNumber}
-                  className="relative w-full"
-                >
-                  {/* Loading skeleton */}
-                  {!loadedImages.has(img.pageNumber) && (
-                    <div
-                      className="w-full skeleton"
-                      style={{
-                        aspectRatio:
-                          img.width && img.height
-                            ? `${img.width}/${img.height}`
-                            : '2/3',
-                      }}
-                    >
-                      <div className="flex items-center justify-center h-full text-white/20">
-                        <FileImage className="h-12 w-12" />
-                      </div>
-                    </div>
-                  )}
-                  <Image
-                    src={img.imageUrl}
-                    alt={`Page ${img.pageNumber}`}
-                    width={img.width || 800}
-                    height={img.height || 1200}
-                    className={cn(
-                      'w-full h-auto block',
-                      !loadedImages.has(img.pageNumber) && 'opacity-0 absolute'
-                    )}
-                    priority={img.pageNumber <= 3}
-                    fetchPriority={img.pageNumber <= 3 ? "high" : "auto"}
-                    onLoad={() => handleImageLoad(img.pageNumber)}
-                    sizes="(max-width: 900px) 100vw, 900px"
-                  />
-                </div>
-              ))}
-
-              {/* Subscribe Card */}
-              <div className="max-w-[900px] mx-auto px-4 mt-12" onClick={e => e.stopPropagation()}>
-                <SubscribeCard youtubeUrl={youtubeUrl || null} />
-              </div>
-
-              {/* End of chapter */}
-              <div className="py-16 px-4 text-center">
-                <p className="text-white/30 text-sm mb-6">
-                  End of {chapter.number !== null ? `Chapter ${chapter.number}` : (chapter.title || 'Oneshot')}
-                </p>
-                <div className="flex items-center justify-center gap-4">
-                  {prevSlug && (
-                    <Link
-                      href={`/series/${chapter.seriesSlug}/chapter/${prevSlug}`}
-                      className="flex items-center gap-2 rounded-xl bg-foreground/5 px-6 py-3 text-sm font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
-                    </Link>
-                  )}
-                  {nextSlug && (
-                    <Link
-                      href={`/series/${chapter.seriesSlug}/chapter/${nextSlug}`}
-                      className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white hover:bg-primary-hover transition-all"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Next Chapter
-                      <ChevronRight className="h-4 w-4" />
-                    </Link>
-                  )}
-                </div>
-              </div>
+            
+            {/* End of Chapter */}
+            <div className="py-24 text-center">
+               <div className="max-w-[900px] mx-auto px-4 mb-12">
+                 <SubscribeCard youtubeUrl={youtubeUrl || null} />
+               </div>
+               <p className="text-white/50 text-sm mb-6 font-medium">End of Chapter</p>
+               <div className="flex justify-center gap-4">
+                 {nextSlug && (
+                   <button 
+                     onClick={(e) => { e.stopPropagation(); router.push(`/series/${chapter.seriesSlug}/chapter/${nextSlug}`); }}
+                     className="bg-primary/20 text-primary px-8 py-3 rounded-full font-bold hover:bg-primary/30 active:scale-95 transition-all"
+                   >
+                     Next Chapter
+                   </button>
+                 )}
+               </div>
             </div>
           </div>
         )}
 
-        {/* Single Page / Horizontal Mode */}
-        {(mode === 'singlePage' || mode === 'horizontal') && (
-          <div className="h-full w-full flex items-center justify-center">
-            <div
-              className={cn(
-                'relative',
-                fitMode === 'width' && 'w-full max-w-[900px] h-auto',
-                fitMode === 'height' && 'h-full w-auto',
-                fitMode === 'original' && 'w-auto h-auto'
-              )}
-              style={filterStyle}
-            >
-              {chapter.images[currentPage - 1] && (
-                <>
-                  {!loadedImages.has(currentPage) && (
-                    <div className="w-[800px] max-w-full aspect-[2/3] skeleton flex items-center justify-center">
-                      <FileImage className="h-12 w-12 text-white/20" />
-                    </div>
-                  )}
-                  <Image
-                    src={chapter.images[currentPage - 1].imageUrl}
-                    alt={`Page ${currentPage}`}
-                    width={chapter.images[currentPage - 1].width || 800}
-                    height={chapter.images[currentPage - 1].height || 1200}
-                    className={cn(
-                      'max-h-screen object-contain mx-auto',
-                      fitMode === 'width' && 'w-full h-auto',
-                      fitMode === 'height' && 'h-full w-auto',
-                      !loadedImages.has(currentPage) && 'opacity-0 absolute'
-                    )}
-                    priority
-                    fetchPriority="high"
-                    onLoad={() => handleImageLoad(currentPage)}
-                    sizes="900px"
-                  />
-                </>
-              )}
-            </div>
-
-            {/* Side navigation arrows */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (direction === 'rtl') goNext(); else goPrev();
-              }}
-              className="absolute left-0 top-0 bottom-0 w-16 flex items-center justify-start pl-3 text-white/0 hover:text-white/60 transition-all group"
-              disabled={direction === 'rtl' ? currentPage >= totalPages : currentPage <= 1}
-            >
-              <ChevronLeft className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (direction === 'rtl') goPrev(); else goNext();
-              }}
-              className="absolute right-0 top-0 bottom-0 w-16 flex items-center justify-end pr-3 text-white/0 hover:text-white/60 transition-all group"
-              disabled={direction === 'rtl' ? currentPage <= 1 : currentPage >= totalPages}
-            >
-              <ChevronRight className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-          </div>
-        )}
-        </>
+        {/* Paged Modes (Single / Vertical / Double) */}
+        {(store.mode === 'singlePage' || store.mode === 'vertical' || store.mode === 'horizontal' || store.mode === 'doublePage') && (
+           <TransformWrapper
+             initialScale={1}
+             minScale={1}
+             maxScale={3}
+             centerOnInit
+             doubleClick={{ step: 0.5, disabled: !store.doubleTapZoom }}
+             pinch={{ step: 5 }}
+             panning={{ disabled: false }} // When scaled = 1, panning is prevented by bounds usually
+             wheel={{ disabled: true }}
+           >
+             {({ state }) => (
+               <TransformComponent wrapperClass="w-full h-full" contentClass="w-full h-full flex items-center justify-center">
+                 <div className="flex w-full h-full items-center justify-center pointer-events-none">
+                 {store.mode === 'doublePage' ? (
+                   <>
+                     {/* For Double Page, we show 2 images side-by-side. Need to handle direction. */}
+                     {store.direction === 'rtl' ? (
+                       <>
+                         {/* Right-to-left: Right side is current page, Left side is next page */}
+                         {chapter.images[store.currentPage] && (
+                           <Image src={chapter.images[store.currentPage].imageUrl} alt="Left" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized />
+                         )}
+                         {chapter.images[store.currentPage - 1] && (
+                           <Image src={chapter.images[store.currentPage - 1].imageUrl} alt="Right" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized priority />
+                         )}
+                       </>
+                     ) : (
+                       <>
+                         {/* Left-to-right: Left side is current page, Right side is next page */}
+                         {chapter.images[store.currentPage - 1] && (
+                           <Image src={chapter.images[store.currentPage - 1].imageUrl} alt="Left" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized priority />
+                         )}
+                         {chapter.images[store.currentPage] && (
+                           <Image src={chapter.images[store.currentPage].imageUrl} alt="Right" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized />
+                         )}
+                       </>
+                     )}
+                   </>
+                 ) : (
+                   chapter.images[store.currentPage - 1] && (
+                     <Image
+                       src={chapter.images[store.currentPage - 1].imageUrl}
+                       alt={`Page ${store.currentPage}`}
+                       width={chapter.images[store.currentPage - 1].width || 800}
+                       height={chapter.images[store.currentPage - 1].height || 1200}
+                       className={cn(
+                         "max-w-full max-h-screen pointer-events-auto",
+                         store.fitMode === 'width' && "w-full h-auto",
+                         store.fitMode === 'height' && "h-full w-auto",
+                         store.fitMode === 'smart' && "w-auto h-screen object-contain",
+                         store.cropBorders && "scale-105"
+                       )}
+                       priority
+                       unoptimized
+                     />
+                   )
+                 )}
+                 </div>
+               </TransformComponent>
+             )}
+           </TransformWrapper>
         )}
       </div>
 
-      {/* ── Bottom Bar ─────────────────────────────────────── */}
+      {/* --- UI LAYER (Bars, Settings, Seekbar) --- */}
       <AnimatePresence>
-        {uiVisible && (
-          <motion.footer
-            initial={{ y: 60, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 60, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="absolute bottom-0 left-0 right-0 z-50 glass border-t border-white/5"
-          >
-            {/* Progress bar */}
-            <div
-              className="relative h-1 w-full bg-foreground/5 cursor-pointer group"
-              onClick={(e) => {
-                e.stopPropagation();
-                const rect = e.currentTarget.getBoundingClientRect();
-                const pct = (e.clientX - rect.left) / rect.width;
-                const page = Math.max(1, Math.ceil(pct * totalPages));
-                goToPage(page);
-              }}
+        {showUI && (
+          <>
+            {/* Top Bar */}
+            <motion.header
+              initial={{ y: '-100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '-100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="absolute top-0 inset-x-0 z-50 bg-[#0F1115]/90 backdrop-blur-xl border-b border-white/5 pt-safe"
             >
-              <div
-                className="h-full bg-primary transition-all duration-200 group-hover:h-1.5"
-                style={{ width: `${progress}%` }}
-              />
-              {/* Drag handle */}
-              <div
-                className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-primary shadow-lg shadow-primary/30 opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ left: `calc(${progress}% - 7px)` }}
-              />
-            </div>
+              <div className="flex h-14 items-center px-4 justify-between">
+                <button onClick={() => router.push(`/series/${chapter.seriesSlug}`)} className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
+                  <ArrowLeft className="h-6 w-6" />
+                </button>
+                <div className="flex-1 px-4 flex flex-col items-center overflow-hidden">
+                  <h1 className="text-white font-bold text-[15px] truncate w-full text-center tracking-wide">{chapter.seriesTitle}</h1>
+                  <span className="text-[#E53935] text-[11px] font-semibold tracking-wider uppercase truncate w-full text-center">Chapter {chapter.number || ''} {chapter.title ? `- ${chapter.title}` : ''}</span>
+                </div>
+                <div className="flex items-center gap-1 -mr-2">
+                  <button className="p-2 text-white hover:bg-[#E53935]/20 hover:text-[#E53935] rounded-full transition-colors">
+                    <Bookmark className="w-5 h-5" />
+                  </button>
+                  <button onClick={() => setCommentsOpen(true)} className="p-2 text-white hover:bg-white/10 rounded-full transition-colors relative">
+                    <MessageSquare className="w-5 h-5" />
+                    {comments?.length > 0 && (
+                      <span className="absolute top-2 right-2 w-2 h-2 bg-[#E53935] rounded-full" />
+                    )}
+                  </button>
+                  <button onClick={() => setSettingsOpen(true)} className="p-2 text-white hover:bg-white/10 rounded-full transition-colors">
+                    <Settings className="w-5 h-5" />
+                  </button>
+                  <button className="p-2 text-white hover:bg-white/10 rounded-full transition-colors hidden sm:flex">
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </motion.header>
 
-            <div className="flex items-center justify-between px-4 py-3">
-              {/* Prev chapter */}
-              <div className="flex items-center gap-2">
-                {prevSlug ? (
-                  <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${prevSlug}`}
-                    className="flex items-center gap-1.5 rounded-lg bg-foreground/5 px-3 py-2 text-xs font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Ch. {chapter.prevChapter?.number}</span>
-                    <span className="sm:hidden">Prev</span>
-                  </Link>
-                ) : (
-                  <div className="w-16" />
-                )}
+            {/* Bottom Bar / Page Indicator */}
+            {store.showPageNumber && (
+              <motion.footer
+                initial={{ y: '100%', opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: '100%', opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="absolute bottom-0 inset-x-0 z-50 bg-gradient-to-t from-[#0F1115] to-transparent pb-safe pointer-events-none"
+              >
+                <div className="px-4 pb-6 pt-12 flex items-center justify-center">
+                  <div className="bg-[#1A1D24]/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 text-white/90 text-[11px] font-bold tracking-widest uppercase shadow-xl pointer-events-auto">
+                    {store.currentPage} / {chapter.images.length}
+                  </div>
+                </div>
+              </motion.footer>
+            )}
+
+            {/* Vertical Page/Chapter Navigator */}
+            <motion.div
+              initial={{ opacity: 0, x: store.verticalNavigatorPosition === 'right' ? 20 : -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: store.verticalNavigatorPosition === 'right' ? 20 : -20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className={cn(
+                "absolute top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-3",
+                store.verticalNavigatorPosition === 'right' ? "right-4" : "left-4"
+              )}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                onClick={() => goToPage(1)} 
+                className="w-10 h-10 rounded-full bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white shadow-2xl active:scale-95 transition-all hover:bg-[#E53935]"
+              >
+                <ChevronLeft className="w-5 h-5 rotate-90" />
+              </button>
+              
+              <div 
+                className="relative w-10 bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl py-4 flex justify-center transition-all"
+                style={{ height: `${store.navigatorHeight}vh`, maxHeight: '400px' }}
+              >
+                <input
+                  type="range"
+                  min={1}
+                  max={chapter.images.length}
+                  value={chapter.images.length - store.currentPage + 1}
+                  onChange={(e) => {
+                    const val = chapter.images.length - parseInt(e.target.value) + 1;
+                    goToPage(val);
+                  }}
+                  className="w-full h-full appearance-none bg-transparent cursor-pointer outline-none slider-vertical"
+                  style={{ writingMode: 'vertical-rl', direction: 'rtl', WebkitAppearance: 'slider-vertical' }}
+                />
               </div>
 
-              {/* Page indicator */}
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-white/80">
-                  {currentPage}
-                  <span className="text-white/30 mx-1">/</span>
-                  {totalPages}
-                </span>
-              </div>
-
-              {/* Next chapter */}
-              <div className="flex items-center gap-2">
-                {nextSlug ? (
-                  <Link
-                    href={`/series/${chapter.seriesSlug}/chapter/${nextSlug}`}
-                    className="flex items-center gap-1.5 rounded-lg bg-foreground/5 px-3 py-2 text-xs font-medium text-white/70 hover:bg-foreground/10 hover:text-text-primary transition-all"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <span className="hidden sm:inline">Ch. {chapter.nextChapter?.number}</span>
-                    <span className="sm:hidden">Next</span>
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Link>
-                ) : (
-                  <div className="w-16" />
-                )}
-              </div>
-            </div>
-          </motion.footer>
+              <button 
+                onClick={() => goToPage(chapter.images.length)} 
+                className="w-10 h-10 rounded-full bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white shadow-2xl active:scale-95 transition-all hover:bg-[#E53935]"
+              >
+                <ChevronRight className="w-5 h-5 rotate-90" />
+              </button>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
-      {/* ── Settings Panel ─────────────────────────────────── */}
+      {/* --- QUICK SETTINGS BOTTOM SHEET --- */}
       <AnimatePresence>
         {settingsOpen && (
           <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-[60] bg-black/40"
-              onClick={() => setSettingsOpen(false)}
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-sm" 
+              onClick={() => setSettingsOpen(false)} 
             />
-
-            {/* Panel */}
-            <motion.aside
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="absolute top-0 right-0 bottom-0 z-[70] w-full max-w-[360px] bg-surface border-l border-border overflow-y-auto thin-scrollbar"
-              onClick={(e) => e.stopPropagation()}
+            <motion.div
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="absolute bottom-0 inset-x-0 z-[70] bg-[#0F1115] rounded-t-[32px] flex flex-col pb-safe shadow-2xl overflow-hidden border-t border-white/10"
+              onClick={e => e.stopPropagation()}
             >
-              {/* Panel Header */}
-              <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-surface border-b border-border">
-                <h2 className="text-lg font-bold text-text-primary">
-                  Reader Settings
-                </h2>
-                <button
-                  onClick={() => setSettingsOpen(false)}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-card text-text-muted hover:text-text-primary hover:bg-card-hover transition-all"
-                >
-                  <X className="h-4 w-4" />
+              <div className="p-6 flex justify-between items-center border-b border-white/5 shrink-0 bg-[#1A1D24]/50">
+                <h3 className="font-bold text-xl text-white tracking-tight">Reader Settings</h3>
+                <button onClick={() => setSettingsOpen(false)} className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-white/70 transition-colors">
+                  <X className="w-5 h-5"/>
                 </button>
               </div>
-
-              <div className="p-5 space-y-6">
-                {/* Reader Mode */}
-                <SettingGroup label="Reader Mode" icon={<Monitor className="h-4 w-4" />}>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(
-                      [
-                        { value: 'vertical', label: 'Vertical', icon: <ArrowDownToLine className="h-4 w-4" /> },
-                        { value: 'singlePage', label: 'Single Page', icon: <FileImage className="h-4 w-4" /> },
-                        { value: 'longStrip', label: 'Long Strip', icon: <Scroll className="h-4 w-4" /> },
-                        { value: 'horizontal', label: 'Horizontal', icon: <ArrowRightToLine className="h-4 w-4" /> },
-                      ] as { value: ReaderMode; label: string; icon: React.ReactNode }[]
-                    ).map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => setMode(option.value)}
-                        className={cn(
-                          'flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium transition-all border',
-                          mode === option.value
-                            ? 'bg-primary/10 border-primary/30 text-primary'
-                            : 'bg-card border-border text-text-secondary hover:border-primary/20 hover:bg-card-hover'
-                        )}
-                      >
-                        {option.icon}
-                        {option.label}
-                      </button>
-                    ))}
+              
+              <div className="p-6 flex flex-col gap-8 overflow-y-auto max-h-[75vh] thin-scrollbar">
+                
+                {/* Reading Mode */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-[#E53935]">
+                    <Layout className="w-5 h-5" />
+                    <h4 className="font-bold text-sm uppercase tracking-widest">Reading Mode</h4>
                   </div>
-                </SettingGroup>
-
-                {/* Fit Mode */}
-                <SettingGroup label="Fit Mode" icon={<Maximize className="h-4 w-4" />}>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(
-                      [
-                        { value: 'width', label: 'Width' },
-                        { value: 'height', label: 'Height' },
-                        { value: 'original', label: 'Original' },
-                      ] as { value: FitMode; label: string }[]
-                    ).map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => setFitMode(option.value)}
-                        className={cn(
-                          'rounded-xl px-3 py-2.5 text-xs font-medium transition-all border',
-                          fitMode === option.value
-                            ? 'bg-primary/10 border-primary/30 text-primary'
-                            : 'bg-card border-border text-text-secondary hover:border-primary/20 hover:bg-card-hover'
-                        )}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </SettingGroup>
-
-                {/* Reading Direction */}
-                <SettingGroup label="Reading Direction" icon={<ArrowRightToLine className="h-4 w-4" />}>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(
-                      [
-                        { value: 'ltr', label: 'Left to Right', icon: <ArrowRightToLine className="h-4 w-4" /> },
-                        { value: 'rtl', label: 'Right to Left', icon: <ArrowLeftToLine className="h-4 w-4" /> },
-                      ] as { value: ReadingDirection; label: string; icon: React.ReactNode }[]
-                    ).map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => setDirection(option.value)}
-                        className={cn(
-                          'flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium transition-all border',
-                          direction === option.value
-                            ? 'bg-primary/10 border-primary/30 text-primary'
-                            : 'bg-card border-border text-text-secondary hover:border-primary/20 hover:bg-card-hover'
-                        )}
-                      >
-                        {option.icon}
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </SettingGroup>
-
-                {/* Image Filters */}
-                <SettingGroup label="Image Filters" icon={<Sun className="h-4 w-4" />}>
-                  <SliderControl
-                    label="Brightness"
-                    icon={<Sun className="h-3.5 w-3.5" />}
-                    value={brightness}
-                    onChange={setBrightness}
-                    min={20}
-                    max={200}
-                    unit="%"
-                  />
-                  <SliderControl
-                    label="Contrast"
-                    icon={<Contrast className="h-3.5 w-3.5" />}
-                    value={contrast}
-                    onChange={setContrast}
-                    min={20}
-                    max={200}
-                    unit="%"
-                  />
-                  <SliderControl
-                    label="Sepia"
-                    icon={<Smartphone className="h-3.5 w-3.5" />}
-                    value={sepia}
-                    onChange={setSepia}
-                    min={0}
-                    max={100}
-                    unit="%"
-                  />
-                </SettingGroup>
-
-                {/* Zoom */}
-                <SettingGroup label="Zoom" icon={<ZoomIn className="h-4 w-4" />}>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setZoom(Math.max(50, zoom - 10))}
-                      className="flex items-center justify-center w-9 h-9 rounded-lg bg-card border border-border text-text-secondary hover:bg-card-hover transition-all"
-                    >
-                      <ZoomOut className="h-4 w-4" />
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={() => { store.setMode('longStrip'); if(store.longStripGap) store.toggleLongStripGap(); }} className={cn("py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border", store.mode === 'longStrip' && !store.longStripGap ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "bg-[#1A1D24] border-transparent text-white/70 hover:bg-white/5")}>
+                      <Scroll className="w-6 h-6" />
+                      <span className="text-xs font-semibold">Long Strip</span>
                     </button>
-                    <div className="flex-1 text-center">
-                      <span className="text-sm font-semibold text-text-primary">
-                        {zoom}%
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setZoom(Math.min(200, zoom + 10))}
-                      className="flex items-center justify-center w-9 h-9 rounded-lg bg-card border border-border text-text-secondary hover:bg-card-hover transition-all"
-                    >
-                      <ZoomIn className="h-4 w-4" />
+                    <button onClick={() => { store.setMode('longStrip'); if(!store.longStripGap) store.toggleLongStripGap(); }} className={cn("py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border", store.mode === 'longStrip' && store.longStripGap ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "bg-[#1A1D24] border-transparent text-white/70 hover:bg-white/5")}>
+                      <Scroll className="w-6 h-6 border-dashed border-2 rounded-sm" />
+                      <span className="text-xs font-semibold">Strip (Gaps)</span>
                     </button>
-                  </div>
-                </SettingGroup>
-
-                {/* Auto-scroll */}
-                <SettingGroup label="Auto-scroll" icon={<Play className="h-4 w-4" />}>
-                  <ToggleSwitch
-                    label="Enable Auto-scroll"
-                    enabled={autoScroll}
-                    onToggle={toggleAutoScroll}
-                  />
-                  {autoScroll && (
-                    <SliderControl
-                      label="Speed"
-                      icon={<Gauge className="h-3.5 w-3.5" />}
-                      value={autoScrollSpeed}
-                      onChange={setAutoScrollSpeed}
-                      min={1}
-                      max={10}
-                      unit="x"
-                    />
-                  )}
-                </SettingGroup>
-
-                {/* Auto Next Chapter */}
-                <SettingGroup label="Navigation" icon={<SkipForward className="h-4 w-4" />}>
-                  <ToggleSwitch
-                    label="Auto Next Chapter"
-                    enabled={autoNextChapter}
-                    onToggle={toggleAutoNextChapter}
-                  />
-                </SettingGroup>
-
-                {/* Reset */}
-                <button
-                  onClick={resetFilters}
-                  className="flex items-center justify-center gap-2 w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-text-secondary hover:bg-card-hover hover:text-text-primary transition-all"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  Reset All Filters
-                </button>
-
-                {/* Keyboard shortcuts hint */}
-                <div className="rounded-xl bg-card border border-border p-4">
-                  <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">
-                    Keyboard Shortcuts
-                  </p>
-                  <div className="space-y-2 text-xs text-text-secondary">
-                    <ShortcutRow keys={['←', '→']} action="Prev / Next page" />
-                    <ShortcutRow keys={['F']} action="Toggle fullscreen" />
-                    <ShortcutRow keys={['H']} action="Toggle UI" />
-                    <ShortcutRow keys={['Esc']} action="Exit reader" />
+                    <button onClick={() => { store.setMode('singlePage'); store.setDirection('ltr'); }} className={cn("py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border", store.mode === 'singlePage' && store.direction === 'ltr' ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "bg-[#1A1D24] border-transparent text-white/70 hover:bg-white/5")}>
+                      <ArrowRightToLine className="w-6 h-6" />
+                      <span className="text-xs font-semibold">Paged (L→R)</span>
+                    </button>
+                    <button onClick={() => { store.setMode('singlePage'); store.setDirection('rtl'); }} className={cn("py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border", store.mode === 'singlePage' && store.direction === 'rtl' ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "bg-[#1A1D24] border-transparent text-white/70 hover:bg-white/5")}>
+                      <ArrowLeftToLine className="w-6 h-6" />
+                      <span className="text-xs font-semibold">Paged (R→L)</span>
+                    </button>
+                    <button onClick={() => store.setMode('vertical')} className={cn("py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border", store.mode === 'vertical' ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "bg-[#1A1D24] border-transparent text-white/70 hover:bg-white/5")}>
+                      <ArrowDownToLine className="w-6 h-6" />
+                      <span className="text-xs font-semibold">Paged Vertical</span>
+                    </button>
+                    <button onClick={() => store.setMode('doublePage')} className={cn("py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border", store.mode === 'doublePage' ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "bg-[#1A1D24] border-transparent text-white/70 hover:bg-white/5")}>
+                      <Columns className="w-6 h-6" />
+                      <span className="text-xs font-semibold">Double Page</span>
+                    </button>
                   </div>
                 </div>
+
+                {/* General Settings */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-[#E53935]">
+                    <Settings className="w-5 h-5" />
+                    <h4 className="font-bold text-sm uppercase tracking-widest">General</h4>
+                  </div>
+                  
+                  <div className="space-y-4 bg-[#1A1D24] p-4 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-white/90">Show Page Number</span>
+                      <button onClick={() => store.toggleShowPageNumber()} className={cn("w-12 h-6 rounded-full transition-colors relative", store.showPageNumber ? "bg-[#E53935]" : "bg-white/10")}>
+                        <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.showPageNumber ? "left-7" : "left-1")} />
+                      </button>
+                    </div>
+                    
+                    <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
+                      <span className="text-sm font-medium text-white/90">Navigator Position</span>
+                      <div className="flex gap-2">
+                        <button onClick={() => store.setVerticalNavigatorPosition('left')} className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-all border", store.verticalNavigatorPosition === 'left' ? "bg-[#E53935] text-white border-transparent" : "bg-transparent text-white/50 border-white/10 hover:bg-white/5")}>Left</button>
+                        <button onClick={() => store.setVerticalNavigatorPosition('right')} className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-all border", store.verticalNavigatorPosition === 'right' ? "bg-[#E53935] text-white border-transparent" : "bg-transparent text-white/50 border-white/10 hover:bg-white/5")}>Right</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Custom Filters */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-[#E53935]">
+                    <Palette className="w-5 h-5" />
+                    <h4 className="font-bold text-sm uppercase tracking-widest">Custom Filter</h4>
+                  </div>
+                  
+                  <div className="space-y-6 bg-[#1A1D24] p-4 rounded-2xl">
+                    {/* Brightness */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-white/90">Brightness</span>
+                        <span className="text-xs font-bold text-white/50">{Math.round(store.brightness)}%</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Sun className="w-4 h-4 text-white/30" />
+                        <input 
+                          type="range" min="10" max="100" step="1" 
+                          value={store.brightness} 
+                          onChange={(e) => store.setBrightness(parseInt(e.target.value))}
+                          className="flex-1 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#E53935] outline-none"
+                        />
+                        <Sun className="w-5 h-5 text-white/90" />
+                      </div>
+                    </div>
+                    
+                    {/* Color Filters */}
+                    <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
+                      <span className="text-sm font-medium text-white/90">Color Overlay</span>
+                      <div className="flex gap-2">
+                        {['transparent', '#F5E6C8', '#E8F5E9', '#E3F2FD', '#FCE4EC'].map(color => (
+                          <button 
+                            key={color}
+                            onClick={() => store.setColorFilter(color)}
+                            className={cn("w-10 h-10 rounded-full border-2 transition-transform", store.colorFilter === color ? "border-[#E53935] scale-110" : "border-transparent hover:scale-105")}
+                            style={{ backgroundColor: color === 'transparent' ? '#333' : color }}
+                          >
+                            {color === 'transparent' && <span className="text-[10px] text-white/50 block mt-2">None</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Toggles */}
+                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                      <span className="text-sm font-medium text-white/90">Grayscale</span>
+                      <button onClick={() => store.toggleGrayscale()} className={cn("w-12 h-6 rounded-full transition-colors relative", store.grayscale ? "bg-[#E53935]" : "bg-white/10")}>
+                        <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.grayscale ? "left-7" : "left-1")} />
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-white/90">Invert Colors</span>
+                      <button onClick={() => store.toggleInverted()} className={cn("w-12 h-6 rounded-full transition-colors relative", store.inverted ? "bg-[#E53935]" : "bg-white/10")}>
+                        <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.inverted ? "left-7" : "left-1")} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
               </div>
-            </motion.aside>
+            </motion.div>
           </>
         )}
       </AnimatePresence>
 
-      {/* ── Comments Panel ─────────────────────────────────── */}
+      {/* --- COMMENTS BOTTOM SHEET --- */}
       <AnimatePresence>
         {commentsOpen && (
           <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-[60] bg-black/40"
-              onClick={() => setCommentsOpen(false)}
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 z-[60] bg-black/50" 
+              onClick={() => setCommentsOpen(false)} 
             />
-
-            {/* Panel */}
-            <motion.aside
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="absolute top-0 right-0 bottom-0 z-[70] w-full max-w-md bg-surface border-l border-border overflow-y-auto thin-scrollbar"
-              onClick={(e) => e.stopPropagation()}
+            <motion.div
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="absolute bottom-0 inset-x-0 z-[70] bg-[#121212] rounded-t-2xl h-[80vh] flex flex-col pb-safe shadow-2xl"
+              onClick={e => e.stopPropagation()}
             >
-              {/* Panel Header */}
-              <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-surface border-b border-border">
-                <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  Comments
-                </h2>
-                <button
-                  onClick={() => setCommentsOpen(false)}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-card text-text-muted hover:text-text-primary hover:bg-card-hover transition-all"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+              <div className="p-4 flex justify-between items-center border-b border-white/10 text-white shrink-0">
+                <h3 className="font-bold text-lg flex items-center gap-2"><MessageSquare className="w-5 h-5"/> Comments</h3>
+                <button onClick={() => setCommentsOpen(false)} className="p-2"><X className="w-5 h-5"/></button>
               </div>
-
-              <div className="p-5">
-                <CommentSection 
-                  chapterId={chapter.id} 
-                  comments={comments} 
-                  currentUserId={currentUserId} 
-                />
+              <div className="p-4 flex-1 overflow-y-auto thin-scrollbar bg-black/20">
+                <CommentSection chapterId={chapter.id} comments={comments || []} currentUserId={currentUserId} />
               </div>
-            </motion.aside>
+            </motion.div>
           </>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-// ─── Sub-components ────────────────────────────────────────────
-
-function SettingGroup({
-  label,
-  icon,
-  children,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-text-muted">{icon}</span>
-        <h3 className="text-sm font-semibold text-text-primary">{label}</h3>
-      </div>
-      <div className="space-y-3">{children}</div>
-    </div>
-  );
-}
-
-function SliderControl({
-  label,
-  icon,
-  value,
-  onChange,
-  min,
-  max,
-  unit,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  value: number;
-  onChange: (v: number) => void;
-  min: number;
-  max: number;
-  unit: string;
-}) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="flex items-center gap-1.5 text-xs text-text-secondary">
-          {icon}
-          {label}
-        </span>
-        <span className="text-xs font-medium text-text-primary">
-          {value}{unit}
-        </span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-1.5 rounded-full bg-card appearance-none cursor-pointer accent-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-primary/30"
-      />
-    </div>
-  );
-}
-
-function ToggleSwitch({
-  label,
-  enabled,
-  onToggle,
-}: {
-  label: string;
-  enabled: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-text-secondary">{label}</span>
-      <button
-        onClick={onToggle}
-        className={cn(
-          'relative w-11 h-6 rounded-full transition-colors duration-200',
-          enabled ? 'bg-primary' : 'bg-card border border-border'
-        )}
-      >
-        <div
-          className={cn(
-            'absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200',
-            enabled ? 'translate-x-[22px]' : 'translate-x-0.5'
-          )}
-        />
-      </button>
-    </div>
-  );
-}
-
-function ShortcutRow({ keys, action }: { keys: string[]; action: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-1">
-        {keys.map((key, i) => (
-          <span key={i}>
-            <kbd className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 rounded bg-surface border border-border text-[10px] font-mono text-text-muted">
-              {key}
-            </kbd>
-            {i < keys.length - 1 && <span className="mx-0.5 text-text-muted">/</span>}
-          </span>
-        ))}
-      </div>
-      <span>{action}</span>
     </div>
   );
 }

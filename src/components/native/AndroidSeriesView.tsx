@@ -172,7 +172,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
     if (dl?.status === 'COMPLETED') {
       const exists = await localChapterFileExists(chapter.id);
       if (exists) {
-        router.push(`/android-reader?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`);
+        window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`;
         return;
       }
       // Missing file -> fall through to download
@@ -187,7 +187,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
     }
 
     // 3. Fallback online reader
-    router.push(`/android-reader?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`);
+    window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`;
   };
 
   // Auto-open effect
@@ -198,7 +198,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
       // Need to find the chapter slug for the url
       const ch = chapters.find((c: any) => c.id === pending);
       if (ch) {
-        router.push(`/android-reader?seriesSlug=${series.slug}&chapterSlug=${ch.slug}&id=${ch.id}&seriesId=${series.id}`);
+        window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${ch.slug}&id=${ch.id}&seriesId=${series.id}`;
       }
     }
     if (pending && downloads[pending]?.status === 'FAILED') {
@@ -229,7 +229,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
 
     const onSuccess = () => {
       setActiveSheet(null);
-      router.push(`/android-reader?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`);
+      window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`;
     };
 
     const onError = (msg: string) => {
@@ -474,7 +474,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                 <button 
                   onClick={() => {
                     setActiveSheet(null);
-                    router.push(`/android-reader?seriesSlug=${series.slug}&chapterSlug=${selectedChapter.slug}&id=${selectedChapter.id}&seriesId=${series.id}`);
+                    window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${selectedChapter.slug}&id=${selectedChapter.id}&seriesId=${series.id}`;
                   }}
                   className="flex items-center gap-4 p-3 rounded hover:bg-neutral-800 active:bg-neutral-800 text-white w-full text-left"
                 >
@@ -514,7 +514,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                   className="flex items-center gap-4 p-3 rounded hover:bg-neutral-800 active:bg-neutral-800 text-white w-full text-left"
                 >
                   <FileUp className="h-5 w-5" />
-                  <span>Import Local PDF</span>
+                  <span>Import PDF / CBZ</span>
                 </button>
                 <button 
                   onClick={async () => {
@@ -752,7 +752,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
           <button 
             onClick={() => {
               const target = resumeChapter || firstChapterToRead;
-              router.push(`/android-reader?seriesSlug=${series.slug}&chapterSlug=${target.slug}&id=${target.id}&seriesId=${series.id}`);
+              window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${target.slug}&id=${target.id}&seriesId=${series.id}`;
             }}
             className="bg-[#E5092F] text-white px-6 py-4 rounded-full font-bold shadow-lg flex items-center gap-2 active:scale-95 transition-transform"
           >

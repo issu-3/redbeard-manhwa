@@ -52,6 +52,12 @@ try {
     fs.rmSync(outDir, { recursive: true, force: true });
   }
 
+  const nextCache = resolve(process.cwd(), '.next');
+  if (fs.existsSync(nextCache)) {
+    console.log('Clearing Next.js cache to ensure fresh Android build...');
+    fs.rmSync(nextCache, { recursive: true, force: true });
+  }
+
   // We run Next.js build with NEXT_PUBLIC_CAPACITOR=true
   execSync('npx next build', {
     stdio: 'inherit',

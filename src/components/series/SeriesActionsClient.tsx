@@ -85,7 +85,7 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
                   const { useDownloadStore } = await import('@/store/download-store');
                   const state = useDownloadStore.getState().downloads[targetChapter.id];
                   if (state && state.status === 'COMPLETED' && state.localUri) {
-                    router.push(`/android-reader?seriesSlug=${seriesSlug}&chapterSlug=${chapterLabel}&id=${targetChapter.id}&seriesId=${seriesId}`);
+                    window.location.href = `/android-reader/index.html?seriesSlug=${seriesSlug}&chapterSlug=${chapterLabel}&id=${targetChapter.id}&seriesId=${seriesId}`;
                     return;
                   }
                 }
@@ -179,7 +179,7 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
                 const { useDownloadStore } = await import('@/store/download-store');
                 const state = useDownloadStore.getState().downloads[targetChapter.id];
                 if (state && state.status === 'COMPLETED' && state.localUri) {
-                  router.push(`/android-reader?seriesSlug=${seriesSlug}&chapterSlug=${chapterLabel}&id=${targetChapter.id}&seriesId=${seriesId}`);
+                  window.location.href = `/android-reader/index.html?seriesSlug=${seriesSlug}&chapterSlug=${chapterLabel}&id=${targetChapter.id}&seriesId=${seriesId}`;
                   return;
                 }
               }
