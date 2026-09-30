@@ -305,16 +305,25 @@ export default async function ChapterPage({
     const isCbzUrl = targetUrl.toLowerCase().endsWith('.cbz') || targetUrl.includes('drive.google.com');
     if (isCbzUrl) {
       try {
-        const { resolverManager } = await import('@/lib/resolvers');
-        const { url: resolvedUrl, headers: responseHeaders } = await resolverManager.resolve(targetUrl);
+        const { resolverManager } = await import('@/lib/providers/factory');
+        const resolver = resolverManager.getResolver(targetUrl);
+        if (!resolver) throw new Error('No resolver');
+        
+        const resolved = await resolver.resolve(targetUrl);
+        if (!resolved.success || !resolved.downloadUrl) throw new Error('Failed to resolve URL');
+
+        const resolvedHeaders = (resolved as any).headers || {};
         const { getRemoteFileSize, getRemoteCbzMetadata } = await import('@/lib/cbz-remote');
-        const fileSize = await getRemoteFileSize(resolvedUrl, responseHeaders);
-        const metadata = await getRemoteCbzMetadata(resolvedUrl, responseHeaders, fileSize);
+        const fileSize = await getRemoteFileSize(resolved.downloadUrl, resolvedHeaders);
+        const metadata = await getRemoteCbzMetadata(resolved.downloadUrl, resolvedHeaders, fileSize);
+        
         chapter.images = metadata.pages.map((p: any) => ({
+          id: `cbz-page-${p.index}`,
+          pageNumber: p.index + 1,
           imageUrl: `/api/chapter/${chapter.id}/page/${p.index}`,
           width: 800,
           height: 1200
-        }));
+        })) as any;
         // Skip redirect, let it render ChapterReader below
       } catch (err) {
         console.error('Failed to parse remote CBZ for website reader:', err);
