@@ -57,6 +57,46 @@ export async function deleteChapter(chapterId: string, seriesId: string) {
   updateTag('homepage_data');
 }
 
+export async function bulkDeleteChapters(chapterIds: string[], seriesId: string) {
+  await checkAdmin();
+  
+  if (!chapterIds.length) return { success: false, error: 'No chapters selected' };
+
+  // Get all images to delete blobs
+  const chapters = await prisma.chapter.findMany({
+    where: { id: { in: chapterIds } },
+    include: { images: true }
+  });
+
+  const allImages = chapters.flatMap(c => c.images);
+  if (allImages.length > 0) {
+    const blobUrls = allImages.map(img => img.imageUrl).filter(url => url.includes('.public.blob.vercel-storage.com'));
+    if (blobUrls.length > 0) {
+      await del(blobUrls).catch(e => console.error('Failed to delete blobs:', e));
+    }
+  }
+
+  // Delete chapters
+  const deleteResult = await prisma.chapter.deleteMany({
+    where: { id: { in: chapterIds } }
+  });
+
+  // Update series count
+  await prisma.series.update({
+    where: { id: seriesId },
+    data: { chapterCount: { decrement: deleteResult.count } }
+  });
+
+  revalidatePath(`/admin/series/${seriesId}/chapters`);
+  revalidatePath(`/series/[slug]`, 'page');
+  revalidatePath(`/series/[slug]/chapter/[chapterSlug]`, 'page');
+  revalidatePath('/');
+  revalidatePath('/browse/latest');
+  updateTag('homepage_data');
+  
+  return { success: true, count: deleteResult.count };
+}
+
 export async function createChapter(seriesId: string, formData: FormData) {
   await checkAdmin();
 
