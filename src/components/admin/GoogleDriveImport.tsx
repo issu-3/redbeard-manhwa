@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Loader2, FolderSearch, CheckCircle2, AlertTriangle, AlertCircle } from 'lucide-react';
 import { getExistingChapters, createChapter } from '@/app/actions/admin/chapters';
 
@@ -29,6 +29,8 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
   const [existingNumbers, setExistingNumbers] = useState<Set<number>>(new Set());
 
   const [isImporting, setIsImporting] = useState(false);
+  const [isImportingDone, setIsImportingDone] = useState(false);
+  const cancelRef = useRef(false);
   const [importProgress, setImportProgress] = useState({ chapterIndex: 0, currentImage: 0, totalImages: 0 });
 
   useEffect(() => {
@@ -109,6 +111,8 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
     if (chaptersToImport.length === 0) return;
 
     setIsImporting(true);
+    setIsImportingDone(false);
+    cancelRef.current = false;
     setError(null);
 
     let chaptersDone = 0;
@@ -118,6 +122,9 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
     const updatedResult = [...scanResult];
 
     for (let i = 0; i < chaptersToImport.length; i++) {
+      if (cancelRef.current) {
+        break;
+      }
       const chapter = chaptersToImport[i];
       const resultIdx = updatedResult.findIndex(c => c.id === chapter.id);
       
@@ -195,7 +202,12 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
       setScanResult([...updatedResult]);
     }
 
-    setIsImporting(false);
+    if (cancelRef.current) {
+      setIsImporting(false);
+      return;
+    }
+
+    setIsImportingDone(true);
     
     // Redirect to chapters list after a short delay
     setTimeout(() => {
@@ -203,7 +215,11 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
     }, 2000);
   };
 
-  if (isImporting) {
+  const handleCancelImport = () => {
+    cancelRef.current = true;
+  };
+
+  if (isImporting || isImportingDone) {
     const chaptersToImport = scanResult?.filter(c => c.selected && !c.skip) || [];
     const currentChapter = chaptersToImport[importProgress.chapterIndex];
     const totalImages = chaptersToImport.reduce((acc, c) => acc + (c.isArchive ? 1 : c.images.length), 0);
@@ -212,10 +228,16 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
 
     return (
       <div className="space-y-6 bg-surface p-6 rounded-xl border border-border text-center py-12">
-        <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto" />
+        {isImportingDone ? (
+          <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
+        ) : (
+          <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto" />
+        )}
         <div>
-          <h3 className="text-xl font-bold">Importing chapters...</h3>
-          <p className="text-text-secondary mt-2">Please do not close this window.</p>
+          <h3 className="text-xl font-bold">{isImportingDone ? 'Import Complete!' : 'Importing chapters...'}</h3>
+          <p className="text-text-secondary mt-2">
+            {isImportingDone ? 'Redirecting you to the chapters list...' : 'Please do not close this window.'}
+          </p>
         </div>
         
         <div className="max-w-md mx-auto text-left space-y-4">
@@ -237,6 +259,19 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
              <div className="h-full bg-sky-500 transition-all duration-300" style={{ width: `${pct}%` }} />
           </div>
           <p className="text-xs text-text-muted text-center">{completedImages} / {totalImages} total images</p>
+          
+          {!isImportingDone && (
+            <div className="pt-4 flex justify-center">
+              <button
+                type="button"
+                onClick={handleCancelImport}
+                disabled={cancelRef.current}
+                className="px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+              >
+                {cancelRef.current ? 'Cancelling...' : 'Cancel Import'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
