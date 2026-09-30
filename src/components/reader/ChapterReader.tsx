@@ -349,10 +349,10 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
     </div>
   );
 
-  if (!mounted) return <div className="h-screen w-screen bg-black" />;
+  if (!mounted) return <div className="h-dvh w-screen bg-black" />;
 
   return (
-    <div className={cn("relative h-screen w-screen overflow-hidden select-none", bgClass)}>
+    <div className={cn("relative h-dvh w-screen overflow-hidden select-none", bgClass)}>
       
       {/* --- OVERLAYS --- */}
       {/* Brightness Overlay (Darkens everything below it, pointer-events-none) */}
@@ -689,7 +689,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute bottom-0 inset-x-0 z-[70] bg-[#121212] rounded-t-2xl h-[80vh] flex flex-col pb-safe shadow-2xl"
+              className="absolute bottom-0 inset-x-0 z-[70] bg-[#121212] rounded-t-2xl h-[80dvh] flex flex-col pb-safe shadow-2xl"
               onClick={e => e.stopPropagation()}
             >
               <div className="p-4 flex justify-between items-center border-b border-white/10 text-white shrink-0">

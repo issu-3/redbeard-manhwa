@@ -38,7 +38,7 @@ export function ReaderSettingsSheet({ onClose }: { onClose: () => void }) {
     <motion.div
       initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="absolute bottom-0 inset-x-0 z-[70] bg-[#0F1115] rounded-t-[32px] flex flex-col pb-safe shadow-2xl h-[85vh] border-t border-white/10"
+      className="absolute bottom-0 inset-x-0 z-[70] bg-[#0F1115] rounded-t-[32px] flex flex-col pb-safe shadow-2xl h-[85dvh] border-t border-white/10"
       onClick={e => e.stopPropagation()}
     >
       <div className="flex flex-col shrink-0">
