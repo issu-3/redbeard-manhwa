@@ -50,6 +50,7 @@ export async function POST(req: Request) {
 
     const subfolders = allFiles.filter((f: any) => f.mimeType === 'application/vnd.google-apps.folder');
     let directImages = allFiles.filter((f: any) => f.mimeType !== 'application/vnd.google-apps.folder' && (/\.(jpe?g|png|webp|gif)$/i.test(f.name) || f.mimeType.startsWith('image/')));
+    const archives = allFiles.filter((f: any) => /\.(cbz|zip)$/i.test(f.name) || f.mimeType === 'application/zip' || f.mimeType === 'application/x-zip-compressed' || f.mimeType === 'application/vnd.comicbook+zip');
 
     const results = [];
 
@@ -64,7 +65,21 @@ export async function POST(req: Request) {
        });
     }
 
-    // Case 2: Folder contains subfolders (Bulk Import mode)
+    // Case 2: Folder contains archives (Bulk CBZ/ZIP mode)
+    if (archives.length > 0) {
+       archives.sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+       for (const arc of archives) {
+          results.push({
+             id: arc.id,
+             name: arc.name,
+             number: parseChapterNumber(arc.name),
+             images: [],
+             isArchive: true
+          });
+       }
+    }
+
+    // Case 3: Folder contains subfolders (Bulk Import mode)
     if (subfolders.length > 0) {
        const chapterData = subfolders.map((c: any) => ({ id: c.id, name: c.name, number: parseChapterNumber(c.name) }));
        

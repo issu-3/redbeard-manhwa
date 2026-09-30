@@ -16,6 +16,7 @@ interface DriveChapter {
   selected?: boolean;
   status?: 'pending' | 'importing' | 'success' | 'error' | 'duplicate';
   skip?: boolean;
+  isArchive?: boolean;
 }
 
 export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
@@ -106,7 +107,7 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
 
     let chaptersDone = 0;
     let imagesDone = 0;
-    const totalSelectedImages = chaptersToImport.reduce((acc, c) => acc + c.images.length, 0);
+    const totalSelectedImages = chaptersToImport.reduce((acc, c) => acc + (c.isArchive ? 1 : c.images.length), 0);
 
     const updatedResult = [...scanResult];
 
@@ -117,27 +118,45 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
       updatedResult[resultIdx].status = 'importing';
       setScanResult([...updatedResult]);
 
-      const uploadedUrls: string[] = [];
+      let uploadedUrls: string[] = [];
       let chapterFailed = false;
 
-      for (let j = 0; j < chapter.images.length; j++) {
-        const img = chapter.images[j];
-        setImportProgress({ chapterIndex: i, currentImage: j + 1, totalImages: totalSelectedImages });
+      if (chapter.isArchive) {
+         setImportProgress({ chapterIndex: i, currentImage: 0, totalImages: totalSelectedImages });
+         try {
+           const res = await fetch('/api/admin/drive/import-archive', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ fileId: chapter.id, fileName: chapter.name, apiKey }),
+           });
+           const data = await res.json();
+           if (!res.ok) throw new Error(data.error || 'Archive import failed');
+           uploadedUrls = data.urls;
+           imagesDone++;
+         } catch (err) {
+           console.error(`Failed to import archive ${chapter.name}:`, err);
+           chapterFailed = true;
+         }
+      } else {
+         for (let j = 0; j < chapter.images.length; j++) {
+           const img = chapter.images[j];
+           setImportProgress({ chapterIndex: i, currentImage: j + 1, totalImages: totalSelectedImages });
 
-        try {
-          const res = await fetch('/api/admin/drive/import-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileId: img.id, fileName: img.name, apiKey }),
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Upload failed');
-          uploadedUrls.push(data.url);
-          imagesDone++;
-        } catch (err) {
-          console.error(`Failed to import image ${img.name}:`, err);
-          // Continue with next image, don't break chapter import completely
-        }
+           try {
+             const res = await fetch('/api/admin/drive/import-image', {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ fileId: img.id, fileName: img.name, apiKey }),
+             });
+             const data = await res.json();
+             if (!res.ok) throw new Error(data.error || 'Upload failed');
+             uploadedUrls.push(data.url);
+             imagesDone++;
+           } catch (err) {
+             console.error(`Failed to import image ${img.name}:`, err);
+             // Continue with next image, don't break chapter import completely
+           }
+         }
       }
 
       // Now create the chapter
@@ -175,8 +194,8 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
   if (isImporting) {
     const chaptersToImport = scanResult?.filter(c => c.selected && !c.skip) || [];
     const currentChapter = chaptersToImport[importProgress.chapterIndex];
-    const totalImages = chaptersToImport.reduce((acc, c) => acc + c.images.length, 0);
-    const completedImages = chaptersToImport.slice(0, importProgress.chapterIndex).reduce((acc, c) => acc + c.images.length, 0) + importProgress.currentImage;
+    const totalImages = chaptersToImport.reduce((acc, c) => acc + (c.isArchive ? 1 : c.images.length), 0);
+    const completedImages = chaptersToImport.slice(0, importProgress.chapterIndex).reduce((acc, c) => acc + (c.isArchive ? 1 : c.images.length), 0) + importProgress.currentImage;
     const pct = Math.round((completedImages / Math.max(1, totalImages)) * 100);
 
     return (
@@ -191,10 +210,10 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
           <div className="bg-card p-4 rounded-lg border border-border">
              <div className="flex justify-between font-semibold text-sm mb-2">
                 <span>{currentChapter?.name}</span>
-                <span>{importProgress.currentImage}/{currentChapter?.images.length} images</span>
+                <span>{currentChapter?.isArchive ? 'Extracting archive...' : `${importProgress.currentImage}/${currentChapter?.images.length} images`}</span>
              </div>
              <div className="h-2 w-full bg-surface rounded-full overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: `${(importProgress.currentImage / Math.max(1, currentChapter?.images.length || 1)) * 100}%` }} />
+                <div className="h-full bg-primary" style={{ width: currentChapter?.isArchive ? '100%' : `${(importProgress.currentImage / Math.max(1, currentChapter?.images.length || 1)) * 100}%` }} />
              </div>
           </div>
           
@@ -270,7 +289,7 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
               <h3 className="text-lg font-bold">Google Drive Import</h3>
               <div className="flex items-center gap-4 mt-2 text-sm font-semibold text-text-secondary">
                 <span className="flex items-center gap-1 text-green-500"><CheckCircle2 className="h-4 w-4" /> {scanResult.length} chapters detected</span>
-                <span className="flex items-center gap-1 text-sky-500"><CheckCircle2 className="h-4 w-4" /> {scanResult.reduce((acc, c) => acc + c.images.length, 0).toLocaleString()} images detected</span>
+                <span className="flex items-center gap-1 text-sky-500"><CheckCircle2 className="h-4 w-4" /> {scanResult.reduce((acc, c) => acc + (c.isArchive ? 1 : c.images.length), 0).toLocaleString()} images/archives detected</span>
               </div>
             </div>
             <button type="button" onClick={() => setScanResult(null)} className="text-sm text-text-muted hover:text-text-primary underline">
@@ -306,7 +325,7 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
                            </span>
                          )}
                        </div>
-                       <div className="text-xs text-text-muted mt-0.5">{chapter.images.length} images</div>
+                       <div className="text-xs text-text-muted mt-0.5">{chapter.isArchive ? 'Archive file (CBZ/ZIP)' : `${chapter.images.length} images`}</div>
                      </div>
                    </div>
                    
