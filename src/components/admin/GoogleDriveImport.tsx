@@ -38,6 +38,12 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
       chapters.forEach((c) => { if (c.number !== null) nums.add(c.number); });
       setExistingNumbers(nums);
     });
+
+    // Load saved API key from localStorage
+    const savedApiKey = localStorage.getItem('redbeard_gdrive_api_key');
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+    }
   }, [seriesId]);
 
   const handleScan = async () => {
@@ -269,7 +275,10 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
                  <input 
                    type="text" 
                    value={apiKey} 
-                   onChange={(e) => setApiKey(e.target.value)} 
+                   onChange={(e) => {
+                     setApiKey(e.target.value);
+                     localStorage.setItem('redbeard_gdrive_api_key', e.target.value);
+                   }}
                    placeholder="AIzaSy..." 
                    className="flex-1 rounded-lg border border-border bg-card px-4 py-2 text-sm focus:outline-none focus:border-primary/50"
                  />
