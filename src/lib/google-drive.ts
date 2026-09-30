@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 import type { BackupScheduleConfig } from '@/types/backup';
 
-interface ServiceAccountCredentials {
+export interface ServiceAccountCredentials {
   client_email: string;
   private_key: string;
   token_uri?: string;
@@ -50,7 +50,7 @@ export async function getGoogleDriveConfig(): Promise<{
 /**
  * Generates an OAuth2 access token for Google Drive API using JWT Bearer grant
  */
-async function getAccessToken(credentials: ServiceAccountCredentials): Promise<string> {
+export async function getAccessToken(credentials: ServiceAccountCredentials): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const payload = {
     iss: credentials.client_email,

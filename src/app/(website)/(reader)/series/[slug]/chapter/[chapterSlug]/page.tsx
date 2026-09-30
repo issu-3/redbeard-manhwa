@@ -415,7 +415,7 @@ export default async function ChapterPage({
         comments={commentsData} 
         currentUserId={session?.user?.id} 
         userPreferences={userPreferences}
-        defaultReadingMode={settings.defaultReadingMode || 'vertical'}
+        defaultReadingMode={'singlePage'}
         youtubeUrl={settings.youtubeUrl || null}
       />
     </>

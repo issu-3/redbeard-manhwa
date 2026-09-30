@@ -6,9 +6,10 @@ import { useState, useTransition } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Trash2, Upload, Save, RefreshCw, Link as LinkIcon, Database } from 'lucide-react';
+import { GripVertical, Trash2, Upload, Save, RefreshCw, Link as LinkIcon, Database, FolderSearch } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChapterUploader } from './ChapterUploader';
+import { GoogleDriveImport } from './GoogleDriveImport';
 import { updateChapter, createChapter } from '@/app/actions/admin/chapters';
 
 function SortableImage({ id, url, pageNumber, onRemove, onReplace }: any) {
@@ -75,7 +76,7 @@ const DOWNLOAD_PROVIDERS = [
 ];
 
 export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { seriesId: string; chapter?: any; initialImages?: any[] }) {
-  const [sourceType, setSourceType] = useState(chapter?.sourceType || 'DOWNLOAD');
+  const [sourceType, setSourceType] = useState(chapter?.sourceType || (!chapter ? 'GOOGLE_DRIVE' : 'UPLOAD'));
   const [images, setImages] = useState(initialImages.map((img: any, i: number) => ({ id: `img-${Date.now()}-${i}`, url: img.imageUrl })));
   const [isPending, startTransition] = useTransition();
   const [showUploader, setShowUploader] = useState(images.length === 0 && sourceType === 'UPLOAD');
@@ -151,13 +152,16 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
       <div className="bg-surface p-1 rounded-xl border border-border inline-flex w-full sm:w-auto">
         <button
           type="button"
-          onClick={() => setSourceType('UPLOAD')}
+          onClick={() => setSourceType(!chapter ? 'GOOGLE_DRIVE' : 'UPLOAD')}
           className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-            sourceType === 'UPLOAD' ? 'bg-primary text-white shadow' : 'text-text-secondary hover:text-text-primary hover:bg-card'
+            (sourceType === 'GOOGLE_DRIVE' || sourceType === 'UPLOAD') ? 'bg-primary text-white shadow' : 'text-text-secondary hover:text-text-primary hover:bg-card'
           }`}
         >
-          <Database className="h-4 w-4" />
-          Upload Archive
+          {!chapter ? (
+            <><FolderSearch className="h-4 w-4" /> Google Drive Folder</>
+          ) : (
+            <><Database className="h-4 w-4" /> Upload Archive</>
+          )}
         </button>
         <button
           type="button"
@@ -171,8 +175,9 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="grid grid-cols-2 gap-4">
+      {sourceType !== 'GOOGLE_DRIVE' && (<>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-4">
           {sourceType === 'DOWNLOAD' ? (
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold">Chapter Label *</label>
@@ -225,8 +230,9 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
         />
         <label htmlFor="isPublished" className="text-sm font-semibold">Published</label>
       </div>
+      </>)}
 
-      <hr className="border-border" />
+      {sourceType !== 'GOOGLE_DRIVE' && <hr className="border-border" />}
 
       {sourceType === 'DOWNLOAD' ? (
         <div className="space-y-6">
@@ -262,6 +268,8 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
             <p>Users clicking DOWNLOAD on this chapter will be directly redirected to the download URL.</p>
           </div>
         </div>
+      ) : sourceType === 'GOOGLE_DRIVE' ? (
+        <GoogleDriveImport seriesId={seriesId} />
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -313,8 +321,9 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
         </div>
       )}
 
-      <div className="flex justify-end gap-4 border-t border-border pt-6">
-        <button 
+      {sourceType !== 'GOOGLE_DRIVE' && (
+        <div className="flex justify-end gap-4 border-t border-border pt-6">
+          <button 
           type="button"
           onClick={() => window.history.back()}
           className="rounded-lg px-4 py-2 text-sm font-semibold text-text-secondary hover:bg-surface"
@@ -330,6 +339,7 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
           {isPending ? 'Saving...' : 'Save Chapter'}
         </button>
       </div>
+      )}
     </form>
   );
 }

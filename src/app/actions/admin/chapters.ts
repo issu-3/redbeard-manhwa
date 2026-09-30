@@ -4,6 +4,18 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
+
+export async function getExistingChapters(seriesId: string) {
+  const session = await auth();
+  if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
+    throw new Error('Unauthorized');
+  }
+  return await prisma.chapter.findMany({
+    where: { seriesId },
+    select: { id: true, number: true, label: true }
+  });
+}
+
 import { del } from '@vercel/blob';
 
 async function checkAdmin() {
