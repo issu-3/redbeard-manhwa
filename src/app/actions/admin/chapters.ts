@@ -119,6 +119,8 @@ export async function createChapter(seriesId: string, formData: FormData) {
     });
 
     revalidatePath(`/admin/series/${seriesId}/chapters`);
+    revalidatePath(`/series/[slug]`, 'page');
+    revalidatePath(`/series/[slug]/chapter/[chapterSlug]`, 'page');
     revalidatePath('/');
     revalidatePath('/browse/latest');
     updateTag('homepage_data');
@@ -272,6 +274,8 @@ export async function createBulkChapters(seriesId: string, chapters: { label: st
     });
 
     revalidatePath(`/admin/series/${seriesId}/chapters`);
+    revalidatePath(`/series/[slug]`, 'page');
+    revalidatePath(`/series/[slug]/chapter/[chapterSlug]`, 'page');
     revalidatePath('/');
     revalidatePath('/browse/latest');
     updateTag('homepage_data');
