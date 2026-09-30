@@ -10,6 +10,7 @@ import {
   Calendar,
   CheckCircle2,
   Link as LinkIcon,
+  Download,
 } from 'lucide-react';
 import { formatRelativeTime, cn } from '@/lib/utils';
 import type { ChapterListItem } from '@/types';
@@ -142,81 +143,70 @@ export function ChapterListSection({
                   >
                     <div
                       className={cn(
-                        'group relative flex flex-col justify-between p-4 rounded-xl border transition-all h-full',
+                        'group relative flex flex-col justify-center p-3.5 rounded-[16px] border transition-all min-h-[85px]',
                         isLatest 
                           ? 'bg-primary/5 border-primary/30 hover:border-primary/60 hover:bg-primary/10 shadow-sm'
                           : 'bg-card border-border hover:border-primary/40 hover:bg-card-hover',
                         chapter.isRead && 'opacity-60'
                       )}
                     >
-                      {isLatest && (
-                        <div className="absolute -top-2.5 -right-2.5 bg-primary text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-md z-10">
-                          New
-                        </div>
-                      )}
-                      
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1 min-w-0 pr-4">
-                          <h3 className={cn(
-                            "font-bold truncate transition-colors",
-                            isLatest ? "text-primary" : "text-text-primary group-hover:text-primary"
-                          )}>
-                            {chapter.label || `Chapter ${chapter.number}`}
-                          </h3>
-                          {chapter.title && (
-                            <p className="text-xs text-text-secondary truncate mt-0.5">
-                              {chapter.title}
-                            </p>
-                          )}
+                      <div className="flex items-center justify-between gap-3">
+                        {/* Title and Metadata Column */}
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className={cn(
+                              "text-[18px] font-bold leading-tight truncate transition-colors",
+                              isLatest ? "text-primary" : "text-text-primary group-hover:text-primary"
+                            )}>
+                              {chapter.label || `Chapter ${chapter.number}`}
+                            </h3>
+                            {isLatest && (
+                              <span className="bg-primary text-white text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm shrink-0">
+                                New
+                              </span>
+                            )}
+                            {chapter.isRead && (
+                              <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center gap-3 text-[13px] font-medium text-text-muted mt-0.5">
+                            {chapter.publishedAt && (
+                              <span className="flex items-center gap-1" suppressHydrationWarning>
+                                <Calendar className="h-3 w-3" />
+                                {formatRelativeTime(chapter.publishedAt)}
+                              </span>
+                            )}
+                            {chapter.totalPages && chapter.totalPages > 0 ? (
+                              <span className="flex items-center gap-1">
+                                {chapter.totalPages} pgs
+                              </span>
+                            ) : null}
+                          </div>
                         </div>
                         
-                        {chapter.isRead && (
-                          <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-[11px] font-medium text-text-muted mt-auto pt-3 border-t border-border/50">
-                        <div className="flex items-center gap-3">
-                          {chapter.publishedAt && (
-                            <span className="flex items-center gap-1" suppressHydrationWarning>
-                              <Calendar className="h-3 w-3" />
-                              {formatRelativeTime(chapter.publishedAt)}
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center gap-3 text-text-secondary">
-                          {chapter.totalPages && chapter.totalPages > 0 ? (
-                            <span>{chapter.totalPages} pgs</span>
-                          ) : null}
+                        {/* READ and Download Buttons Row */}
+                        <div className="flex items-center gap-2 shrink-0">
                           {chapter.downloadUrl && (
-                            <div className="flex items-center gap-1">
-                              <LinkIcon className="h-3 w-3" />
-                              <span>{chapter.downloadProvider || 'Link'}</span>
-                            </div>
+                            <a
+                              href={`/api/chapter/${chapter.id}/download`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-[34px] h-[34px] flex items-center justify-center bg-surface border border-border hover:bg-card-hover text-text-secondary hover:text-text-primary rounded-full transition-colors"
+                              title="Download"
+                            >
+                              <Download className="h-4 w-4" />
+                            </a>
                           )}
+                          {chapter.totalPages && chapter.totalPages > 0 && safeSlug ? (
+                            <Link
+                              href={`/series/${seriesSlug}/chapter/${safeSlug}`}
+                              className="w-[68px] h-[34px] flex items-center justify-center bg-primary text-white hover:bg-primary/90 rounded-full text-[12px] font-bold transition-colors shadow-sm"
+                            >
+                              READ
+                            </Link>
+                          ) : null}
                         </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
-                        {chapter.totalPages && chapter.totalPages > 0 && safeSlug ? (
-                          <Link
-                            href={`/series/${seriesSlug}/chapter/${safeSlug}`}
-                            className="flex-1 flex items-center justify-center py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-md text-xs font-bold transition-colors"
-                          >
-                            READ
-                          </Link>
-                        ) : null}
-                        {chapter.downloadUrl && (
-                          <a
-                            href={`/api/chapter/${chapter.id}/download`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1 flex items-center justify-center py-1.5 bg-surface border border-border hover:bg-card-hover text-text-secondary hover:text-text-primary rounded-md text-xs font-bold transition-colors"
-                          >
-                            DOWNLOAD
-                          </a>
-                        )}
                       </div>
                     </div>
                   </motion.div>
