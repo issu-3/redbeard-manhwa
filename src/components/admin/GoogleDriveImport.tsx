@@ -23,6 +23,8 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<DriveChapter[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState('');
+  const [needsApiKey, setNeedsApiKey] = useState(false);
   const [existingNumbers, setExistingNumbers] = useState<Set<number>>(new Set());
 
   const [isImporting, setIsImporting] = useState(false);
@@ -47,13 +49,19 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
       const res = await fetch('/api/admin/drive/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ folderUrl }),
+        body: JSON.stringify({ folderUrl, apiKey }),
       });
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.error === 'NEEDS_API_KEY') {
+          setNeedsApiKey(true);
+          throw new Error('Google Drive is not configured. Please enter a Google API Key.');
+        }
         throw new Error(data.error || 'Failed to scan folder');
       }
+      
+      setNeedsApiKey(false);
 
       const chapters = data.chapters.map((c: DriveChapter) => {
         const isDuplicate = c.number !== null && existingNumbers.has(c.number);
@@ -120,7 +128,7 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
           const res = await fetch('/api/admin/drive/import-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileId: img.id, fileName: img.name }),
+            body: JSON.stringify({ fileId: img.id, fileName: img.name, apiKey }),
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || 'Upload failed');
@@ -228,6 +236,25 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
               {isScanning ? 'Scanning...' : 'Scan Folder'}
             </button>
           </div>
+
+          {needsApiKey && (
+            <div className="mt-4 p-4 bg-surface border border-border rounded-xl">
+               <label className="text-sm font-semibold mb-2 block">Google API Key</label>
+               <div className="flex gap-3">
+                 <input 
+                   type="text" 
+                   value={apiKey} 
+                   onChange={(e) => setApiKey(e.target.value)} 
+                   placeholder="AIzaSy..." 
+                   className="flex-1 rounded-lg border border-border bg-card px-4 py-2 text-sm focus:outline-none focus:border-primary/50"
+                 />
+                 <button onClick={handleScan} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">
+                   Retry Scan
+                 </button>
+               </div>
+               <p className="text-xs text-text-muted mt-2">Your system has no Service Account configured. You can bypass this by providing a Google API Key with Drive API access.</p>
+            </div>
+          )}
 
           {error && (
             <div className="mt-4 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-semibold flex gap-2 items-start">

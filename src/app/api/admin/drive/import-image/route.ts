@@ -10,24 +10,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
     }
 
-    const { fileId, fileName } = await req.json();
+    const { fileId, fileName, apiKey } = await req.json();
     if (!fileId || !fileName) {
       return NextResponse.json({ error: 'Missing fileId or fileName' }, { status: 400 });
     }
 
     const config = await getGoogleDriveConfig();
     let authHeader = '';
+    let finalApiKey = process.env.GOOGLE_API_KEY || apiKey;
 
     if (config.enabled && config.credentials) {
       const token = await getAccessToken(config.credentials);
       authHeader = `Bearer ${token}`;
-    } else if (process.env.GOOGLE_API_KEY) {
+    } else if (finalApiKey) {
       authHeader = ``;
     } else {
-      return NextResponse.json({ error: 'Google Drive not configured.' }, { status: 400 });
+      return NextResponse.json({ error: 'NEEDS_API_KEY' }, { status: 400 });
     }
 
-    const authQuery = authHeader ? '' : `&key=${process.env.GOOGLE_API_KEY}`;
+    const authQuery = authHeader ? '' : `&key=${finalApiKey}`;
     const headers: Record<string, string> = authHeader ? { Authorization: authHeader } : {};
 
     const driveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media${authQuery}`, { headers });

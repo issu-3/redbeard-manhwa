@@ -3,7 +3,7 @@ import { getGoogleDriveConfig, getAccessToken } from '@/lib/google-drive';
 
 export async function POST(req: Request) {
   try {
-    const { folderUrl } = await req.json();
+    const { folderUrl, apiKey } = await req.json();
     if (!folderUrl) return NextResponse.json({ error: 'Folder URL is required' }, { status: 400 });
 
     const folderId = extractFolderId(folderUrl);
@@ -11,20 +11,21 @@ export async function POST(req: Request) {
 
     const config = await getGoogleDriveConfig();
     let authHeader = '';
+    let finalApiKey = process.env.GOOGLE_API_KEY || apiKey;
 
     if (config.enabled && config.credentials) {
       const token = await getAccessToken(config.credentials);
       authHeader = `Bearer ${token}`;
-    } else if (process.env.GOOGLE_API_KEY) {
+    } else if (finalApiKey) {
       // Fallback to API Key for public folders if configured
       authHeader = ``;
     } else {
       return NextResponse.json({ 
-        error: 'Google Drive is not configured. Please configure a Service Account in the Backups settings.' 
+        error: 'NEEDS_API_KEY' 
       }, { status: 400 });
     }
 
-    const authQuery = authHeader ? '' : `&key=${process.env.GOOGLE_API_KEY}`;
+    const authQuery = authHeader ? '' : `&key=${finalApiKey}`;
     const headers: Record<string, string> = authHeader ? { Authorization: authHeader } : {};
 
     // 1. Fetch child folders (chapters)
