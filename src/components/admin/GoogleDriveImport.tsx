@@ -163,7 +163,13 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
       try {
         const formData = new FormData();
         formData.append('number', chapter.number !== null ? chapter.number.toString() : '');
-        formData.append('label', chapter.name);
+        
+        // Clean up label (e.g., "Ch.001.cbz" -> "Chapter 1" or fallback to filename without extension)
+        const cleanLabel = chapter.number !== null 
+          ? `Chapter ${chapter.number}` 
+          : chapter.name.replace(/\.(cbz|zip|rar)$/i, '').trim();
+        
+        formData.append('label', cleanLabel);
         formData.append('title', '');
         formData.append('isPublished', 'true');
         formData.append('sourceType', 'UPLOAD');
