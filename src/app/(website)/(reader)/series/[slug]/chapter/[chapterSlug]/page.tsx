@@ -302,8 +302,25 @@ export default async function ChapterPage({
       targetUrl = `https://${targetUrl}`;
     }
 
-    // Redirect to the external URL
-    redirect(targetUrl);
+    const isCbzUrl = targetUrl.toLowerCase().endsWith('.cbz') || targetUrl.includes('drive.google.com');
+    if (isCbzUrl) {
+      try {
+        const { getRemoteCbzMetadata } = await import('@/lib/cbz-remote');
+        const metadata = await getRemoteCbzMetadata(targetUrl);
+        chapter.images = metadata.pages.map((p: any) => ({
+          imageUrl: `/api/chapter/${chapter.id}/page/${p.index}`,
+          width: 800,
+          height: 1200
+        }));
+        // Skip redirect, let it render ChapterReader below
+      } catch (err) {
+        console.error('Failed to parse remote CBZ for website reader:', err);
+        redirect(targetUrl); // Fallback to redirect if parsing fails
+      }
+    } else {
+      // Redirect to the external URL
+      redirect(targetUrl);
+    }
   }
 
   // Reading history and view tracking is now handled asynchronously via client-side API call
