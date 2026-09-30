@@ -22,14 +22,19 @@ import { AdRenderer } from '@/components/ads/AdRenderer';
 
 // OPT-21: Pre-render top 100 most popular series at build time
 export async function generateStaticParams() {
-  const series = await prisma.series.findMany({
-    orderBy: { totalViews: 'desc' },
-    take: 100,
-    select: { slug: true }
-  });
-  return series.map((s) => ({
-    slug: s.slug,
-  }));
+  try {
+    const series = await prisma.series.findMany({
+      orderBy: { totalViews: 'desc' },
+      take: 100,
+      select: { slug: true }
+    });
+    return series.map((s) => ({
+      slug: s.slug,
+    }));
+  } catch (error) {
+    console.warn('Failed to pre-render series routes during build:', error);
+    return [];
+  }
 }
 
 // OPT-04: React cache() deduplicates getSeriesData between generateMetadata and page component
