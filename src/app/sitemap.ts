@@ -2,54 +2,114 @@ import type { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 import { APP_URL } from '@/lib/constants';
 
-// OPT-11: Cache the heavy sitemap DB queries.
-export const revalidate = 86400; // Cache sitemap for 24 hours at the Edge
+// Cache sitemap for 24 hours
+export const revalidate = 86400;
 
-const getCachedSitemapData = async () => {
-    const [series, genres] = await Promise.all([
-        prisma.series.findMany({ select: { slug: true, updatedAt: true } }),
-        prisma.genre.findMany({ select: { slug: true } }),
-      ]);
-    return { series, genres };
-};
+const CHAPTERS_PER_SITEMAP = 10000;
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+/**
+ * Generate sitemap index entries.
+ * ID 0 = static + genres
+ * ID 1 = all series
+ * ID 2+ = chapters (paginated at 10k each)
+ */
+export async function generateSitemaps() {
+  const chapterCount = await prisma.chapter.count({
+    where: { isPublished: true },
+  });
+
+  const chapterSitemapCount = Math.max(1, Math.ceil(chapterCount / CHAPTERS_PER_SITEMAP));
+
+  const ids: { id: string }[] = [
+    { id: 'static' },
+    { id: 'series' },
+  ];
+
+  for (let i = 0; i < chapterSitemapCount; i++) {
+    ids.push({ id: `chapters-${i}` });
+  }
+
+  return ids;
+}
+
+export default async function sitemap(props: {
+  id: Promise<string>;
+}): Promise<MetadataRoute.Sitemap> {
+  const id = await props.id;
   const baseUrl = APP_URL || 'http://localhost:3000';
 
-  try {
-    const { series, genres } = await getCachedSitemapData();
+  // ── Static pages + Genres ──
+  if (id === 'static') {
+    const genres = await prisma.genre.findMany({
+      select: { slug: true },
+    });
 
-    let staticRoutes: MetadataRoute.Sitemap = [];
-    let seriesRoutes: MetadataRoute.Sitemap = [];
-    let genreRoutes: MetadataRoute.Sitemap = [];
+    const staticRoutes: MetadataRoute.Sitemap = [
+      { url: baseUrl, changeFrequency: 'daily', priority: 1.0 },
+      { url: `${baseUrl}/browse/trending`, changeFrequency: 'hourly', priority: 0.9 },
+      { url: `${baseUrl}/browse/popular`, changeFrequency: 'daily', priority: 0.9 },
+      { url: `${baseUrl}/browse/latest`, changeFrequency: 'hourly', priority: 0.9 },
+      { url: `${baseUrl}/browse/ongoing`, changeFrequency: 'daily', priority: 0.8 },
+      { url: `${baseUrl}/browse/new-releases`, changeFrequency: 'daily', priority: 0.8 },
+      { url: `${baseUrl}/browse/completed`, changeFrequency: 'daily', priority: 0.8 },
+      { url: `${baseUrl}/browse/genres`, changeFrequency: 'weekly', priority: 0.8 },
+      { url: `${baseUrl}/search`, changeFrequency: 'weekly', priority: 0.6 },
+    ];
 
-    staticRoutes = [
-        { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
-        { url: `${baseUrl}/browse/trending`, lastModified: new Date(), changeFrequency: 'hourly', priority: 0.9 },
-        { url: `${baseUrl}/browse/popular`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-        { url: `${baseUrl}/browse/latest`, lastModified: new Date(), changeFrequency: 'hourly', priority: 0.9 },
-        { url: `${baseUrl}/browse/ongoing`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
-        { url: `${baseUrl}/browse/new-releases`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
-        { url: `${baseUrl}/browse/completed`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
-        { url: `${baseUrl}/browse/genres`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
-      ];
+    const genreRoutes: MetadataRoute.Sitemap = genres
+      .filter((g) => g.slug && g.slug.trim())
+      .map((g) => ({
+        url: `${baseUrl}/browse/genres/${g.slug}`,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      }));
 
-      seriesRoutes = series.filter((s) => s.slug && s.slug.trim()).map((s) => ({
+    return [...staticRoutes, ...genreRoutes];
+  }
+
+  // ── All Series ──
+  if (id === 'series') {
+    const series = await prisma.series.findMany({
+      select: { slug: true, updatedAt: true },
+    });
+
+    return series
+      .filter((s) => s.slug && s.slug.trim())
+      .map((s) => ({
         url: `${baseUrl}/series/${s.slug}`,
         lastModified: s.updatedAt,
         changeFrequency: 'daily' as const,
         priority: 0.8,
       }));
-
-      genreRoutes = genres.filter((g) => g.slug && g.slug.trim()).map((g) => ({
-        url: `${baseUrl}/browse/genres/${g.slug}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly' as const,
-        priority: 0.7,
-      }));
-    return [...staticRoutes, ...seriesRoutes, ...genreRoutes];
-  } catch (error) {
-    console.error(`Failed to generate dynamic sitemap routes:`, error);
-    return [];
   }
+
+  // ── Chapters (paginated) ──
+  if (id.startsWith('chapters-')) {
+    const pageIndex = parseInt(id.replace('chapters-', ''), 10);
+
+    const chapters = await prisma.chapter.findMany({
+      where: { isPublished: true },
+      select: {
+        slug: true,
+        updatedAt: true,
+        series: {
+          select: { slug: true },
+        },
+      },
+      orderBy: { publishedAt: 'desc' },
+      skip: pageIndex * CHAPTERS_PER_SITEMAP,
+      take: CHAPTERS_PER_SITEMAP,
+    });
+
+    return chapters
+      .filter((c) => c.slug && c.slug.trim() && c.series.slug)
+      .map((c) => ({
+        url: `${baseUrl}/series/${c.series.slug}/chapter/${c.slug}`,
+        lastModified: c.updatedAt,
+        changeFrequency: 'monthly' as const,
+        priority: 0.5,
+      }));
+  }
+
+  return [];
 }
