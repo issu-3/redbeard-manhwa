@@ -38,7 +38,7 @@ export async function GET(
     //    (e.g. from Google Drive import). Return them directly.
     if (!chapter.downloadUrl && chapter.images.length > 0) {
       const metadata = {
-        fileType: 'IMAGES' as const,
+        fileType: 'CBZ' as const, // Spoof as CBZ so old apps don't need an update
         pageCount: chapter.images.length,
         pages: chapter.images.map((img, i) => ({
           index: i,
