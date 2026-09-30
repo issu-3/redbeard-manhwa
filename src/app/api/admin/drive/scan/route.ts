@@ -28,48 +28,67 @@ export async function POST(req: Request) {
     const authQuery = authHeader ? '' : `&key=${finalApiKey}`;
     const headers: Record<string, string> = authHeader ? { Authorization: authHeader } : {};
 
-    // 1. Fetch child folders (chapters)
-    const foldersRes = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name)&pageSize=1000${authQuery}`, { headers });
+    // 1. Fetch parent folder metadata
+    const parentRes = await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name${authQuery}`, { headers });
+    let parentName = 'Unknown Folder';
+    if (parentRes.ok) {
+      const pData = await parentRes.json();
+      if (pData.name) parentName = pData.name;
+    }
+
+    // 2. Fetch all files inside the provided folder
+    const filesRes = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=files(id,name,mimeType)&pageSize=1000${authQuery}`, { headers });
     
-    if (!foldersRes.ok) {
-       const err = await foldersRes.text();
+    if (!filesRes.ok) {
+       const err = await filesRes.text();
        console.error("Google Drive Scan Error:", err);
        return NextResponse.json({ error: `Unable to access this Google Drive folder. Check Google Drive connection and folder permissions.` }, { status: 400 });
     }
     
-    const foldersData = await foldersRes.json();
-    const chapters = foldersData.files || [];
+    const filesData = await filesRes.json();
+    const allFiles = filesData.files || [];
 
-    // Extract chapter numbers
-    const chapterData = chapters.map((c: any) => {
-       const num = parseChapterNumber(c.name);
-       return { id: c.id, name: c.name, number: num };
-    });
-    
-    // Sort chapters by number naturally
-    chapterData.sort((a: any, b: any) => {
-       if (a.number !== null && b.number !== null) return a.number - b.number;
-       return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
-    });
+    const subfolders = allFiles.filter((f: any) => f.mimeType === 'application/vnd.google-apps.folder');
+    let directImages = allFiles.filter((f: any) => f.mimeType !== 'application/vnd.google-apps.folder' && (/\.(jpe?g|png|webp|gif)$/i.test(f.name) || f.mimeType.startsWith('image/')));
 
-    // 2. Fetch files for each chapter folder
     const results = [];
-    for (const chap of chapterData) {
-       const filesRes = await fetch(`https://www.googleapis.com/drive/v3/files?q='${chap.id}'+in+parents+and+mimeType!='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name,mimeType)&pageSize=1000${authQuery}`, { headers });
-       if (filesRes.ok) {
-          const filesData = await filesRes.json();
-          let images = filesData.files || [];
-          
-          // filter for images
-          images = images.filter((f: any) => /\.(jpe?g|png|webp|gif)$/i.test(f.name) || f.mimeType.startsWith('image/'));
-          
-          // sort images naturally
-          images.sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
-          
-          results.push({
-             ...chap,
-             images: images.map((i: any) => ({ id: i.id, name: i.name, mimeType: i.mimeType }))
-          });
+
+    // Case 1: Folder directly contains images (Single Chapter mode)
+    if (directImages.length > 0) {
+       directImages.sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+       results.push({
+          id: folderId,
+          name: parentName,
+          number: parseChapterNumber(parentName),
+          images: directImages.map((i: any) => ({ id: i.id, name: i.name, mimeType: i.mimeType }))
+       });
+    }
+
+    // Case 2: Folder contains subfolders (Bulk Import mode)
+    if (subfolders.length > 0) {
+       const chapterData = subfolders.map((c: any) => ({ id: c.id, name: c.name, number: parseChapterNumber(c.name) }));
+       
+       chapterData.sort((a: any, b: any) => {
+          if (a.number !== null && b.number !== null) return a.number - b.number;
+          return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+       });
+
+       for (const chap of chapterData) {
+          const chapFilesRes = await fetch(`https://www.googleapis.com/drive/v3/files?q='${chap.id}'+in+parents+and+mimeType!='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name,mimeType)&pageSize=1000${authQuery}`, { headers });
+          if (chapFilesRes.ok) {
+             const chapFilesData = await chapFilesRes.json();
+             let chapImages = chapFilesData.files || [];
+             
+             chapImages = chapImages.filter((f: any) => /\.(jpe?g|png|webp|gif)$/i.test(f.name) || f.mimeType.startsWith('image/'));
+             chapImages.sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+             
+             if (chapImages.length > 0) {
+               results.push({
+                  ...chap,
+                  images: chapImages.map((i: any) => ({ id: i.id, name: i.name, mimeType: i.mimeType }))
+               });
+             }
+          }
        }
     }
 
