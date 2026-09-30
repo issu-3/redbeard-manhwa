@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import type { ChapterData } from '@/types';
 import { Capacitor } from '@capacitor/core';
 import { useDownloadStore } from '@/store/download-store';
+import { useAppLibraryStore } from '@/store/app-library-store';
 import { saveUserPreferences } from '@/app/actions/preferences';
 import { CommentSection } from '@/components/shared/CommentSection';
 import { SubscribeCard } from '@/components/shared/SubscribeCard';
@@ -32,12 +33,34 @@ function getSafeSlug(c?: { slug?: string | null; number?: number | null } | null
   return null;
 }
 
-export function ChapterReader({ chapter, comments, currentUserId, userPreferences, defaultReadingMode, youtubeUrl }: any) {
+export function ChapterReader({ chapter, comments, currentUserId, userPreferences, defaultReadingMode, youtubeUrl, renderPage, initialPage = 1 }: any) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [containerWidth, setContainerWidth] = useState<number>(0);
+
+  // Bookmark state
+  const isSaved = useAppLibraryStore((state) => state.isSaved(chapter.seriesId));
+  const addToLibrary = useAppLibraryStore((state) => state.addToLibrary);
+  const removeFromLibrary = useAppLibraryStore((state) => state.removeFromLibrary);
+
+  const handleBookmarkToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isSaved) {
+      const savedSeriesEntry = useAppLibraryStore.getState().savedSeries[chapter.seriesId] || Object.values(useAppLibraryStore.getState().savedSeries).find((s: any) => s.slug === chapter.seriesSlug);
+      if (savedSeriesEntry) {
+        await removeFromLibrary(savedSeriesEntry.seriesId);
+      }
+    } else {
+      await addToLibrary({
+        seriesId: chapter.seriesId,
+        title: chapter.seriesTitle,
+        slug: chapter.seriesSlug,
+        coverImage: null,
+      });
+    }
+  };
   const isInitializedRef = useRef(false);
 
   // Zustand Store
@@ -47,8 +70,21 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
   const [showUI, setShowUI] = useState(!store.isUIHidden);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'display' | 'reading' | 'navigation' | 'advanced'>('display');
   const [showSeekbar, setShowSeekbar] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+
+  // Auto-hide UI
+  useEffect(() => {
+    if (showUI && store.autoHideControls) {
+      const timer = setTimeout(() => {
+        if (!settingsOpen && !commentsOpen) {
+          setShowUI(false);
+        }
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showUI, settingsOpen, commentsOpen, store.autoHideControls]);
   
   // Slugs
   const nextSlug = getSafeSlug(chapter.nextChapter);
@@ -57,7 +93,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
   // Initialize
   useEffect(() => {
     store.setTotalPages(chapter.images.length);
-    store.setCurrentPage(1);
+    store.setCurrentPage(initialPage);
 
     if (!isInitializedRef.current) {
       if (userPreferences && Object.keys(userPreferences).length > 0) {
@@ -123,7 +159,12 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
       const img = chapter.images[i];
       if (!img.width || !img.height || !containerWidth) return 600;
       if (store.fitMode === 'original') return img.height;
-      return (containerWidth * img.height) / img.width;
+      
+      const renderWidth = store.fitMode === 'width' 
+        ? containerWidth 
+        : Math.min(containerWidth, 896); // 56rem = 896px max-width in the css
+        
+      return (renderWidth * img.height) / img.width;
     },
     overscan: 3,
   });
@@ -141,16 +182,19 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
 
   // Navigation
   const goToPage = useCallback((page: number) => {
-    const p = Math.max(1, Math.min(page, chapter.images.length));
+    const maxPage = store.mode !== 'longStrip' ? chapter.images.length + 1 : chapter.images.length;
+    const p = Math.max(1, Math.min(page, maxPage));
     store.setCurrentPage(p);
-    if (store.mode === 'longStrip') {
+    if (store.mode === 'longStrip' && p <= chapter.images.length) {
       rowVirtualizer.scrollToIndex(p - 1, { align: 'start' });
     }
   }, [chapter.images.length, store.mode, rowVirtualizer]);
 
   const goNext = useCallback(() => {
-    const jump = store.mode === 'doublePage' ? 2 : 1;
-    if (store.currentPage + jump - 1 < chapter.images.length) {
+    const jump = store.mode === 'doublePage' && store.currentPage < chapter.images.length ? 2 : 1;
+    const maxPage = store.mode !== 'longStrip' ? chapter.images.length + 1 : chapter.images.length;
+    
+    if (store.currentPage + jump <= maxPage) {
       goToPage(store.currentPage + jump);
     } else if (store.autoNextChapter && nextSlug) {
       router.push(`/series/${chapter.seriesSlug}/chapter/${nextSlug}`);
@@ -158,11 +202,13 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
   }, [store.currentPage, chapter.images.length, store.autoNextChapter, nextSlug, chapter.seriesSlug, router, goToPage, store.mode]);
 
   const goPrev = useCallback(() => {
-    const jump = store.mode === 'doublePage' ? 2 : 1;
+    const jump = store.mode === 'doublePage' && store.currentPage <= chapter.images.length ? 2 : 1;
     if (store.currentPage > jump) {
       goToPage(store.currentPage - jump);
     } else if (prevSlug) {
       router.push(`/series/${chapter.seriesSlug}/chapter/${prevSlug}`);
+    } else {
+      goToPage(1);
     }
   }, [store.currentPage, prevSlug, chapter.seriesSlug, router, goToPage, store.mode]);
 
@@ -177,6 +223,16 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
       key: 'ArrowLeft',
       handler: () => (store.direction === 'rtl' ? goNext() : goPrev()),
       enabled: store.mode !== 'longStrip' && store.mode !== 'vertical',
+    },
+    {
+      key: 'VolumeUp',
+      handler: () => store.volumeNavigation && goPrev(),
+      enabled: true,
+    },
+    {
+      key: 'VolumeDown',
+      handler: () => store.volumeNavigation && goNext(),
+      enabled: true,
     },
     { key: 'f', handler: () => document.fullscreenElement ? document.exitFullscreen() : containerRef.current?.requestFullscreen() },
     { key: ' ', handler: goNext },
@@ -229,6 +285,68 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
     'white': 'bg-[#FFFFFF]',
     'gray': 'bg-[#1e1e1e]',
   }[store.backgroundColor] || 'bg-black';
+
+  const endOfChapterView = (
+    <div className="py-24 text-center w-full h-full flex flex-col items-center justify-center pointer-events-auto z-10 relative bg-[#0F1115]">
+       <div className="max-w-[900px] w-full mx-auto px-4 mb-12">
+         <SubscribeCard youtubeUrl={youtubeUrl || null} />
+       </div>
+       <h2 className="text-white text-2xl font-black uppercase tracking-wider mb-2">Chapter Complete</h2>
+       <p className="text-white/50 text-sm mb-8 font-medium">What would you like to read next?</p>
+       
+       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md px-4">
+         {prevSlug && (
+           <button 
+             onClick={(e) => { 
+                e.stopPropagation(); 
+                if (typeof window !== 'undefined' && window.location.pathname.includes('android-reader')) {
+                  window.location.href = `/android-reader/index.html?seriesSlug=${chapter.seriesSlug}&chapterSlug=${prevSlug}&id=${chapter.prevChapter?.id}&seriesId=${chapter.seriesId}`;
+                } else {
+                  router.push(`/series/${chapter.seriesSlug}/chapter/${prevSlug}`); 
+                }
+              }}
+             className="w-full sm:w-auto bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+           >
+             <ChevronLeft className="w-5 h-5" /> Prev
+           </button>
+         )}
+         
+         <button 
+           onClick={(e) => { 
+              e.stopPropagation(); 
+              if (typeof window !== 'undefined' && window.location.pathname.includes('android-reader')) {
+                window.history.back();
+              } else {
+                router.push(`/series/${chapter.seriesSlug}`);
+              }
+            }}
+           className="w-full sm:w-auto bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+         >
+           <Layout className="w-5 h-5" /> Series
+         </button>
+
+         {nextSlug ? (
+           <button 
+             onClick={(e) => { 
+                e.stopPropagation(); 
+                if (typeof window !== 'undefined' && window.location.pathname.includes('android-reader')) {
+                  window.location.href = `/android-reader/index.html?seriesSlug=${chapter.seriesSlug}&chapterSlug=${nextSlug}&id=${chapter.nextChapter?.id}&seriesId=${chapter.seriesId}`;
+                } else {
+                  router.push(`/series/${chapter.seriesSlug}/chapter/${nextSlug}`); 
+                }
+              }}
+             className="w-full sm:w-auto bg-[#E53935] text-white px-8 py-3 rounded-full font-bold hover:bg-[#E53935]/90 active:scale-95 transition-all flex items-center justify-center gap-2"
+           >
+             Next <ChevronRight className="w-5 h-5" />
+           </button>
+         ) : (
+            <div className="w-full sm:w-auto px-6 py-3 rounded-full border border-white/10 flex items-center justify-center">
+              <span className="text-white/30 text-xs font-bold uppercase tracking-wider">Latest Chapter</span>
+            </div>
+         )}
+       </div>
+    </div>
+  );
 
   if (!mounted) return <div className="h-screen w-screen bg-black" />;
 
@@ -286,109 +404,112 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                   >
                     {/* Using standard img for webtoon for perfectly seamless stacking without layout shifts when width/height are known */}
                     {/* We can use Next.js Image if we configure it correctly, but simple img is often better for zero-gap webtoons if unoptimized anyway */}
-                    <img
-                      src={img.imageUrl}
-                      alt={`Page ${img.pageNumber}`}
-                      width={img.width || 800}
-                      height={img.height || 1200}
-                      className={cn(
-                        "block m-0 p-0 h-auto", // Zero gap guarantee
-                        store.fitMode === 'original' 
-                          ? "w-auto object-none"
-                          : store.fitMode === 'width'
-                            ? "w-full max-w-full"
-                            : "w-full max-w-[56rem]"
-                      )}
-                      loading={virtualRow.index <= 3 ? 'eager' : 'lazy'}
-                    />
+                    {renderPage ? (
+                      renderPage(virtualRow.index)
+                    ) : (
+                      <img
+                        src={img.imageUrl}
+                        alt={`Page ${img.pageNumber}`}
+                        width={img.width || 800}
+                        height={img.height || 1200}
+                        className={cn(
+                          "block m-0 p-0 h-auto", // Zero gap guarantee
+                          store.fitMode === 'original' 
+                            ? "w-auto object-none"
+                            : store.fitMode === 'width'
+                              ? "w-full max-w-full"
+                              : "w-full max-w-[56rem]"
+                        )}
+                        loading={virtualRow.index <= 3 ? 'eager' : 'lazy'}
+                      />
+                    )}
                   </div>
                 );
               })}
             </div>
             
             {/* End of Chapter */}
-            <div className="py-24 text-center">
-               <div className="max-w-[900px] mx-auto px-4 mb-12">
-                 <SubscribeCard youtubeUrl={youtubeUrl || null} />
-               </div>
-               <p className="text-white/50 text-sm mb-6 font-medium">End of Chapter</p>
-               <div className="flex justify-center gap-4">
-                 {nextSlug && (
-                   <button 
-                     onClick={(e) => { e.stopPropagation(); router.push(`/series/${chapter.seriesSlug}/chapter/${nextSlug}`); }}
-                     className="bg-primary/20 text-primary px-8 py-3 rounded-full font-bold hover:bg-primary/30 active:scale-95 transition-all"
-                   >
-                     Next Chapter
-                   </button>
-                 )}
-               </div>
-            </div>
+            {endOfChapterView}
           </div>
         )}
 
         {/* Paged Modes (Single / Vertical / Double) */}
         {(store.mode === 'singlePage' || store.mode === 'vertical' || store.mode === 'horizontal' || store.mode === 'doublePage') && (
-           <TransformWrapper
-             initialScale={1}
-             minScale={1}
-             maxScale={3}
-             centerOnInit
-             doubleClick={{ step: 0.5, disabled: !store.doubleTapZoom }}
-             pinch={{ step: 5 }}
-             panning={{ disabled: false }} // When scaled = 1, panning is prevented by bounds usually
-             wheel={{ disabled: true }}
-           >
-             {({ state }) => (
-               <TransformComponent wrapperClass="w-full h-full" contentClass="w-full h-full flex items-center justify-center">
-                 <div className="flex w-full h-full items-center justify-center pointer-events-none">
-                 {store.mode === 'doublePage' ? (
-                   <>
-                     {/* For Double Page, we show 2 images side-by-side. Need to handle direction. */}
-                     {store.direction === 'rtl' ? (
+           <>
+             {store.currentPage > chapter.images.length ? (
+               endOfChapterView
+             ) : (
+               <TransformWrapper
+                 initialScale={1}
+                 minScale={1}
+                 maxScale={3}
+                 centerOnInit
+                 doubleClick={{ step: 0.5, disabled: !store.doubleTapZoom }}
+                 pinch={{ step: 5 }}
+                 panning={{ disabled: false }} // When scaled = 1, panning is prevented by bounds usually
+                 wheel={{ disabled: true }}
+               >
+                 {({ state }) => (
+                   <TransformComponent wrapperClass="w-full h-full" contentClass="w-full h-full flex items-center justify-center">
+                     <div className="flex w-full h-full items-center justify-center pointer-events-none">
+                     {store.mode === 'doublePage' ? (
                        <>
-                         {/* Right-to-left: Right side is current page, Left side is next page */}
-                         {chapter.images[store.currentPage] && (
-                           <Image src={chapter.images[store.currentPage].imageUrl} alt="Left" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized />
-                         )}
-                         {chapter.images[store.currentPage - 1] && (
-                           <Image src={chapter.images[store.currentPage - 1].imageUrl} alt="Right" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized priority />
+                         {/* For Double Page, we show 2 images side-by-side. Need to handle direction. */}
+                         {store.direction === 'rtl' ? (
+                           <>
+                             {/* Right-to-left: Right side is current page, Left side is next page */}
+                             {chapter.images[store.currentPage] && (
+                               renderPage ? renderPage(store.currentPage) : (
+                                 <Image src={chapter.images[store.currentPage].imageUrl} alt="Left" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized />
+                               )
+                             )}
+                             {chapter.images[store.currentPage - 1] && (
+                               renderPage ? renderPage(store.currentPage - 1) : (
+                                 <Image src={chapter.images[store.currentPage - 1].imageUrl} alt="Right" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized priority />
+                               )
+                             )}
+                           </>
+                         ) : (
+                           <>
+                             {/* Left-to-right: Left side is current page, Right side is next page */}
+                             {chapter.images[store.currentPage - 1] && (
+                               renderPage ? renderPage(store.currentPage - 1) : (
+                                 <Image src={chapter.images[store.currentPage - 1].imageUrl} alt="Left" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized priority />
+                               )
+                             )}
+                             {chapter.images[store.currentPage] && (
+                               renderPage ? renderPage(store.currentPage) : (
+                                 <Image src={chapter.images[store.currentPage].imageUrl} alt="Right" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized />
+                               )
+                             )}
+                           </>
                          )}
                        </>
                      ) : (
-                       <>
-                         {/* Left-to-right: Left side is current page, Right side is next page */}
-                         {chapter.images[store.currentPage - 1] && (
-                           <Image src={chapter.images[store.currentPage - 1].imageUrl} alt="Left" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized priority />
-                         )}
-                         {chapter.images[store.currentPage] && (
-                           <Image src={chapter.images[store.currentPage].imageUrl} alt="Right" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized />
-                         )}
-                       </>
+                       chapter.images[store.currentPage - 1] && (
+                         <Image
+                           src={chapter.images[store.currentPage - 1].imageUrl}
+                           alt={`Page ${store.currentPage}`}
+                           width={chapter.images[store.currentPage - 1].width || 800}
+                           height={chapter.images[store.currentPage - 1].height || 1200}
+                           className={cn(
+                             "max-w-full max-h-screen pointer-events-auto",
+                             store.fitMode === 'width' && "w-full h-auto",
+                             store.fitMode === 'height' && "h-full w-auto",
+                             store.fitMode === 'smart' && "w-auto h-screen object-contain",
+                             store.cropBorders && "scale-105"
+                           )}
+                           priority
+                           unoptimized
+                         />
+                       )
                      )}
-                   </>
-                 ) : (
-                   chapter.images[store.currentPage - 1] && (
-                     <Image
-                       src={chapter.images[store.currentPage - 1].imageUrl}
-                       alt={`Page ${store.currentPage}`}
-                       width={chapter.images[store.currentPage - 1].width || 800}
-                       height={chapter.images[store.currentPage - 1].height || 1200}
-                       className={cn(
-                         "max-w-full max-h-screen pointer-events-auto",
-                         store.fitMode === 'width' && "w-full h-auto",
-                         store.fitMode === 'height' && "h-full w-auto",
-                         store.fitMode === 'smart' && "w-auto h-screen object-contain",
-                         store.cropBorders && "scale-105"
-                       )}
-                       priority
-                       unoptimized
-                     />
-                   )
+                     </div>
+                   </TransformComponent>
                  )}
-                 </div>
-               </TransformComponent>
+               </TransformWrapper>
              )}
-           </TransformWrapper>
+           </>
         )}
       </div>
 
@@ -405,7 +526,16 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
               className="absolute top-0 inset-x-0 z-50 bg-[#0F1115]/90 backdrop-blur-xl border-b border-white/5 pt-safe"
             >
               <div className="flex h-14 items-center px-4 justify-between">
-                <button onClick={() => router.push(`/series/${chapter.seriesSlug}`)} className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
+                <button 
+                  onClick={() => {
+                    if (typeof window !== 'undefined' && window.location.pathname.includes('android-reader')) {
+                      window.history.back();
+                    } else {
+                      router.push(`/series/${chapter.seriesSlug}`);
+                    }
+                  }} 
+                  className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors"
+                >
                   <ArrowLeft className="h-6 w-6" />
                 </button>
                 <div className="flex-1 px-4 flex flex-col items-center overflow-hidden">
@@ -413,17 +543,20 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                   <span className="text-[#E53935] text-[11px] font-semibold tracking-wider uppercase truncate w-full text-center">Chapter {chapter.number || ''} {chapter.title ? `- ${chapter.title}` : ''}</span>
                 </div>
                 <div className="flex items-center gap-1 -mr-2">
-                  <button className="p-2 text-white hover:bg-[#E53935]/20 hover:text-[#E53935] rounded-full transition-colors">
-                    <Bookmark className="w-5 h-5" />
+                  <button 
+                    onClick={handleBookmarkToggle} 
+                    className={cn(
+                      "p-2 rounded-full transition-colors",
+                      isSaved ? "text-[#E53935] hover:bg-[#E53935]/20" : "text-white hover:bg-[#E53935]/20 hover:text-[#E53935]"
+                    )}
+                  >
+                    <Bookmark className="w-5 h-5" fill={isSaved ? "currentColor" : "none"} />
                   </button>
                   <button onClick={() => setCommentsOpen(true)} className="p-2 text-white hover:bg-white/10 rounded-full transition-colors relative">
                     <MessageSquare className="w-5 h-5" />
                     {comments?.length > 0 && (
                       <span className="absolute top-2 right-2 w-2 h-2 bg-[#E53935] rounded-full" />
                     )}
-                  </button>
-                  <button onClick={() => setSettingsOpen(true)} className="p-2 text-white hover:bg-white/10 rounded-full transition-colors">
-                    <Settings className="w-5 h-5" />
                   </button>
                   <button className="p-2 text-white hover:bg-white/10 rounded-full transition-colors hidden sm:flex">
                     <MoreVertical className="w-5 h-5" />
@@ -432,22 +565,54 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
               </div>
             </motion.header>
 
-            {/* Bottom Bar / Page Indicator */}
-            {store.showPageNumber && (
-              <motion.footer
-                initial={{ y: '100%', opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: '100%', opacity: 0 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="absolute bottom-0 inset-x-0 z-50 bg-gradient-to-t from-[#0F1115] to-transparent pb-safe pointer-events-none"
-              >
-                <div className="px-4 pb-6 pt-12 flex items-center justify-center">
+            {/* Bottom Bar Controls */}
+            <motion.footer
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="absolute bottom-0 inset-x-0 z-50 bg-gradient-to-t from-[#0F1115] via-[#0F1115]/90 to-transparent pb-safe pointer-events-none"
+            >
+              <div className="px-4 pb-4 pt-12 flex flex-col items-center justify-center gap-4">
+                {store.showPageNumber && (
                   <div className="bg-[#1A1D24]/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 text-white/90 text-[11px] font-bold tracking-widest uppercase shadow-xl pointer-events-auto">
-                    {store.currentPage} / {chapter.images.length}
+                    {store.currentPage} / {chapter.images?.length || 0}
                   </div>
+                )}
+                
+                <div className="flex items-center justify-between w-full max-w-sm bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 rounded-2xl px-6 py-3 text-white pointer-events-auto shadow-2xl">
+                  <button onClick={(e) => { e.stopPropagation(); goPrev(); }} className="flex flex-col items-center gap-1 opacity-70 hover:opacity-100 hover:text-[#E53935] transition-all">
+                    <ChevronLeft className="w-6 h-6" />
+                    <span className="text-[10px] font-semibold">Previous</span>
+                  </button>
+                  
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      if (typeof window !== 'undefined' && window.location.pathname.includes('android-reader')) {
+                        window.history.back();
+                      } else {
+                        router.push(`/series/${chapter.seriesSlug}`);
+                      }
+                    }} 
+                    className="flex flex-col items-center gap-1 opacity-70 hover:opacity-100 hover:text-[#E53935] transition-all"
+                  >
+                    <Layout className="w-6 h-6" />
+                    <span className="text-[10px] font-semibold">Chapters</span>
+                  </button>
+                  
+                  <button onClick={(e) => { e.stopPropagation(); setSettingsOpen(true); }} className="flex flex-col items-center gap-1 text-[#E53935] hover:opacity-80 transition-all">
+                    <Settings className="w-6 h-6" />
+                    <span className="text-[10px] font-semibold">Settings</span>
+                  </button>
+                  
+                  <button onClick={(e) => { e.stopPropagation(); goNext(); }} className="flex flex-col items-center gap-1 opacity-70 hover:opacity-100 hover:text-[#E53935] transition-all">
+                    <ChevronRight className="w-6 h-6" />
+                    <span className="text-[10px] font-semibold">Next</span>
+                  </button>
                 </div>
-              </motion.footer>
-            )}
+              </div>
+            </motion.footer>
 
             {/* Vertical Page/Chapter Navigator */}
             <motion.div
@@ -519,127 +684,195 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                 </button>
               </div>
               
-              <div className="p-6 flex flex-col gap-8 overflow-y-auto max-h-[75vh] thin-scrollbar">
+              <div className="p-6 flex flex-col gap-4 overflow-y-auto max-h-[75vh] thin-scrollbar">
                 
-                {/* Reading Mode */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[#E53935]">
-                    <Layout className="w-5 h-5" />
-                    <h4 className="font-bold text-sm uppercase tracking-widest">Reading Mode</h4>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => { store.setMode('longStrip'); if(store.longStripGap) store.toggleLongStripGap(); }} className={cn("py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border", store.mode === 'longStrip' && !store.longStripGap ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "bg-[#1A1D24] border-transparent text-white/70 hover:bg-white/5")}>
-                      <Scroll className="w-6 h-6" />
-                      <span className="text-xs font-semibold">Long Strip</span>
+                {/* Tabs */}
+                <div className="flex bg-[#1A1D24] p-1 rounded-2xl shrink-0">
+                  {[
+                    { id: 'display', icon: <Monitor className="w-4 h-4" />, label: 'Display' },
+                    { id: 'reading', icon: <Scroll className="w-4 h-4" />, label: 'Reading' },
+                    { id: 'navigation', icon: <Smartphone className="w-4 h-4" />, label: 'Navigation' },
+                    { id: 'advanced', icon: <Settings className="w-4 h-4" />, label: 'Advanced' }
+                  ].map(tab => (
+                    <button 
+                      key={tab.id}
+                      onClick={() => setActiveSettingsTab(tab.id as any)}
+                      className={cn(
+                        "flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-all",
+                        activeSettingsTab === tab.id ? "bg-[#0F1115] text-[#E53935]" : "text-white/50 hover:text-white"
+                      )}
+                    >
+                      {tab.icon}
+                      <span className="text-[10px] font-bold uppercase tracking-wider">{tab.label}</span>
                     </button>
-                    <button onClick={() => { store.setMode('longStrip'); if(!store.longStripGap) store.toggleLongStripGap(); }} className={cn("py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border", store.mode === 'longStrip' && store.longStripGap ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "bg-[#1A1D24] border-transparent text-white/70 hover:bg-white/5")}>
-                      <Scroll className="w-6 h-6 border-dashed border-2 rounded-sm" />
-                      <span className="text-xs font-semibold">Strip (Gaps)</span>
-                    </button>
-                    <button onClick={() => { store.setMode('singlePage'); store.setDirection('ltr'); }} className={cn("py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border", store.mode === 'singlePage' && store.direction === 'ltr' ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "bg-[#1A1D24] border-transparent text-white/70 hover:bg-white/5")}>
-                      <ArrowRightToLine className="w-6 h-6" />
-                      <span className="text-xs font-semibold">Paged (L→R)</span>
-                    </button>
-                    <button onClick={() => { store.setMode('singlePage'); store.setDirection('rtl'); }} className={cn("py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border", store.mode === 'singlePage' && store.direction === 'rtl' ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "bg-[#1A1D24] border-transparent text-white/70 hover:bg-white/5")}>
-                      <ArrowLeftToLine className="w-6 h-6" />
-                      <span className="text-xs font-semibold">Paged (R→L)</span>
-                    </button>
-                    <button onClick={() => store.setMode('vertical')} className={cn("py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border", store.mode === 'vertical' ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "bg-[#1A1D24] border-transparent text-white/70 hover:bg-white/5")}>
-                      <ArrowDownToLine className="w-6 h-6" />
-                      <span className="text-xs font-semibold">Paged Vertical</span>
-                    </button>
-                    <button onClick={() => store.setMode('doublePage')} className={cn("py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border", store.mode === 'doublePage' ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "bg-[#1A1D24] border-transparent text-white/70 hover:bg-white/5")}>
-                      <Columns className="w-6 h-6" />
-                      <span className="text-xs font-semibold">Double Page</span>
-                    </button>
-                  </div>
+                  ))}
                 </div>
 
-                {/* General Settings */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[#E53935]">
-                    <Settings className="w-5 h-5" />
-                    <h4 className="font-bold text-sm uppercase tracking-widest">General</h4>
-                  </div>
-                  
-                  <div className="space-y-4 bg-[#1A1D24] p-4 rounded-2xl">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-white/90">Show Page Number</span>
-                      <button onClick={() => store.toggleShowPageNumber()} className={cn("w-12 h-6 rounded-full transition-colors relative", store.showPageNumber ? "bg-[#E53935]" : "bg-white/10")}>
-                        <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.showPageNumber ? "left-7" : "left-1")} />
-                      </button>
-                    </div>
-                    
-                    <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
-                      <span className="text-sm font-medium text-white/90">Navigator Position</span>
-                      <div className="flex gap-2">
-                        <button onClick={() => store.setVerticalNavigatorPosition('left')} className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-all border", store.verticalNavigatorPosition === 'left' ? "bg-[#E53935] text-white border-transparent" : "bg-transparent text-white/50 border-white/10 hover:bg-white/5")}>Left</button>
-                        <button onClick={() => store.setVerticalNavigatorPosition('right')} className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-all border", store.verticalNavigatorPosition === 'right' ? "bg-[#E53935] text-white border-transparent" : "bg-transparent text-white/50 border-white/10 hover:bg-white/5")}>Right</button>
+                {/* Tab Content */}
+                <div className="pt-2 pb-8">
+                  {activeSettingsTab === 'display' && (
+                    <div className="space-y-6">
+                      {/* Brightness */}
+                      <div className="space-y-3 bg-[#1A1D24] p-4 rounded-2xl border border-white/5">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-white/90">Brightness</span>
+                          <span className="text-xs font-bold text-white/50">{Math.round(store.brightness)}%</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Sun className="w-4 h-4 text-white/30" />
+                          <input 
+                            type="range" min="10" max="100" step="1" 
+                            value={store.brightness} 
+                            onChange={(e) => store.setBrightness(parseInt(e.target.value))}
+                            className="flex-1 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#E53935] outline-none"
+                          />
+                          <Sun className="w-5 h-5 text-white/90" />
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Custom Filters */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[#E53935]">
-                    <Palette className="w-5 h-5" />
-                    <h4 className="font-bold text-sm uppercase tracking-widest">Custom Filter</h4>
-                  </div>
-                  
-                  <div className="space-y-6 bg-[#1A1D24] p-4 rounded-2xl">
-                    {/* Brightness */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-white/90">Brightness</span>
-                        <span className="text-xs font-bold text-white/50">{Math.round(store.brightness)}%</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Sun className="w-4 h-4 text-white/30" />
-                        <input 
-                          type="range" min="10" max="100" step="1" 
-                          value={store.brightness} 
-                          onChange={(e) => store.setBrightness(parseInt(e.target.value))}
-                          className="flex-1 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#E53935] outline-none"
-                        />
-                        <Sun className="w-5 h-5 text-white/90" />
-                      </div>
-                    </div>
-                    
-                    {/* Color Filters */}
-                    <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
-                      <span className="text-sm font-medium text-white/90">Color Overlay</span>
-                      <div className="flex gap-2">
-                        {['transparent', '#F5E6C8', '#E8F5E9', '#E3F2FD', '#FCE4EC'].map(color => (
-                          <button 
-                            key={color}
-                            onClick={() => store.setColorFilter(color)}
-                            className={cn("w-10 h-10 rounded-full border-2 transition-transform", store.colorFilter === color ? "border-[#E53935] scale-110" : "border-transparent hover:scale-105")}
-                            style={{ backgroundColor: color === 'transparent' ? '#333' : color }}
-                          >
-                            {color === 'transparent' && <span className="text-[10px] text-white/50 block mt-2">None</span>}
+                      {/* Background */}
+                      <div className="space-y-3 bg-[#1A1D24] p-4 rounded-2xl border border-white/5">
+                        <span className="text-sm font-medium text-white/90 block">Background</span>
+                        <div className="flex gap-4">
+                          <button onClick={() => store.setBackgroundColor('white')} className="flex flex-col items-center gap-2">
+                            <div className={cn("w-10 h-10 rounded-full bg-white border-2", store.backgroundColor === 'white' ? "border-[#E53935]" : "border-transparent")} />
+                            <span className="text-[10px] text-white/50 font-medium">White</span>
                           </button>
-                        ))}
+                          <button onClick={() => store.setBackgroundColor('gray')} className="flex flex-col items-center gap-2">
+                            <div className={cn("w-10 h-10 rounded-full bg-[#1e1e1e] border-2", store.backgroundColor === 'gray' ? "border-[#E53935]" : "border-transparent")} />
+                            <span className="text-[10px] text-white/50 font-medium">Dark</span>
+                          </button>
+                          <button onClick={() => store.setBackgroundColor('black')} className="flex flex-col items-center gap-2">
+                            <div className={cn("w-10 h-10 rounded-full bg-black border-2 border-white/10", store.backgroundColor === 'black' ? "border-[#E53935]" : "")} />
+                            <span className="text-[10px] text-white/50 font-medium">Pure Black</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Image Fit */}
+                      <div className="space-y-3 bg-[#1A1D24] p-4 rounded-2xl border border-white/5">
+                        <span className="text-sm font-medium text-white/90 block">Image Fit</span>
+                        <div className="flex gap-2">
+                          <button onClick={() => store.setFitMode('width')} className={cn("flex-1 py-3 rounded-xl flex flex-col items-center gap-1 border", store.fitMode === 'width' ? "border-[#E53935] text-[#E53935] bg-[#E53935]/10" : "border-white/10 text-white/50")}>
+                            <Maximize className="w-5 h-5" />
+                            <span className="text-[10px] font-medium">Fit Width</span>
+                          </button>
+                          <button onClick={() => store.setFitMode('height')} className={cn("flex-1 py-3 rounded-xl flex flex-col items-center gap-1 border", store.fitMode === 'height' ? "border-[#E53935] text-[#E53935] bg-[#E53935]/10" : "border-white/10 text-white/50")}>
+                            <FileImage className="w-5 h-5" />
+                            <span className="text-[10px] font-medium">Fit Height</span>
+                          </button>
+                          <button onClick={() => store.setFitMode('smart')} className={cn("flex-1 py-3 rounded-xl flex flex-col items-center gap-1 border", store.fitMode === 'smart' ? "border-[#E53935] text-[#E53935] bg-[#E53935]/10" : "border-white/10 text-white/50")}>
+                            <Sun className="w-5 h-5" />
+                            <span className="text-[10px] font-medium">Smart Fit</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Display Toggles */}
+                      <div className="space-y-1 bg-[#1A1D24] rounded-2xl border border-white/5 divide-y divide-white/5 overflow-hidden">
+                        <div className="flex items-center justify-between p-4">
+                          <span className="text-sm font-medium text-white/90">Show Page Number</span>
+                          <button onClick={() => store.toggleShowPageNumber()} className={cn("w-12 h-6 rounded-full transition-colors relative", store.showPageNumber ? "bg-[#E53935]" : "bg-white/10")}>
+                            <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.showPageNumber ? "left-7" : "left-1")} />
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between p-4">
+                          <span className="text-sm font-medium text-white/90">Keep Screen On</span>
+                          <button onClick={() => store.setKeepScreenOn(!store.keepScreenOn)} className={cn("w-12 h-6 rounded-full transition-colors relative", store.keepScreenOn ? "bg-[#E53935]" : "bg-white/10")}>
+                            <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.keepScreenOn ? "left-7" : "left-1")} />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    
-                    {/* Toggles */}
-                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                      <span className="text-sm font-medium text-white/90">Grayscale</span>
-                      <button onClick={() => store.toggleGrayscale()} className={cn("w-12 h-6 rounded-full transition-colors relative", store.grayscale ? "bg-[#E53935]" : "bg-white/10")}>
-                        <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.grayscale ? "left-7" : "left-1")} />
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-white/90">Invert Colors</span>
-                      <button onClick={() => store.toggleInverted()} className={cn("w-12 h-6 rounded-full transition-colors relative", store.inverted ? "bg-[#E53935]" : "bg-white/10")}>
-                        <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.inverted ? "left-7" : "left-1")} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  )}
 
+                  {activeSettingsTab === 'reading' && (
+                    <div className="space-y-6">
+                      <div className="space-y-3 bg-[#1A1D24] p-4 rounded-2xl border border-white/5">
+                        <span className="text-sm font-medium text-white/90 block">Reading Mode</span>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button onClick={() => store.setMode('vertical')} className={cn("py-3 px-4 rounded-xl flex flex-col items-center gap-2 border transition-all", store.mode === 'vertical' ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "border-white/10 text-white/70 hover:bg-white/5")}>
+                            <ArrowDownToLine className="w-5 h-5" />
+                            <span className="text-[10px] font-bold uppercase">Vertical</span>
+                          </button>
+                          <button onClick={() => { store.setMode('singlePage'); store.setDirection('ltr'); }} className={cn("py-3 px-4 rounded-xl flex flex-col items-center gap-2 border transition-all", store.mode === 'singlePage' && store.direction === 'ltr' ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "border-white/10 text-white/70 hover:bg-white/5")}>
+                            <ArrowRightToLine className="w-5 h-5" />
+                            <span className="text-[10px] font-bold uppercase">Horizontal</span>
+                          </button>
+                          <button onClick={() => { store.setMode('longStrip'); store.setLongStripGap(false); }} className={cn("py-3 px-4 rounded-xl flex flex-col items-center gap-2 border transition-all", store.mode === 'longStrip' && !store.longStripGap ? "bg-[#E53935]/10 border-[#E53935] text-[#E53935]" : "border-white/10 text-white/70 hover:bg-white/5")}>
+                            <Scroll className="w-5 h-5" />
+                            <span className="text-[10px] font-bold uppercase">Webtoon</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 bg-[#1A1D24] rounded-2xl border border-white/5 divide-y divide-white/5 overflow-hidden">
+                        <div className="flex items-center justify-between p-4">
+                          <span className="text-sm font-medium text-white/90">Double Tap to Zoom</span>
+                          <button onClick={() => store.toggleDoubleTapZoom()} className={cn("w-12 h-6 rounded-full transition-colors relative", store.doubleTapZoom ? "bg-[#E53935]" : "bg-white/10")}>
+                            <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.doubleTapZoom ? "left-7" : "left-1")} />
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between p-4">
+                          <span className="text-sm font-medium text-white/90">Remember Zoom</span>
+                          <button onClick={() => store.setRememberZoom(!store.rememberZoom)} className={cn("w-12 h-6 rounded-full transition-colors relative", store.rememberZoom ? "bg-[#E53935]" : "bg-white/10")}>
+                            <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.rememberZoom ? "left-7" : "left-1")} />
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between p-4">
+                          <span className="text-sm font-medium text-white/90">Auto-Hide Controls</span>
+                          <button onClick={() => store.setAutoHideControls(!store.autoHideControls)} className={cn("w-12 h-6 rounded-full transition-colors relative", store.autoHideControls ? "bg-[#E53935]" : "bg-white/10")}>
+                            <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.autoHideControls ? "left-7" : "left-1")} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeSettingsTab === 'navigation' && (
+                    <div className="space-y-6">
+                      <div className="space-y-1 bg-[#1A1D24] rounded-2xl border border-white/5 divide-y divide-white/5 overflow-hidden">
+                        <div className="flex items-center justify-between p-4">
+                          <span className="text-sm font-medium text-white/90">Volume Buttons to Navigate</span>
+                          <button onClick={() => store.setVolumeNavigation(!store.volumeNavigation)} className={cn("w-12 h-6 rounded-full transition-colors relative", store.volumeNavigation ? "bg-[#E53935]" : "bg-white/10")}>
+                            <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.volumeNavigation ? "left-7" : "left-1")} />
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between p-4">
+                          <span className="text-sm font-medium text-white/90">Swipe to Change Chapter</span>
+                          <button onClick={() => store.setSwipeNavigation(!store.swipeNavigation)} className={cn("w-12 h-6 rounded-full transition-colors relative", store.swipeNavigation ? "bg-[#E53935]" : "bg-white/10")}>
+                            <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.swipeNavigation ? "left-7" : "left-1")} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeSettingsTab === 'advanced' && (
+                    <div className="space-y-6">
+                      <div className="space-y-1 bg-[#1A1D24] rounded-2xl border border-white/5 divide-y divide-white/5 overflow-hidden">
+                        <div className="flex items-center justify-between p-4">
+                          <span className="text-sm font-medium text-white/90">Preload Next Pages</span>
+                          <button onClick={() => store.setPreloadNextPages(!store.preloadNextPages)} className={cn("w-12 h-6 rounded-full transition-colors relative", store.preloadNextPages ? "bg-[#E53935]" : "bg-white/10")}>
+                            <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.preloadNextPages ? "left-7" : "left-1")} />
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between p-4">
+                          <span className="text-sm font-medium text-white/90">Fullscreen Reader</span>
+                          <button onClick={() => store.toggleFullscreen()} className={cn("w-12 h-6 rounded-full transition-colors relative", store.isFullscreen ? "bg-[#E53935]" : "bg-white/10")}>
+                            <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.isFullscreen ? "left-7" : "left-1")} />
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between p-4">
+                          <span className="text-sm font-medium text-white/90">Immersive Mode</span>
+                          <button onClick={() => store.setImmersiveMode(!store.immersiveMode)} className={cn("w-12 h-6 rounded-full transition-colors relative", store.immersiveMode ? "bg-[#E53935]" : "bg-white/10")}>
+                            <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", store.immersiveMode ? "left-7" : "left-1")} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           </>

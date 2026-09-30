@@ -167,9 +167,14 @@ export class SeriesRepository {
 
     try {
       const localSeriesId = `${userId}_${serverSeriesId}`;
+      // Use a LEFT JOIN to fetch reading progress and lastReadAt from the history table
       const res = await db.query(
-        'SELECT * FROM chapters WHERE userId = ? AND seriesId = ? ORDER BY CAST(chapterNumber AS REAL) DESC',
-        [userId, localSeriesId]
+        `SELECT c.*, h.currentPage, h.lastReadAt AS historyLastReadAt 
+         FROM chapters c 
+         LEFT JOIN history h ON c.id = h.chapterId AND h.userId = ? 
+         WHERE c.userId = ? AND c.seriesId = ? 
+         ORDER BY CAST(c.chapterNumber AS REAL) DESC`,
+        [userId, userId, localSeriesId]
       );
       return res.values || [];
     } catch (e) {
@@ -284,6 +289,29 @@ export class SeriesRepository {
       );
     } catch (e) {
       console.error('Failed to save reading progress', e);
+    }
+  }
+
+  /**
+   * Get reading progress
+   */
+  static async getReadingProgress(userId: string, serverSeriesId: string, serverChapterId: string): Promise<number> {
+    const db = await getDB();
+    if (!db) return 1;
+
+    try {
+      const historyId = `${userId}_${serverSeriesId}_${serverChapterId}`;
+      const res = await db.query(
+        'SELECT currentPage FROM history WHERE id = ? LIMIT 1',
+        [historyId]
+      );
+      if (res.values && res.values.length > 0) {
+        return res.values[0].currentPage || 1;
+      }
+      return 1;
+    } catch (e) {
+      console.error('Failed to get reading progress', e);
+      return 1;
     }
   }
 

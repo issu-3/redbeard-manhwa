@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { 
   ArrowLeft, Share2, MoreVertical, Download, Bookmark, Play, Check, 
-  ChevronDown, ChevronUp, Filter, List, RefreshCcw, FileText, Tags, ExternalLink, X, BookOpen, Trash2, FileUp
+  ChevronDown, ChevronUp, Filter, List, RefreshCcw, FileText, Tags, ExternalLink, X, BookOpen, Trash2, FileUp, CheckCircle2
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -175,18 +175,10 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
         window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`;
         return;
       }
-      // Missing file -> fall through to download
+      // Missing file -> fall through to online reader
     }
 
-    // 2. Download source -> queue + auto-open
-    if (chapter.sourceType === 'DOWNLOAD' && chapter.downloadUrl) {
-      setPendingOpenChapter(chapter.id);
-      handleDownload(chapter);
-      // Removed toast/alert to not block UI, visual indicator on button is enough
-      return;
-    }
-
-    // 3. Fallback online reader
+    // 2. Fallback online reader
     window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`;
   };
 
@@ -198,7 +190,9 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
       // Need to find the chapter slug for the url
       const ch = chapters.find((c: any) => c.id === pending);
       if (ch) {
-        window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${ch.slug}&id=${ch.id}&seriesId=${series.id}`;
+        setTimeout(() => {
+          window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${ch.slug}&id=${ch.id}&seriesId=${series.id}`;
+        }, 100);
       }
     }
     if (pending && downloads[pending]?.status === 'FAILED') {
@@ -229,7 +223,9 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
 
     const onSuccess = () => {
       setActiveSheet(null);
-      window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`;
+      setTimeout(() => {
+        window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`;
+      }, 100);
     };
 
     const onError = (msg: string) => {
@@ -290,6 +286,52 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
     setActiveSheet(null);
   };
 
+  const handleToggleReadState = async (chapter: any) => {
+    const isCurrentlyRead = chapter.isRead;
+    const newState = !isCurrentlyRead;
+    
+    // Optimistic UI update
+    setLocalChapters(prev => ({
+      ...prev,
+      [chapter.id]: {
+        ...prev[chapter.id],
+        isRead: newState ? 1 : 0,
+        readAt: newState ? Date.now() : null
+      }
+    }));
+    
+    if (Capacitor.isNativePlatform()) {
+      const userId = nativeUserId || activeUserId;
+      if (userId) {
+        await SeriesRepository.saveReadState(userId, series.id, chapter.id, newState);
+      }
+    }
+  };
+
+  const handleMarkAllReadState = async (newState: boolean) => {
+    const updates: Record<string, any> = {};
+    const now = Date.now();
+    chapters.forEach((ch: any) => {
+      updates[ch.id] = {
+        ...(localChapters[ch.id] || {}),
+        isRead: newState ? 1 : 0,
+        readAt: newState ? now : null
+      };
+    });
+    setLocalChapters(prev => ({ ...prev, ...updates }));
+    
+    if (Capacitor.isNativePlatform()) {
+      const userId = nativeUserId || activeUserId;
+      if (userId) {
+        // Sequential save to avoid overwhelming SQLite
+        for (const ch of chapters) {
+          await SeriesRepository.saveReadState(userId, series.id, ch.id, newState);
+        }
+      }
+    }
+    setActiveSheet(null);
+  };
+
   const uniqueChapters = useMemo(() => {
     const map = new Map();
     for (const ch of chapters) {
@@ -336,15 +378,47 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
   const firstChapterToRead = processedChapters.length > 0 ? processedChapters[processedChapters.length - 1] : null;
   
   // Determine if there is reading progress for resume button
-  let resumeChapter = null;
-  let lastReadAt = 0;
-  for (const ch of uniqueChapters) {
+  const getResumeChapter = () => {
+    if (!uniqueChapters || uniqueChapters.length === 0) return null;
+
+    // Sort chapters ascending to find the "next" chapter
+    const ascendingChapters = [...uniqueChapters].sort((a, b) => {
+      const numA = typeof a.number === 'number' ? a.number : parseFloat(a.number) || 0;
+      const numB = typeof b.number === 'number' ? b.number : parseFloat(b.number) || 0;
+      return numA - numB;
+    });
+
+    let latestOpenedChapter = null;
+    let latestOpenedTime = 0;
+    let latestOpenedIndex = -1;
+
+    for (let i = 0; i < ascendingChapters.length; i++) {
+      const ch = ascendingChapters[i];
       const local = localChapters[ch.id];
-      if (local && local.readAt && local.readAt > lastReadAt) {
-          lastReadAt = local.readAt;
-          resumeChapter = ch;
+      const time = local?.historyLastReadAt || local?.readAt || 0;
+      if (time > latestOpenedTime) {
+        latestOpenedTime = time;
+        latestOpenedChapter = ch;
+        latestOpenedIndex = i;
       }
-  }
+    }
+
+    if (latestOpenedChapter) {
+      const local = localChapters[latestOpenedChapter.id];
+      if (local?.isRead) {
+        // If they finished it, return the next chapter (if available)
+        if (latestOpenedIndex + 1 < ascendingChapters.length) {
+          return ascendingChapters[latestOpenedIndex + 1];
+        }
+        return latestOpenedChapter; // Already finished the last chapter, resume it again
+      }
+      return latestOpenedChapter; // Not finished, resume it
+    }
+
+    return null;
+  };
+
+  const resumeChapter = getResumeChapter();
 
   // Render Bottom Sheet Overlay
   const renderBottomSheet = () => {
@@ -428,6 +502,14 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                   <RefreshCcw className={cn("h-5 w-5", isRefreshing && "animate-spin")} />
                   <span>Refresh</span>
                 </button>
+                <button onClick={() => handleMarkAllReadState(true)} className="flex items-center gap-4 p-3 rounded hover:bg-neutral-800 active:bg-neutral-800 text-white w-full text-left">
+                  <CheckCircle2 className="h-5 w-5" />
+                  <span>Mark All as Read</span>
+                </button>
+                <button onClick={() => handleMarkAllReadState(false)} className="flex items-center gap-4 p-3 rounded hover:bg-neutral-800 active:bg-neutral-800 text-white w-full text-left">
+                  <Check className="h-5 w-5" />
+                  <span>Mark All as Unread</span>
+                </button>
                 <button onClick={handleShare} className="flex items-center gap-4 p-3 rounded hover:bg-neutral-800 active:bg-neutral-800 text-white w-full text-left">
                   <Share2 className="h-5 w-5" />
                   <span>Share</span>
@@ -474,12 +556,24 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                 <button 
                   onClick={() => {
                     setActiveSheet(null);
-                    window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${selectedChapter.slug}&id=${selectedChapter.id}&seriesId=${series.id}`;
+                    setTimeout(() => {
+                      window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${selectedChapter.slug}&id=${selectedChapter.id}&seriesId=${series.id}`;
+                    }, 100);
                   }}
                   className="flex items-center gap-4 p-3 rounded hover:bg-neutral-800 active:bg-neutral-800 text-white w-full text-left"
                 >
                   <BookOpen className="h-5 w-5" />
                   <span>Read Chapter</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    handleToggleReadState(selectedChapter);
+                    setActiveSheet(null);
+                  }}
+                  className="flex items-center gap-4 p-3 rounded hover:bg-neutral-800 active:bg-neutral-800 text-white w-full text-left"
+                >
+                  <Check className="h-5 w-5" />
+                  <span>{selectedChapter.isRead ? 'Mark as Unread' : 'Mark as Read'}</span>
                 </button>
                 {selectedChapter.downloadState === 'COMPLETED' ? (
                   <button 
@@ -552,7 +646,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
       <header className="absolute top-0 left-0 right-0 z-40 bg-transparent flex items-center justify-between px-2 py-[env(safe-area-inset-top,0px)] transition-colors duration-300">
         <div className="px-2 py-3 flex items-center justify-between w-full">
         <button
-          onClick={() => router.back()}
+          onClick={() => window.history.back()}
           className="p-2 bg-black/40 backdrop-blur rounded-full text-white"
         >
           <ArrowLeft className="h-6 w-6" />
@@ -568,7 +662,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
       {/* ── Scrollable Content ─────────────────────────────── */}
       <main className="flex-1 overflow-y-auto no-scrollbar pb-[calc(6rem+env(safe-area-inset-bottom,0px))]">
         {/* ── Hero Banner ────────────────────────────────────── */}
-        <div className="relative pt-[25%] pb-4 px-4 w-full shrink-0 flex flex-col items-center">
+        <div className="relative pt-[calc(env(safe-area-inset-top,0px)+3.5rem)] pb-4 px-4 w-full shrink-0 flex items-end gap-4 mt-8">
           <div className="absolute inset-0 overflow-hidden bg-black">
             <Image
               src={series.bannerImage || series.coverImage || ''}
@@ -580,7 +674,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
             <div className="absolute inset-0 bg-gradient-to-b from-[#0B0D10]/20 via-[#0B0D10]/80 to-[#0B0D10]" />
           </div>
           
-          <div className="relative z-10 w-32 aspect-[2/3] rounded-lg overflow-hidden shadow-2xl shadow-black ring-1 ring-white/10 mb-5">
+          <div className="relative z-10 w-[90px] aspect-[2/3] rounded-md overflow-hidden shadow-2xl shadow-black ring-1 ring-white/10 shrink-0">
             {series.coverImage && (
               <Image
                 src={series.coverImage}
@@ -590,15 +684,17 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
               />
             )}
           </div>
-          <h1 className="relative z-10 text-[24px] font-black tracking-tight leading-tight text-white text-center drop-shadow-md max-w-[95%] mb-1.5">
-            {series.title}
-          </h1>
-          <p className="relative z-10 text-[13px] font-medium text-neutral-400 text-center mb-4 drop-shadow">
-            {series.authors?.[0]?.name || 'Unknown Author'}
-          </p>
-          <div className="relative z-10 flex items-center justify-center gap-2">
-            <span className="text-[10px] tracking-wider uppercase font-bold bg-white/10 backdrop-blur-md px-2.5 py-1 rounded text-white">{series.status || 'UNKNOWN'}</span>
-            <span className="text-[10px] tracking-wider uppercase font-bold bg-[#E5092F]/20 backdrop-blur-md px-2.5 py-1 rounded text-[#E5092F]">{series.type || 'MANGA'}</span>
+          <div className="relative z-10 flex flex-col items-start min-w-0 pb-1 flex-1">
+            <h1 className="text-[20px] font-bold leading-tight text-white drop-shadow-md mb-1 line-clamp-3">
+              {series.title}
+            </h1>
+            <p className="text-[12px] font-medium text-neutral-400 mb-2.5 drop-shadow line-clamp-1">
+              {series.authors?.[0]?.name || 'Unknown Author'}
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[9px] tracking-wider uppercase font-bold bg-white/10 backdrop-blur-md px-1.5 py-0.5 rounded text-white">{series.status || 'UNKNOWN'}</span>
+              <span className="text-[9px] tracking-wider uppercase font-bold bg-[#E5092F]/20 backdrop-blur-md px-1.5 py-0.5 rounded text-[#E5092F]">{series.type || 'MANGA'}</span>
+            </div>
           </div>
         </div>
 
@@ -708,6 +804,18 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleReadState(ch);
+                  }}
+                  className={cn(
+                    "p-2 transition-colors active:scale-95",
+                    ch.isRead ? "text-[#E5092F]" : "text-neutral-600"
+                  )}
+                >
+                  <CheckCircle2 className="h-5 w-5" />
+                </button>
                 {ch.downloadState === 'COMPLETED' ? (
                   <div className="p-2 text-neutral-500"><Check className="h-5 w-5" /></div>
                 ) : ch.downloadState === 'DOWNLOADING' || ch.downloadState === 'QUEUED' || ch.downloadState === 'RESOLVING' || ch.downloadState === 'VALIDATING' ? (

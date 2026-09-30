@@ -415,7 +415,7 @@ export function AndroidLibraryView() {
                     key={item.seriesId}
                     onClick={(e) => {
                       if (isSelectionMode) toggleSelection(item.seriesId, e);
-                      else router.push(`/android-series?slug=${item.slug}`);
+                      else window.location.href = `/android-series/index.html?slug=${item.slug}`;
                     }}
                     className={cn(
                       "flex gap-3 p-2.5 rounded-[14px] bg-[#1C1C1C] active:scale-[0.98] transition-transform border border-white/5 relative",
@@ -458,7 +458,7 @@ export function AndroidLibraryView() {
                   key={item.seriesId}
                   onClick={(e) => {
                     if (isSelectionMode) toggleSelection(item.seriesId, e);
-                    else router.push(`/android-series?slug=${item.slug}`);
+                    else window.location.href = `/android-series/index.html?slug=${item.slug}`;
                   }}
                   className="flex flex-col gap-2 active:scale-[0.98] transition-transform relative"
                 >

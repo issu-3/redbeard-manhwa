@@ -72,7 +72,7 @@ export function NativeInitializer({ children }: { children: React.ReactNode }) {
         if (currentPath === '/android-app' || currentPath === '/' || currentPath === '/android-app/') {
           CapacitorApp.exitApp();
         } else {
-          router.back();
+          window.history.back();
         }
       }).then(listener => {
         backButtonListener = listener;

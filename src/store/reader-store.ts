@@ -36,6 +36,28 @@ interface ReaderState {
   rotationMode: RotationMode;
   verticalNavigatorPosition: NavigatorPosition;
   navigatorHeight: number;
+  
+  // New mockup state
+  keepScreenOn: boolean;
+  pageTransitionEffect: 'scroll' | 'slide' | 'fade' | 'none';
+  rememberZoom: boolean;
+  autoHideControls: boolean;
+  volumeNavigation: boolean;
+  swipeNavigation: boolean;
+  preloadNextPages: boolean;
+  imageQuality: 'auto' | 'high' | 'dataSaver';
+  immersiveMode: boolean;
+
+  setKeepScreenOn: (keep: boolean) => void;
+  setPageTransitionEffect: (effect: 'scroll' | 'slide' | 'fade' | 'none') => void;
+  setRememberZoom: (remember: boolean) => void;
+  setAutoHideControls: (autoHide: boolean) => void;
+  setVolumeNavigation: (volume: boolean) => void;
+  setSwipeNavigation: (swipe: boolean) => void;
+  setPreloadNextPages: (preload: boolean) => void;
+  setImageQuality: (quality: 'auto' | 'high' | 'dataSaver') => void;
+  setImmersiveMode: (immersive: boolean) => void;
+  toggleShowProgress: () => void;
 
   setMode: (mode: ReaderMode) => void;
   setDirection: (direction: ReadingDirection) => void;
@@ -98,6 +120,15 @@ export const useReaderStore = create<ReaderState>()(
       rotationMode: 'default',
       verticalNavigatorPosition: 'right',
       navigatorHeight: 60,
+      keepScreenOn: true,
+      pageTransitionEffect: 'scroll',
+      rememberZoom: false,
+      autoHideControls: true,
+      volumeNavigation: true,
+      swipeNavigation: true,
+      preloadNextPages: true,
+      imageQuality: 'auto',
+      immersiveMode: false,
 
       setMode: (mode) => set({ mode }),
       setDirection: (direction) => set({ direction }),
@@ -134,6 +165,16 @@ export const useReaderStore = create<ReaderState>()(
       setRotationMode: (rotationMode) => set({ rotationMode }),
       setVerticalNavigatorPosition: (verticalNavigatorPosition) => set({ verticalNavigatorPosition }),
       setNavigatorHeight: (navigatorHeight) => set({ navigatorHeight }),
+      setKeepScreenOn: (keepScreenOn) => set({ keepScreenOn }),
+      setPageTransitionEffect: (pageTransitionEffect) => set({ pageTransitionEffect }),
+      setRememberZoom: (rememberZoom) => set({ rememberZoom }),
+      setAutoHideControls: (autoHideControls) => set({ autoHideControls }),
+      setVolumeNavigation: (volumeNavigation) => set({ volumeNavigation }),
+      setSwipeNavigation: (swipeNavigation) => set({ swipeNavigation }),
+      setPreloadNextPages: (preloadNextPages) => set({ preloadNextPages }),
+      setImageQuality: (imageQuality) => set({ imageQuality }),
+      setImmersiveMode: (immersiveMode) => set({ immersiveMode }),
+      toggleShowProgress: () => set((state) => ({ showProgress: !state.showProgress })),
     }),
     {
       name: 'redbeard-reader-preferences',

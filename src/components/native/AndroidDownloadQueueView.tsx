@@ -66,7 +66,7 @@ export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
       {/* App Bar */}
       <div className="flex h-14 items-center gap-4 px-4 border-b border-white/5 bg-[#0B0D10]/95 backdrop-blur-md">
         <button 
-          onClick={() => onBack ? onBack() : router.back()}
+          onClick={() => onBack ? onBack() : window.history.back()}
           className="rounded-full p-2 -ml-2 active:bg-neutral-800 transition-colors"
         >
           <ArrowLeft className="h-6 w-6 text-white" />

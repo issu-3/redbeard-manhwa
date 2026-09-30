@@ -124,7 +124,8 @@ export const useAppLibraryStore = create<AppLibraryStore>()((set, get) => ({
     }
   },
 
-  isSaved: (seriesId) => {
-    return !!get().savedSeries[seriesId];
+  isSaved: (identifier) => {
+    const state = get();
+    return !!state.savedSeries[identifier] || Object.values(state.savedSeries).some((s: any) => s.slug === identifier || s.seriesId === identifier);
   },
 }));

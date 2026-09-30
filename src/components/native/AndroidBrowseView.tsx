@@ -295,7 +295,7 @@ export function AndroidBrowseView() {
         {results.map(item => (
           <div
             key={item.id}
-            onClick={() => router.push(`/android-series?slug=${item.slug}`)}
+            onClick={() => window.location.href = `/android-series/index.html?slug=${item.slug}`}
             className="flex flex-col gap-2 active:scale-[0.98] transition-transform"
           >
             <div className="relative rounded-[14px] overflow-hidden aspect-[4/5] bg-[#1C1C1C] shadow-[0_4px_12px_rgba(0,0,0,0.2)] border border-white/5">
@@ -392,7 +392,7 @@ export function AndroidBrowseView() {
           {!isSearchMode ? (
             <>
               <div className="flex items-center gap-4">
-                <button onClick={() => router.push('/library')} className="text-white active:opacity-70 transition-opacity">
+                <button onClick={() => window.location.href = '/android-app/index.html'} className="text-white active:opacity-70 transition-opacity">
                   <ArrowLeft className="h-6 w-6" />
                 </button>
                 <div className="flex items-center">
