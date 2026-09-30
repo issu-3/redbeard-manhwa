@@ -26,5 +26,7 @@ export interface FileResolver {
 
 export function inferMimeType(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase() || '';
-  return ext === 'pdf' ? 'application/pdf' : 'application/octet-stream';
+  if (ext === 'pdf') return 'application/pdf';
+  if (ext === 'cbz' || ext === 'zip') return 'application/zip';
+  return 'application/octet-stream';
 }

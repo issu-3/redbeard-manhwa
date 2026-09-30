@@ -92,8 +92,75 @@ export async function GET(
       return new NextResponse('Chapter not found', { status: 404 });
     }
 
+    // 1a. UPLOAD-type chapters: images are stored individually (e.g. from Google Drive import).
+    //     No external downloadUrl exists, so we handle it differently.
     if (!chapter.downloadUrl) {
-      return new NextResponse('No download URL available for this chapter', { status: 400 });
+      const images = await prisma.chapterImage.findMany({
+        where: { chapterId: id },
+        orderBy: { pageNumber: 'asc' },
+        select: { imageUrl: true, pageNumber: true }
+      });
+
+      if (images.length === 0) {
+        return new NextResponse('No download URL or images available for this chapter', { status: 400 });
+      }
+
+      const { searchParams } = new URL(request.url);
+
+      // For proxy=true: construct a CBZ from individual images and stream it
+      if (searchParams.get('proxy') === 'true') {
+        try {
+          const JSZip = (await import('jszip')).default;
+          const zip = new JSZip();
+
+          // Fetch each image and add to zip
+          for (const img of images) {
+            try {
+              const imgRes = await fetch(img.imageUrl, { redirect: 'follow' });
+              if (!imgRes.ok) continue;
+              const buffer = await imgRes.arrayBuffer();
+              const ext = img.imageUrl.split('.').pop()?.split('?')[0] || 'jpg';
+              zip.file(`page_${String(img.pageNumber).padStart(3, '0')}.${ext}`, buffer);
+            } catch (e) {
+              console.error(`Failed to fetch image ${img.pageNumber}:`, e);
+            }
+          }
+
+          const zipBuffer = await zip.generateAsync({ type: 'nodebuffer', compression: 'STORE' });
+
+          const responseHeaders = new Headers();
+          responseHeaders.set('Content-Type', 'application/zip');
+          responseHeaders.set('Content-Length', String(zipBuffer.length));
+          responseHeaders.set('Content-Disposition', `attachment; filename="chapter_${id}.cbz"`);
+
+          return new NextResponse(zipBuffer as unknown as BodyInit, { status: 200, headers: responseHeaders });
+        } catch (err: any) {
+          console.error('CBZ construction error:', err);
+          return new NextResponse('Failed to construct download', { status: 500 });
+        }
+      }
+
+      // For resolve=true: tell the client to use the proxy endpoint
+      if (searchParams.get('resolve') === 'true') {
+        const proxyUrl = `/api/chapter/${id}/download?proxy=true`;
+        return NextResponse.json({
+          success: true,
+          url: proxyUrl,
+          fileName: `chapter_${id}.cbz`,
+          mimeType: 'application/zip',
+          size: null,
+          downloadUrl: proxyUrl,
+          expiresAt: null,
+          provider: 'REDBEARD',
+          downloadHeaders: null,
+        });
+      }
+
+      // Default: inform that this chapter uses image-based storage
+      return NextResponse.json({
+        success: false,
+        error: { code: 'NO_EXTERNAL_DOWNLOAD', message: 'This chapter uses image-based storage. Use ?resolve=true to download.', retryable: false }
+      }, { status: 400 });
     }
 
     // 2. Track view asynchronously
@@ -199,17 +266,23 @@ export async function GET(
              return NextResponse.json({ success: false, error: resolved.error }, { status: 400 });
           }
 
-          // PDF-ONLY GATE — CBZ/ZIP/EPUB yahin reject hote hain
-          const isPdfCompatible =
+          // FILE TYPE GATE — Allow PDF and CBZ/ZIP downloads
+          const isDownloadable =
             resolved.mimeType === 'application/pdf' ||
-            resolved.fileName.toLowerCase().endsWith('.pdf');
+            resolved.mimeType === 'application/zip' ||
+            resolved.mimeType === 'application/x-cbz' ||
+            resolved.mimeType === 'application/vnd.comicbook+zip' ||
+            resolved.mimeType === 'application/octet-stream' ||
+            resolved.fileName.toLowerCase().endsWith('.pdf') ||
+            resolved.fileName.toLowerCase().endsWith('.cbz') ||
+            resolved.fileName.toLowerCase().endsWith('.zip');
 
-          if (!isPdfCompatible) {
+          if (!isDownloadable) {
             return NextResponse.json({
               success: false,
               error: {
                 code: 'INVALID_FILE_TYPE',
-                message: `Expected PDF chapter, got ${resolved.mimeType} (${resolved.fileName})`,
+                message: `Unsupported file type: ${resolved.mimeType} (${resolved.fileName})`,
                 retryable: false,
               }
             }, { status: 400 });

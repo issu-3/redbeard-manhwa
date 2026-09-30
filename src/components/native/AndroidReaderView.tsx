@@ -85,12 +85,14 @@ export function AndroidReaderView({
           const res = await fetch(`${API_BASE_URL}/api/chapter/${chapterId}/online-info`);
           if (res.ok) {
             const data = await res.json();
-            if (data.success && data.fileType === 'CBZ') {
+            if (data.success && (data.fileType === 'CBZ' || data.fileType === 'IMAGES')) {
               setIsCbz(true);
               const images = data.pages.map((p: any) => ({
-                url: `${API_BASE_URL}/api/chapter/${chapterId}/page/${p.index}`,
-                width: 800,
-                height: 1200
+                // IMAGES type: use the direct Vercel Blob URL
+                // CBZ type: use the page extraction API
+                url: p.imageUrl || `${API_BASE_URL}/api/chapter/${chapterId}/page/${p.index}`,
+                width: p.width || 800,
+                height: p.height || 1200
               }));
               setCbzImages(images);
               setNumPages(images.length);

@@ -23,11 +23,46 @@ export async function GET(
       select: { id: true, downloadUrl: true, sourceType: true }
     });
 
-    if (!chapter || !chapter.downloadUrl) {
+    if (!chapter) {
+      return new NextResponse('Chapter not found', { status: 404 });
+    }
+
+    // 2. UPLOAD-type chapters: images are stored as individual ChapterImage records.
+    //    Look up by pageNumber (0-indexed from client, but stored as 1-indexed in DB).
+    if (!chapter.downloadUrl) {
+      const image = await prisma.chapterImage.findFirst({
+        where: { chapterId: id, pageNumber: index + 1 },
+        select: { imageUrl: true }
+      });
+
+      if (!image) {
+        // Also try 0-indexed match in case the client sends pageNumber directly
+        const imageAlt = await prisma.chapterImage.findFirst({
+          where: { chapterId: id, pageNumber: index },
+          select: { imageUrl: true }
+        });
+        if (!imageAlt) {
+          return new NextResponse('Page not found', { status: 404 });
+        }
+        // Redirect to the Vercel Blob URL with long-term caching
+        return NextResponse.redirect(imageAlt.imageUrl, {
+          status: 302,
+          headers: { 'Cache-Control': 'public, max-age=31536000, immutable' }
+        });
+      }
+
+      return NextResponse.redirect(image.imageUrl, {
+        status: 302,
+        headers: { 'Cache-Control': 'public, max-age=31536000, immutable' }
+      });
+    }
+
+    // 3. DOWNLOAD-type chapters: extract from remote CBZ
+    if (!chapter.downloadUrl) {
       return new NextResponse('Chapter not found or no download URL', { status: 404 });
     }
 
-    // 2. Resolve URL
+    // 4. Resolve URL
     const { resolverManager } = await import('@/lib/providers/factory');
     const resolver = resolverManager.getResolver(chapter.downloadUrl);
     if (!resolver) {
@@ -39,7 +74,7 @@ export async function GET(
       return NextResponse.json({ success: false, error: resolved.error }, { status: 400 });
     }
 
-    // 3. Get Metadata (from cache or fetch)
+    // 5. Get Metadata (from cache or fetch)
     const cacheKey = chapter.id;
     let metadata = metadataCache.get(cacheKey);
     const headers = resolved.serverHeaders || resolved.downloadHeaders || {};
@@ -59,7 +94,7 @@ export async function GET(
       return new NextResponse('Page not found', { status: 404 });
     }
 
-    // 4. Fetch the specific page
+    // 6. Fetch the specific page
     const imageBuffer = await getRemoteCbzPage(resolved.downloadUrl, headers, pageInfo);
 
     // Determine mime type

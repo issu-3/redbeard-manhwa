@@ -16,17 +16,51 @@ export async function GET(
   try {
     const { id } = await params;
     
-    // 1. Fetch the chapter
+    // 1. Fetch the chapter with images (for UPLOAD-type chapters)
     const chapter = await prisma.chapter.findUnique({
       where: { id },
-      select: { id: true, downloadUrl: true, sourceType: true }
+      select: {
+        id: true,
+        downloadUrl: true,
+        sourceType: true,
+        images: {
+          orderBy: { pageNumber: 'asc' },
+          select: { pageNumber: true, imageUrl: true, width: true, height: true }
+        }
+      }
     });
 
-    if (!chapter || !chapter.downloadUrl) {
+    if (!chapter) {
+      return new NextResponse('Chapter not found', { status: 404 });
+    }
+
+    // 2. UPLOAD-type chapters: images are stored as individual ChapterImage records
+    //    (e.g. from Google Drive import). Return them directly.
+    if (!chapter.downloadUrl && chapter.images.length > 0) {
+      const metadata = {
+        fileType: 'IMAGES' as const,
+        pageCount: chapter.images.length,
+        pages: chapter.images.map((img, i) => ({
+          index: i,
+          name: `page_${img.pageNumber}.jpg`,
+          imageUrl: img.imageUrl,
+          width: img.width || 800,
+          height: img.height || 1200,
+        })),
+      };
+
+      return NextResponse.json({
+        success: true,
+        ...metadata
+      });
+    }
+
+    // 3. DOWNLOAD-type chapters: need a downloadUrl to fetch CBZ remotely
+    if (!chapter.downloadUrl) {
       return new NextResponse('Chapter not found or no download URL', { status: 404 });
     }
 
-    // 2. Resolve URL
+    // 4. Resolve URL
     const { resolverManager } = await import('@/lib/providers/factory');
     const resolver = resolverManager.getResolver(chapter.downloadUrl);
     if (!resolver) {
@@ -38,13 +72,13 @@ export async function GET(
       return NextResponse.json({ success: false, error: resolved.error }, { status: 400 });
     }
 
-    // 3. Check cache
+    // 5. Check cache
     const cacheKey = chapter.id;
     if (metadataCache.has(cacheKey)) {
       return NextResponse.json({ success: true, ...metadataCache.get(cacheKey) });
     }
 
-    // 4. Fetch CBZ metadata
+    // 6. Fetch CBZ metadata
     const headers = resolved.serverHeaders || resolved.downloadHeaders || {};
     
     let fileSize = resolved.size;
