@@ -305,8 +305,11 @@ export default async function ChapterPage({
     const isCbzUrl = targetUrl.toLowerCase().endsWith('.cbz') || targetUrl.includes('drive.google.com');
     if (isCbzUrl) {
       try {
-        const { getRemoteCbzMetadata } = await import('@/lib/cbz-remote');
-        const metadata = await getRemoteCbzMetadata(targetUrl);
+        const { resolverManager } = await import('@/lib/resolvers');
+        const { url: resolvedUrl, headers: responseHeaders } = await resolverManager.resolve(targetUrl);
+        const { getRemoteFileSize, getRemoteCbzMetadata } = await import('@/lib/cbz-remote');
+        const fileSize = await getRemoteFileSize(resolvedUrl, responseHeaders);
+        const metadata = await getRemoteCbzMetadata(resolvedUrl, responseHeaders, fileSize);
         chapter.images = metadata.pages.map((p: any) => ({
           imageUrl: `/api/chapter/${chapter.id}/page/${p.index}`,
           width: 800,
