@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { put } from '@vercel/blob';
+import { uploadToR2 } from '@/lib/s3';
 
 // C4 FIX: Allowed file types and max size
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
@@ -42,21 +42,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      console.error('Missing BLOB_READ_WRITE_TOKEN environment variable');
+    if (!process.env.R2_ACCESS_KEY_ID) {
+      console.error('Missing R2_ACCESS_KEY_ID environment variable');
       return NextResponse.json(
-        { error: 'Cloud storage is not configured. Missing BLOB_READ_WRITE_TOKEN.' },
+        { error: 'Cloud storage is not configured. Missing R2 configuration.' },
         { status: 500 }
       );
     }
 
     const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
-    const filename = `${Date.now()}_${safeName}`;
+    const filename = `uploads/${Date.now()}_${safeName}`;
 
-    // Cloud Storage via Vercel Blob
-    const blob = await put(filename, file, { access: 'public' });
+    // Cloud Storage via Cloudflare R2
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const url = await uploadToR2(filename, buffer, file.type || 'application/octet-stream');
     
-    return NextResponse.json({ url: blob.url }, { status: 200 });
+    return NextResponse.json({ url }, { status: 200 });
 
   } catch (error) {
     console.error('Error in upload route:', error);

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { put } from '@vercel/blob';
+import { uploadToR2 } from '@/lib/s3';
 import { getGoogleDriveConfig, getAccessToken } from '@/lib/google-drive';
 
 export async function POST(req: NextRequest) {
@@ -37,20 +37,25 @@ export async function POST(req: NextRequest) {
        return NextResponse.json({ error: `Failed to download image from Drive` }, { status: 400 });
     }
     
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      return NextResponse.json({ error: 'Missing BLOB_READ_WRITE_TOKEN.' }, { status: 500 });
+    if (!process.env.R2_ACCESS_KEY_ID) {
+      return NextResponse.json({ error: 'Missing R2_ACCESS_KEY_ID.' }, { status: 500 });
     }
 
     const safeName = fileName.replace(/[^a-zA-Z0-9.\-_]/g, '');
-    const filename = `${Date.now()}_${safeName}`;
+    const filename = `drive/${Date.now()}_${safeName}`;
 
-    // Upload the stream directly to Vercel Blob
-    const blob = await put(filename, driveRes.body as any, { 
-      access: 'public',
-      contentType: driveRes.headers.get('content-type') || 'application/octet-stream'
-    });
+    // Cloudflare R2 requires a buffer or Uint8Array
+    const arrayBuffer = await driveRes.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Upload to Cloudflare R2
+    const url = await uploadToR2(
+      filename, 
+      buffer, 
+      driveRes.headers.get('content-type') || 'application/octet-stream'
+    );
     
-    return NextResponse.json({ url: blob.url }, { status: 200 });
+    return NextResponse.json({ url }, { status: 200 });
 
   } catch (error: any) {
     console.error('Error in import-image route:', error);

@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
-import { del } from '@vercel/blob';
+import { deleteFromR2 } from '@/lib/s3';
 
 const DEFAULT_SECTIONS = [
   { type: 'HERO_BANNER', isActive: true, order: 0, limit: 10, isManual: false, title: null, subtitle: null, showViewAll: false },
@@ -38,13 +38,14 @@ export async function upsertBanner(data: any) {
     const existing = await prisma.heroBanner.findUnique({ where: { id } });
     if (
       existing && 
-      existing.desktopImage !== rest.desktopImage && 
-      existing.desktopImage.includes('public.blob.vercel-storage.com')
+      existing.desktopImage !== rest.desktopImage
     ) {
       try {
-        await del(existing.desktopImage);
+        if (!existing.desktopImage.includes('googleusercontent.com') && !existing.desktopImage.includes('drive.google.com')) {
+          await deleteFromR2(existing.desktopImage);
+        }
       } catch (e) {
-        console.error('Failed to delete old Vercel blob:', e);
+        console.error('Failed to delete old object from R2:', e);
       }
     }
     await prisma.heroBanner.update({ where: { id }, data: rest });
@@ -63,11 +64,13 @@ export async function deleteBanner(id: string) {
   await checkAdmin();
   const existing = await prisma.heroBanner.findUnique({ where: { id } });
   
-  if (existing && existing.desktopImage.includes('public.blob.vercel-storage.com')) {
+  if (existing) {
     try {
-      await del(existing.desktopImage);
+      if (!existing.desktopImage.includes('googleusercontent.com') && !existing.desktopImage.includes('drive.google.com')) {
+         await deleteFromR2(existing.desktopImage);
+      }
     } catch (e) {
-      console.error('Failed to delete Vercel blob:', e);
+      console.error('Failed to delete object from R2:', e);
     }
   }
   

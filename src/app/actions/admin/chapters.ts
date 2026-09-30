@@ -16,7 +16,7 @@ export async function getExistingChapters(seriesId: string) {
   });
 }
 
-import { del } from '@vercel/blob';
+import { deleteFromR2 } from '@/lib/s3';
 
 async function checkAdmin() {
   const session = await auth();
@@ -34,9 +34,9 @@ export async function deleteChapter(chapterId: string, seriesId: string) {
   });
 
   if (chapter && chapter.images.length > 0) {
-    const blobUrls = chapter.images.map(img => img.imageUrl).filter(url => url.includes('.public.blob.vercel-storage.com'));
-    if (blobUrls.length > 0) {
-      await del(blobUrls).catch(e => console.error('Failed to delete blobs:', e));
+    const urls = chapter.images.map(img => img.imageUrl).filter(url => url && !url.includes('googleusercontent.com') && !url.includes('drive.google.com'));
+    for (const url of urls) {
+      await deleteFromR2(url).catch(e => console.error('Failed to delete object from R2:', e));
     }
   }
 
@@ -70,9 +70,9 @@ export async function bulkDeleteChapters(chapterIds: string[], seriesId: string)
 
   const allImages = chapters.flatMap(c => c.images);
   if (allImages.length > 0) {
-    const blobUrls = allImages.map(img => img.imageUrl).filter(url => url.includes('.public.blob.vercel-storage.com'));
-    if (blobUrls.length > 0) {
-      await del(blobUrls).catch(e => console.error('Failed to delete blobs:', e));
+    const urls = allImages.map(img => img.imageUrl).filter(url => url && !url.includes('googleusercontent.com') && !url.includes('drive.google.com'));
+    for (const url of urls) {
+      await deleteFromR2(url).catch(e => console.error('Failed to delete object from R2:', e));
     }
   }
 

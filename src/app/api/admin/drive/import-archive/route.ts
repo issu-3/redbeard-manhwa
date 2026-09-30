@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { put } from '@vercel/blob';
+import { uploadToR2 } from '@/lib/s3';
 import { getGoogleDriveConfig, getAccessToken } from '@/lib/google-drive';
 import JSZip from 'jszip';
 
@@ -63,18 +63,15 @@ export async function POST(req: NextRequest) {
     // Sort images naturally
     imageFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
 
-    // 3. Upload extracted images to Vercel Blob sequentially to avoid overwhelming
+    // 3. Upload extracted images to Cloudflare R2 sequentially to avoid overwhelming
     const urls: string[] = [];
     for (const file of imageFiles) {
       const buffer = await file.async('nodebuffer');
       const ext = file.name.split('.').pop() || 'jpg';
       const safeName = `extracted-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
       
-      const blob = await put(`chapters/${safeName}`, buffer, {
-         access: 'public',
-         addRandomSuffix: false
-      });
-      urls.push(blob.url);
+      const url = await uploadToR2(`chapters/${safeName}`, buffer, `image/${ext === 'jpg' ? 'jpeg' : ext}`);
+      urls.push(url);
     }
 
     return NextResponse.json({ success: true, urls });
