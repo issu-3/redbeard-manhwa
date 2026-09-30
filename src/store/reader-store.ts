@@ -85,6 +85,7 @@ interface ReaderState {
   togglePageTransitions: () => void;
   toggleShowPageNumber: () => void;
   toggleLongStripGap: () => void;
+  setLongStripGap: (gap: boolean) => void;
   setRotationMode: (mode: RotationMode) => void;
   setVerticalNavigatorPosition: (position: NavigatorPosition) => void;
   setNavigatorHeight: (height: number) => void;
@@ -162,6 +163,7 @@ export const useReaderStore = create<ReaderState>()(
       togglePageTransitions: () => set((state) => ({ pageTransitions: !state.pageTransitions })),
       toggleShowPageNumber: () => set((state) => ({ showPageNumber: !state.showPageNumber })),
       toggleLongStripGap: () => set((state) => ({ longStripGap: !state.longStripGap })),
+      setLongStripGap: (longStripGap) => set({ longStripGap }),
       setRotationMode: (rotationMode) => set({ rotationMode }),
       setVerticalNavigatorPosition: (verticalNavigatorPosition) => set({ verticalNavigatorPosition }),
       setNavigatorHeight: (navigatorHeight) => set({ navigatorHeight }),
