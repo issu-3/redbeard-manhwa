@@ -5,35 +5,16 @@ import { APP_URL } from '@/lib/constants';
 // Cache sitemap for 24 hours
 export const revalidate = 86400;
 
-const CHAPTERS_PER_SITEMAP = 10000;
-
 /**
  * Generate sitemap index entries.
  * ID 0 = static + genres
  * ID 1 = all series
- * ID 2+ = chapters (paginated at 10k each)
  */
 export async function generateSitemaps() {
-  let chapterSitemapCount = 1;
-  try {
-    const chapterCount = await prisma.chapter.count({
-      where: { isPublished: true },
-    });
-    chapterSitemapCount = Math.max(1, Math.ceil(chapterCount / CHAPTERS_PER_SITEMAP));
-  } catch (error) {
-    console.warn('Failed to count chapters for sitemap:', error);
-  }
-
-  const ids: { id: string }[] = [
+  return [
     { id: 'static' },
     { id: 'series' },
   ];
-
-  for (let i = 0; i < chapterSitemapCount; i++) {
-    ids.push({ id: `chapters-${i}` });
-  }
-
-  return ids;
 }
 
 export default async function sitemap(props: {
@@ -84,34 +65,6 @@ export default async function sitemap(props: {
           lastModified: s.updatedAt,
           changeFrequency: 'daily' as const,
           priority: 0.9,
-        }));
-    }
-
-    // ── Chapters (paginated) ──
-    if (id.startsWith('chapters-')) {
-      const pageIndex = parseInt(id.replace('chapters-', ''), 10);
-
-      const chapters = await prisma.chapter.findMany({
-        where: { isPublished: true },
-        select: {
-          slug: true,
-          updatedAt: true,
-          series: {
-            select: { slug: true },
-          },
-        },
-        orderBy: { publishedAt: 'desc' },
-        skip: pageIndex * CHAPTERS_PER_SITEMAP,
-        take: CHAPTERS_PER_SITEMAP,
-      });
-
-      return chapters
-        .filter((c) => c.slug && c.slug.trim() && c.series?.slug)
-        .map((c) => ({
-          url: `${baseUrl}/series/${c.series!.slug}/chapter/${c.slug}`,
-          lastModified: c.updatedAt,
-          changeFrequency: 'monthly' as const,
-          priority: 0.8,
         }));
     }
   } catch (error) {

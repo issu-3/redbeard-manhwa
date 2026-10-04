@@ -213,7 +213,7 @@ export async function generateMetadata({
     description,
     keywords,
     robots: {
-      index: true,
+      index: false,
       follow: true,
       'max-image-preview': 'large' as const,
       'max-snippet': -1,

@@ -3,10 +3,22 @@ export const APP_TAGLINE = 'The Ultimate Reading Experience';
 export const APP_DESCRIPTION = 'REDBEARD is a premium reading platform offering the best reading experience with thousands of comics and novels.';
 export const getBaseUrl = () => {
   if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+  
+  // Enforce production domain to prevent Vercel preview URLs in SEO tags
+  if (process.env.VERCEL_ENV === 'production') {
+    return 'https://redbeard.store';
+  }
+
   if (process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`;
   if (process.env.NEXT_PUBLIC_VERCEL_URL) return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  
+  // Default to prod if building/running in standard production environment without other vars
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://redbeard.store';
+  }
+
   return 'http://localhost:3000';
 };
 

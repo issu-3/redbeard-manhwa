@@ -79,11 +79,10 @@ export async function getSettings(): Promise<Record<string, string>> {
     }
 
     const settingsMap: Record<string, string> = {};
-    const BAD_TEXT = 'REDESIGN AD PLACEMENT SYSTEM';
-    const BAD_TEXT_2 = 'DOWNLOAD BASED ONLY';
     
     for (const s of settings) {
-      if (s.value.includes(BAD_TEXT) || s.value.includes(BAD_TEXT_2)) {
+      // Ensure empty/null values still have safe defaults
+      if (!s.value || s.value.trim() === '') {
         let fallback = '';
         if (s.key === 'siteName') fallback = 'REDBEARD';
         if (s.key === 'seo_site_title') fallback = 'REDBEARD - The Ultimate Reading Experience';

@@ -27,6 +27,7 @@ export function RecentlyUpdatedCarousel({ updates }: { updates: RecentUpdate[] }
         <div key={`${update.series.id}-${update.chapterNumber}`} className="w-[135px] shrink-0 md:w-[200px]">
           <Link 
             href={`/series/${update.series.slug}/chapter/${safeSlug}`}
+            prefetch={false}
             className="group block"
           >
             <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-surface">

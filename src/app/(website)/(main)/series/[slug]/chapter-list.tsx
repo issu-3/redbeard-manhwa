@@ -200,6 +200,7 @@ export function ChapterListSection({
                           {safeSlug ? (
                             <Link
                               href={`/series/${seriesSlug}/chapter/${safeSlug}`}
+                              prefetch={false}
                               className="w-[68px] h-[34px] flex items-center justify-center bg-primary text-white hover:bg-primary/90 rounded-full text-[12px] font-bold transition-colors shadow-sm"
                             >
                               READ

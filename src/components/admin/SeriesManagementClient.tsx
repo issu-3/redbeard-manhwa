@@ -227,6 +227,7 @@ function ActionMenu({
             <Link
               key={action.label}
               href={action.href}
+              prefetch={false}
               className="flex items-center gap-2.5 px-3 py-2 text-sm text-text-secondary hover:bg-surface hover:text-text-primary transition-colors"
               role="menuitem"
               onClick={() => setOpen(false)}
@@ -732,6 +733,7 @@ export default function SeriesManagementClient({
                   {/* Chevron link */}
                   <Link
                     href={`/admin/series/${series.id}/edit`}
+                    prefetch={false}
                     className="flex-shrink-0 self-center ml-1 text-text-muted hover:text-primary transition-colors"
                     aria-label={`Edit ${series.title}`}
                   >

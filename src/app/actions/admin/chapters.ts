@@ -97,7 +97,7 @@ export async function bulkDeleteChapters(chapterIds: string[], seriesId: string)
   return { success: true, count: deleteResult.count };
 }
 
-export async function createChapter(seriesId: string, formData: FormData) {
+export async function createChapter(seriesId: string, formData: FormData, preventRedirect: boolean = false) {
   await checkAdmin();
 
   const title = formData.get('title') as string;
@@ -170,7 +170,11 @@ export async function createChapter(seriesId: string, formData: FormData) {
     }
     throw error;
   }
-  redirect(`/admin/series/${seriesId}/chapters`);
+  if (!preventRedirect) {
+    redirect(`/admin/series/${seriesId}/chapters`);
+  } else {
+    return { success: true };
+  }
 }
 
 export async function updateChapter(id: string, seriesId: string, formData: FormData) {

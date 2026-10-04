@@ -44,6 +44,7 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
       >
         <Link
           href={`/series/${series.slug}`}
+          prefetch={false}
           className="group flex gap-4 rounded-2xl border border-border bg-card p-3 transition-all hover:border-border-hover hover:shadow-lg hover:shadow-black/20"
         >
           <div className="relative h-32 w-24 shrink-0 overflow-hidden rounded-xl">
@@ -111,7 +112,7 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
       whileHover={{ y: -4 }}
       className={isFeatured ? 'w-full' : isCompact ? 'w-full' : 'w-full'}
     >
-      <Link href={`/series/${series.slug}`} className="group block">
+      <Link href={`/series/${series.slug}`} prefetch={false} className="group block">
         <div className="relative overflow-hidden rounded-2xl border border-transparent transition-all duration-300 group-hover:border-primary/30 group-hover:shadow-xl group-hover:shadow-primary/5 aspect-[3/4]">
           <Image
             src={series.coverImage}

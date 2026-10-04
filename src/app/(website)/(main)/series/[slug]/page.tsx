@@ -483,6 +483,12 @@ export default async function SeriesDetailPage({
           />
         </div>
       </div>
+
+      {/* SEO: Inject JSON-LD Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     </div>
   );
 }

@@ -18,6 +18,7 @@ import { saveUserPreferences } from '@/app/actions/preferences';
 import { CommentSection } from '@/components/shared/CommentSection';
 import { ReaderSettingsSheet } from './ReaderSettingsSheet';
 import { SubscribeCard } from '@/components/shared/SubscribeCard';
+import { AdsterraAd } from '@/components/ads/AdsterraAd';
 
 // Helper to safely get the slug
 function getSafeSlug(c?: { slug?: string | null; number?: number | null } | null) {
@@ -26,6 +27,13 @@ function getSafeSlug(c?: { slug?: string | null; number?: number | null } | null
   if (c.number != null) return String(c.number);
   return null;
 }
+
+const ImageLoader = () => (
+  <div className="absolute inset-0 flex flex-col items-center justify-center -z-10 pointer-events-none">
+    <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-[#E53935] animate-spin mb-2 shadow-[0_0_15px_rgba(229,57,53,0.15)]"></div>
+    <span className="text-white/40 text-[9px] font-bold tracking-widest uppercase">Loading...</span>
+  </div>
+);
 
 export function ChapterReader({ chapter, comments, currentUserId, userPreferences, defaultReadingMode, youtubeUrl, renderPage, initialPage = 1 }: any) {
   const router = useRouter();
@@ -83,6 +91,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
   // Slugs
   const nextSlug = getSafeSlug(chapter.nextChapter);
   const prevSlug = getSafeSlug(chapter.prevChapter);
+  const midIndex = Math.max(1, Math.floor((chapter.images?.length || 0) * 0.35));
 
   // Initialize
   useEffect(() => {
@@ -282,6 +291,9 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
 
   const endOfChapterView = (
     <div className="py-24 text-center w-full h-full flex flex-col items-center justify-center pointer-events-auto z-10 relative bg-[#0F1115]">
+       <div className="w-full flex justify-center mb-8">
+         <AdsterraAd placement="BOTTOM" />
+       </div>
        <div className="max-w-[900px] w-full mx-auto px-4 mb-12">
          <SubscribeCard youtubeUrl={youtubeUrl || null} />
        </div>
@@ -369,6 +381,11 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
         onClick={handleContainerClick}
         style={contentFilterStyle}
       >
+        {/* RIGHT RAIL AD (Desktop Only) */}
+        <div className="hidden xl:flex absolute right-4 top-0 bottom-0 w-[160px] items-center justify-center pointer-events-auto z-20">
+           <AdsterraAd placement="RIGHT_RAIL" />
+        </div>
+
         {/* Webtoon / Long Strip */}
         {store.mode === 'longStrip' && (
           <div ref={scrollRef} className="h-full w-full overflow-y-auto overflow-x-hidden thin-scrollbar" style={{ scrollBehavior: 'smooth' }}>
@@ -394,16 +411,27 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                       width: '100%',
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
-                    className={cn("flex justify-center bg-transparent", store.longStripGap ? "py-2" : "py-0")}
+                    className={cn("flex flex-col items-center bg-transparent", store.longStripGap ? "py-2" : "py-0")}
                   >
+                    {virtualRow.index === 0 && (
+                      <div className="w-full flex justify-center pt-16 pb-6 pointer-events-auto shrink-0">
+                        <AdsterraAd placement="TOP" className="w-full max-w-[728px]" />
+                      </div>
+                    )}
+                    {virtualRow.index === midIndex && (
+                      <div className="w-full flex justify-center py-6 pointer-events-auto shrink-0">
+                        <AdsterraAd placement="MID" className="w-full max-w-[300px]" />
+                      </div>
+                    )}
                     {/* Using standard img for webtoon for perfectly seamless stacking without layout shifts when width/height are known */}
                     {/* We can use Next.js Image if we configure it correctly, but simple img is often better for zero-gap webtoons if unoptimized anyway */}
+                    {!renderPage && !loadedImages.has(virtualRow.index) && <ImageLoader />}
                     {renderPage ? (
                       renderPage(virtualRow.index)
                     ) : (
                       <img
                         src={img.imageUrl}
-                        alt={`Page ${img.pageNumber}`}
+                        alt={`${chapter.seriesTitle} Chapter ${chapter.number || ''} Page ${img.pageNumber}`}
                         width={img.width || 800}
                         height={img.height || 1200}
                         className={cn(
@@ -415,6 +443,20 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                               : "w-full max-w-[56rem]"
                         )}
                         loading={virtualRow.index <= 3 ? 'eager' : 'lazy'}
+                        onLoad={() => {
+                          setLoadedImages(prev => {
+                            const next = new Set(prev);
+                            next.add(virtualRow.index);
+                            return next;
+                          });
+                        }}
+                        onError={() => {
+                          setLoadedImages(prev => {
+                            const next = new Set(prev);
+                            next.add(virtualRow.index);
+                            return next;
+                          });
+                        }}
                       />
                     )}
                   </div>
@@ -433,16 +475,28 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
              {store.currentPage > chapter.images.length ? (
                endOfChapterView
              ) : (
-               <TransformWrapper
-                 initialScale={1}
-                 minScale={1}
-                 maxScale={3}
-                 centerOnInit
-                 doubleClick={{ step: 0.5, disabled: !store.doubleTapZoom }}
-                 pinch={{ step: 5 }}
-                 panning={{ disabled: false }} // When scaled = 1, panning is prevented by bounds usually
-                 wheel={{ disabled: true }}
-               >
+               <div className="w-full h-full flex flex-col items-center justify-center">
+                 {store.currentPage === 1 && (
+                   <div className="w-full flex justify-center pt-16 pb-2 pointer-events-auto shrink-0 z-20">
+                     <AdsterraAd placement="TOP" className="w-full max-w-[728px]" />
+                   </div>
+                 )}
+                 {store.currentPage === midIndex && (
+                   <div className="w-full flex justify-center py-2 pointer-events-auto shrink-0 z-20">
+                     <AdsterraAd placement="MID" className="w-full max-w-[300px]" />
+                   </div>
+                 )}
+                 <div className="flex-1 w-full overflow-hidden flex items-center justify-center relative">
+                   <TransformWrapper
+                     initialScale={1}
+                     minScale={1}
+                     maxScale={3}
+                     centerOnInit
+                     doubleClick={{ step: 0.5, disabled: !store.doubleTapZoom }}
+                     pinch={{ step: 5 }}
+                     panning={{ disabled: false }} // When scaled = 1, panning is prevented by bounds usually
+                     wheel={{ disabled: true }}
+                   >
                  {({ state }) => (
                    <TransformComponent wrapperClass="w-full h-full" contentClass="w-full h-full flex items-center justify-center">
                      <div className="flex w-full h-full items-center justify-center pointer-events-none">
@@ -453,55 +507,86 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                            <>
                              {/* Right-to-left: Right side is current page, Left side is next page */}
                              {chapter.images[store.currentPage] && (
-                               renderPage ? renderPage(store.currentPage) : (
-                                 <Image src={chapter.images[store.currentPage].imageUrl} alt="Left" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized />
-                               )
+                               <div className="relative w-1/2 h-full flex justify-center items-center">
+                                 {!renderPage && !loadedImages.has(store.currentPage) && <ImageLoader />}
+                                 {renderPage ? renderPage(store.currentPage) : (
+                                   <Image src={chapter.images[store.currentPage].imageUrl} alt="Left" width={800} height={1200} className="w-full h-full object-contain pointer-events-auto" unoptimized onLoad={() => setLoadedImages(prev => new Set(prev).add(store.currentPage))} onError={() => setLoadedImages(prev => new Set(prev).add(store.currentPage))} />
+                                 )}
+                               </div>
                              )}
                              {chapter.images[store.currentPage - 1] && (
-                               renderPage ? renderPage(store.currentPage - 1) : (
-                                 <Image src={chapter.images[store.currentPage - 1].imageUrl} alt="Right" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized priority />
-                               )
+                               <div className="relative w-1/2 h-full flex justify-center items-center">
+                                 {!renderPage && !loadedImages.has(store.currentPage - 1) && <ImageLoader />}
+                                 {renderPage ? renderPage(store.currentPage - 1) : (
+                                   <Image src={chapter.images[store.currentPage - 1].imageUrl} alt="Right" width={800} height={1200} className="w-full h-full object-contain pointer-events-auto" unoptimized priority onLoad={() => setLoadedImages(prev => new Set(prev).add(store.currentPage - 1))} onError={() => setLoadedImages(prev => new Set(prev).add(store.currentPage - 1))} />
+                                 )}
+                               </div>
                              )}
                            </>
                          ) : (
                            <>
                              {/* Left-to-right: Left side is current page, Right side is next page */}
                              {chapter.images[store.currentPage - 1] && (
-                               renderPage ? renderPage(store.currentPage - 1) : (
-                                 <Image src={chapter.images[store.currentPage - 1].imageUrl} alt="Left" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized priority />
-                               )
+                               <div className="relative w-1/2 h-full flex justify-center items-center">
+                                 {!renderPage && !loadedImages.has(store.currentPage - 1) && <ImageLoader />}
+                                 {renderPage ? renderPage(store.currentPage - 1) : (
+                                   <Image src={chapter.images[store.currentPage - 1].imageUrl} alt="Left" width={800} height={1200} className="w-full h-full object-contain pointer-events-auto" unoptimized priority onLoad={() => setLoadedImages(prev => new Set(prev).add(store.currentPage - 1))} onError={() => setLoadedImages(prev => new Set(prev).add(store.currentPage - 1))} />
+                                 )}
+                               </div>
                              )}
                              {chapter.images[store.currentPage] && (
-                               renderPage ? renderPage(store.currentPage) : (
-                                 <Image src={chapter.images[store.currentPage].imageUrl} alt="Right" width={800} height={1200} className="w-1/2 h-full object-contain pointer-events-auto" unoptimized />
-                               )
+                               <div className="relative w-1/2 h-full flex justify-center items-center">
+                                 {!renderPage && !loadedImages.has(store.currentPage) && <ImageLoader />}
+                                 {renderPage ? renderPage(store.currentPage) : (
+                                   <Image src={chapter.images[store.currentPage].imageUrl} alt="Right" width={800} height={1200} className="w-full h-full object-contain pointer-events-auto" unoptimized onLoad={() => setLoadedImages(prev => new Set(prev).add(store.currentPage))} onError={() => setLoadedImages(prev => new Set(prev).add(store.currentPage))} />
+                                 )}
+                               </div>
                              )}
                            </>
                          )}
                        </>
                      ) : (
                        chapter.images[store.currentPage - 1] && (
-                         <Image
-                           src={chapter.images[store.currentPage - 1].imageUrl}
-                           alt={`Page ${store.currentPage}`}
-                           width={chapter.images[store.currentPage - 1].width || 800}
-                           height={chapter.images[store.currentPage - 1].height || 1200}
-                           className={cn(
-                             "max-w-full max-h-screen pointer-events-auto",
-                             store.fitMode === 'width' && "w-full h-auto",
-                             store.fitMode === 'height' && "h-full w-auto",
-                             store.fitMode === 'smart' && "w-auto h-screen object-contain",
-                             store.cropBorders && "scale-105"
-                           )}
-                           priority
-                           unoptimized
-                         />
+                         <>
+                           {!loadedImages.has(store.currentPage - 1) && <ImageLoader />}
+                           <Image
+                             src={chapter.images[store.currentPage - 1].imageUrl}
+                             alt={`Page ${store.currentPage}`}
+                             width={chapter.images[store.currentPage - 1].width || 800}
+                             height={chapter.images[store.currentPage - 1].height || 1200}
+                             className={cn(
+                               "max-w-full max-h-screen pointer-events-auto",
+                               store.fitMode === 'width' && "w-full h-auto",
+                               store.fitMode === 'height' && "h-full w-auto",
+                               store.fitMode === 'smart' && "w-auto h-screen object-contain",
+                               store.cropBorders && "scale-105"
+                             )}
+                             priority
+                             unoptimized
+                             onLoad={() => {
+                               setLoadedImages(prev => {
+                                 const next = new Set(prev);
+                                 next.add(store.currentPage - 1);
+                                 return next;
+                               });
+                             }}
+                             onError={() => {
+                               setLoadedImages(prev => {
+                                 const next = new Set(prev);
+                                 next.add(store.currentPage - 1);
+                                 return next;
+                               });
+                             }}
+                           />
+                         </>
                        )
                      )}
                      </div>
                    </TransformComponent>
                  )}
                </TransformWrapper>
+                 </div>
+               </div>
              )}
            </>
         )}

@@ -124,6 +124,7 @@ export function ChaptersTableClient({ series }: { series: any }) {
                     <div className="flex items-center justify-end gap-2">
                       <Link 
                         href={`/admin/series/${series.id}/chapters/${chapter.id}/preview`}
+                        prefetch={false}
                         className="rounded-lg p-2 text-text-secondary hover:bg-surface-hover transition-colors"
                         title="Preview Chapter"
                       >
@@ -131,6 +132,7 @@ export function ChaptersTableClient({ series }: { series: any }) {
                       </Link>
                       <Link 
                         href={`/admin/series/${series.id}/chapters/${chapter.id}/edit`}
+                        prefetch={false}
                         className="rounded-lg p-2 text-text-secondary hover:bg-surface-hover transition-colors"
                         title="Edit Chapter"
                       >

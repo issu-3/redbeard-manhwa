@@ -28,11 +28,17 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
   const [needsApiKey, setNeedsApiKey] = useState(false);
   const [existingNumbers, setExistingNumbers] = useState<Set<number>>(new Set());
 
-  const [isImporting, setIsImporting] = useState(false);
-  const [isImportingDone, setIsImportingDone] = useState(false);
+  const [bulkImport, setBulkImport] = useState({
+    active: false,
+    total: 0,
+    completed: 0,
+    currentChapter: '',
+    currentProgress: 0,
+    succeeded: 0,
+    failed: 0,
+    status: 'scanning' as 'scanning' | 'importing' | 'completed' | 'failed' | 'cancelled'
+  });
   const cancelRef = useRef(false);
-  const [isCancelling, setIsCancelling] = useState(false);
-  const [importProgress, setImportProgress] = useState({ chapterIndex: 0, currentImage: 0, totalImages: 0 });
 
   useEffect(() => {
     // Fetch existing chapters to check for duplicates
@@ -111,32 +117,41 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
     const chaptersToImport = scanResult.filter(c => c.selected && !c.skip);
     if (chaptersToImport.length === 0) return;
 
-    setIsImporting(true);
-    setIsImportingDone(false);
     cancelRef.current = false;
     setError(null);
-
-    let chaptersDone = 0;
-    let imagesDone = 0;
-    const totalSelectedImages = chaptersToImport.reduce((acc, c) => acc + (c.isArchive ? 1 : c.images.length), 0);
+    
+    setBulkImport({
+      active: true,
+      total: chaptersToImport.length,
+      completed: 0,
+      currentChapter: chaptersToImport[0].name,
+      currentProgress: 0,
+      succeeded: 0,
+      failed: 0,
+      status: 'importing'
+    });
 
     const updatedResult = [...scanResult];
+    let succeeded = 0;
+    let failed = 0;
 
     for (let i = 0; i < chaptersToImport.length; i++) {
       if (cancelRef.current) {
-        break;
+        setBulkImport(prev => ({ ...prev, status: 'cancelled' }));
+        return;
       }
       const chapter = chaptersToImport[i];
       const resultIdx = updatedResult.findIndex(c => c.id === chapter.id);
       
       updatedResult[resultIdx].status = 'importing';
       setScanResult([...updatedResult]);
+      setBulkImport(prev => ({ ...prev, currentChapter: chapter.name, currentProgress: 0 }));
 
       let uploadedUrls: string[] = [];
       let chapterFailed = false;
 
       if (chapter.isArchive) {
-         setImportProgress({ chapterIndex: i, currentImage: 0, totalImages: totalSelectedImages });
+         setBulkImport(prev => ({ ...prev, currentProgress: 50 }));
          try {
            const res = await fetch('/api/admin/drive/import-archive', {
              method: 'POST',
@@ -146,7 +161,7 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
            const data = await res.json();
            if (!res.ok) throw new Error(data.error || 'Archive import failed');
            uploadedUrls = data.urls;
-           imagesDone++;
+           setBulkImport(prev => ({ ...prev, currentProgress: 100 }));
          } catch (err) {
            console.error(`Failed to import archive ${chapter.name}:`, err);
            chapterFailed = true;
@@ -154,8 +169,7 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
       } else {
          for (let j = 0; j < chapter.images.length; j++) {
            const img = chapter.images[j];
-           setImportProgress({ chapterIndex: i, currentImage: j + 1, totalImages: totalSelectedImages });
-
+           
            try {
              const res = await fetch('/api/admin/drive/import-image', {
                method: 'POST',
@@ -165,7 +179,7 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
              const data = await res.json();
              if (!res.ok) throw new Error(data.error || 'Upload failed');
              uploadedUrls.push(data.url);
-             imagesDone++;
+             setBulkImport(prev => ({ ...prev, currentProgress: Math.round(((j + 1) / chapter.images.length) * 100) }));
            } catch (err) {
              console.error(`Failed to import image ${img.name}:`, err);
              // Continue with next image, don't break chapter import completely
@@ -175,102 +189,143 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
 
       // Now create the chapter
       try {
-        const formData = new FormData();
-        formData.append('number', chapter.number !== null ? chapter.number.toString() : '');
-        
-        // Clean up label (e.g., "Ch.001.cbz" -> "Chapter 1" or fallback to filename without extension)
-        const cleanLabel = chapter.number !== null 
-          ? `Chapter ${chapter.number}` 
-          : chapter.name.replace(/\.(cbz|zip|rar)$/i, '').trim();
-        
-        formData.append('label', cleanLabel);
-        formData.append('title', '');
-        formData.append('isPublished', 'true');
-        formData.append('sourceType', 'UPLOAD');
-        formData.append('imageUrls', uploadedUrls.join('\n'));
+        if (!chapterFailed) {
+          const formData = new FormData();
+          formData.append('number', chapter.number !== null ? chapter.number.toString() : '');
+          
+          // Clean up label (e.g., "Ch.001.cbz" -> "Chapter 1" or fallback to filename without extension)
+          const cleanLabel = chapter.number !== null 
+            ? `Chapter ${chapter.number}` 
+            : chapter.name.replace(/\.(cbz|zip|rar)$/i, '').trim();
+          
+          formData.append('label', cleanLabel);
+          formData.append('title', '');
+          formData.append('isPublished', 'true');
+          formData.append('sourceType', 'UPLOAD');
+          formData.append('imageUrls', uploadedUrls.join('\n'));
 
-        // Actually create via our internal route to avoid server action CORS/client issues
-        await createChapter(seriesId, formData);
-        
-        updatedResult[resultIdx].status = 'success';
-        chaptersDone++;
+          // Actually create via our internal route with preventRedirect=true
+          await createChapter(seriesId, formData, true);
+          
+          updatedResult[resultIdx].status = 'success';
+          succeeded++;
+        } else {
+          updatedResult[resultIdx].status = 'error';
+          failed++;
+        }
       } catch (err) {
         console.error(`Failed to save chapter ${chapter.name}:`, err);
         updatedResult[resultIdx].status = 'error';
         chapterFailed = true;
+        failed++;
       }
 
       setScanResult([...updatedResult]);
+      setBulkImport(prev => ({
+        ...prev,
+        completed: prev.completed + 1,
+        succeeded,
+        failed
+      }));
     }
 
-    if (cancelRef.current) {
-      setIsImporting(false);
-      return;
-    }
+    if (cancelRef.current) return;
 
-    setIsImportingDone(true);
-    
-    // Redirect to chapters list after a short delay
-    setTimeout(() => {
-      window.location.href = `/admin/series/${seriesId}/chapters`;
-    }, 2000);
+    setBulkImport(prev => ({ ...prev, status: 'completed' }));
   };
 
   const handleCancelImport = () => {
     cancelRef.current = true;
-    setIsCancelling(true);
+    setBulkImport(prev => ({ ...prev, status: 'cancelled' }));
   };
 
-  if (isImporting || isImportingDone) {
-    const chaptersToImport = scanResult?.filter(c => c.selected && !c.skip) || [];
-    const currentChapter = chaptersToImport[importProgress.chapterIndex];
-    const totalImages = chaptersToImport.reduce((acc, c) => acc + (c.isArchive ? 1 : c.images.length), 0);
-    const completedImages = chaptersToImport.slice(0, importProgress.chapterIndex).reduce((acc, c) => acc + (c.isArchive ? 1 : c.images.length), 0) + importProgress.currentImage;
-    const pct = Math.round((completedImages / Math.max(1, totalImages)) * 100);
+  if (bulkImport.active) {
+    const pct = Math.round((bulkImport.completed / Math.max(1, bulkImport.total)) * 100);
+    const isDone = bulkImport.status === 'completed' || bulkImport.status === 'cancelled';
 
     return (
       <div className="space-y-6 bg-surface p-6 rounded-xl border border-border text-center py-12">
-        {isImportingDone ? (
+        {bulkImport.status === 'completed' ? (
           <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
+        ) : bulkImport.status === 'cancelled' ? (
+          <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto" />
         ) : (
           <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto" />
         )}
         <div>
-          <h3 className="text-xl font-bold">{isImportingDone ? 'Import Complete!' : 'Importing chapters...'}</h3>
+          <h3 className="text-xl font-bold">
+            {bulkImport.status === 'completed' 
+              ? 'Import Complete!' 
+              : bulkImport.status === 'cancelled'
+                ? 'Import Cancelled'
+                : 'Importing chapters...'}
+          </h3>
           <p className="text-text-secondary mt-2">
-            {isImportingDone ? 'Redirecting you to the chapters list...' : 'Please do not close this window.'}
+            {bulkImport.status === 'completed' 
+              ? 'All selected chapters have been processed.' 
+              : bulkImport.status === 'cancelled'
+                ? 'The bulk import was cancelled.'
+                : 'Please do not close this window.'}
           </p>
         </div>
         
         <div className="max-w-md mx-auto text-left space-y-4">
           <div className="bg-card p-4 rounded-lg border border-border">
              <div className="flex justify-between font-semibold text-sm mb-2">
-                <span>{currentChapter?.name}</span>
-                <span>{currentChapter?.isArchive ? 'Extracting archive...' : `${importProgress.currentImage}/${currentChapter?.images.length} images`}</span>
+                <span className="truncate pr-4">{bulkImport.currentChapter || 'Processing...'}</span>
+                <span>{bulkImport.currentProgress}%</span>
              </div>
              <div className="h-2 w-full bg-surface rounded-full overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: currentChapter?.isArchive ? '100%' : `${(importProgress.currentImage / Math.max(1, currentChapter?.images.length || 1)) * 100}%` }} />
+                <div className="h-full bg-primary transition-all duration-300" style={{ width: `${bulkImport.currentProgress}%` }} />
              </div>
           </div>
           
           <div className="text-sm font-semibold flex justify-between">
-            <span>Overall Progress</span>
+            <span>Overall Progress ({bulkImport.completed}/{bulkImport.total})</span>
             <span>{pct}%</span>
           </div>
           <div className="h-3 w-full bg-card rounded-full overflow-hidden border border-border">
              <div className="h-full bg-sky-500 transition-all duration-300" style={{ width: `${pct}%` }} />
           </div>
-          <p className="text-xs text-text-muted text-center">{completedImages} / {totalImages} total images</p>
           
-          {!isImportingDone && (
+          <div className="flex justify-center gap-6 text-sm font-semibold mt-4">
+            <span className="text-green-500">{bulkImport.succeeded} Succeeded</span>
+            <span className="text-red-500">{bulkImport.failed} Failed</span>
+          </div>
+          
+          {!isDone && (
             <div className="pt-4 flex justify-center">
               <button
                 type="button"
                 onClick={handleCancelImport}
-                disabled={isCancelling}
-                className="px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-sm font-semibold transition-colors"
               >
-                {isCancelling ? 'Cancelling...' : 'Cancel Import'}
+                Cancel Import
+              </button>
+            </div>
+          )}
+
+          {isDone && (
+            <div className="pt-4 flex justify-center gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setBulkImport(prev => ({ ...prev, active: false }));
+                  window.location.href = `/admin/series/${seriesId}/chapters`;
+                }}
+                className="px-4 py-2 bg-primary text-white hover:bg-primary/90 rounded-lg text-sm font-semibold transition-colors"
+              >
+                Return to Chapters
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setBulkImport(prev => ({ ...prev, active: false }));
+                  handleScan(); // re-scan folder
+                }}
+                className="px-4 py-2 bg-surface border border-border hover:bg-card text-text-primary rounded-lg text-sm font-semibold transition-colors"
+              >
+                Scan Again
               </button>
             </div>
           )}
