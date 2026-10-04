@@ -42,7 +42,8 @@ export function AdminReviewsClient({
   return (
     <div className="space-y-6">
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
               <tr>
@@ -119,6 +120,62 @@ export function AdminReviewsClient({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden divide-y divide-border/50">
+          {reviews.length === 0 ? (
+            <div className="px-6 py-12 text-center text-muted-foreground">
+              No reviews found.
+            </div>
+          ) : (
+            reviews.map((review) => (
+              <div key={review.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="font-medium text-text-primary">
+                      {review.user.displayName || review.user.username || 'Anonymous'}
+                    </div>
+                    <Link 
+                      href={`/series/${review.series.slug}`}
+                      className="text-sm font-medium text-primary hover:underline flex items-center gap-1 mt-0.5"
+                      target="_blank"
+                    >
+                      {review.series.title}
+                    </Link>
+                  </div>
+                  <div className="flex items-center gap-1 bg-surface px-2 py-1 rounded-full text-sm">
+                    <span className="font-bold text-text-primary">{review.rating}</span>
+                    <Star className="w-3.5 h-3.5 text-warning fill-warning" />
+                  </div>
+                </div>
+                
+                {review.content && (
+                  <div className="text-sm text-text-secondary bg-surface/50 p-3 rounded-lg border border-border/50">
+                    {review.isSpoiler && (
+                      <AlertCircle className="w-3.5 h-3.5 text-danger inline mr-1" />
+                    )}
+                    {review.content}
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-xs text-muted-foreground">
+                    {formatRelativeTime(review.createdAt)}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(review.id)}
+                    disabled={isDeleting === review.id}
+                    className="h-8 text-danger hover:text-danger hover:bg-danger/10"
+                  >
+                    {isDeleting === review.id ? '...' : <Trash2 className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
         
         {/* Pagination Controls */}

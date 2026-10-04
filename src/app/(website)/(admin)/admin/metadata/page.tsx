@@ -9,9 +9,13 @@ export default async function AdminMetadataPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight">Metadata Management</h1>
-        <p className="text-text-secondary">Manage Genres and Tags.</p>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-3xl md:text-4xl font-black tracking-tight text-text-primary">
+          Metadata
+        </h1>
+        <p className="mt-2 text-sm md:text-base text-text-secondary">
+          Manage Genres and Tags.
+        </p>
       </div>
 
       <MetadataClient genres={genres} tags={tags} />

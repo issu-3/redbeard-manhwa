@@ -15,11 +15,11 @@ export default async function AdminReviewsPage(props: {
   const { reviews, total, totalPages } = await getAdminReviews(page, 20);
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-6">
+      <div className="mb-6 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reviews</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-text-primary">Reviews</h1>
+          <p className="mt-2 text-sm md:text-base text-text-secondary">
             Manage user reviews and ratings across all series.
           </p>
         </div>

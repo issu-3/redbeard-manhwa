@@ -163,7 +163,7 @@ export function SystemHealthPanel() {
             <div className="flex justify-between"><span className="text-text-muted">Admin Auth</span><span className="font-medium">{health.security.adminAuth}</span></div>
             <div className="flex justify-between"><span className="text-text-muted">Required Env Vars</span><span className="font-medium">{health.security.envMissing.length === 0 ? 'All Set' : `${health.security.envMissing.length} Missing`}</span></div>
             {health.security.envMissing.length > 0 && (
-              <div className="mt-2 text-xs text-red-500 bg-red-500/10 p-2 rounded">
+              <div className="mt-2 text-xs text-red-500 bg-red-500/10 p-2 rounded break-words">
                 Missing: {health.security.envMissing.join(', ')}
               </div>
             )}

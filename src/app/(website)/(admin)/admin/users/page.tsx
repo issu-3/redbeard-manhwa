@@ -9,9 +9,13 @@ export default async function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight">User Management</h1>
-        <p className="text-text-secondary">View and manage registered users.</p>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-3xl md:text-4xl font-black tracking-tight text-text-primary">
+          Users
+        </h1>
+        <p className="mt-2 text-sm md:text-base text-text-secondary">
+          View and manage registered users.
+        </p>
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">

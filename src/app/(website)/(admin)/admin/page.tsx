@@ -56,12 +56,12 @@ export default async function AdminDashboard() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {dbError && (
-        <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-red-400 flex items-start gap-3 shadow-sm">
+        <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-red-400 flex items-start gap-3 shadow-sm w-full min-w-0 overflow-hidden">
           <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-500 mt-0.5" />
-          <div>
+          <div className="min-w-0 flex-1">
             <h4 className="font-bold text-red-300">Database Connection Warning</h4>
-            <p className="text-sm mt-1 opacity-90 leading-relaxed">{dbError}</p>
-            <p className="text-xs mt-2 text-red-300/80 font-mono">Tip: If using Prisma Cloud / Accelerate on Vercel, check your usage plan limits in console.prisma.io or switch DATABASE_URL to direct Postgres.</p>
+            <p className="text-sm mt-1 opacity-90 leading-relaxed break-words whitespace-pre-wrap">{dbError}</p>
+            <p className="text-xs mt-2 text-red-300/80 font-mono break-words">Tip: If using Prisma Cloud / Accelerate on Vercel, check your usage plan limits in console.prisma.io or switch DATABASE_URL to direct Postgres.</p>
           </div>
         </div>
       )}

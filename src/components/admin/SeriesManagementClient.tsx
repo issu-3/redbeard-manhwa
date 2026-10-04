@@ -21,6 +21,31 @@ import {
 import { getContentTypeLabel } from '@/lib/content-types';
 import { formatDate } from '@/lib/utils';
 
+/* ── Thumbnail Fallback Component ─────────────────── */
+
+function Thumbnail({ src, alt, className, sizes }: { src: string; alt: string; className: string; sizes: string }) {
+  const [error, setError] = useState(false);
+
+  if (error || !src) {
+    return (
+      <div className="w-full h-full bg-surface flex items-center justify-center">
+        <Library className="h-1/2 w-1/2 text-text-muted opacity-50" />
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      className={className}
+      sizes={sizes}
+      onError={() => setError(true)}
+    />
+  );
+}
+
 /* ── Types ──────────────────────────────────────── */
 
 interface SeriesItem {
@@ -437,18 +462,18 @@ export default function SeriesManagementClient({
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-text-primary">
-            Series Management
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-text-primary">
+            Series
           </h1>
-          <p className="text-sm text-text-secondary mt-0.5">
-            {totalSeries} {totalSeries === 1 ? 'series' : 'series'} total
+          <p className="mt-2 text-sm md:text-base text-text-secondary">
+            Manage all series on the platform.
           </p>
         </div>
         <Link
           href="/admin/series/new"
-          className="hidden lg:flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors focus-ring"
+          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors focus-ring w-full sm:w-auto justify-center"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-5 w-5" />
           Add Series
         </Link>
       </div>
@@ -538,13 +563,12 @@ export default function SeriesManagementClient({
                     <tr key={series.id} className="hover:bg-surface/50 transition-colors">
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="relative h-10 w-10 rounded overflow-hidden flex-shrink-0 bg-surface">
-                            <Image
+                          <div className="relative h-12 w-9 rounded overflow-hidden flex-shrink-0 bg-surface">
+                            <Thumbnail
                               src={series.coverImage}
                               alt={series.title}
-                              fill
                               className="object-cover"
-                              sizes="40px"
+                              sizes="36px"
                             />
                           </div>
                           <div className="min-w-0">
@@ -607,11 +631,10 @@ export default function SeriesManagementClient({
                   <tr key={series.id} className="hover:bg-surface/50 transition-colors">
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-2.5">
-                        <div className="relative h-9 w-9 rounded overflow-hidden flex-shrink-0 bg-surface">
-                          <Image
+                        <div className="relative h-12 w-9 rounded overflow-hidden flex-shrink-0 bg-surface">
+                          <Thumbnail
                             src={series.coverImage}
                             alt={series.title}
-                            fill
                             className="object-cover"
                             sizes="36px"
                           />
@@ -656,21 +679,20 @@ export default function SeriesManagementClient({
           </div>
 
           {/* Mobile Cards (<md) */}
-          <div className="md:hidden space-y-2">
+          <div className="md:hidden space-y-3">
             {filteredSeries.map((series) => (
               <div
                 key={series.id}
-                className="rounded-lg border border-border bg-card p-3 transition-colors hover:bg-card-hover"
+                className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-colors hover:bg-card-hover"
               >
                 <div className="flex items-start gap-3">
                   {/* Thumbnail */}
-                  <div className="relative h-[52px] w-[52px] rounded overflow-hidden flex-shrink-0 bg-surface">
-                    <Image
+                  <div className="relative h-16 w-12 rounded overflow-hidden flex-shrink-0 bg-surface border border-border/50">
+                    <Thumbnail
                       src={series.coverImage}
                       alt={series.title}
-                      fill
                       className="object-cover"
-                      sizes="52px"
+                      sizes="48px"
                     />
                   </div>
 

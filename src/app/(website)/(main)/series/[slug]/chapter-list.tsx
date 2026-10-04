@@ -198,7 +198,7 @@ export function ChapterListSection({
                               <Download className="h-4 w-4" />
                             </a>
                           )}
-                          {chapter.totalPages && chapter.totalPages > 0 && safeSlug ? (
+                          {safeSlug ? (
                             <Link
                               href={`/series/${seriesSlug}/chapter/${safeSlug}`}
                               className="w-[68px] h-[34px] flex items-center justify-center bg-primary text-white hover:bg-primary/90 rounded-full text-[12px] font-bold transition-colors shadow-sm"

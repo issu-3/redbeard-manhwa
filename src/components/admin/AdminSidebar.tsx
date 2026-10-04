@@ -18,6 +18,7 @@ import {
   Menu,
   X,
 } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -98,6 +99,11 @@ export function DesktopSidebar() {
 export function MobileDrawer() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close drawer on route change
   useEffect(() => {
@@ -127,67 +133,68 @@ export function MobileDrawer() {
 
   const handleClose = useCallback(() => setOpen(false), []);
 
+  const drawerContent = (
+    <div className="fixed inset-0 z-[100] lg:hidden">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 z-[90]"
+        onClick={handleClose}
+        aria-hidden="true"
+      />
+
+      {/* Drawer panel */}
+      <aside
+        className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col bg-[#0F1115] shadow-2xl animate-slide-in-left pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] z-[100]"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
+      >
+        <div className="flex h-14 shrink-0 items-center justify-between px-4 border-b border-border bg-[#0F1115]">
+          <Link href="/admin" className="flex items-center gap-2 focus-ring rounded-md" onClick={handleClose}>
+            <span className="text-xl font-black tracking-tighter text-white">REDBEARD</span>
+            <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+              ADMIN
+            </span>
+          </Link>
+          <button
+            onClick={handleClose}
+            className="flex items-center justify-center h-10 w-10 -mr-2 rounded-lg text-text-secondary hover:bg-surface hover:text-white transition-colors focus-ring"
+            aria-label="Close navigation menu"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto thin-scrollbar p-3 space-y-1">
+          <NavLinks onNavigate={handleClose} />
+        </nav>
+
+        <div className="p-4 border-t border-border bg-[#0F1115] shrink-0">
+          <Link
+            href="/"
+            onClick={handleClose}
+            className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm font-medium text-text-secondary transition-all hover:bg-surface-hover hover:text-white focus-ring"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            Return to Site
+          </Link>
+        </div>
+      </aside>
+    </div>
+  );
+
   return (
     <>
-      {/* Hamburger button — rendered in the mobile header */}
       <button
         onClick={() => setOpen(true)}
         className="flex items-center justify-center h-10 w-10 -ml-2 rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary transition-colors focus-ring"
         aria-label="Open navigation menu"
+        aria-expanded={open}
       >
         <Menu className="h-6 w-6" />
       </button>
 
-      {/* Overlay + Drawer */}
-      {open && (
-        <div className="fixed inset-0 z-[60] lg:hidden">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={handleClose}
-            aria-hidden="true"
-          />
-
-          {/* Drawer panel */}
-          <aside
-            className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col bg-card shadow-2xl animate-slide-in-left"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Navigation menu"
-          >
-            <div className="flex h-14 items-center justify-between px-4 border-b border-border">
-              <Link href="/admin" className="flex items-center gap-2" onClick={handleClose}>
-                <span className="text-xl font-black tracking-tighter text-primary">REDBEARD</span>
-                <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[10px] font-bold text-primary">
-                  ADMIN
-                </span>
-              </Link>
-              <button
-                onClick={handleClose}
-                className="flex items-center justify-center h-10 w-10 -mr-2 rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary transition-colors focus-ring"
-                aria-label="Close navigation menu"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <nav className="flex-1 overflow-y-auto thin-scrollbar p-3 space-y-1">
-              <NavLinks onNavigate={handleClose} />
-            </nav>
-
-            <div className="p-4 border-t border-border">
-              <Link
-                href="/"
-                onClick={handleClose}
-                className="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3 text-sm font-medium text-text-secondary transition-all hover:bg-surface-hover hover:text-text-primary"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Return to Site
-              </Link>
-            </div>
-          </aside>
-        </div>
-      )}
+      {open && mounted && createPortal(drawerContent, document.body)}
     </>
   );
 }

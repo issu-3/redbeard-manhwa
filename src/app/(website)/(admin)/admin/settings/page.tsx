@@ -11,11 +11,11 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-black tracking-tighter text-text-primary" style={{ fontFamily: 'var(--font-heading)' }}>
-          Site Settings
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-3xl md:text-4xl font-black tracking-tight text-text-primary">
+          Settings
         </h1>
-        <p className="mt-1 text-text-muted">
+        <p className="mt-2 text-sm md:text-base text-text-secondary">
           Configure global site settings, reading preferences, SEO, and advertisements.
         </p>
       </div>

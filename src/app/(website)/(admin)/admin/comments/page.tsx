@@ -16,14 +16,18 @@ export default async function AdminCommentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight">Comments & Moderation</h1>
-        <p className="text-text-secondary">View and moderate recent comments.</p>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-3xl md:text-4xl font-black tracking-tight text-text-primary">
+          Comments
+        </h1>
+        <p className="mt-2 text-sm md:text-base text-text-secondary">
+          View and moderate recent comments.
+        </p>
       </div>
 
       <div className="space-y-4">
         {comments.map(comment => (
-          <div key={comment.id} className="rounded-xl border border-border bg-card p-4">
+          <div key={comment.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4">
                 <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-surface text-primary font-bold">
