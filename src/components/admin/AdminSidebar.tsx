@@ -116,6 +116,15 @@ export function MobileDrawer() {
     };
   }, [open]);
 
+  // Handle escape key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    if (open) window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [open]);
+
   const handleClose = useCallback(() => setOpen(false), []);
 
   return (
@@ -123,15 +132,15 @@ export function MobileDrawer() {
       {/* Hamburger button — rendered in the mobile header */}
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden flex items-center justify-center h-10 w-10 rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary transition-colors focus-ring"
+        className="flex items-center justify-center h-10 w-10 -ml-2 rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary transition-colors focus-ring"
         aria-label="Open navigation menu"
       >
-        <Menu className="h-5 w-5" />
+        <Menu className="h-6 w-6" />
       </button>
 
       {/* Overlay + Drawer */}
       {open && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-[60] lg:hidden">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -141,12 +150,12 @@ export function MobileDrawer() {
 
           {/* Drawer panel */}
           <aside
-            className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-card border-r border-border shadow-2xl animate-slide-in-left"
+            className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85vw] flex-col bg-card shadow-2xl animate-slide-in-left"
             role="dialog"
             aria-modal="true"
             aria-label="Navigation menu"
           >
-            <div className="flex items-center justify-between p-4 border-b border-border">
+            <div className="flex h-14 items-center justify-between px-4 border-b border-border">
               <Link href="/admin" className="flex items-center gap-2" onClick={handleClose}>
                 <span className="text-xl font-black tracking-tighter text-primary">REDBEARD</span>
                 <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[10px] font-bold text-primary">
@@ -155,22 +164,22 @@ export function MobileDrawer() {
               </Link>
               <button
                 onClick={handleClose}
-                className="flex items-center justify-center h-9 w-9 rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary transition-colors focus-ring"
+                className="flex items-center justify-center h-10 w-10 -mr-2 rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary transition-colors focus-ring"
                 aria-label="Close navigation menu"
               >
-                <X className="h-5 w-5" />
+                <X className="h-6 w-6" />
               </button>
             </div>
 
-            <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto thin-scrollbar">
+            <nav className="flex-1 overflow-y-auto thin-scrollbar p-3 space-y-1">
               <NavLinks onNavigate={handleClose} />
             </nav>
 
-            <div className="p-3 border-t border-border">
+            <div className="p-4 border-t border-border">
               <Link
                 href="/"
                 onClick={handleClose}
-                className="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-medium text-text-secondary transition-all hover:bg-surface-hover hover:text-text-primary"
+                className="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3 text-sm font-medium text-text-secondary transition-all hover:bg-surface-hover hover:text-text-primary"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Return to Site

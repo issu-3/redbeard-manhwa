@@ -18,11 +18,11 @@ export default async function AnalyticsPage(props: {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-black tracking-tighter text-text-primary" style={{ fontFamily: 'var(--font-heading)' }}>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter text-text-primary" style={{ fontFamily: 'var(--font-heading)' }}>
           Analytics Overview
         </h1>
-        <p className="mt-1 text-text-muted">
+        <p className="mt-1 md:mt-2 text-sm md:text-base text-text-muted">
           Monitor your platform's traffic, revenue, content performance, and system health.
         </p>
       </div>

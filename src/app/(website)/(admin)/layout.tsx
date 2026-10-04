@@ -10,27 +10,26 @@ import { DesktopSidebar, MobileDrawer } from '@/components/admin/AdminSidebar';
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const session = await auth();
 
-  // C2 FIX: Block unauthenticated users
+  // Block unauthenticated users
   if (!session?.user) {
     redirect('/login');
   }
 
-  // C2 FIX: Block non-admin/moderator users
+  // Block non-admin/moderator users
   if (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR') {
     redirect('/');
   }
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar (hidden on mobile) */}
       <DesktopSidebar />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0">
-        {/* Topbar */}
-        <header className="sticky top-0 z-30 flex h-14 lg:h-16 items-center justify-between border-b border-border bg-card/80 px-4 lg:px-6 backdrop-blur-md">
-          {/* Mobile: Hamburger + Logo */}
-          <div className="flex items-center gap-3 lg:hidden">
+      <main className="flex-1 flex flex-col min-w-0 min-h-screen">
+        {/* Mobile & Tablet Header (hidden on lg+) */}
+        <header className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur-md lg:hidden shadow-sm">
+          <div className="flex items-center gap-3">
             <MobileDrawer />
             <Link href="/admin" className="flex items-center gap-1.5">
               <span className="text-lg font-black tracking-tighter text-primary">REDBEARD</span>
@@ -39,22 +38,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               </span>
             </Link>
           </div>
+          {/* Removed the arbitrary red Add button from global mobile header */}
+        </header>
 
-          <div className="flex-1" />
-
-          {/* Right side actions */}
-          <div className="flex items-center gap-3">
-            {/* Mobile: Compact Add button (visible only on series page via CSS, but always accessible) */}
-            <Link
-              href="/admin/series/new"
-              className="lg:hidden flex items-center justify-center h-9 w-9 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors focus-ring"
-              aria-label="Add new series"
-            >
-              <Plus className="h-4 w-4" />
-            </Link>
-            <div className="hidden lg:block text-sm text-text-secondary">
-              Logged in as <span className="font-semibold text-text-primary">{session?.user?.name || (session?.user?.role === 'ADMIN' ? 'Administrator' : 'Moderator')}</span>
-            </div>
+        {/* Desktop Topbar (hidden on mobile) */}
+        <header className="hidden lg:flex sticky top-0 z-30 h-16 items-center justify-end border-b border-border bg-card/80 px-6 backdrop-blur-md">
+          <div className="text-sm text-text-secondary">
+            Logged in as <span className="font-semibold text-text-primary">{session?.user?.name || (session?.user?.role === 'ADMIN' ? 'Administrator' : 'Moderator')}</span>
           </div>
         </header>
 
