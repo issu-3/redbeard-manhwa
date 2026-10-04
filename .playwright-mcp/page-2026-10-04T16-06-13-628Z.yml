@@ -1,0 +1,39 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - link [ref=e10] [cursor=pointer]:
+        - /url: /
+        - heading "REDBEARD" [level=1] [ref=e11]
+      - paragraph [ref=e12]: Welcome back. Sign in to continue reading.
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - button "Continue with Google" [ref=e15]
+        - button "Continue with Discord" [ref=e21]
+      - generic [ref=e24]: or sign in with email
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]: Email
+          - textbox "Email" [ref=e35]:
+            - /placeholder: you@example.com
+        - generic [ref=e36]:
+          - generic [ref=e37]: Password
+          - generic [ref=e38]:
+            - textbox "Password" [ref=e42]:
+              - /placeholder: ••••••••
+            - button [ref=e43]
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - checkbox "Remember me" [ref=e49]
+            - text: Remember me
+          - link "Forgot password?" [ref=e50] [cursor=pointer]:
+            - /url: /forgot-password
+        - button "Sign In" [ref=e51]
+    - paragraph [ref=e54]:
+      - text: Don't have an account?
+      - link "Sign up free" [ref=e55] [cursor=pointer]:
+        - /url: /register
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e61] [cursor=pointer]
+  - alert [ref=e65]

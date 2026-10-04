@@ -1,10 +1,5 @@
-import { createSeries } from '@/app/actions/admin/series';
-import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
-import { MediaManager } from '@/components/admin/MediaManager';
-import { MultiSelectField } from '@/components/admin/MultiSelectField';
-import { SeoFormFields } from '@/components/admin/SeoFormFields';
-import { SeriesInfoCard } from '@/components/admin/SeriesInfoCard';
+import SeriesCreateClient from './SeriesCreateClient';
 
 export default async function NewSeriesPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
@@ -16,125 +11,20 @@ export default async function NewSeriesPage({ searchParams }: { searchParams: Pr
       prisma.genre.findMany({ orderBy: { name: 'asc' } }),
       prisma.tag.findMany({ orderBy: { name: 'asc' } })
     ]);
-    genres = Array.isArray(fetchedGenres) ? fetchedGenres : [];
-    tags = Array.isArray(fetchedTags) ? fetchedTags : [];
+    genres = Array.isArray(fetchedGenres) ? fetchedGenres.map(g => ({ id: g.id, name: g.name })) : [];
+    tags = Array.isArray(fetchedTags) ? fetchedTags.map(t => ({ id: t.id, name: t.name })) : [];
   } catch (err: any) {
     console.error('Error fetching data in NewSeriesPage:', err);
-    // Ignore error so the form still renders even if DB is empty or unreachable
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight">Add New Series</h1>
-        <p className="text-text-secondary">Create a new series entry.</p>
-      </div>
-
+    <>
       {error && (
-        <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-500">
-          <span className="font-semibold">Error:</span> {error}
+        <div className="max-w-2xl mx-auto mb-4 rounded-xl border border-danger/20 bg-danger/10 p-4 text-sm text-danger font-medium shadow-sm">
+          Warning: {error}
         </div>
       )}
-
-      <form action={createSeries} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold">Title *</label>
-            <input 
-              name="title" 
-              required 
-              className="w-full rounded-lg border border-border bg-card px-4 py-2" 
-              placeholder="e.g. Solo Leveling" 
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-semibold">Status *</label>
-            <select name="status" className="w-full rounded-lg border border-border bg-card px-4 py-2">
-              <option value="ONGOING">Ongoing</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="HIATUS">Hiatus</option>
-            </select>
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-             <MediaManager 
-              name="coverImage" 
-              label="Cover Image *" 
-              recommendedDimensions="600x900" 
-            />
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <MediaManager 
-              name="bannerImage" 
-              label="Banner Image" 
-              recommendedDimensions="1920x600" 
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold">Genres *</label>
-            <MultiSelectField 
-              name="genres"
-              placeholder="Search genres..."
-              options={genres?.map(g => ({ id: g.id, name: g.name })) || []}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-semibold">Tags</label>
-            <MultiSelectField 
-              name="tags"
-              placeholder="Search tags..."
-              options={tags?.map(t => ({ id: t.id, name: t.name })) || []}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-semibold">Description *</label>
-          <textarea 
-            name="description" 
-            required
-            minLength={10} 
-            rows={5}
-            className="w-full rounded-lg border border-border bg-card px-4 py-2" 
-            placeholder="Full description..." 
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <label className="text-sm font-semibold">Synopsis (Short)</label>
-          <textarea 
-            name="synopsis" 
-            rows={2}
-            className="w-full rounded-lg border border-border bg-card px-4 py-2" 
-            placeholder="Short 1-2 sentence synopsis..." 
-          />
-        </div>
-
-        <SeriesInfoCard />
-
-        <SeoFormFields />
-
-        <div className="flex justify-end gap-4 border-t border-border pt-6">
-          <Link 
-            href="/admin/series" 
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-text-secondary hover:bg-surface"
-          >
-            Cancel
-          </Link>
-          <button 
-            type="submit" 
-            className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white hover:bg-primary/90"
-          >
-            Create Series
-          </button>
-        </div>
-      </form>
-    </div>
+      <SeriesCreateClient genres={genres} tags={tags} />
+    </>
   );
 }
