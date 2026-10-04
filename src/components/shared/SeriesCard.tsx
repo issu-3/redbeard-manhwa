@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Star, MessageSquare, BookOpen } from 'lucide-react';
+import { Star, MessageSquare, BookOpen, Bookmark } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
+import { useAppLibraryStore } from '@/store/app-library-store';
 import type { SeriesCardData } from '@/types';
 
 interface SeriesCardProps {
@@ -33,6 +34,8 @@ const typeBadges: Record<string, string> = {
 };
 
 export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCardProps) {
+  const store = useAppLibraryStore();
+  const isBookmarked = store.hasHydrated && store.isSaved(series.id);
   const isPorn = series.isNSFW || series.type === 'PORNHWA' || series.type === 'DOUJINSHI';
 
   if (variant === 'wide') {
@@ -55,6 +58,11 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
               className="object-cover transition-transform duration-500 group-hover:scale-110"
               sizes="96px"
             />
+            {isBookmarked && (
+              <div className="absolute top-1.5 right-1.5 z-10 rounded-full bg-black/60 p-1 backdrop-blur-md border border-white/10">
+                <Bookmark className="h-3 w-3 fill-primary text-primary" />
+              </div>
+            )}
           </div>
           <div className="flex min-w-0 flex-1 flex-col justify-between py-1">
             <div>
@@ -123,11 +131,20 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
           />
 
           {/* Status badge */}
-          <div className="absolute left-2.5 top-2.5 z-10">
+          <div className="absolute left-2.5 top-2.5 z-10 flex flex-col gap-1.5 items-start">
             <span className={`rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm backdrop-blur-md border border-white/10 ${statusColors[series.status] || 'bg-gray-500'}`}>
               {series.status}
             </span>
           </div>
+
+          {/* Bookmark indicator */}
+          {isBookmarked && (
+            <div className="absolute right-2.5 top-2.5 z-10">
+              <div className="rounded-full bg-black/60 p-1.5 backdrop-blur-md shadow-sm border border-white/10">
+                <Bookmark className="w-3.5 h-3.5 fill-primary text-primary" />
+              </div>
+            </div>
+          )}
 
           {/* Bottom gradient + info overlay (hidden when there is nothing to show) */}
           {(series.averageRating > 0 || series.ratingCount > 0) && (

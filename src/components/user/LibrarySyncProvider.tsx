@@ -15,9 +15,7 @@ export function LibrarySyncProvider() {
   const hasSyncedRef = useRef(false);
 
   useEffect(() => {
-    // Only run this logic if on Native Android or specifically testing the app shell
     const isNative = Capacitor.isNativePlatform() || (typeof navigator !== 'undefined' && navigator.userAgent.includes('RedbeardApp'));
-    if (!isNative) return;
 
     const performSync = async () => {
       console.log(`[LIBRARY_DEBUG] platform = isNative:${isNative} | Capacitor.isNativePlatform():${Capacitor.isNativePlatform()} | userAgent:${typeof navigator !== 'undefined' ? navigator.userAgent : 'undefined'}`);
@@ -28,7 +26,7 @@ export function LibrarySyncProvider() {
       console.log(`[LIBRARY_DEBUG] store hasHydrated = ${store.hasHydrated}`);
 
       // 1. Hydrate the local library into the UI immediately (Offline-First)
-      if (!store.hasHydrated) {
+      if (isNative && !store.hasHydrated) {
         try {
           console.log('[LIBRARY_DEBUG] app startup = hydrating locally');
 

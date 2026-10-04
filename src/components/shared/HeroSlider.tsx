@@ -223,7 +223,14 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                     </Link>
                   ) : null}
                   <div className="flex h-8 md:h-10 items-center transition-all duration-200 hover:scale-[1.02] active:scale-[0.97]">
-                    <BookmarkButton seriesId={slide.id} initialBookmarked={false} />
+                    <BookmarkButton 
+                      seriesId={slide.id} 
+                      initialBookmarked={false} 
+                      title={slide.title}
+                      slug={slide.slug || undefined}
+                      coverImage={slide.coverImage}
+                      status={slide.status}
+                    />
                   </div>
                 </motion.div>
               </motion.div>

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { LocalLibraryRepository, LocalLibraryData, LibrarySeriesEntity } from '@/lib/local-library';
+import { Capacitor } from '@capacitor/core';
 
 interface AppLibraryStore {
   savedSeries: LocalLibraryData;
@@ -115,7 +116,24 @@ export const useAppLibraryStore = create<AppLibraryStore>()((set, get) => ({
   syncWithServer: async (userId: string, serverSeriesList: Omit<LibrarySeriesEntity, 'addedAt' | 'updatedAt' | 'isBookmarked'>[]) => {
     try {
       console.log(`[LIBRARY_DEBUG] AppLibraryStore.syncWithServer called with ${serverSeriesList.length} items from server`);
-      const syncedLibrary = await LocalLibraryRepository.syncWithServer(userId, serverSeriesList);
+      
+      const isNative = typeof window !== 'undefined' && (Capacitor.isNativePlatform() || navigator.userAgent.includes('RedbeardApp'));
+      let syncedLibrary: LocalLibraryData = {};
+      
+      if (isNative) {
+        syncedLibrary = await LocalLibraryRepository.syncWithServer(userId, serverSeriesList);
+      } else {
+        // Web in-memory store mapping
+        for (const s of serverSeriesList) {
+          syncedLibrary[s.seriesId] = { 
+            ...s, 
+            isBookmarked: true, 
+            addedAt: Date.now(), 
+            updatedAt: Date.now() 
+          };
+        }
+      }
+      
       set({ savedSeries: syncedLibrary, hasHydrated: true, activeUserId: userId });
       await LocalLibraryRepository.setLastUserId(userId);
       console.log(`[LIBRARY_DEBUG] AppLibraryStore.syncWithServer complete`);

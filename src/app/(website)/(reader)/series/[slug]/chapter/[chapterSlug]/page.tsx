@@ -10,24 +10,6 @@ import { getCachedSettings } from '@/app/actions/public/settings';
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { getDirectCdnUrl } from '@/lib/s3';
-// OPT-21: Pre-render recent chapters at build time
-export async function generateStaticParams() {
-  try {
-    const chapters = await prisma.chapter.findMany({
-      where: { isPublished: true },
-      orderBy: { publishedAt: 'desc' },
-      take: 200,
-      select: { slug: true, series: { select: { slug: true } } }
-    });
-    return chapters.map((c) => ({
-      slug: c.series.slug,
-      chapterSlug: c.slug,
-    }));
-  } catch (error) {
-    console.warn('Failed to pre-render chapter routes during build:', error);
-    return [];
-  }
-}
 
 // ─── Data Fetching ───────────────────────────────────────────────
 

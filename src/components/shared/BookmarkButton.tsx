@@ -37,15 +37,20 @@ export function BookmarkButton({
   latestChapterNumber,
   continueReadingChapter
 }: BookmarkButtonProps) {
-  const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
+  const store = useAppLibraryStore();
+  const isSavedInStore = store.isSaved(seriesId);
+  const [internalBookmarked, setInternalBookmarked] = useState(initialBookmarked);
+  
+  // Use store as source of truth if hydrated, otherwise fallback to local/prop state
+  const isBookmarked = store.hasHydrated ? isSavedInStore : internalBookmarked;
+
   const [isPending, setIsPending] = useState(false);
   const router = useRouter();
-  const store = useAppLibraryStore();
 
   const handleToggle = async () => {
     setIsPending(true);
-    // Optimistic update
-    setIsBookmarked(!isBookmarked);
+    const previousState = isBookmarked;
+    setInternalBookmarked(!previousState);
 
     try {
       const result = await toggleBookmark(seriesId);
@@ -54,15 +59,11 @@ export function BookmarkButton({
       }
       
       const newBookmarkedState = result.bookmarked as boolean;
-      setIsBookmarked(newBookmarkedState);
+      setInternalBookmarked(newBookmarkedState);
 
-      // --- NATIVE LOCAL LIBRARY SYNC ---
-      // If we are native and have metadata, sync to the offline-first LocalLibraryRepository
-      const isNative = Capacitor.isNativePlatform() || (typeof navigator !== 'undefined' && navigator.userAgent.includes('RedbeardApp'));
-      console.log(`[LIBRARY_DEBUG] Bookmark clicked: isNative=${isNative}, title=${title}, slug=${slug}, activeUserId=${store.activeUserId}`);
-      if (isNative && title && slug) {
+      // Sync to AppLibraryStore (Works for Web Memory + Native SQLite)
+      if (title && slug) {
         if (newBookmarkedState) {
-          console.log(`[LIBRARY_DEBUG] writing local record = ${title}`);
           await store.addToLibrary({
             seriesId,
             title,
@@ -73,10 +74,10 @@ export function BookmarkButton({
             latestChapterNumber,
             continueReadingChapter
           });
-          console.log(`[LIBRARY_DEBUG] local records AFTER write = done adding to store`);
           
-          // Background caching for cover images
-          if (coverImage) {
+          // Background caching for cover images (Native only)
+          const isNative = typeof window !== 'undefined' && (Capacitor.isNativePlatform() || navigator.userAgent.includes('RedbeardApp'));
+          if (isNative && coverImage) {
             cacheCoverImage(seriesId, coverImage).then(cachedUri => {
               if (cachedUri) {
                 store.updateLibrarySeries(seriesId, { cachedCoverUri: cachedUri });
@@ -84,13 +85,9 @@ export function BookmarkButton({
             }).catch(e => console.error("Failed to cache cover:", e));
           }
         } else {
-          console.log(`[LIBRARY_DEBUG] removing local record = ${title}`);
           await store.removeFromLibrary(seriesId);
         }
-      } else if (isNative) {
-        console.log(`[LIBRARY_DEBUG] NATIVE BUT MISSING METADATA: title=${title}, slug=${slug}`);
       }
-      // ----------------------------------
 
       if (newBookmarkedState) {
         toast.success('Added to bookmarks');
@@ -100,7 +97,7 @@ export function BookmarkButton({
       router.refresh();
     } catch (error: unknown) {
       // Revert on failure
-      setIsBookmarked(isBookmarked);
+      setInternalBookmarked(previousState);
       const msg = error instanceof Error ? error.message : 'Failed to update bookmark';
       toast.error(msg);
     } finally {
