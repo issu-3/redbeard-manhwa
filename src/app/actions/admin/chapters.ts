@@ -27,7 +27,7 @@ async function checkAdmin() {
 
 export async function deleteChapter(chapterId: string, seriesId: string) {
   await checkAdmin();
-  
+
   const chapter = await prisma.chapter.findUnique({
     where: { id: chapterId },
     include: { images: true }
@@ -59,7 +59,7 @@ export async function deleteChapter(chapterId: string, seriesId: string) {
 
 export async function bulkDeleteChapters(chapterIds: string[], seriesId: string) {
   await checkAdmin();
-  
+
   if (!chapterIds.length) return { success: false, error: 'No chapters selected' };
 
   // Get all images to delete blobs
@@ -93,7 +93,7 @@ export async function bulkDeleteChapters(chapterIds: string[], seriesId: string)
   revalidatePath('/');
   revalidatePath('/browse/latest');
   updateTag('homepage_data');
-  
+
   return { success: true, count: deleteResult.count };
 }
 
@@ -103,7 +103,7 @@ export async function createChapter(seriesId: string, formData: FormData) {
   const title = formData.get('title') as string;
   const isPublished = formData.get('isPublished') === 'on' || formData.get('isPublished') === 'true';
   const sourceType = (formData.get('sourceType') as string) || 'UPLOAD';
-  
+
   // CBZ Upload logic
   const imageUrlsText = formData.get('imageUrls') as string;
   const imageUrls = imageUrlsText ? imageUrlsText.split('\n').map(url => url.trim()).filter(url => url.length > 0) : [];
@@ -114,7 +114,7 @@ export async function createChapter(seriesId: string, formData: FormData) {
   let label = formData.get('label') as string | null;
   let numberStr = formData.get('number') as string;
   let number: number | null = numberStr ? parseFloat(numberStr) : null;
-  
+
   if (sourceType === 'DOWNLOAD') {
     if (!label) return { error: 'Label is required for download links' };
     if (!downloadProvider) return { error: 'Download Provider is required' };
@@ -182,7 +182,7 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
   const title = formData.get('title') as string;
   const isPublished = formData.get('isPublished') === 'on' || formData.get('isPublished') === 'true';
   const sourceType = (formData.get('sourceType') as string) || 'UPLOAD';
-  
+
   // CBZ Upload logic
   const imageUrlsText = formData.get('imageUrls') as string;
   const imageUrls = imageUrlsText ? imageUrlsText.split('\n').map(url => url.trim()).filter(url => url.length > 0) : [];
@@ -193,7 +193,7 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
   let label = formData.get('label') as string | null;
   let numberStr = formData.get('number') as string;
   let number: number | null = numberStr ? parseFloat(numberStr) : null;
-  
+
   if (sourceType === 'DOWNLOAD') {
     if (!label) return { error: 'Label is required for download links' };
     if (!downloadProvider) return { error: 'Download Provider is required' };
@@ -212,9 +212,9 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
       if (sourceType === 'UPLOAD' || existing.sourceType === 'UPLOAD') {
         const oldImages = await tx.chapterImage.findMany({ where: { chapterId: id } });
         if (oldImages.length > 0) {
-          const blobUrls = oldImages.map(img => img.imageUrl).filter(url => url.includes('.public.blob.vercel-storage.com'));
-          if (blobUrls.length > 0) {
-            await del(blobUrls).catch(e => console.error('Failed to delete blobs:', e));
+          const urlsToDelete = oldImages.map(img => img.imageUrl).filter(url => url && !url.includes('googleusercontent.com') && !url.includes('drive.google.com'));
+          for (const url of urlsToDelete) {
+            await deleteFromR2(url).catch(e => console.error('Failed to delete object from R2:', e));
           }
         }
         await tx.chapterImage.deleteMany({ where: { chapterId: id } });
@@ -280,7 +280,7 @@ export async function createBulkChapters(seriesId: string, chapters: { label: st
         data: chapters.map(ch => {
           const match = ch.label.match(/(\d+(\.\d+)?)/);
           const parsedNumber = match ? parseFloat(match[1]) : null;
-          
+
           return {
             seriesId,
             number: parsedNumber,
@@ -319,7 +319,7 @@ export async function createBulkChapters(seriesId: string, chapters: { label: st
     revalidatePath('/');
     revalidatePath('/browse/latest');
     updateTag('homepage_data');
-    
+
     return { success: true, count: created };
   } catch (error: any) {
     if (error?.code === 'P2002') {

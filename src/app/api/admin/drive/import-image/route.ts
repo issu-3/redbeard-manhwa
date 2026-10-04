@@ -31,29 +31,10 @@ export async function POST(req: NextRequest) {
     const authQuery = authHeader ? '' : `&key=${finalApiKey}`;
     const headers: Record<string, string> = authHeader ? { Authorization: authHeader } : {};
 
-    const driveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media${authQuery}`, { headers });
-    
-    if (!driveRes.ok) {
-       return NextResponse.json({ error: `Failed to download image from Drive` }, { status: 400 });
-    }
-    
-    if (!process.env.R2_ACCESS_KEY_ID) {
-      return NextResponse.json({ error: 'Missing R2_ACCESS_KEY_ID.' }, { status: 500 });
-    }
-
-    const safeName = fileName.replace(/[^a-zA-Z0-9.\-_]/g, '');
-    const filename = `drive/${Date.now()}_${safeName}`;
-
-    // Cloudflare R2 requires a buffer or Uint8Array
-    const arrayBuffer = await driveRes.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Upload to Cloudflare R2
-    const url = await uploadToR2(
-      filename, 
-      buffer, 
-      driveRes.headers.get('content-type') || 'application/octet-stream'
-    );
+    // We no longer download and upload to R2 during import.
+    // Instead, we return a stable gdrive: reference so Google Drive remains the MASTER source.
+    // The reader API will lazily cache this to R2 on the first read.
+    const url = `gdrive:${fileId}`;
     
     return NextResponse.json({ url }, { status: 200 });
 

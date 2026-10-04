@@ -183,21 +183,21 @@ export async function generateMetadata({
   params: Promise<{ slug: string; chapterSlug: string }>;
 }): Promise<Metadata> {
   const { slug, chapterSlug } = await params;
-  
+
   const chapter = await getChapterData(slug, chapterSlug);
   const settings = await getCachedSettings();
-  
+
   if (!chapter) return { title: 'Chapter Not Found' };
 
   const seo = chapter.seo || {};
   const _siteTitle = settings.seo_site_title || 'REDBEARD';
-  
+
   const defaultTitle = `${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} - Download | ${settings.siteName || 'REDBEARD'}`;
   const defaultDesc = `Download ${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} on ${settings.siteName || 'REDBEARD'}. High quality download experience.`;
   const safeSlug = typeof chapter.slug === 'string' && chapter.slug.trim() ? chapter.slug : chapter.number != null ? String(chapter.number) : null;
-  
+
   if (!safeSlug) return { title: 'Chapter Not Found' };
-  
+
   const defaultUrl = `${APP_URL}/series/${slug}/chapter/${safeSlug}`;
   const defaultImage = chapter.images.length > 0 ? chapter.images[0].imageUrl : undefined;
 
@@ -207,7 +207,7 @@ export async function generateMetadata({
   const ogImage = seo.ogImage || defaultImage;
   const twitterImage = seo.twitterImage || defaultImage;
   const keywords = seo.keywords ? seo.keywords.split(',').map(k => k.trim()) : undefined;
-  
+
   return {
     title,
     description,
@@ -243,7 +243,7 @@ export default async function ChapterPage({
   params: Promise<{ slug: string; chapterSlug: string }>;
 }) {
   const { slug, chapterSlug } = await params;
-  
+
   const chapter = await getChapterData(slug, chapterSlug);
   if (!chapter) {
     notFound();
@@ -265,13 +265,13 @@ export default async function ChapterPage({
   if (chapter.sourceType === 'DOWNLOAD' && chapter.downloadUrl) {
     // OPT-07: Parallelize all DB writes instead of running sequentially
     const writePromises: Promise<any>[] = [];
-    
+
     // Record view counts for external chapters
     try {
       const { headers } = await import('next/headers');
       const headersList = await headers();
       const ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
-      
+
       writePromises.push(
         prisma.chapter.update({
           where: { id: chapter.id },
@@ -313,7 +313,7 @@ export default async function ChapterPage({
         const { resolverManager } = await import('@/lib/providers/factory');
         const resolver = resolverManager.getResolver(targetUrl);
         if (!resolver) throw new Error('No resolver');
-        
+
         const resolved = await resolver.resolve(targetUrl);
         if (!resolved.success || !resolved.downloadUrl) throw new Error('Failed to resolve URL');
 
@@ -321,7 +321,7 @@ export default async function ChapterPage({
         const { getRemoteFileSize, getRemoteCbzMetadata } = await import('@/lib/cbz-remote');
         const fileSize = await getRemoteFileSize(resolved.downloadUrl, resolvedHeaders);
         const metadata = await getRemoteCbzMetadata(resolved.downloadUrl, resolvedHeaders, fileSize);
-        
+
         chapter.images = metadata.pages.map((p: any) => ({
           id: `cbz-page-${p.index}`,
           pageNumber: p.index + 1,
@@ -345,7 +345,7 @@ export default async function ChapterPage({
 
   // OPT-05: Use cached comments query
   const commentsData = await getCachedChapterComments(chapter.id);
-  
+
   // Fetch User Preferences
   let userPreferences = {};
   if (session?.user?.id) {
@@ -415,10 +415,10 @@ export default async function ChapterPage({
       <Link href={`/series/${slug}`} className="sr-only">
         Back to {chapter.seriesTitle}
       </Link>
-      <ChapterReader 
-        chapter={chapter} 
-        comments={commentsData} 
-        currentUserId={session?.user?.id} 
+      <ChapterReader
+        chapter={chapter}
+        comments={commentsData}
+        currentUserId={session?.user?.id}
         userPreferences={userPreferences}
         defaultReadingMode={'singlePage'}
         youtubeUrl={settings.youtubeUrl || null}

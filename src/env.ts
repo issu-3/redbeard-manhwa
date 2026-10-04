@@ -5,7 +5,7 @@ const envSchema = z.object({
   DIRECT_DATABASE_URL: z.string().optional(),
   NEXTAUTH_SECRET: z.string().min(1, 'NEXTAUTH_SECRET is required').optional(),
   NEXTAUTH_URL: z.string().url().optional(),
-  BLOB_READ_WRITE_TOKEN: z.string().optional(),
+  // Removed BLOB_READ_WRITE_TOKEN
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   DISCORD_CLIENT_ID: z.string().optional(),

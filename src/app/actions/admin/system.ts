@@ -78,7 +78,7 @@ export async function getSystemHealth(): Promise<SystemHealthData> {
     try {
       const sizeRes: any = await prisma.$queryRaw`SELECT pg_size_pretty(pg_database_size(current_database())) as size`;
       if (sizeRes && sizeRes[0] && sizeRes[0].size) health.database.size = sizeRes[0].size;
-      
+
       const tablesRes: any = await prisma.$queryRaw`SELECT count(*) as count FROM information_schema.tables WHERE table_schema='public'`;
       if (tablesRes && tablesRes[0] && tablesRes[0].count) health.database.tables = Number(tablesRes[0].count);
     } catch (e) {
@@ -93,7 +93,7 @@ export async function getSystemHealth(): Promise<SystemHealthData> {
     const totalImages = await prisma.chapterImage.count();
     const coversCount = await prisma.series.count({ where: { coverImage: { not: '' } } });
     const bannersCount = await prisma.series.count({ where: { bannerImage: { not: '' } } });
-    
+
     health.storage.imagesCount = totalImages;
     health.storage.pagesCount = totalImages;
     health.storage.coversCount = coversCount;
@@ -102,9 +102,8 @@ export async function getSystemHealth(): Promise<SystemHealthData> {
     // Graceful fallback
   }
 
-  if (process.env.BLOB_READ_WRITE_TOKEN) health.storage.provider = 'Vercel Blob';
+  if (process.env.R2_ACCOUNT_ID) health.storage.provider = 'Cloudflare R2';
   else if (process.env.S3_BUCKET_NAME) health.storage.provider = 'AWS S3';
-  else if (process.env.R2_ACCOUNT_ID) health.storage.provider = 'Cloudflare R2';
   else if (process.env.UPLOADTHING_SECRET) health.storage.provider = 'UploadThing';
   else health.storage.provider = 'Local / Vercel Default';
 
@@ -132,7 +131,7 @@ export async function getSystemHealth(): Promise<SystemHealthData> {
   // 6. Security
   const isProd = process.env.NODE_ENV === 'production';
   health.security.https = isProd ? 'Enabled' : 'Disabled';
-  
+
   const requiredEnvs = ['DATABASE_URL', 'NEXTAUTH_SECRET'];
   requiredEnvs.forEach(env => {
     if (!process.env[env]) health.security.envMissing.push(env);

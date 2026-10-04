@@ -37,16 +37,39 @@ export async function GET(
     // 2. UPLOAD-type chapters: images are stored as individual ChapterImage records
     //    (e.g. from Google Drive import). Return them directly.
     if (!chapter.downloadUrl && chapter.images.length > 0) {
+      const { getPresignedR2Url } = await import('@/lib/s3');
+      
+      const pages = await Promise.all(chapter.images.map(async (img, i) => {
+        let finalUrl = img.imageUrl;
+        if (!finalUrl.includes('public.blob.vercel-storage.com') && 
+            !finalUrl.includes('googleusercontent.com') && 
+            !finalUrl.includes('drive.google.com') &&
+            !finalUrl.startsWith('blob:') &&
+            !finalUrl.startsWith('http')) {
+          const presignedUrl = await getPresignedR2Url(finalUrl);
+          if (presignedUrl) {
+            finalUrl = presignedUrl;
+          }
+        } else if (finalUrl.startsWith('http') && finalUrl.includes('r2.cloudflarestorage.com')) {
+          const presignedUrl = await getPresignedR2Url(finalUrl);
+          if (presignedUrl) {
+            finalUrl = presignedUrl;
+          }
+        }
+
+        return {
+          index: i,
+          name: `page_${img.pageNumber}.jpg`,
+          imageUrl: finalUrl,
+          width: img.width || 800,
+          height: img.height || 1200,
+        };
+      }));
+
       const metadata = {
         fileType: 'CBZ' as const, // Spoof as CBZ so old apps don't need an update
         pageCount: chapter.images.length,
-        pages: chapter.images.map((img, i) => ({
-          index: i,
-          name: `page_${img.pageNumber}.jpg`,
-          imageUrl: img.imageUrl,
-          width: img.width || 800,
-          height: img.height || 1200,
-        })),
+        pages,
       };
 
       return NextResponse.json({

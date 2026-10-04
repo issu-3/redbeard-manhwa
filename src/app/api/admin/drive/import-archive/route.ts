@@ -63,16 +63,10 @@ export async function POST(req: NextRequest) {
     // Sort images naturally
     imageFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
 
-    // 3. Upload extracted images to Cloudflare R2 sequentially to avoid overwhelming
-    const urls: string[] = [];
-    for (const file of imageFiles) {
-      const buffer = await file.async('nodebuffer');
-      const ext = file.name.split('.').pop() || 'jpg';
-      const safeName = `extracted-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
-      
-      const url = await uploadToR2(`chapters/${safeName}`, buffer, `image/${ext === 'jpg' ? 'jpeg' : ext}`);
-      urls.push(url);
-    }
+    // 3. We no longer upload extracted images to R2 during import.
+    // Instead, we return stable source references so Google Drive remains the MASTER source.
+    // The reader API will lazily extract and cache these to R2 on the first read.
+    const urls = imageFiles.map(file => `gdrive-archive:${fileId}:${file.name}`);
 
     return NextResponse.json({ success: true, urls });
   } catch (error: any) {
