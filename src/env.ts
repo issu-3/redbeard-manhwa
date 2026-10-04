@@ -10,6 +10,13 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   DISCORD_CLIENT_ID: z.string().optional(),
   DISCORD_CLIENT_SECRET: z.string().optional(),
+  // Cloudflare R2
+  R2_ENDPOINT: z.string().url('R2_ENDPOINT must be a valid URL').optional(),
+  R2_ACCESS_KEY_ID: z.string().min(1).optional(),
+  R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  R2_BUCKET_NAME: z.string().min(1).optional(),
+  R2_PUBLIC_URL: z.string().url('R2_PUBLIC_URL must be a valid URL').optional(),
+  R2_ACCOUNT_ID: z.string().min(1).optional(),
 });
 
 const _env = envSchema.safeParse(process.env);
