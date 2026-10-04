@@ -9,6 +9,7 @@ import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
+import { getDirectCdnUrl } from '@/lib/s3';
 // OPT-21: Pre-render recent chapters at build time
 export async function generateStaticParams() {
   try {
@@ -129,14 +130,17 @@ const getCachedChapterDataInternal = unstable_cache(
       sourceType: chapter.sourceType || 'UPLOAD',
       downloadUrl: chapter.downloadUrl || undefined,
       downloadProvider: chapter.downloadProvider || undefined,
-      images: chapter.images?.map((img: any) => ({
-        id: img.id,
-        pageNumber: img.pageNumber,
-        imageUrl: `/api/chapter/${chapter.id}/page/${img.pageNumber - 1}`,
-        width: img.width || undefined,
-        height: img.height || undefined,
-        blurHash: img.blurHash || undefined,
-      })) || [],
+      images: chapter.images?.map((img: any) => {
+        const directUrl = getDirectCdnUrl(img.imageUrl);
+        return {
+          id: img.id,
+          pageNumber: img.pageNumber,
+          imageUrl: directUrl || `/api/chapter/${chapter.id}/page/${img.pageNumber - 1}`,
+          width: img.width || undefined,
+          height: img.height || undefined,
+          blurHash: img.blurHash || undefined,
+        };
+      }) || [],
       prevChapter: prevChapter ? { number: prevChapter.number, slug: prevChapter.slug } : undefined,
       nextChapter: nextChapter ? { number: nextChapter.number, slug: nextChapter.slug } : undefined,
       seo: chapter.seo as Record<string, string> | undefined,

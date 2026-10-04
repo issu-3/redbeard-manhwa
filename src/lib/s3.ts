@@ -98,6 +98,43 @@ export async function getPresignedR2Url(key: string, expiresIn = 3600) {
   }
 }
 
+export function getDirectCdnUrl(key: string): string | null {
+  if (!key) return null;
+  
+  // Skip explicitly non-R2 URLs
+  if (key.includes('public.blob.vercel-storage.com') || 
+      key.includes('googleusercontent.com') || 
+      key.includes('drive.google.com') ||
+      key.startsWith('gdrive:') ||
+      key.startsWith('gdrive-archive:') ||
+      key.startsWith('blob:')) {
+    return null;
+  }
+
+  const isPlainKey = !key.startsWith('http');
+  const isR2Http = key.startsWith('http') && key.includes('r2.cloudflarestorage.com');
+  
+  if (!isPlainKey && !isR2Http) {
+    return null; // Some other external HTTP URL
+  }
+
+  let filename = key;
+  if (isR2Http) {
+    const urlParts = key.split('/');
+    const bucketIndex = urlParts.findIndex(p => p === BUCKET_NAME);
+    if (bucketIndex !== -1) {
+      filename = urlParts.slice(bucketIndex + 1).join('/');
+    }
+  }
+
+  // Ensure no leading slash
+  if (filename.startsWith('/')) {
+    filename = filename.substring(1);
+  }
+
+  return `https://cdn.redbeard.store/${filename}`;
+}
+
 // Function to check if a cached object exists and return its URL
 export async function getCachedObjectUrl(key: string) {
   try {
