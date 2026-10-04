@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { prisma } from '@/lib/prisma';
 import { formatDate } from '@/lib/utils';
 import { Trash2, MessageSquare } from 'lucide-react';
