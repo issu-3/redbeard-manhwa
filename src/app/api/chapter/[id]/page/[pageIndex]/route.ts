@@ -78,7 +78,7 @@ export async function GET(
         
         const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media${authHeader ? '' : `&key=${process.env.GOOGLE_API_KEY}`}`;
         console.log('DEBUG route: fetching driveUrl:', driveUrl);
-        const driveRes = await fetch(driveUrl, { headers: authHeader ? { Authorization: authHeader } : {} });
+        const driveRes = await fetch(driveUrl, { headers: authHeader ? { Authorization: authHeader } : {}, cache: 'no-store' });
         console.log('DEBUG route: driveRes ok?', driveRes.ok);
         
         if (!driveRes.ok) {

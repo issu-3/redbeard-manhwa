@@ -110,13 +110,22 @@ export async function GET(
       // For proxy=true: construct a CBZ from individual images and stream it
       if (searchParams.get('proxy') === 'true') {
         try {
+          const cacheKey = `cache/chapters/${chapter.id}/chapter_${chapter.id}.cbz`;
+          const { getCachedObjectUrl, uploadToR2 } = await import('@/lib/s3');
+          
+          // Check R2 Cache first
+          const cachedUrl = await getCachedObjectUrl(cacheKey);
+          if (cachedUrl) {
+            return NextResponse.redirect(cachedUrl, { status: 302, headers: { 'Cache-Control': 'public, max-age=3600' } });
+          }
+
           const JSZip = (await import('jszip')).default;
           const zip = new JSZip();
 
           // Fetch each image and add to zip
           for (const img of images) {
             try {
-              const imgRes = await fetch(img.imageUrl, { redirect: 'follow' });
+              const imgRes = await fetch(img.imageUrl, { redirect: 'follow', cache: 'no-store' });
               if (!imgRes.ok) continue;
               const buffer = await imgRes.arrayBuffer();
               const ext = img.imageUrl.split('.').pop()?.split('?')[0] || 'jpg';
@@ -127,6 +136,11 @@ export async function GET(
           }
 
           const zipBuffer = await zip.generateAsync({ type: 'nodebuffer', compression: 'STORE' });
+
+          // Upload to R2 Cache (fire and forget)
+          try {
+            uploadToR2(cacheKey, zipBuffer, 'application/zip').catch(e => console.error('R2 zip cache fail:', e));
+          } catch (e) {}
 
           const responseHeaders = new Headers();
           responseHeaders.set('Content-Type', 'application/zip');
@@ -226,6 +240,7 @@ export async function GET(
         const upstream = await fetch(resolved.downloadUrl, {
           headers: resolved.serverHeaders || resolved.downloadHeaders || {},
           redirect: 'follow',
+          cache: 'no-store'
         });
 
         if (!upstream.ok || !upstream.body) {
@@ -341,7 +356,15 @@ export async function GET(
     }
 
     // 4. Redirect to the actual download URL
-    return NextResponse.redirect(chapter.downloadUrl);
+    let finalDownloadUrl = chapter.downloadUrl;
+    if (!finalDownloadUrl.startsWith('http') || finalDownloadUrl.includes('r2.cloudflarestorage.com')) {
+      const { getPresignedR2Url } = await import('@/lib/s3');
+      const presignedUrl = await getPresignedR2Url(finalDownloadUrl);
+      if (presignedUrl) {
+        finalDownloadUrl = presignedUrl;
+      }
+    }
+    return NextResponse.redirect(finalDownloadUrl);
   } catch (error) {
     console.error('Download route error:', error);
     return new NextResponse('Internal server error', { status: 500 });

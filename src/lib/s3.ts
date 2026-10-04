@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 let endpoint = process.env.R2_ENDPOINT?.trim() || '';
@@ -82,6 +82,10 @@ export async function getPresignedR2Url(key: string, expiresIn = 3600) {
       filename = urlParts.slice(urlParts.findIndex(p => p === BUCKET_NAME) + 1).join('/');
     }
 
+    if (R2_PUBLIC_URL) {
+      return `${R2_PUBLIC_URL}/${filename}`;
+    }
+
     const command = new GetObjectCommand({
       Bucket: BUCKET_NAME,
       Key: filename,
@@ -94,18 +98,27 @@ export async function getPresignedR2Url(key: string, expiresIn = 3600) {
   }
 }
 
-// Function to check if a cached object exists and return its presigned URL
+// Function to check if a cached object exists and return its URL
 export async function getCachedObjectUrl(key: string) {
   try {
-    const command = new GetObjectCommand({
+    const headCommand = new HeadObjectCommand({
       Bucket: BUCKET_NAME,
       Key: key,
     });
     // This will throw if the object does not exist
-    await r2.send(command);
-    return await getSignedUrl(r2, command, { expiresIn: 3600 });
+    await r2.send(headCommand);
+    
+    if (R2_PUBLIC_URL) {
+      return `${R2_PUBLIC_URL}/${key}`;
+    }
+    
+    const getCommand = new GetObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+    });
+    return await getSignedUrl(r2, getCommand, { expiresIn: 3600 });
   } catch (error: any) {
-    if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {
+    if (error.name === 'NoSuchKey' || error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
       return null;
     }
     console.error('Error checking R2 cache:', error);

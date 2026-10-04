@@ -30,7 +30,7 @@ function readUInt16LE(buf: Uint8Array, offset: number): number {
  */
 export async function getRemoteFileSize(url: string, headers: Record<string, string>): Promise<number> {
   const fetchHeaders = { ...headers, Range: 'bytes=0-0' };
-  const res = await fetch(url, { method: 'GET', headers: fetchHeaders, redirect: 'follow' });
+  const res = await fetch(url, { method: 'GET', headers: fetchHeaders, redirect: 'follow', cache: 'no-store' });
   
   if (!res.ok && res.status !== 206) {
     throw new Error(`Failed to fetch file size. Status: ${res.status}`);
@@ -63,6 +63,7 @@ export async function getRemoteCbzMetadata(url: string, headers: Record<string, 
     method: 'GET',
     headers: { ...headers, Range: `bytes=${eocdStart}-${fileSize - 1}` },
     redirect: 'follow',
+    cache: 'no-store'
   });
   if (!eocdRes.ok && eocdRes.status !== 206) throw new Error(`Failed to fetch EOCD: ${eocdRes.status}`);
   
@@ -94,6 +95,7 @@ export async function getRemoteCbzMetadata(url: string, headers: Record<string, 
     method: 'GET',
     headers: { ...headers, Range: `bytes=${cdOffset}-${cdOffset + cdSize - 1}` },
     redirect: 'follow',
+    cache: 'no-store'
   });
   if (!cdRes.ok && cdRes.status !== 206) throw new Error(`Failed to fetch Central Directory: ${cdRes.status}`);
   
@@ -164,6 +166,7 @@ export async function getRemoteCbzPage(url: string, headers: Record<string, stri
     method: 'GET',
     headers: { ...headers, Range: `bytes=${fetchStart}-${fetchEnd}` },
     redirect: 'follow',
+    cache: 'no-store'
   });
   if (!res.ok && res.status !== 206) throw new Error(`Failed to fetch page data: ${res.status}`);
   

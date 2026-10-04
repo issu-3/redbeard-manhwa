@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     const headers: Record<string, string> = authHeader ? { Authorization: authHeader } : {};
 
     // 1. Fetch parent folder metadata
-    const parentRes = await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name${authQuery}`, { headers });
+    const parentRes = await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name${authQuery}`, { headers, cache: 'no-store' });
     let parentName = 'Unknown Folder';
     if (parentRes.ok) {
       const pData = await parentRes.json();
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Fetch all files inside the provided folder
-    const filesRes = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=files(id,name,mimeType)&pageSize=1000${authQuery}`, { headers });
+    const filesRes = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=files(id,name,mimeType)&pageSize=1000${authQuery}`, { headers, cache: 'no-store' });
     
     if (!filesRes.ok) {
        const err = await filesRes.text();
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
        });
 
        for (const chap of chapterData) {
-          const chapFilesRes = await fetch(`https://www.googleapis.com/drive/v3/files?q='${chap.id}'+in+parents+and+mimeType!='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name,mimeType)&pageSize=1000${authQuery}`, { headers });
+          const chapFilesRes = await fetch(`https://www.googleapis.com/drive/v3/files?q='${chap.id}'+in+parents+and+mimeType!='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name,mimeType)&pageSize=1000${authQuery}`, { headers, cache: 'no-store' });
           if (chapFilesRes.ok) {
              const chapFilesData = await chapFilesRes.json();
              let chapImages = chapFilesData.files || [];

@@ -66,6 +66,7 @@ export async function getAccessToken(credentials: ServiceAccountCredentials): Pr
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    cache: 'no-store',
     body: new URLSearchParams({
       grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
       assertion: token,
@@ -90,6 +91,7 @@ async function getOrCreateFolder(name: string, accessToken: string, parentId?: s
 
   const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)`, {
     headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
   });
 
   if (searchRes.ok) {
@@ -106,6 +108,7 @@ async function getOrCreateFolder(name: string, accessToken: string, parentId?: s
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
+    cache: 'no-store',
     body: JSON.stringify({
       name,
       mimeType: 'application/vnd.google-apps.folder',
@@ -186,6 +189,7 @@ export async function uploadBackupToDrive(
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': `multipart/related; boundary=${boundary}`,
       },
+      cache: 'no-store',
       body: multipartBody,
     });
 

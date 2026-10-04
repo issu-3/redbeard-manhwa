@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const headers: Record<string, string> = authHeader ? { Authorization: authHeader } : {};
 
     // 1. Download the archive from Google Drive
-    const driveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media${authQuery}`, { headers });
+    const driveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media${authQuery}`, { headers, cache: 'no-store' });
     
     if (!driveRes.ok) {
        const err = await driveRes.text();
