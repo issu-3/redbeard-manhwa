@@ -6,8 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { 
   generateDatabaseDump, 
   restoreDatabaseDump, 
-  verifyBackupIntegrity, 
-  verifyBlobIntegrity 
+  verifyBackupIntegrity 
 } from '@/lib/backup-engine';
 import { uploadBackupToDrive } from '@/lib/google-drive';
 import type { 

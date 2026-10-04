@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Trash2, Link as LinkIcon, AlertTriangle, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { deleteChapter, bulkDeleteChapters } from '@/app/actions/admin/chapters';
 

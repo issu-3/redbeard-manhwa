@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useDownloadStore, DownloadState } from '@/store/download-store';
+import { useDownloadStore } from '@/store/download-store';
 import { useAppLibraryStore } from '@/store/app-library-store';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';

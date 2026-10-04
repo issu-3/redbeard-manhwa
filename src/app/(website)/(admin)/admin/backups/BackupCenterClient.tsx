@@ -15,10 +15,7 @@ import {
   Play, 
   FileText, 
   Trash2, 
-  Eye, 
-  ShieldCheck, 
-  ShieldAlert, 
-  HardDrive,
+  ShieldCheck,
   Loader2
 } from 'lucide-react';
 import { 
@@ -32,8 +29,7 @@ import {
 import type { 
   BackupLogData, 
   BackupScheduleConfig, 
-  BackupVerificationResult, 
-  BlobVerificationReport 
+  BackupVerificationResult 
 } from '@/types/backup';
 
 interface BackupCenterClientProps {

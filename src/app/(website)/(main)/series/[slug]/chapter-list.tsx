@@ -9,7 +9,6 @@ import {
   Search,
   Calendar,
   CheckCircle2,
-  Link as LinkIcon,
   Download,
 } from 'lucide-react';
 import { formatRelativeTime, cn } from '@/lib/utils';

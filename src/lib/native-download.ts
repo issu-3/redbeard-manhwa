@@ -29,7 +29,7 @@ export async function verifyDownloadState(chapterId: string): Promise<void> {
   }
 }
 
-import { validateDownloadedFile, SupportedFileType } from '@/lib/file-validation';
+import { validateDownloadedFile } from '@/lib/file-validation';
 
 /**
  * Tracks in-flight transfers so they can be aborted on cancel.

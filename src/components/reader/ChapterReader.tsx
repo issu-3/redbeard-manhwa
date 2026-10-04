@@ -2,24 +2,17 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import {
-  ArrowLeft, Settings, ChevronLeft, ChevronRight, Share2, MoreVertical,
-  Download, AlertTriangle, Monitor, Smartphone, Scroll, FileImage,
-  ArrowRightToLine, ArrowLeftToLine, ArrowDownToLine, Maximize,
-  Sun, Contrast, X, Play, SkipForward, RotateCcw, Columns, MessageSquare,
-  Bookmark, Layout, Palette, Check
+  ArrowLeft, Settings, ChevronLeft, ChevronRight, MoreVertical, X, MessageSquare,
+  Bookmark, Layout
 } from 'lucide-react';
-import { useReaderStore, type ReaderMode, type FitMode, type ReadingDirection, type BackgroundColor } from '@/store/reader-store';
+import { useReaderStore, type ReaderMode } from '@/store/reader-store';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { cn } from '@/lib/utils';
-import type { ChapterData } from '@/types';
-import { Capacitor } from '@capacitor/core';
-import { useDownloadStore } from '@/store/download-store';
 import { useAppLibraryStore } from '@/store/app-library-store';
 import { saveUserPreferences } from '@/app/actions/preferences';
 import { CommentSection } from '@/components/shared/CommentSection';

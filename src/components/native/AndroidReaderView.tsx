@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useDownloadStore } from '@/store/download-store';
 import { SeriesRepository } from '@/lib/sqlite/repository';
@@ -44,6 +44,49 @@ export function AndroidReaderView({
   const [isCbz, setIsCbz] = useState(false);
   const [cbzImages, setCbzImages] = useState<{url: string, width: number, height: number}[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const loadCbz = async (url: string) => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const zip = await JSZip.loadAsync(blob);
+      const images: {url: string, width: number, height: number}[] = [];
+      
+      const entries = Object.values(zip.files).filter(f => {
+        if (f.dir) return false;
+        if (!f.name.match(/\.(jpg|jpeg|png|webp|gif)$/i)) return false;
+        if (f.name.includes('__MACOSX')) return false;
+        if (f.name.split('/').pop()?.startsWith('._')) return false;
+        if (f.name.toLowerCase().includes('thumb')) return false;
+        return true;
+      });
+      entries.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+      
+      for (const entry of entries) {
+        const fileBlob = await entry.async('blob');
+        const imgUrl = URL.createObjectURL(fileBlob);
+        
+        const dims = await new Promise<{width: number, height: number, valid: boolean}>((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve({ width: img.width, height: img.height, valid: true });
+          img.onerror = () => resolve({ width: 0, height: 0, valid: false });
+          img.src = imgUrl;
+        });
+        
+        if (dims.valid && dims.width > 300 && dims.height > 300) {
+          images.push({ url: imgUrl, width: dims.width, height: dims.height });
+        } else {
+          URL.revokeObjectURL(imgUrl);
+        }
+      }
+      
+      setCbzImages(images);
+      setNumPages(images.length);
+    } catch (e) {
+      console.error('CBZ load error:', e);
+      alert('Failed to read CBZ file.');
+    }
+  };
 
   // Initialize
   useEffect(() => {
@@ -115,50 +158,7 @@ export function AndroidReaderView({
     return () => {
       cbzImages.forEach(img => URL.revokeObjectURL(img.url));
     };
-  }, [chapterId, getDownloadState]);
-
-  const loadCbz = async (url: string) => {
-    try {
-      const res = await fetch(url);
-      const blob = await res.blob();
-      const zip = await JSZip.loadAsync(blob);
-      const images: {url: string, width: number, height: number}[] = [];
-      
-      const entries = Object.values(zip.files).filter(f => {
-        if (f.dir) return false;
-        if (!f.name.match(/\.(jpg|jpeg|png|webp|gif)$/i)) return false;
-        if (f.name.includes('__MACOSX')) return false;
-        if (f.name.split('/').pop()?.startsWith('._')) return false;
-        if (f.name.toLowerCase().includes('thumb')) return false;
-        return true;
-      });
-      entries.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
-      
-      for (const entry of entries) {
-        const fileBlob = await entry.async('blob');
-        const imgUrl = URL.createObjectURL(fileBlob);
-        
-        const dims = await new Promise<{width: number, height: number, valid: boolean}>((resolve) => {
-          const img = new Image();
-          img.onload = () => resolve({ width: img.width, height: img.height, valid: true });
-          img.onerror = () => resolve({ width: 0, height: 0, valid: false });
-          img.src = imgUrl;
-        });
-        
-        if (dims.valid && dims.width > 300 && dims.height > 300) {
-          images.push({ url: imgUrl, width: dims.width, height: dims.height });
-        } else {
-          URL.revokeObjectURL(imgUrl);
-        }
-      }
-      
-      setCbzImages(images);
-      setNumPages(images.length);
-    } catch (e) {
-      console.error('CBZ load error:', e);
-      alert('Failed to read CBZ file.');
-    }
-  };
+  }, [chapterId, getDownloadState, cbzImages]);
 
   // Handle Hardware Back Button natively
   useEffect(() => {

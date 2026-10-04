@@ -96,7 +96,7 @@ function getSeoDescription(series: any, seo: Record<string, string>, siteTitle: 
   let description = seo.description;
   if (description && description.trim()) return description;
 
-  const prefix = `Read ${series.title} ${typeLabel} in Hindi on ${siteTitle}.`;
+  const prefix = `Read ${series.title} ${typeLabel} online on ${siteTitle}.`;
   let contentText = series.synopsis?.trim() || series.description?.trim() || '';
   contentText = contentText.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
   
@@ -130,7 +130,7 @@ export async function generateMetadata({
   const siteTitle = settings.seo_site_title || 'REDBEARD';
   const typeLabel = getContentTypeLabel((series as any).type);
   
-  const title = seo.title || `${series.title} - Read ${typeLabel} in Hindi | ${siteTitle}`;
+  const title = seo.title || `${series.title} — Read ${typeLabel} Online | ${siteTitle}`;
   const description = getSeoDescription(series, seo, siteTitle, typeLabel);
   
   const keywords = seo.keywords 

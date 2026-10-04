@@ -192,8 +192,8 @@ export async function generateMetadata({
   const seo = chapter.seo || {};
   const _siteTitle = settings.seo_site_title || 'REDBEARD';
 
-  const defaultTitle = `${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} - Download | ${settings.siteName || 'REDBEARD'}`;
-  const defaultDesc = `Download ${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} on ${settings.siteName || 'REDBEARD'}. High quality download experience.`;
+  const defaultTitle = `${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} — Read Online | ${settings.siteName || 'REDBEARD'}`;
+  const defaultDesc = `Read ${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} online on ${settings.siteName || 'REDBEARD'}. High quality reading experience.`;
   const safeSlug = typeof chapter.slug === 'string' && chapter.slug.trim() ? chapter.slug : chapter.number != null ? String(chapter.number) : null;
 
   if (!safeSlug) return { title: 'Chapter Not Found' };
@@ -213,8 +213,10 @@ export async function generateMetadata({
     description,
     keywords,
     robots: {
-      index: false,
+      index: true,
       follow: true,
+      'max-image-preview': 'large' as const,
+      'max-snippet': -1,
     },
     openGraph: {
       title,
@@ -420,7 +422,7 @@ export default async function ChapterPage({
         comments={commentsData}
         currentUserId={session?.user?.id}
         userPreferences={userPreferences}
-        defaultReadingMode={'singlePage'}
+        defaultReadingMode={'longStrip'}
         youtubeUrl={settings.youtubeUrl || null}
       />
     </>

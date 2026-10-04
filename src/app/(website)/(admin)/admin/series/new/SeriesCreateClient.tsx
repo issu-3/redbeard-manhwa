@@ -13,6 +13,18 @@ interface SeriesCreateClientProps {
   tags: any[];
 }
 
+const SectionHeader = ({ num, title, desc }: { num: string, title: string, desc: string }) => (
+  <div className="flex items-center gap-3 mb-5">
+    <div className="flex items-center justify-center w-6 h-6 rounded-md bg-[#F20D3A]/10 text-[#F20D3A] font-bold text-xs shrink-0 border border-[#F20D3A]/20">
+      {num}
+    </div>
+    <div>
+      <h2 className="text-sm font-bold text-white tracking-wide">{title}</h2>
+      <p className="text-[11px] text-text-muted mt-0.5">{desc}</p>
+    </div>
+  </div>
+);
+
 export default function SeriesCreateClient({ genres, tags }: SeriesCreateClientProps) {
   // 01 BASIC
   const [title, setTitle] = useState('');
@@ -76,18 +88,6 @@ export default function SeriesCreateClient({ genres, tags }: SeriesCreateClientP
       setCanonicalUrl(`https://redbeard-manhwa.vercel.app/series/${slug}`);
     }
   };
-
-  const SectionHeader = ({ num, title, desc }: { num: string, title: string, desc: string }) => (
-    <div className="flex items-center gap-3 mb-5">
-      <div className="flex items-center justify-center w-6 h-6 rounded-md bg-[#F20D3A]/10 text-[#F20D3A] font-bold text-xs shrink-0 border border-[#F20D3A]/20">
-        {num}
-      </div>
-      <div>
-        <h2 className="text-sm font-bold text-white tracking-wide">{title}</h2>
-        <p className="text-[11px] text-text-muted mt-0.5">{desc}</p>
-      </div>
-    </div>
-  );
 
   return (
     <div className="relative pb-[calc(6rem+env(safe-area-inset-bottom))] max-w-2xl mx-auto space-y-6">

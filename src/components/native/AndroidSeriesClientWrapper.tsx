@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { AndroidSeriesView } from '@/components/native/AndroidSeriesView';
-import { SeriesRepository } from '@/lib/sqlite/repository';
 import { Loader2 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { nativeFetch } from '@/lib/native/api';

@@ -2,8 +2,6 @@ import { redirect } from 'next/navigation';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdRenderer } from '@/components/ads/AdRenderer';
 import { prisma } from '@/lib/prisma';
-import Link from 'next/link';
-import { ArrowDownToLine } from 'lucide-react';
 import { AdCountdown } from '@/components/ads/AdCountdown';
 
 export default async function DownloadInterstitialPage({ params }: { params: Promise<{ chapterId: string }> }) {

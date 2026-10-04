@@ -1,4 +1,4 @@
-import { FileResolver, ResolvedFile, inferMimeType } from './base';
+import { FileResolver, ResolvedFile } from './base';
 
 export class GoogleDriveResolver implements FileResolver {
   canResolve(url: string): boolean {

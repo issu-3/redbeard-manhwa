@@ -8,6 +8,7 @@
     "build": "prisma generate && next build",
     "build:android": "node scripts/build-android-shell.mjs",
     "type-check": "tsc --noEmit",
+    "lint": "eslint src",
     "start": "next start",
     "bootstrap-admin": "npx tsx scripts/bootstrap-admin.ts",
     "backup:verify": "npx tsx scripts/pre-deploy-backup.ts",

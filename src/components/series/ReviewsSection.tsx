@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatRelativeTime } from '@/lib/utils';
 import { submitReview, deleteReview } from '@/app/actions/public/reviews';
 import { toast } from 'sonner';
-import type { Review, User } from '@prisma/client';
+import type { Review } from '@prisma/client';
 
 type ReviewWithUser = Review & {
   user: {

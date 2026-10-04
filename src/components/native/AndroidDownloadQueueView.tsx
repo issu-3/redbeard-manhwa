@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { ArrowLeft, X, Check, Loader2, CloudDownload, RotateCcw } from 'lucide-react';
+import { ArrowLeft, X, CloudDownload, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Capacitor } from '@capacitor/core';
 import { useDownloadStore, DownloadStateStatus } from '@/store/download-store';
 
 interface DownloadItem {

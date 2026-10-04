@@ -40,7 +40,7 @@ export default async function sitemap(props: {
   id: Promise<string>;
 }): Promise<MetadataRoute.Sitemap> {
   const id = await props.id;
-  const baseUrl = APP_URL || 'http://localhost:3000';
+  const baseUrl = APP_URL || 'https://redbeard.store';
 
   try {
     // ── Static pages + Genres ──
@@ -58,7 +58,6 @@ export default async function sitemap(props: {
         { url: `${baseUrl}/browse/new-releases`, changeFrequency: 'daily', priority: 0.8 },
         { url: `${baseUrl}/browse/completed`, changeFrequency: 'daily', priority: 0.8 },
         { url: `${baseUrl}/browse/genres`, changeFrequency: 'weekly', priority: 0.8 },
-        { url: `${baseUrl}/search`, changeFrequency: 'weekly', priority: 0.6 },
       ];
 
       const genreRoutes: MetadataRoute.Sitemap = genres
@@ -84,7 +83,7 @@ export default async function sitemap(props: {
           url: `${baseUrl}/series/${s.slug}`,
           lastModified: s.updatedAt,
           changeFrequency: 'daily' as const,
-          priority: 0.8,
+          priority: 0.9,
         }));
     }
 
@@ -112,7 +111,7 @@ export default async function sitemap(props: {
           url: `${baseUrl}/series/${c.series!.slug}/chapter/${c.slug}`,
           lastModified: c.updatedAt,
           changeFrequency: 'monthly' as const,
-          priority: 0.5,
+          priority: 0.8,
         }));
     }
   } catch (error) {

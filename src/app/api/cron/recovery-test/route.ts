@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyBackupIntegrity, verifyBlobIntegrity } from '@/lib/backup-engine';
+import { verifyBackupIntegrity } from '@/lib/backup-engine';
 import { uploadBackupToDrive } from '@/lib/google-drive';
 
 export const dynamic = 'force-dynamic';

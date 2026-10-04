@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { uploadToR2 } from '@/lib/s3';
 import { getGoogleDriveConfig, getAccessToken } from '@/lib/google-drive';
 import JSZip from 'jszip';
 

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { MediaManager } from '@/components/admin/MediaManager';
-import { Sparkles, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { Sparkles, AlertTriangle, Info } from 'lucide-react';
 import { getContentTypeLabel } from '@/lib/content-types';
 
 export interface SeoData {

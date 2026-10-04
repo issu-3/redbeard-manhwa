@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence, useMotionValue, useSpring, useReducedMotion, Variants } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { BookmarkButton } from '@/components/shared/BookmarkButton';
 import { Badge } from '@/components/shared/Badge';
 
@@ -218,8 +218,8 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                       href={`/series/${slide.slug}`}
                       className="inline-flex h-8 md:h-10 items-center justify-center gap-1.5 md:gap-2 rounded-xl bg-primary px-3 md:px-4 py-1 md:py-2 text-xs md:text-base font-bold text-white transition-all duration-200 hover:bg-primary-hover hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/40 active:scale-[0.97] shadow-md shadow-primary/25"
                     >
-                      <Download className="h-4 w-4 md:h-5 md:w-5" />
-                      Download
+                      <BookOpen className="h-4 w-4 md:h-5 md:w-5" />
+                      Read Now
                     </Link>
                   ) : null}
                   <div className="flex h-8 md:h-10 items-center transition-all duration-200 hover:scale-[1.02] active:scale-[0.97]">

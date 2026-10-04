@@ -5,7 +5,6 @@ import { DownloadCloud, Info, ChevronRight, HardDrive, ExternalLink, ArrowLeft }
 import { AndroidDownloadQueueView } from './AndroidDownloadQueueView';
 import { Browser } from '@capacitor/browser';
 import packageJson from '../../../package.json';
-import { nativeUserId } from '@/components/native/NativeInitializer';
 
 export function AndroidMoreView() {
   const [currentScreen, setCurrentScreen] = useState<'main' | 'downloads' | 'storage' | 'about'>('main');

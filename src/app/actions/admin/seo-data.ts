@@ -3,7 +3,6 @@ import { auth } from '@/auth';
 import fs from 'fs';
 import path from 'path';
 import { calculateSeriesSeoScore } from '@/lib/seo-generator';
-import { APP_URL } from '@/lib/constants';
 import { unstable_cache } from 'next/cache';
 
 export async function fetchSeoDashboardData() {

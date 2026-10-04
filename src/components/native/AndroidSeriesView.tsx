@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { 
-  ArrowLeft, Share2, MoreVertical, Download, Bookmark, Play, Check, 
-  ChevronDown, ChevronUp, Filter, List, RefreshCcw, FileText, Tags, ExternalLink, X, BookOpen, Trash2, FileUp, CheckCircle2
+  ArrowLeft, Share2, MoreVertical, Download, Bookmark, Play, Check, Filter, List, RefreshCcw, FileText, Tags, ExternalLink, X, BookOpen, Trash2, FileUp, CheckCircle2
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -172,14 +171,14 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
     if (dl?.status === 'COMPLETED') {
       const exists = await localChapterFileExists(chapter.id);
       if (exists) {
-        window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`;
+        window.location.assign(`/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`);
         return;
       }
       // Missing file -> fall through to online reader
     }
 
     // 2. Fallback online reader
-    window.location.href = `/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`;
+    window.location.assign(`/android-reader/index.html?seriesSlug=${series.slug}&chapterSlug=${chapter.slug}&id=${chapter.id}&seriesId=${series.id}`);
   };
 
   // Auto-open effect

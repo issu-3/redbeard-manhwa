@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, HardDrive, Trash2, Folder, CloudDownload, ChevronRight, X, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, HardDrive, Trash2, Folder, CloudDownload, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { useDownloadStore } from '@/store/download-store';
 import { SeriesRepository } from '@/lib/sqlite/repository';

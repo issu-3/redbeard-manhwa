@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Search, CheckCircle2 } from 'lucide-react';
 import { OverviewCards } from './OverviewCards';
 import { TechnicalAudit } from './TechnicalAudit';
 import { PerformanceMetrics } from './PerformanceMetrics';

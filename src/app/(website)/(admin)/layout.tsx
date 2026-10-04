@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Plus } from 'lucide-react';
 import { auth } from '@/auth';
 import { DesktopSidebar, MobileDrawer } from '@/components/admin/AdminSidebar';
 

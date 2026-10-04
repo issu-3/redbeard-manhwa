@@ -1,38 +1,37 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  X, Sun, Layout, Smartphone, Eye, Expand, 
-  ArrowRightToLine, ArrowLeftToLine, GripVertical, GripHorizontal, 
-  Settings, Hand, BoxSelect, Maximize,
-  RectangleHorizontal, BookOpen, Scaling, Move, Type, Sparkles
+  X, Sun, Expand, 
+  ArrowRightToLine, ArrowLeftToLine, GripVertical, GripHorizontal, BoxSelect, Maximize,
+  RectangleHorizontal, Scaling, Move, Sparkles
 } from 'lucide-react';
 import { useReaderStore } from '@/store/reader-store';
 import { cn } from '@/lib/utils';
 
+const ToggleSwitch = ({ checked, onChange, label }: { checked: boolean, onChange: () => void, label?: string }) => (
+  <div className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
+    {label && <span className="text-sm font-medium text-white/90">{label}</span>}
+    <button 
+      onClick={onChange} 
+      className={cn("w-12 h-6 rounded-full transition-colors relative flex-shrink-0", checked ? "bg-[#E53935]" : "bg-white/10")}
+    >
+      <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", checked ? "left-7" : "left-1")} />
+    </button>
+  </div>
+);
+
+const Section = ({ title, children }: { title: string, children: React.ReactNode }) => (
+  <div className="mb-6 space-y-3">
+    <h4 className="text-sm font-semibold text-white/60 uppercase tracking-wider">{title}</h4>
+    <div className="bg-[#1A1D24] p-4 rounded-2xl border border-white/5 shadow-sm space-y-4">
+      {children}
+    </div>
+  </div>
+);
+
 export function ReaderSettingsSheet({ onClose }: { onClose: () => void }) {
   const store = useReaderStore();
   const [activeTab, setActiveTab] = useState<'display' | 'reading' | 'navigation' | 'advanced'>('display');
-
-  const ToggleSwitch = ({ checked, onChange, label }: { checked: boolean, onChange: () => void, label?: string }) => (
-    <div className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
-      {label && <span className="text-sm font-medium text-white/90">{label}</span>}
-      <button 
-        onClick={onChange} 
-        className={cn("w-12 h-6 rounded-full transition-colors relative flex-shrink-0", checked ? "bg-[#E53935]" : "bg-white/10")}
-      >
-        <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", checked ? "left-7" : "left-1")} />
-      </button>
-    </div>
-  );
-
-  const Section = ({ title, children }: { title: string, children: React.ReactNode }) => (
-    <div className="mb-6 space-y-3">
-      <h4 className="text-sm font-semibold text-white/60 uppercase tracking-wider">{title}</h4>
-      <div className="bg-[#1A1D24] p-4 rounded-2xl border border-white/5 shadow-sm space-y-4">
-        {children}
-      </div>
-    </div>
-  );
 
   return (
     <motion.div

@@ -31,6 +31,7 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
   const [isImporting, setIsImporting] = useState(false);
   const [isImportingDone, setIsImportingDone] = useState(false);
   const cancelRef = useRef(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [importProgress, setImportProgress] = useState({ chapterIndex: 0, currentImage: 0, totalImages: 0 });
 
   useEffect(() => {
@@ -217,6 +218,7 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
 
   const handleCancelImport = () => {
     cancelRef.current = true;
+    setIsCancelling(true);
   };
 
   if (isImporting || isImportingDone) {
@@ -265,10 +267,10 @@ export function GoogleDriveImport({ seriesId }: GoogleDriveImportProps) {
               <button
                 type="button"
                 onClick={handleCancelImport}
-                disabled={cancelRef.current}
+                disabled={isCancelling}
                 className="px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
               >
-                {cancelRef.current ? 'Cancelling...' : 'Cancel Import'}
+                {isCancelling ? 'Cancelling...' : 'Cancel Import'}
               </button>
             </div>
           )}

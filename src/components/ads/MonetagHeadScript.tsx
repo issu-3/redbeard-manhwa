@@ -1,6 +1,5 @@
 'use client';
 
-import Script from 'next/script';
 import { Capacitor } from '@capacitor/core';
 
 export function MonetagHeadScript({ scriptString }: { scriptString?: string | null }) {

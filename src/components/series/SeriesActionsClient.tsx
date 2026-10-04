@@ -140,8 +140,8 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
             {isLoading 
               ? 'Loading...' 
               : (hasHistory 
-                  ? `Continue ${isExternal ? 'Download' : 'Ch.'} ${continueChapterObj?.label || continueChapterObj?.number || continueReadingChapter}` 
-                  : (isExternal ? 'Download First Chapter' : 'Read First Chapter')
+                  ? `Continue Ch. ${continueChapterObj?.label || continueChapterObj?.number || continueReadingChapter}` 
+                  : 'Read First Chapter'
                 )
             }
           </Link>
@@ -234,8 +234,8 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
             {isLoading 
               ? 'Loading...' 
               : (hasHistory 
-                  ? `Continue ${isExternal ? 'Download' : 'Ch.'} ${continueChapterObj?.label || continueChapterObj?.number || continueReadingChapter}` 
-                  : (isExternal ? 'Download First Chapter' : 'Read First Chapter')
+                  ? `Continue Ch. ${continueChapterObj?.label || continueChapterObj?.number || continueReadingChapter}` 
+                  : 'Read First Chapter'
                 )
             }
         </Link>

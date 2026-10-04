@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { Upload, X, Copy, Trash2, Image as ImageIcon, Link as LinkIcon, RefreshCw, AlertCircle } from 'lucide-react';
+import { Trash2, Image as ImageIcon, Link as LinkIcon, RefreshCw, AlertCircle } from 'lucide-react';
 
 interface FileInfo {
   width?: number;
