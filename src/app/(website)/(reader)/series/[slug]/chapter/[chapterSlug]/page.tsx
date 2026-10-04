@@ -132,7 +132,7 @@ const getCachedChapterDataInternal = unstable_cache(
       images: chapter.images?.map((img: any) => ({
         id: img.id,
         pageNumber: img.pageNumber,
-        imageUrl: img.imageUrl,
+        imageUrl: `/api/chapter/${chapter.id}/page/${img.pageNumber - 1}`,
         width: img.width || undefined,
         height: img.height || undefined,
         blurHash: img.blurHash || undefined,
