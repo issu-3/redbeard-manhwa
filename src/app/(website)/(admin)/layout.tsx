@@ -1,33 +1,9 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Library, 
-  Users, 
-  MessageSquare, 
-  Tags,
-  Settings,
-  ArrowLeft,
-  BarChart3,
-  Search,
-  Star,
-  Database
-} from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { auth } from '@/auth';
-const navigation = [
-  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-  { name: 'Backups & DR', href: '/admin/backups', icon: Database },
-  { name: 'SEO Health', href: '/admin/seo', icon: Search },
-  { name: 'Homepage', href: '/admin/homepage', icon: LayoutDashboard },
-  { name: 'Series', href: '/admin/series', icon: Library },
-  { name: 'Genres & Tags', href: '/admin/metadata', icon: Tags },
-  { name: 'Users', href: '/admin/users', icon: Users },
-  { name: 'Comments', href: '/admin/comments', icon: MessageSquare },
-  { name: 'Reviews', href: '/admin/reviews', icon: Star },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
-];
+import { DesktopSidebar, MobileDrawer } from '@/components/admin/AdminSidebar';
 
 // OPT-22: Removed force-dynamic to allow individual admin pages to cache appropriately
 
@@ -46,56 +22,44 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-card flex flex-col hidden md:flex sticky top-0 h-screen">
-        <div className="p-6">
-          <Link href="/admin" className="flex items-center gap-2">
-            <span className="text-2xl font-black tracking-tighter text-primary">REDBEARD</span>
-            <span className="rounded bg-primary/20 px-2 py-0.5 text-xs font-bold text-primary">
-              ADMIN
-            </span>
-          </Link>
-        </div>
-        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-text-secondary transition-all hover:bg-primary/10 hover:text-primary"
-            >
-              <item.icon className="h-5 w-5" />
-              {item.name}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-border">
-          <Link
-            href="/"
-            className="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-medium text-text-secondary transition-all hover:bg-surface-hover hover:text-text-primary"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Return to Site
-          </Link>
-        </div>
-      </aside>
+      {/* Desktop Sidebar */}
+      <DesktopSidebar />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/80 px-6 backdrop-blur-md">
-          <div className="flex items-center gap-4 md:hidden">
-            <Link href="/admin" className="text-xl font-black text-primary">RB</Link>
+        <header className="sticky top-0 z-30 flex h-14 lg:h-16 items-center justify-between border-b border-border bg-card/80 px-4 lg:px-6 backdrop-blur-md">
+          {/* Mobile: Hamburger + Logo */}
+          <div className="flex items-center gap-3 lg:hidden">
+            <MobileDrawer />
+            <Link href="/admin" className="flex items-center gap-1.5">
+              <span className="text-lg font-black tracking-tighter text-primary">REDBEARD</span>
+              <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                ADMIN
+              </span>
+            </Link>
           </div>
+
           <div className="flex-1" />
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-text-secondary">
+
+          {/* Right side actions */}
+          <div className="flex items-center gap-3">
+            {/* Mobile: Compact Add button (visible only on series page via CSS, but always accessible) */}
+            <Link
+              href="/admin/series/new"
+              className="lg:hidden flex items-center justify-center h-9 w-9 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors focus-ring"
+              aria-label="Add new series"
+            >
+              <Plus className="h-4 w-4" />
+            </Link>
+            <div className="hidden lg:block text-sm text-text-secondary">
               Logged in as <span className="font-semibold text-text-primary">{session?.user?.name || (session?.user?.role === 'ADMIN' ? 'Administrator' : 'Moderator')}</span>
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 p-6 md:p-8">
+        <div className="flex-1 p-4 md:p-6 lg:p-8">
           {children}
         </div>
       </main>

@@ -123,6 +123,30 @@ body {
   }
 }
 
+/* ── Drawer Slide-In Animation ──────────────────────────── */
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.2s ease-out;
+}
+
+/* ── Line Clamp ────────────────────────────────────────── */
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* ── No Scrollbar ───────────────────────────────────────── */
 
 .no-scrollbar {
