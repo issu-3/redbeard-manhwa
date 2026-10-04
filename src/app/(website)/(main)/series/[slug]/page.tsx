@@ -50,7 +50,6 @@ const getSeriesData = cache(async (slug: string) => {
       chapters: {
         where: { isPublished: true },
         orderBy: [{ number: 'desc' }, { createdAt: 'desc' }],
-        take: 100,
         select: {
           id: true,
           number: true,

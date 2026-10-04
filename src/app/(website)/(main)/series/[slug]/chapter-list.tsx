@@ -85,7 +85,7 @@ export function ChapterListSection({
         <h2 className="text-2xl font-bold text-text-primary flex items-center gap-2">
           Chapters
           <span className="text-sm font-medium bg-card px-2 py-0.5 rounded-full text-text-muted border border-border">
-            {chapters.length}
+            {totalChapters}
           </span>
         </h2>
         <div className="flex items-center gap-3">
