@@ -23,8 +23,13 @@ export function AdGlobalScripts({
 
     const childNodes = Array.from(temp.childNodes);
     childNodes.forEach(node => {
-      if (node.nodeName.toLowerCase() !== 'script') {
-        document.body.appendChild(node.cloneNode(true));
+      // Only append specific known tracking elements (noscript, img, iframe).
+      // This strictly prevents rendering accidental admin instructions, text nodes, or generic divs.
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const tagName = node.nodeName.toLowerCase();
+        if (['noscript', 'img', 'iframe'].includes(tagName)) {
+          document.body.appendChild(node.cloneNode(true));
+        }
       }
     });
 

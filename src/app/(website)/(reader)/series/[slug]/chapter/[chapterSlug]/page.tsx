@@ -403,6 +403,10 @@ export default async function ChapterPage({
     image: chapter.images.length > 0 ? chapter.images[0].imageUrl : undefined
   };
 
+  const adsterraBannerScript = settings.ads_enabled_adsterra === 'true' && settings.ads_adsterra_banner 
+    ? Buffer.from(settings.ads_adsterra_banner).toString('base64') 
+    : null;
+
   return (
     <>
       <script
@@ -424,6 +428,7 @@ export default async function ChapterPage({
         userPreferences={userPreferences}
         defaultReadingMode={'longStrip'}
         youtubeUrl={settings.youtubeUrl || null}
+        adsterraBannerScript={adsterraBannerScript}
       />
     </>
   );

@@ -35,7 +35,7 @@ const ImageLoader = () => (
   </div>
 );
 
-export function ChapterReader({ chapter, comments, currentUserId, userPreferences, defaultReadingMode, youtubeUrl, renderPage, initialPage = 1 }: any) {
+export function ChapterReader({ chapter, comments, currentUserId, userPreferences, defaultReadingMode, youtubeUrl, renderPage, initialPage = 1, adsterraBannerScript }: any) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -292,7 +292,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
   const endOfChapterView = (
     <div className="py-24 text-center w-full h-full flex flex-col items-center justify-center pointer-events-auto z-10 relative bg-[#0F1115]">
        <div className="w-full flex justify-center mb-8">
-         <AdsterraAd placement="BOTTOM" />
+         <AdsterraAd placement="BOTTOM" htmlScript={adsterraBannerScript} />
        </div>
        <div className="max-w-[900px] w-full mx-auto px-4 mb-12">
          <SubscribeCard youtubeUrl={youtubeUrl || null} />
@@ -381,10 +381,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
         onClick={handleContainerClick}
         style={contentFilterStyle}
       >
-        {/* RIGHT RAIL AD (Desktop Only) */}
-        <div className="hidden xl:flex absolute right-4 top-0 bottom-0 w-[160px] items-center justify-center pointer-events-auto z-20">
-           <AdsterraAd placement="RIGHT_RAIL" />
-        </div>
+
 
         {/* Webtoon / Long Strip */}
         {store.mode === 'longStrip' && (
@@ -415,12 +412,12 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                   >
                     {virtualRow.index === 0 && (
                       <div className="w-full flex justify-center pt-16 pb-6 pointer-events-auto shrink-0">
-                        <AdsterraAd placement="TOP" className="w-full max-w-[728px]" />
+                        <AdsterraAd placement="TOP" htmlScript={adsterraBannerScript} className="w-full max-w-[728px]" />
                       </div>
                     )}
                     {virtualRow.index === midIndex && (
                       <div className="w-full flex justify-center py-6 pointer-events-auto shrink-0">
-                        <AdsterraAd placement="MID" className="w-full max-w-[300px]" />
+                        <AdsterraAd placement="MID" htmlScript={adsterraBannerScript} className="w-full max-w-[300px]" />
                       </div>
                     )}
                     {/* Using standard img for webtoon for perfectly seamless stacking without layout shifts when width/height are known */}
@@ -478,12 +475,12 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                <div className="w-full h-full flex flex-col items-center justify-center">
                  {store.currentPage === 1 && (
                    <div className="w-full flex justify-center pt-16 pb-2 pointer-events-auto shrink-0 z-20">
-                     <AdsterraAd placement="TOP" className="w-full max-w-[728px]" />
+                     <AdsterraAd placement="TOP" htmlScript={adsterraBannerScript} className="w-full max-w-[728px]" />
                    </div>
                  )}
                  {store.currentPage === midIndex && (
                    <div className="w-full flex justify-center py-2 pointer-events-auto shrink-0 z-20">
-                     <AdsterraAd placement="MID" className="w-full max-w-[300px]" />
+                     <AdsterraAd placement="MID" htmlScript={adsterraBannerScript} className="w-full max-w-[300px]" />
                    </div>
                  )}
                  <div className="flex-1 w-full overflow-hidden flex items-center justify-center relative">
