@@ -477,8 +477,8 @@ export default function SeriesManagementClient({
           )}
         </div>
 
-        {/* Filter row — horizontally scrollable on mobile */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 -mb-1">
+        {/* Filter row — wrapped on mobile so dropdowns aren't clipped */}
+        <div className="flex flex-wrap items-center gap-2 pb-1">
           <FilterDropdown
             label="Status"
             value={statusFilter}
