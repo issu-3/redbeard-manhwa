@@ -36,7 +36,7 @@ export function AnalyticsDashboard({ initialData, currentRange }: { initialData:
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface border border-border p-4 rounded-xl">
         <div className="flex items-center gap-2 text-sm text-text-secondary">
           <Activity className="h-5 w-5 text-primary" />
-          <span className="font-medium">Data Sync: Live (Neon PostgreSQL)</span>
+          <span className="font-medium">Data Sync: Cached (5m)</span>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <label className="text-sm font-medium text-text-secondary">Date Range:</label>

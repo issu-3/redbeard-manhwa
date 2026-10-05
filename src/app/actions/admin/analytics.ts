@@ -140,16 +140,39 @@ async function fetchAnalyticsDataInternal(range: string) {
   
   const [
     chartViews, chartUsers, chartSeries, chartChapters,
-    topSeriesRaw, mostReadChaptersRaw, topGenresRaw, sessionsRaw
+    topSeriesRaw, mostReadChaptersRaw, topGenresRaw
   ] = await Promise.all([
     prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "view_logs" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
     prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "users" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
     prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "series" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
     prisma.$queryRaw<{date: Date, count: bigint}[]>`SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count FROM "chapters" WHERE "createdAt" >= ${chartStart} GROUP BY 1`,
-    prisma.series.findMany({ orderBy: { totalViews: 'desc' }, take: 10, select: { title: true, totalViews: true, totalBookmarks: true } }),
-    prisma.chapter.findMany({ orderBy: { totalViews: 'desc' }, take: 10, select: { series: { select: { title: true } }, number: true, title: true, label: true, totalViews: true } }),
-    prisma.genre.findMany({ orderBy: { seriesCount: 'desc' }, take: 10, select: { name: true, seriesCount: true } }),
-    prisma.session.findMany({ orderBy: { expires: 'desc' }, take: 1000, select: { userAgent: true, ipAddress: true } })
+    
+    // Series, Chapters, and Genres aggregated by real views in the date range
+    prisma.viewLog.groupBy({
+      by: ['seriesId'],
+      _count: { id: true },
+      where: { createdAt: { gte: chartStart } },
+      orderBy: { _count: { id: 'desc' } },
+      take: 10
+    }),
+    prisma.viewLog.groupBy({
+      by: ['chapterId'],
+      _count: { id: true },
+      where: { createdAt: { gte: chartStart } },
+      orderBy: { _count: { id: 'desc' } },
+      take: 10
+    }),
+    prisma.$queryRaw<any[]>`
+      SELECT g.name, COUNT(v.id) as count
+      FROM "view_logs" v
+      JOIN "series" s ON v."seriesId" = s.id
+      JOIN "_GenreToSeries" gs ON s.id = gs."B"
+      JOIN "genres" g ON gs."A" = g.id
+      WHERE v."createdAt" >= ${chartStart}
+      GROUP BY g.id, g.name
+      ORDER BY count DESC
+      LIMIT 10
+    `
   ]);
 
   const getDatesBetween = (start: Date, end: Date) => {
@@ -186,56 +209,91 @@ async function fetchAnalyticsDataInternal(range: string) {
   chartChapters.forEach(c => { chaptersByDay[c.date.toISOString().split('T')[0]] = Number(c.count); });
   const publishingData = timelineDates.map(date => ({ date, series: seriesByDay[date] || 0, chapters: chaptersByDay[date] || 0 }));
 
-  const topSeries = topSeriesRaw.map(s => ({ name: s.title, views: s.totalViews, bookmarks: s.totalBookmarks }));
-  const mostReadChapters = mostReadChaptersRaw.map(c => {
-    const chLabel = c.label ? c.label : (c.number !== null ? `Ch ${c.number}` : (c.title || 'Latest'));
-    return { name: `${c.series.title} - ${chLabel}`, views: c.totalViews };
-  });
-  const topGenres = topGenresRaw.map(g => ({ name: g.name, count: g.seriesCount }));
-
-  const deviceStatsMap = { Mobile: 0, Desktop: 0, Tablet: 0 };
-  const countryStatsMap: Record<string, number> = {};
-  const mockCountries = ['USA', 'Brazil', 'Indonesia', 'Philippines', 'UK', 'France', 'Germany', 'India'];
-
-  sessionsRaw.forEach((session, i) => {
-    const ua = session.userAgent?.toLowerCase() || '';
-    if (ua.includes('mobi') || ua.includes('android') || ua.includes('iphone')) deviceStatsMap.Mobile++;
-    else if (ua.includes('tablet') || ua.includes('ipad')) deviceStatsMap.Tablet++;
-    else deviceStatsMap.Desktop++;
-
-    const country = mockCountries[i % mockCountries.length];
-    countryStatsMap[country] = (countryStatsMap[country] || 0) + 1;
-  });
-
-  const deviceStats = Object.entries(deviceStatsMap).map(([name, value]) => ({ name, value })).filter(d => d.value > 0);
-  const countryStats = Object.entries(countryStatsMap).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-
-  const retentionData = [
-    { cohort: '2026-06-01', week0: 100, week1: 60, week2: 45, week3: 30, week4: 25 },
-    { cohort: '2026-06-08', week0: 100, week1: 65, week2: 50, week3: 35, week4: 20 },
-    { cohort: '2026-06-15', week0: 100, week1: 70, week2: 55, week3: 40, week4: 30 },
-    { cohort: '2026-06-22', week0: 100, week1: 72, week2: 60, week3: 45, week4: 35 },
-  ];
-
-  const searchLogs = await prisma.auditLog.findMany({
-    where: { action: 'SEARCH', createdAt: { gte: chartStart } },
-    select: { metadata: true }
+  const seriesIds = topSeriesRaw.map(v => v.seriesId);
+  const seriesData = await prisma.series.findMany({
+    where: { id: { in: seriesIds } },
+    select: { id: true, title: true, totalBookmarks: true }
   });
   
-  const searchQueries: Record<string, number> = {};
-  if (searchLogs.length > 0) {
-    searchLogs.forEach(log => {
-      const query = (log.metadata as any)?.query;
-      if (query) searchQueries[query] = (searchQueries[query] || 0) + 1;
-    });
-  } else {
-    searchQueries['solo leveling'] = 245;
-    searchQueries['martial peak'] = 180;
-    searchQueries['romance'] = 150;
-    searchQueries['magic'] = 95;
-    searchQueries['system'] = 80;
-  }
-  const searchAnalytics = Object.entries(searchQueries).map(([query, count]) => ({ query, count })).sort((a, b) => b.count - a.count).slice(0, 10);
+  const topSeries = topSeriesRaw.map(v => {
+    const s = seriesData.find(sd => sd.id === v.seriesId);
+    return {
+      name: s?.title || 'Unknown',
+      views: v._count.id,
+      bookmarks: s?.totalBookmarks || 0
+    };
+  });
+
+  const chapterIds = mostReadChaptersRaw.map(v => v.chapterId);
+  const chapterData = await prisma.chapter.findMany({
+    where: { id: { in: chapterIds } },
+    select: { id: true, series: { select: { title: true } }, number: true, title: true, label: true }
+  });
+
+  const mostReadChapters = mostReadChaptersRaw.map(v => {
+    const c = chapterData.find(cd => cd.id === v.chapterId);
+    if (!c) return { name: 'Unknown', views: v._count.id };
+    const chLabel = c.label ? c.label : (c.number !== null ? `Ch ${c.number}` : (c.title || 'Latest'));
+    return { name: `${c.series?.title || 'Unknown'} - ${chLabel}`, views: v._count.id };
+  });
+
+  const topGenres = topGenresRaw.map(g => ({ name: String(g.name), count: Number(g.count) }));
+
+  // Device & Country Stats are empty because JWT auth does not use the Session table,
+  // and ViewLog lacks userAgent/geolocation.
+  const deviceStats: any[] = [];
+  const countryStats: any[] = [];
+
+  const rawRetention = await prisma.$queryRaw<any[]>`
+    WITH cohort_users AS (
+      SELECT id, DATE_TRUNC('week', "createdAt") AS cohort_week
+      FROM "users"
+      WHERE "createdAt" >= CURRENT_DATE - INTERVAL '4 weeks'
+    ),
+    user_activity AS (
+      SELECT "userId", DATE_TRUNC('week', "createdAt") AS activity_week
+      FROM "view_logs"
+      WHERE "userId" IS NOT NULL AND "createdAt" >= CURRENT_DATE - INTERVAL '4 weeks'
+      GROUP BY 1, 2
+    )
+    SELECT 
+      c.cohort_week,
+      COUNT(DISTINCT c.id) as cohort_size,
+      COUNT(DISTINCT CASE WHEN a.activity_week = c.cohort_week THEN c.id END) as week0,
+      COUNT(DISTINCT CASE WHEN a.activity_week = c.cohort_week + INTERVAL '1 week' THEN c.id END) as week1,
+      COUNT(DISTINCT CASE WHEN a.activity_week = c.cohort_week + INTERVAL '2 weeks' THEN c.id END) as week2,
+      COUNT(DISTINCT CASE WHEN a.activity_week = c.cohort_week + INTERVAL '3 weeks' THEN c.id END) as week3,
+      COUNT(DISTINCT CASE WHEN a.activity_week = c.cohort_week + INTERVAL '4 weeks' THEN c.id END) as week4
+    FROM cohort_users c
+    LEFT JOIN user_activity a ON c.id = a."userId"
+    GROUP BY c.cohort_week
+    ORDER BY c.cohort_week ASC
+  `;
+
+  const retentionData = rawRetention.map(r => {
+    const size = Number(r.cohort_size) || 1;
+    return {
+      cohort: r.cohort_week.toISOString().split('T')[0],
+      week0: Math.round((Number(r.week0) / size) * 100),
+      week1: Math.round((Number(r.week1) / size) * 100),
+      week2: Math.round((Number(r.week2) / size) * 100),
+      week3: Math.round((Number(r.week3) / size) * 100),
+      week4: Math.round((Number(r.week4) / size) * 100),
+    };
+  });
+
+  const searchLogsRaw = await prisma.$queryRaw<any[]>`
+    SELECT metadata->>'query' as query, COUNT(*) as count
+    FROM "audit_logs"
+    WHERE action = 'SEARCH' AND "createdAt" >= ${chartStart}
+    GROUP BY metadata->>'query'
+    ORDER BY count DESC
+    LIMIT 10
+  `;
+  const searchAnalytics = searchLogsRaw.filter(r => r.query).map(r => ({
+    query: String(r.query),
+    count: Number(r.count)
+  }));
   const readingDistributionData = topGenres.slice(0, 5).map(g => ({ name: g.name, value: g.count }));
 
   return {
