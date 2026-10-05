@@ -177,7 +177,7 @@ export async function createChapter(seriesId: string, formData: FormData, preven
   }
 }
 
-export async function updateChapter(id: string, seriesId: string, formData: FormData) {
+export async function updateChapter(id: string, seriesId: string, formData: FormData, preventRedirect: boolean = false) {
   await checkAdmin();
 
   const existing = await prisma.chapter.findUnique({ where: { id } });
@@ -209,18 +209,20 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
 
   const slug = sourceType === 'DOWNLOAD' ? `chapter-${label!.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : `chapter-${number}`;
 
+  let urlsToDeleteFromR2: string[] = [];
+
   try {
     await prisma.$transaction(async (tx) => {
       // 1. Delete existing images if we are updating an uploaded archive
       // Or if switching from UPLOAD to DOWNLOAD, clear old images
       if (sourceType === 'UPLOAD' || existing.sourceType === 'UPLOAD') {
         const oldImages = await tx.chapterImage.findMany({ where: { chapterId: id } });
-        if (oldImages.length > 0) {
-          const urlsToDelete = oldImages.map(img => img.imageUrl).filter(url => url && !url.includes('googleusercontent.com') && !url.includes('drive.google.com'));
-          for (const url of urlsToDelete) {
-            await deleteFromR2(url).catch(e => console.error('Failed to delete object from R2:', e));
-          }
-        }
+        
+        const newUrlsSet = new Set(imageUrls);
+        urlsToDeleteFromR2 = oldImages
+          .map(img => img.imageUrl)
+          .filter(url => url && !newUrlsSet.has(url) && !url.includes('googleusercontent.com') && !url.includes('drive.google.com'));
+
         await tx.chapterImage.deleteMany({ where: { chapterId: id } });
       }
 
@@ -248,6 +250,11 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
       });
     });
 
+    // Delete orphaned images from R2 asynchronously to not block response
+    if (urlsToDeleteFromR2.length > 0) {
+      Promise.allSettled(urlsToDeleteFromR2.map(url => deleteFromR2(url))).catch(e => console.error('Background R2 deletion failed:', e));
+    }
+
     if (isPublished) {
       await prisma.series.update({
         where: { id: seriesId },
@@ -267,7 +274,12 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
     }
     throw error;
   }
-  redirect(`/admin/series/${seriesId}/chapters`);
+  
+  if (!preventRedirect) {
+    redirect(`/admin/series/${seriesId}/chapters`);
+  } else {
+    return { success: true };
+  }
 }
 
 export async function createBulkChapters(seriesId: string, chapters: { label: string; url: string; provider: string }[], isPublished: boolean = true) {

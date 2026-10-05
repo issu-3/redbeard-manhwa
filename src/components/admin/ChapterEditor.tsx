@@ -75,7 +75,10 @@ const DOWNLOAD_PROVIDERS = [
   'Custom'
 ];
 
+import { useRouter } from 'next/navigation';
+
 export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { seriesId: string; chapter?: any; initialImages?: any[] }) {
+  const router = useRouter();
   const [sourceType, setSourceType] = useState(chapter?.sourceType || (!chapter ? 'GOOGLE_DRIVE' : 'UPLOAD'));
   const [images, setImages] = useState(initialImages.map((img: any, i: number) => ({ id: `img-${Date.now()}-${i}`, url: img.imageUrl })));
   const [isPending, startTransition] = useTransition();
@@ -129,17 +132,19 @@ export function ChapterEditor({ seriesId, chapter, initialImages = [] }: { serie
       try {
         let res;
         if (chapter) {
-          res = await updateChapter(chapter.id, seriesId, formData);
+          res = await updateChapter(chapter.id, seriesId, formData, true);
         } else {
-          res = await createChapter(seriesId, formData);
+          res = await createChapter(seriesId, formData, true);
         }
         
         if (res?.error) {
           toast.error(res.error);
         } else {
           toast.success(chapter ? 'Chapter updated successfully!' : 'Chapter created successfully!');
+          router.push(`/admin/series/${seriesId}/chapters`);
         }
       } catch (err: any) {
+        console.error(err);
         toast.error('An unexpected error occurred.');
       }
     });
