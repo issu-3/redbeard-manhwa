@@ -144,7 +144,7 @@ export async function fetchSeoDashboardData() {
   let hasSitemap = false;
   try {
     hasRobots = fs.existsSync(path.join(process.cwd(), 'public', 'robots.txt')) || fs.existsSync(path.join(process.cwd(), 'src', 'app', 'robots.ts'));
-    hasSitemap = fs.existsSync(path.join(process.cwd(), 'public', 'sitemap.xml')) || fs.existsSync(path.join(process.cwd(), 'src', 'app', 'sitemap.ts'));
+    hasSitemap = fs.existsSync(path.join(process.cwd(), 'public', 'sitemap.xml')) || fs.existsSync(path.join(process.cwd(), 'src', 'app', 'sitemap.ts')) || fs.existsSync(path.join(process.cwd(), 'src', 'app', 'sitemap.xml', 'route.ts'));
   } catch {
     // fs operations may fail in some serverless environments
   }

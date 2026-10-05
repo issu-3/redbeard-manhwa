@@ -8,6 +8,7 @@ export async function GET() {
   const sitemaps = [
     `${baseUrl}/sitemap-feed/sitemap/static.xml`,
     `${baseUrl}/sitemap-feed/sitemap/series.xml`,
+    `${baseUrl}/sitemap-feed/sitemap/chapters.xml`,
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
