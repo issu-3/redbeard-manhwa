@@ -14,6 +14,7 @@ export async function generateSitemaps() {
   return [
     { id: 'static' },
     { id: 'series' },
+    { id: 'chapters' },
   ];
 }
 
@@ -66,6 +67,26 @@ export default async function sitemap(props: {
           changeFrequency: 'daily' as const,
           priority: 0.9,
         }));
+    }
+
+    // ── Chapters ──
+    if (id === 'chapters') {
+      const chapters = await prisma.chapter.findMany({
+        where: { isPublished: true },
+        select: { slug: true, number: true, updatedAt: true, series: { select: { slug: true } } },
+      });
+
+      return chapters
+        .filter((c) => c.series?.slug && (c.slug || c.number != null))
+        .map((c) => {
+          const cSlug = c.slug?.trim() ? c.slug : String(c.number);
+          return {
+            url: `${baseUrl}/series/${c.series.slug}/chapter/${cSlug}`,
+            lastModified: c.updatedAt,
+            changeFrequency: 'weekly' as const,
+            priority: 0.8,
+          };
+        });
     }
   } catch (error) {
     console.error(`Failed to generate sitemap for id ${id}:`, error);

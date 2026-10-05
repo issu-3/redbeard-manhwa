@@ -49,17 +49,28 @@ export async function fetchSeoDashboardData() {
     }
   };
 
-  const allTitles = new Set<string>();
-  const allDescs = new Set<string>();
+  const titleCounts = new Map<string, number>();
+  const descCounts = new Map<string, number>();
   seriesRaw.forEach(s => {
     const seo = getSeoData(s);
-    if (seo.title && seo.title.trim()) allTitles.add(seo.title.trim());
-    if (seo.description && seo.description.trim()) allDescs.add(seo.description.trim());
+    if (seo.title && seo.title.trim()) {
+      const t = seo.title.trim();
+      titleCounts.set(t, (titleCounts.get(t) || 0) + 1);
+    }
+    if (seo.description && seo.description.trim()) {
+      const d = seo.description.trim();
+      descCounts.set(d, (descCounts.get(d) || 0) + 1);
+    }
   });
+
+  const duplicateTitlesSet = new Set<string>();
+  const duplicateDescsSet = new Set<string>();
+  titleCounts.forEach((count, title) => { if (count > 1) duplicateTitlesSet.add(title); });
+  descCounts.forEach((count, desc) => { if (count > 1) duplicateDescsSet.add(desc); });
 
   const seriesList = seriesRaw.map(s => {
     const seo = getSeoData(s);
-    const scoreData = calculateSeriesSeoScore(seo, s.slug, allTitles, allDescs);
+    const scoreData = calculateSeriesSeoScore(seo, s.slug, duplicateTitlesSet, duplicateDescsSet);
     return {
       id: s.id,
       title: s.title,
@@ -93,11 +104,22 @@ export async function fetchSeoDashboardData() {
   const chaptersWithSeoCount = chaptersRaw.filter(hasSeo).length;
   const seriesScore = seriesList.length > 0 ? Math.round(seriesList.reduce((acc, s) => acc + (s.seoScore || 0), 0) / seriesList.length) : 100;
   const chapterScore = chaptersRaw.length > 0 ? Math.round((chaptersWithSeoCount / chaptersRaw.length) * 100) : 100;
-  
   const metadataScore = Math.round((seriesScore + chapterScore) / 2);
-  const technicalScore = 90;
-  const contentScore = 85;
-  const overallScore = Math.round((metadataScore + technicalScore + contentScore) / 3);
+
+  let totalContentScore = 0;
+  if (seriesRaw.length === 0) {
+    totalContentScore = 100;
+  } else {
+    seriesList.forEach(s => {
+      let sScore = 100;
+      if (s.wordCount === 0) sScore -= 40;
+      else if (s.wordCount < 20) sScore -= 20;
+      const rawS = seriesRaw.find(r => r.id === s.id);
+      if (rawS && rawS.chapterCount === 0) sScore -= 30;
+      totalContentScore += Math.max(0, sScore);
+    });
+  }
+  const contentScore = seriesList.length > 0 ? Math.round(totalContentScore / seriesList.length) : 100;
 
   const chapterList = chaptersRaw.map(c => {
     const seo = getSeoData(c);
@@ -159,7 +181,15 @@ export async function fetchSeoDashboardData() {
     { name: 'Indexability', status: nonIndexable > 0 ? 'warning' : 'pass' },
   ];
 
-  const totalImpressions = totalViewsData._sum.totalViews || 0;
+  const technicalScore = Math.round(technicalAudit.reduce((acc, curr) => {
+    if (curr.status === 'pass') return acc + (100 / technicalAudit.length);
+    if (curr.status === 'warning') return acc + (50 / technicalAudit.length);
+    return acc;
+  }, 0));
+
+  const overallScore = Math.round((metadataScore + technicalScore + contentScore) / 3);
+
+  const totalImpressions = totalViewsData?._sum?.totalViews || 0;
   const uniqueIps = viewLogs.reduce((acc, curr) => acc + Number(curr.count), 0);
   const ctr = totalImpressions > 0 ? ((uniqueIps / totalImpressions) * 100).toFixed(1) : '0';
 
@@ -186,11 +216,14 @@ export async function fetchSeoDashboardData() {
     }
   });
 
-  const timelineData = Object.keys(days).map(date => ({
-    date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
-    score: overallScore,
-    traffic: days[date]
-  }));
+  const timelineData = Object.keys(days).map((date, index) => {
+    const isToday = index === 6;
+    return {
+      date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+      ...(isToday ? { score: overallScore } : {}), // Only include score for today to avoid fake historical data
+      traffic: days[date]
+    };
+  });
 
   const aiSuggestions: Array<{title: string, desc: string}> = [];
   const shortTitles = seriesList.filter(s => s.title.length < 10);
