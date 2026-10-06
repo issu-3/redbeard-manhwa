@@ -17,6 +17,19 @@ export async function GET(
       return new NextResponse('Invalid page index', { status: 400 });
     }
     
+    // Parse resolve params for Cloudflare Worker
+    const url = new URL(request.url);
+    const isResolve = url.searchParams.get('resolve') === 'true';
+    
+    let workerSecret = request.headers.get('Authorization');
+    if (workerSecret?.startsWith('Bearer ')) {
+      workerSecret = workerSecret.slice(7);
+    }
+    
+    if (isResolve && process.env.WORKER_SECRET && workerSecret !== process.env.WORKER_SECRET) {
+      return new NextResponse('Unauthorized worker', { status: 401 });
+    }
+
     // 1. Fetch the chapter
     const chapter = await prisma.chapter.findUnique({
       where: { id },
@@ -77,6 +90,14 @@ export async function GET(
         }
         
         const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media${authHeader ? '' : `&key=${process.env.GOOGLE_API_KEY}`}`;
+
+        if (isResolve) {
+          return NextResponse.json(
+            { type: 'gdrive', url: driveUrl, headers: authHeader ? { Authorization: authHeader } : {}, cacheKey },
+            { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+          );
+        }
+
         console.log('DEBUG route: fetching driveUrl:', driveUrl);
         const driveRes = await fetch(driveUrl, { headers: authHeader ? { Authorization: authHeader } : {}, cache: 'no-store' });
         console.log('DEBUG route: driveRes ok?', driveRes.ok);
@@ -87,11 +108,6 @@ export async function GET(
         
         const buffer = Buffer.from(await driveRes.arrayBuffer());
         const mimeType = driveRes.headers.get('content-type') || 'image/jpeg';
-        
-        // 3. Upload to R2 Cache (fire and forget)
-        try {
-          uploadToR2(cacheKey, buffer, mimeType).catch(e => console.error('R2 cache fail:', e));
-        } catch (e) {}
 
         // 4. Return image
         const responseHeaders = new Headers();
@@ -139,6 +155,13 @@ export async function GET(
           return new NextResponse('Page not found in archive', { status: 404 });
         }
 
+        if (isResolve) {
+          return NextResponse.json(
+            { type: 'cbz', url: driveUrl, headers, pageInfo, cacheKey },
+            { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+          );
+        }
+
         // 4. Extract specific page
         const imageBuffer = await getRemoteCbzPage(driveUrl, headers, pageInfo);
 
@@ -148,11 +171,6 @@ export async function GET(
         else if (nameLower.endsWith('.webp')) mimeType = 'image/webp';
         else if (nameLower.endsWith('.gif')) mimeType = 'image/gif';
         else if (nameLower.endsWith('.avif')) mimeType = 'image/avif';
-
-        // 5. Upload to R2 Cache (fire and forget)
-        try {
-          uploadToR2(cacheKey, Buffer.from(imageBuffer), mimeType).catch(e => console.error('R2 cache fail:', e));
-        } catch (e) {}
 
         const responseHeaders = new Headers();
         responseHeaders.set('Content-Type', mimeType);
@@ -178,6 +196,14 @@ export async function GET(
       }
 
       const isPresigned = finalUrl !== imageUrl;
+
+      if (isResolve) {
+        return NextResponse.json(
+          { type: 'redirect', url: finalUrl, cacheKey: `cache/chapters/${chapter.id}/pages/${index}` },
+          { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+        );
+      }
+
       return NextResponse.redirect(finalUrl, {
         status: 302,
         headers: { 'Cache-Control': isPresigned ? 'public, max-age=3600' : 'public, max-age=31536000, immutable' }
@@ -233,6 +259,13 @@ export async function GET(
       return new NextResponse('Page not found', { status: 404 });
     }
 
+    if (isResolve) {
+      return NextResponse.json(
+        { type: 'cbz', url: resolved.downloadUrl, headers, pageInfo, cacheKey },
+        { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+      );
+    }
+
     // 6. Fetch the specific page from source
     const imageBuffer = await getRemoteCbzPage(resolved.downloadUrl, headers, pageInfo);
 
@@ -243,15 +276,6 @@ export async function GET(
     else if (nameLower.endsWith('.webp')) mimeType = 'image/webp';
     else if (nameLower.endsWith('.gif')) mimeType = 'image/gif';
     else if (nameLower.endsWith('.avif')) mimeType = 'image/avif';
-
-    // Fire-and-forget: Cache it in R2
-    try {
-      uploadToR2(cacheKey, Buffer.from(imageBuffer), mimeType).catch(e => {
-        console.error('Failed to cache page in R2:', e);
-      });
-    } catch (e) {
-      console.error('Failed to initiate R2 cache upload:', e);
-    }
 
     const responseHeaders = new Headers();
     responseHeaders.set('Content-Type', mimeType);

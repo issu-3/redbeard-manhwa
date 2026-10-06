@@ -114,10 +114,14 @@ const getCachedChapterDataInternal = unstable_cache(
       downloadProvider: chapter.downloadProvider || undefined,
       images: chapter.images?.map((img: any) => {
         const directUrl = getDirectCdnUrl(img.imageUrl);
+        let defaultUrl = `/api/chapter/${chapter.id}/page/${img.pageNumber - 1}`;
+        if (process.env.NEXT_PUBLIC_IMAGE_WORKER_URL) {
+          defaultUrl = `${process.env.NEXT_PUBLIC_IMAGE_WORKER_URL}${defaultUrl}`;
+        }
         return {
           id: img.id,
           pageNumber: img.pageNumber,
-          imageUrl: directUrl || `/api/chapter/${chapter.id}/page/${img.pageNumber - 1}`,
+          imageUrl: directUrl || defaultUrl,
           width: img.width || undefined,
           height: img.height || undefined,
           blurHash: img.blurHash || undefined,
@@ -310,10 +314,11 @@ export default async function ChapterPage({
         const fileSize = await getRemoteFileSize(resolved.downloadUrl, resolvedHeaders);
         const metadata = await getRemoteCbzMetadata(resolved.downloadUrl, resolvedHeaders, fileSize);
 
+        const workerUrl = process.env.NEXT_PUBLIC_IMAGE_WORKER_URL || '';
         chapter.images = metadata.pages.map((p: any) => ({
           id: `cbz-page-${p.index}`,
           pageNumber: p.index + 1,
-          imageUrl: `/api/chapter/${chapter.id}/page/${p.index}`,
+          imageUrl: `${workerUrl}/api/chapter/${chapter.id}/page/${p.index}`,
           width: 800,
           height: 1200
         })) as any;

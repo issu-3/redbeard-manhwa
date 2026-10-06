@@ -130,10 +130,13 @@ export function AndroidReaderView({
             const data = await res.json();
             if (data.success && (data.fileType === 'CBZ' || data.fileType === 'IMAGES')) {
               setIsCbz(true);
+              const workerUrl = process.env.NEXT_PUBLIC_IMAGE_WORKER_URL || API_BASE_URL;
               const images = data.pages.map((p: any) => ({
                 // IMAGES type: use the direct Vercel Blob URL
                 // CBZ type: use the page extraction API
-                url: p.imageUrl || `${API_BASE_URL}/api/chapter/${chapterId}/page/${p.index}`,
+                url: p.imageUrl || (process.env.NEXT_PUBLIC_IMAGE_WORKER_URL 
+                  ? `${workerUrl}/api/chapter/${chapterId}/page/${p.index}` 
+                  : `${API_BASE_URL}/api/chapter/${chapterId}/page/${p.index}`),
                 width: p.width || 800,
                 height: p.height || 1200
               }));

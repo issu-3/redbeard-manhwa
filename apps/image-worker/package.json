@@ -1,0 +1,18 @@
+{
+  "name": "image-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for Image Delivery",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240222.0",
+    "typescript": "^5.0.0",
+    "wrangler": "^3.0.0"
+  }
+}

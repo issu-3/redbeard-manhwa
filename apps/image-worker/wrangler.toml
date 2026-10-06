@@ -1,0 +1,9 @@
+name = "redbeard-image-worker"
+main = "src/index.ts"
+compatibility_date = "2024-03-20"
+
+[vars]
+ORIGIN_URL = "https://redbeard.store"
+
+# [cache]
+# Cache configurations are handled in the script using Cache API.
