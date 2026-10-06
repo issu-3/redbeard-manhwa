@@ -72,6 +72,12 @@ export async function GET(
           console.log('DEBUG route: calling getCachedObjectUrl with R2_ENDPOINT:', process.env.R2_ENDPOINT);
           const cachedUrl = await getCachedObjectUrl(cacheKey);
           if (cachedUrl) {
+            if (isResolve) {
+              return NextResponse.json(
+                { type: 'redirect', url: cachedUrl, cacheKey },
+                { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+              );
+            }
             return NextResponse.redirect(cachedUrl, { status: 302, headers: { 'Cache-Control': 'public, max-age=3600' } });
           }
         } catch (e: any) {
@@ -124,6 +130,12 @@ export async function GET(
         // 1. Check R2 Cache
         const cachedUrl = await getCachedObjectUrl(cacheKey);
         if (cachedUrl) {
+          if (isResolve) {
+            return NextResponse.json(
+              { type: 'redirect', url: cachedUrl, cacheKey },
+              { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+            );
+          }
           return NextResponse.redirect(cachedUrl, { status: 302, headers: { 'Cache-Control': 'public, max-age=3600' } });
         }
 
@@ -221,6 +233,12 @@ export async function GET(
     // Check R2 Cache first
     const cachedUrl = await getCachedObjectUrl(cacheKey);
     if (cachedUrl) {
+      if (isResolve) {
+        return NextResponse.json(
+          { type: 'redirect', url: cachedUrl, cacheKey },
+          { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+        );
+      }
       return NextResponse.redirect(cachedUrl, {
         status: 302,
         headers: { 'Cache-Control': 'public, max-age=3600' }

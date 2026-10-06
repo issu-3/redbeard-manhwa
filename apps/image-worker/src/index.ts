@@ -46,6 +46,12 @@ export default {
         return new Response('Failed to resolve image', { status: resolveRes.status });
       }
 
+      const contentType = resolveRes.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        console.error(`Unexpected Content-Type from resolve endpoint: ${contentType}`);
+        return new Response(`Expected JSON metadata but got ${contentType}`, { status: 502 });
+      }
+
       const config = await resolveRes.json() as any;
 
       // 3. Process based on configuration
