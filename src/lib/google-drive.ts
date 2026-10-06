@@ -52,6 +52,12 @@ export async function getGoogleDriveConfig(): Promise<{
  */
 export async function getAccessToken(credentials: ServiceAccountCredentials): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
+
+  const g = globalThis as any;
+  if (g._googleDriveToken && g._googleDriveTokenExp > now + 300) {
+    return g._googleDriveToken;
+  }
+
   const payload = {
     iss: credentials.client_email,
     sub: credentials.client_email,
@@ -79,6 +85,10 @@ export async function getAccessToken(credentials: ServiceAccountCredentials): Pr
   }
 
   const data = await response.json();
+  
+  g._googleDriveToken = data.access_token;
+  g._googleDriveTokenExp = now + 3600;
+
   return data.access_token;
 }
 

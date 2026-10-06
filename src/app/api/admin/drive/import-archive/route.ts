@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { getGoogleDriveConfig, getAccessToken } from '@/lib/google-drive';
-import JSZip from 'jszip';
+import { getRemoteFileSize, getRemoteCbzMetadata } from '@/lib/cbz-remote';
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,41 +31,33 @@ export async function POST(req: NextRequest) {
     const authQuery = authHeader ? '' : `&key=${finalApiKey}`;
     const headers: Record<string, string> = authHeader ? { Authorization: authHeader } : {};
 
-    // 1. Download the archive from Google Drive
-    const driveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media${authQuery}`, { headers, cache: 'no-store' });
+    // 1. Fetch metadata using range requests instead of downloading the whole archive
+    const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media${authQuery}`;
     
-    if (!driveRes.ok) {
-       const err = await driveRes.text();
-       console.error("Drive download error:", err);
-       return NextResponse.json({ error: `Failed to download archive from Google Drive.` }, { status: 400 });
+    let fileSize: number;
+    try {
+      fileSize = await getRemoteFileSize(driveUrl, headers);
+    } catch (e: any) {
+      console.error("Drive file size error:", e);
+      return NextResponse.json({ error: `Failed to access archive from Google Drive.` }, { status: 400 });
     }
 
-    const arrayBuffer = await driveRes.arrayBuffer();
+    let metadata;
+    try {
+      metadata = await getRemoteCbzMetadata(driveUrl, headers, fileSize);
+    } catch (e: any) {
+      console.error("Drive metadata error:", e);
+      return NextResponse.json({ error: `Failed to parse archive metadata from Google Drive.` }, { status: 400 });
+    }
 
-    // 2. Extract with JSZip
-    const zip = await JSZip.loadAsync(arrayBuffer);
-    const imageFiles: JSZip.JSZipObject[] = [];
-
-    zip.forEach((relativePath, file) => {
-      if (!file.dir && /\.(jpe?g|png|webp|gif)$/i.test(file.name)) {
-        // ignore macOS hidden files
-        if (!file.name.includes('__MACOSX') && !file.name.split('/').pop()?.startsWith('.')) {
-           imageFiles.push(file);
-        }
-      }
-    });
-
-    if (imageFiles.length === 0) {
+    if (!metadata.pages || metadata.pages.length === 0) {
        return NextResponse.json({ error: 'No images found in the archive.' }, { status: 400 });
     }
-
-    // Sort images naturally
-    imageFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
 
     // 3. We no longer upload extracted images to R2 during import.
     // Instead, we return stable source references so Google Drive remains the MASTER source.
     // The reader API will lazily extract and cache these to R2 on the first read.
-    const urls = imageFiles.map(file => `gdrive-archive:${fileId}:${file.name}`);
+    const urls = metadata.pages.map(page => `gdrive-archive:${fileId}:${page.name}`);
 
     return NextResponse.json({ success: true, urls });
   } catch (error: any) {
