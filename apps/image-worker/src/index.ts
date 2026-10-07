@@ -104,7 +104,8 @@ export default {
 
     // 1. Check Cache
     const cache = caches.default;
-    const cacheKey = new Request(url.toString(), {
+    const cleanCacheUrl = new URL(url.pathname, url.origin);
+    const cacheKey = new Request(cleanCacheUrl.toString(), {
       method: 'GET',
     });
     
@@ -142,7 +143,23 @@ export default {
 
       // 3. Process based on configuration
       if (config.type === 'redirect') {
-        response = Response.redirect(config.url, 302);
+        const r2Res = await fetch(config.url, {
+          method: 'GET',
+        });
+
+        if (!r2Res.ok) {
+          return new Response('Failed to fetch image from storage', { status: r2Res.status });
+        }
+
+        const mimeType = r2Res.headers.get('content-type') || 'image/jpeg';
+        response = new Response(r2Res.body, {
+          status: 200,
+          headers: {
+            'Content-Type': mimeType,
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'CDN-Cache-Control': 'max-age=31536000',
+          }
+        });
       } else if (config.type === 'gdrive') {
         const driveRes = await fetch(config.url, {
           method: 'GET',

@@ -164,7 +164,6 @@ export function Header() {
                 aria-label="Notifications"
               >
                 <Bell className="h-[18px] w-[18px]" />
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
               </Link>
             )}
 
