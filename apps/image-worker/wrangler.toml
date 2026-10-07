@@ -7,3 +7,7 @@ ORIGIN_URL = "https://redbeard.store"
 
 # [cache]
 # Cache configurations are handled in the script using Cache API.
+
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "redbeard"

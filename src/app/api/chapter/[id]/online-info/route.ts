@@ -75,6 +75,10 @@ export async function GET(
       return NextResponse.json({
         success: true,
         ...metadata
+      }, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
+        }
       });
     }
 
@@ -98,7 +102,10 @@ export async function GET(
     // 5. Check cache
     const cacheKey = chapter.id;
     if (metadataCache.has(cacheKey)) {
-      return NextResponse.json({ success: true, ...metadataCache.get(cacheKey) });
+      return NextResponse.json(
+        { success: true, ...metadataCache.get(cacheKey) },
+        { headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' } }
+      );
     }
 
     // 6. Fetch CBZ metadata
@@ -118,6 +125,10 @@ export async function GET(
     return NextResponse.json({
       success: true,
       ...metadata
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
+      }
     });
   } catch (error: any) {
     console.error('CBZ online-info error:', error);

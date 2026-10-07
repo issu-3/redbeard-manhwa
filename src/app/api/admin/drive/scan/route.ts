@@ -51,6 +51,7 @@ export async function POST(req: Request) {
     const subfolders = allFiles.filter((f: any) => f.mimeType === 'application/vnd.google-apps.folder');
     let directImages = allFiles.filter((f: any) => f.mimeType !== 'application/vnd.google-apps.folder' && (/\.(jpe?g|png|webp|gif)$/i.test(f.name) || f.mimeType.startsWith('image/')));
     const archives = allFiles.filter((f: any) => /\.(cbz|zip)$/i.test(f.name) || f.mimeType === 'application/zip' || f.mimeType === 'application/x-zip-compressed' || f.mimeType === 'application/vnd.comicbook+zip');
+    const pdfs = allFiles.filter((f: any) => /\.pdf$/i.test(f.name) || f.mimeType === 'application/pdf');
 
     const results = [];
 
@@ -78,6 +79,19 @@ export async function POST(req: Request) {
           });
        }
     }
+    
+    // Case 2b: Folder contains PDFs (Bulk PDF mode)
+    if (pdfs.length > 0) {
+       pdfs.sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+       for (const pdf of pdfs) {
+          results.push({
+             id: pdf.id,
+             name: pdf.name,
+             number: parseChapterNumber(pdf.name),
+             images: [{ id: pdf.id, name: pdf.name, mimeType: pdf.mimeType }]
+          });
+       }
+    }
 
     // Case 3: Folder contains subfolders (Bulk Import mode)
     if (subfolders.length > 0) {
@@ -89,20 +103,46 @@ export async function POST(req: Request) {
        });
 
        for (const chap of chapterData) {
-          const chapFilesRes = await fetch(`https://www.googleapis.com/drive/v3/files?q='${chap.id}'+in+parents+and+mimeType!='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name,mimeType)&pageSize=1000${authQuery}`, { headers, cache: 'no-store' });
-          if (chapFilesRes.ok) {
-             const chapFilesData = await chapFilesRes.json();
-             let chapImages = chapFilesData.files || [];
-             
-             chapImages = chapImages.filter((f: any) => /\.(jpe?g|png|webp|gif)$/i.test(f.name) || f.mimeType.startsWith('image/'));
-             chapImages.sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
-             
-             if (chapImages.length > 0) {
-               results.push({
-                  ...chap,
-                  images: chapImages.map((i: any) => ({ id: i.id, name: i.name, mimeType: i.mimeType }))
-               });
+          try {
+             const chapFilesRes = await fetch(`https://www.googleapis.com/drive/v3/files?q='${chap.id}'+in+parents+and+mimeType!='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name,mimeType)&pageSize=1000${authQuery}`, { headers, cache: 'no-store' });
+             if (chapFilesRes.ok) {
+                const chapFilesData = await chapFilesRes.json();
+                const chapFiles = chapFilesData.files || [];
+                
+                const chapArchives = chapFiles.filter((f: any) => /\.(cbz|zip)$/i.test(f.name) || f.mimeType === 'application/zip' || f.mimeType === 'application/x-zip-compressed' || f.mimeType === 'application/vnd.comicbook+zip');
+                const chapPdfs = chapFiles.filter((f: any) => /\.pdf$/i.test(f.name) || f.mimeType === 'application/pdf');
+                const chapImages = chapFiles.filter((f: any) => /\.(jpe?g|png|webp|gif)$/i.test(f.name) || f.mimeType.startsWith('image/'));
+
+                // Prioritize Archives > PDFs > Direct Images to prevent duplicate chapters for the same folder
+                if (chapArchives.length > 0) {
+                  chapArchives.sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+                  results.push({
+                    id: chapArchives[0].id,
+                    name: chap.name,
+                    number: chap.number,
+                    images: [],
+                    isArchive: true
+                  });
+                } else if (chapPdfs.length > 0) {
+                  chapPdfs.sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+                  results.push({
+                    id: chap.id,
+                    name: chap.name,
+                    number: chap.number,
+                    images: [{ id: chapPdfs[0].id, name: chapPdfs[0].name, mimeType: chapPdfs[0].mimeType }]
+                  });
+                } else if (chapImages.length > 0) {
+                  chapImages.sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+                  results.push({
+                    ...chap,
+                    images: chapImages.map((i: any) => ({ id: i.id, name: i.name, mimeType: i.mimeType }))
+                  });
+                }
+             } else {
+                console.warn(`Failed to fetch contents for folder ${chap.name}: ${chapFilesRes.status}`);
              }
+          } catch (err) {
+             console.error(`Exception while fetching contents for folder ${chap.name}`, err);
           }
        }
     }

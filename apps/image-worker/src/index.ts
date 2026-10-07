@@ -1,6 +1,7 @@
 export interface Env {
   ORIGIN_URL: string;
   WORKER_SECRET: string;
+  R2_BUCKET: R2Bucket;
 }
 
 function readUInt16LE(buf: Uint8Array, offset: number): number {
@@ -11,7 +12,92 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
-    // Only handle image requests
+    // Handle Next.js image proxying (covers, thumbnails) to bypass Vercel Image Optimization
+    if (url.pathname === '/_next/image') {
+      const targetUrlStr = url.searchParams.get('url');
+      if (!targetUrlStr) return fetch(request);
+
+      let targetUrl: URL;
+      try {
+        // Provide a dummy base to safely parse relative URLs
+        targetUrl = new URL(targetUrlStr, 'http://localhost');
+      } catch (e) {
+        return fetch(request);
+      }
+
+      // If it's a relative URL or matches the origin, fallback to origin Next.js handling
+      if (targetUrlStr.startsWith('/') || targetUrl.hostname === 'localhost' || targetUrlStr.startsWith(env.ORIGIN_URL)) {
+        return fetch(request);
+      }
+
+      // SSRF Protection: Strict Allowlist based on Redbeard architecture
+      const allowedExactHosts = [
+        'drive.google.com',
+        'cdn.discordapp.com',
+        'public.blob.vercel-storage.com'
+      ];
+      
+      const isAllowed = 
+        allowedExactHosts.includes(targetUrl.hostname) ||
+        targetUrl.hostname.endsWith('.public.blob.vercel-storage.com') ||
+        targetUrl.hostname.endsWith('.googleusercontent.com') ||
+        targetUrl.hostname.endsWith('.r2.cloudflarestorage.com');
+
+      if (!isAllowed || targetUrl.protocol !== 'https:') {
+        // Fallback gracefully for unknown external hosts to preserve existing Next.js logic
+        return fetch(request);
+      }
+
+      // Sanitize Cache Key: Cloudflare Cache API requires the cache key to match the worker's zone.
+      // We strip 'w' and 'q' Next.js parameters to prevent cache exhaustion and maximize cache hits.
+      const cleanCacheUrl = new URL(url.pathname, url.origin);
+      cleanCacheUrl.searchParams.set('url', targetUrl.toString());
+      
+      const cache = caches.default;
+      const cacheKey = new Request(cleanCacheUrl.toString(), { method: 'GET' });
+      
+      let response = await cache.match(cacheKey);
+      if (response) {
+        return response;
+      }
+
+      try {
+        const fetchRes = await fetch(targetUrl.toString(), {
+          method: 'GET',
+          headers: { 'User-Agent': 'Cloudflare-Worker-Image-Proxy' },
+        });
+
+        if (!fetchRes.ok) {
+          // If the direct fetch fails (e.g. 403 from Vercel Blob or 400 from Google), fallback to origin
+          // because Next.js Image Optimization might still succeed
+          return fetch(request);
+        }
+
+        const mimeType = fetchRes.headers.get('content-type') || 'application/octet-stream';
+        // Prevent proxying of HTML/scripts even if hosted on an allowed domain
+        if (!mimeType.startsWith('image/')) {
+           return fetch(request);
+        }
+
+        response = new Response(fetchRes.body, {
+          status: 200,
+          headers: {
+            'Content-Type': mimeType,
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'CDN-Cache-Control': 'max-age=31536000',
+            'Access-Control-Allow-Origin': '*',
+          }
+        });
+
+        ctx.waitUntil(cache.put(cacheKey, response.clone()));
+        return response;
+      } catch (e: any) {
+        console.error('Proxy Error:', e);
+        return fetch(request);
+      }
+    }
+
+    // Only handle chapter image requests
     if (!url.pathname.startsWith('/api/chapter/') || !url.pathname.includes('/page/')) {
       return fetch(request);
     }
