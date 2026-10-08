@@ -33,7 +33,7 @@ export async function GET(
     // 1. Fetch the chapter
     const chapter = await prisma.chapter.findUnique({
       where: { id },
-      select: { id: true, downloadUrl: true, sourceType: true }
+      select: { id: true, downloadUrl: true, sourceType: true, downloadProvider: true }
     });
 
     if (!chapter) {
@@ -246,6 +246,13 @@ export async function GET(
     }
 
     // 4. Resolve URL (Cache Miss)
+    if (chapter.downloadProvider === 'TeraBox') {
+      return new NextResponse(
+        'TeraBox is only supported for downloads, not reading.',
+        { status: 400 }
+      );
+    }
+
     const { resolverManager } = await import('@/lib/providers/factory');
     const resolver = resolverManager.getResolver(chapter.downloadUrl);
     if (!resolver) {
