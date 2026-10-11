@@ -123,17 +123,17 @@ export async function GET(
           const zip = new JSZip();
 
           // Fetch each image and add to zip
-          for (const img of images) {
+          await Promise.all(images.map(async (img) => {
             try {
               const imgRes = await fetch(img.imageUrl, { redirect: 'follow', cache: 'no-store' });
-              if (!imgRes.ok) continue;
+              if (!imgRes.ok) return;
               const buffer = await imgRes.arrayBuffer();
               const ext = img.imageUrl.split('.').pop()?.split('?')[0] || 'jpg';
               zip.file(`page_${String(img.pageNumber).padStart(3, '0')}.${ext}`, buffer);
             } catch (e) {
               console.error(`Failed to fetch image ${img.pageNumber}:`, e);
             }
-          }
+          }));
 
           const zipBuffer = await zip.generateAsync({ type: 'nodebuffer', compression: 'STORE' });
 
