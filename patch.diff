@@ -1,0 +1,27 @@
+--- src/app/actions/admin/metadata.ts
++++ src/app/actions/admin/metadata.ts
+@@ -102,15 +102,12 @@
+     'Villainess', 'Web Comic', 'Webtoons', 'Yaoi', 'Yuri', 'Zombies'
+   ];
+
+-  for (const name of genres) {
+-    const slug = slugify(name);
+-    await prisma.genre.upsert({
+-      where: { name: name.toUpperCase() },
+-      update: {},
+-      create: {
+-        name: name.toUpperCase(),
+-        slug: slug,
+-      },
+-    });
+-  }
++  await prisma.genre.createMany({
++    data: genres.map(name => ({
++      name: name.toUpperCase(),
++      slug: slugify(name),
++    })),
++    skipDuplicates: true,
++  });
++
+   revalidatePaths();
+ }
