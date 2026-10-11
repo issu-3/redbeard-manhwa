@@ -72,24 +72,28 @@ export async function generateDatabaseDump(format: 'SQL' | 'JSON'): Promise<{
   let totalRecords = 0;
   const dataMap: Record<string, any[]> = {};
 
-  // 1. Fetch explicit models
-  for (const model of TOPOLOGICAL_MODELS) {
-    const delegate = (prisma as any)[model.delegate];
-    if (!delegate) continue;
-    try {
-      const records = await delegate.findMany();
-      dataMap[model.name] = records;
-      tableCounts[model.name] = records.length;
-      totalRecords += records.length;
-    } catch (e: any) {
-      console.warn(`[BackupEngine] Failed to fetch ${model.name}:`, e.message);
-      dataMap[model.name] = [];
-      tableCounts[model.name] = 0;
-    }
+  // 1. Fetch explicit models (bounded concurrency)
+  const MAX_CONCURRENT_MODELS = 3;
+  for (let i = 0; i < TOPOLOGICAL_MODELS.length; i += MAX_CONCURRENT_MODELS) {
+    const chunk = TOPOLOGICAL_MODELS.slice(i, i + MAX_CONCURRENT_MODELS);
+    await Promise.all(chunk.map(async (model) => {
+      const delegate = (prisma as any)[model.delegate];
+      if (!delegate) return;
+      try {
+        const records = await delegate.findMany();
+        dataMap[model.name] = records;
+        tableCounts[model.name] = records.length;
+        totalRecords += records.length;
+      } catch (e: any) {
+        console.warn(`[BackupEngine] Failed to fetch ${model.name}:`, e.message);
+        dataMap[model.name] = [];
+        tableCounts[model.name] = 0;
+      }
+    }));
   }
 
   // 2. Fetch implicit M2M tables
-  for (const table of IMPLICIT_M2M_TABLES) {
+  await Promise.all(IMPLICIT_M2M_TABLES.map(async (table) => {
     try {
       const records: any[] = await prisma.$queryRawUnsafe(`SELECT * FROM "${table}"`);
       dataMap[table] = records;
@@ -100,7 +104,7 @@ export async function generateDatabaseDump(format: 'SQL' | 'JSON'): Promise<{
       dataMap[table] = [];
       tableCounts[table] = 0;
     }
-  }
+  }));
 
   let content = '';
 
