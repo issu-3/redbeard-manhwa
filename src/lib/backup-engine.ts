@@ -89,7 +89,7 @@ export async function generateDatabaseDump(format: 'SQL' | 'JSON'): Promise<{
   }
 
   // 2. Fetch implicit M2M tables
-  for (const table of IMPLICIT_M2M_TABLES) {
+  await Promise.all(IMPLICIT_M2M_TABLES.map(async (table) => {
     try {
       const records: any[] = await prisma.$queryRawUnsafe(`SELECT * FROM "${table}"`);
       dataMap[table] = records;
@@ -100,7 +100,7 @@ export async function generateDatabaseDump(format: 'SQL' | 'JSON'): Promise<{
       dataMap[table] = [];
       tableCounts[table] = 0;
     }
-  }
+  }));
 
   let content = '';
 
