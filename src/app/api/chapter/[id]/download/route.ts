@@ -122,18 +122,22 @@ export async function GET(
           const JSZip = (await import('jszip')).default;
           const zip = new JSZip();
 
-          // Fetch each image and add to zip
-          await Promise.all(images.map(async (img) => {
-            try {
-              const imgRes = await fetch(img.imageUrl, { redirect: 'follow', cache: 'no-store' });
-              if (!imgRes.ok) return;
-              const buffer = await imgRes.arrayBuffer();
-              const ext = img.imageUrl.split('.').pop()?.split('?')[0] || 'jpg';
-              zip.file(`page_${String(img.pageNumber).padStart(3, '0')}.${ext}`, buffer);
-            } catch (e) {
-              console.error(`Failed to fetch image ${img.pageNumber}:`, e);
-            }
-          }));
+          // Fetch each image and add to zip with bounded concurrency (chunking)
+          const concurrencyLimit = 5;
+          for (let i = 0; i < images.length; i += concurrencyLimit) {
+            const chunk = images.slice(i, i + concurrencyLimit);
+            await Promise.all(chunk.map(async (img) => {
+              try {
+                const imgRes = await fetch(img.imageUrl, { redirect: 'follow', cache: 'no-store' });
+                if (!imgRes.ok) return;
+                const buffer = await imgRes.arrayBuffer();
+                const ext = img.imageUrl.split('.').pop()?.split('?')[0] || 'jpg';
+                zip.file(`page_${String(img.pageNumber).padStart(3, '0')}.${ext}`, buffer);
+              } catch (e) {
+                console.error(`Failed to fetch image ${img.pageNumber}:`, e);
+              }
+            }));
+          }
 
           const zipBuffer = await zip.generateAsync({ type: 'nodebuffer', compression: 'STORE' });
 
