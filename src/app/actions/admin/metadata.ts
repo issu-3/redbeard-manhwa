@@ -102,16 +102,13 @@ export async function seedDefaultGenres() {
     'Villainess', 'Web Comic', 'Webtoons', 'Yaoi', 'Yuri', 'Zombies'
   ];
 
-  for (const name of genres) {
-    const slug = slugify(name);
-    await prisma.genre.upsert({
-      where: { name: name.toUpperCase() },
-      update: {},
-      create: {
-        name: name.toUpperCase(),
-        slug: slug,
-      },
-    });
-  }
+  await prisma.genre.createMany({
+    data: genres.map(name => ({
+      name: name.toUpperCase(),
+      slug: slugify(name),
+    })),
+    skipDuplicates: true,
+  });
+
   revalidatePaths();
 }
