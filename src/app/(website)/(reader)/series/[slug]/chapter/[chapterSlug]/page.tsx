@@ -167,6 +167,64 @@ const getCachedChapterComments = unstable_cache(
 
 // ─── Metadata ──────────────────────────────────────────────────
 
+function parseRobotsDirectives(seo: Record<string, any>) {
+  let shouldIndex = true;
+  let shouldFollow = true;
+
+  if (typeof seo.robots === 'string') {
+    const tokens = seo.robots
+      .toLowerCase()
+      .split(/[\s,]+/)
+      .map((t: string) => t.trim())
+      .filter(Boolean);
+
+    for (const token of tokens) {
+      if (token === 'noindex') {
+        shouldIndex = false;
+      } else if (token === 'index') {
+        shouldIndex = true;
+      } else if (token === 'nofollow') {
+        shouldFollow = false;
+      } else if (token === 'follow') {
+        shouldFollow = true;
+      } else if (token === 'none') {
+        shouldIndex = false;
+        shouldFollow = false;
+      } else if (token === 'all') {
+        shouldIndex = true;
+        shouldFollow = true;
+      }
+    }
+  } else if (seo.robots && typeof seo.robots === 'object') {
+    if (typeof seo.robots.index === 'boolean') {
+      shouldIndex = seo.robots.index;
+    }
+    if (typeof seo.robots.follow === 'boolean') {
+      shouldFollow = seo.robots.follow;
+    }
+  }
+
+  // Explicit admin override properties (noindex / nofollow) take precedence
+  if (seo.noindex === true || seo.noindex === 'true' || seo.noindex === 1 || seo.noindex === '1') {
+    shouldIndex = false;
+  } else if (seo.noindex === false || seo.noindex === 'false' || seo.noindex === 0 || seo.noindex === '0') {
+    shouldIndex = true;
+  }
+
+  if (seo.nofollow === true || seo.nofollow === 'true' || seo.nofollow === 1 || seo.nofollow === '1') {
+    shouldFollow = false;
+  } else if (seo.nofollow === false || seo.nofollow === 'false' || seo.nofollow === 0 || seo.nofollow === '0') {
+    shouldFollow = true;
+  }
+
+  return {
+    index: shouldIndex,
+    follow: shouldFollow,
+    'max-image-preview': 'large' as const,
+    'max-snippet': -1,
+  };
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -179,7 +237,7 @@ export async function generateMetadata({
 
   if (!chapter) return { title: 'Chapter Not Found' };
 
-  const seo = chapter.seo || {};
+  const seo = (chapter.seo || {}) as Record<string, any>;
   const _siteTitle = settings.seo_site_title || 'REDBEARD';
 
   const defaultTitle = `${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} — Read Online | ${settings.siteName || 'REDBEARD'}`;
@@ -196,18 +254,13 @@ export async function generateMetadata({
   const canonical = seo.canonicalUrl || defaultUrl;
   const ogImage = seo.ogImage || defaultImage;
   const twitterImage = seo.twitterImage || defaultImage;
-  const keywords = seo.keywords ? seo.keywords.split(',').map(k => k.trim()) : undefined;
+  const keywords = typeof seo.keywords === 'string' ? seo.keywords.split(',').map((k: string) => k.trim()) : undefined;
 
   return {
     title,
     description,
     keywords,
-    robots: {
-      index: false,
-      follow: true,
-      'max-image-preview': 'large' as const,
-      'max-snippet': -1,
-    },
+    robots: parseRobotsDirectives(seo),
     openGraph: {
       title,
       description,
