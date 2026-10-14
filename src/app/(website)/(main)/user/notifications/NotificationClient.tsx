@@ -104,6 +104,7 @@ export function NotificationClient({ initialNotifications }: { initialNotificati
                     {notification.link && (
                       <Link 
                         href={notification.link}
+                        prefetch={false}
                         onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
                         className="text-xs font-medium text-primary hover:text-primary-hover transition-colors"
                       >

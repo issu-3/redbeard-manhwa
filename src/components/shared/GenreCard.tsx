@@ -90,6 +90,7 @@ export function GenreCard({ genre, variant = 'default', index = 0 }: GenreCardPr
     return (
       <Link
         href={`/browse/genres/${genre.slug}`}
+        prefetch={false}
         className="group flex items-center gap-2 rounded-xl border border-border px-3 py-2 transition-all hover:border-border-hover bg-surface/50 hover:bg-surface"
       >
         <div className={`flex items-center justify-center rounded-full p-1.5 ${!isCustomColor ? `bg-gradient-to-br ${style.gradient}` : ''}`} style={customGradientStyle}>
@@ -112,6 +113,7 @@ export function GenreCard({ genre, variant = 'default', index = 0 }: GenreCardPr
     >
       <Link
         href={`/browse/genres/${genre.slug}`}
+        prefetch={false}
         className="group relative flex h-full flex-col items-center gap-4 overflow-hidden rounded-2xl border border-border bg-card p-6 text-center transition-all duration-300 hover:border-border-hover"
         style={{
           boxShadow: `0 4px 20px -10px rgba(0,0,0,0.5)`,

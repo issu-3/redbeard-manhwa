@@ -55,6 +55,7 @@ export function Carousel({ title, subtitle, href, children, className = '' }: Ca
         {href && (
           <Link
             href={href}
+            aria-label={`View all ${title} series`}
             className="group flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-primary/10 h-8 px-3 py-1.5 md:h-10 md:px-4 md:py-2 text-xs md:text-sm font-semibold text-primary transition-all duration-300 hover:bg-primary/20 hover:scale-105 active:scale-95"
           >
             View All

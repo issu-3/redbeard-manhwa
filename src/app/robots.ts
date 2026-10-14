@@ -5,7 +5,7 @@ import { getCachedSettings } from '@/app/actions/public/settings';
 export const revalidate = 3600;
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
-  const baseUrl = APP_URL || 'http://localhost:3000';
+  const baseUrl = APP_URL || 'https://redbeard.store';
   const settings = await getCachedSettings();
   
   const robotsSetting = settings.seo_robots || 'index, follow';

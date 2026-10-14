@@ -76,6 +76,7 @@ export function AdminReviewsClient({
                     <td className="px-6 py-4">
                       <Link 
                         href={`/series/${review.series.slug}`}
+                        prefetch={false}
                         className="font-medium text-primary hover:underline flex items-center gap-1"
                         target="_blank"
                       >
@@ -138,6 +139,7 @@ export function AdminReviewsClient({
                     </div>
                     <Link 
                       href={`/series/${review.series.slug}`}
+                      prefetch={false}
                       className="text-sm font-medium text-primary hover:underline flex items-center gap-1 mt-0.5"
                       target="_blank"
                     >

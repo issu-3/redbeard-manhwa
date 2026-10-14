@@ -22,7 +22,7 @@ export function generateMetadata({
   const fullImage = image.startsWith('http') ? image : `${APP_URL}${image}`;
 
   return {
-    title: fullTitle,
+    title: { absolute: fullTitle },
     description,
     metadataBase: new URL(APP_URL),
     alternates: {

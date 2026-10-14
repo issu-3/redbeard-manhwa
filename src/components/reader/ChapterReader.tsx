@@ -615,7 +615,9 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                   <ArrowLeft className="h-6 w-6" />
                 </button>
                 <div className="flex-1 px-4 flex flex-col items-center overflow-hidden">
-                  <h1 className="text-white font-bold text-[15px] truncate w-full text-center tracking-wide">{chapter.seriesTitle}</h1>
+                  <h1 className="text-white font-bold text-[15px] truncate w-full text-center tracking-wide">
+                    {chapter.seriesTitle} - {chapter.label || `Chapter ${chapter.number}`}
+                  </h1>
                   <span className="text-[#E53935] text-[11px] font-semibold tracking-wider uppercase truncate w-full text-center">Chapter {chapter.number || ''} {chapter.title ? `- ${chapter.title}` : ''}</span>
                 </div>
                 <div className="flex items-center gap-1 -mr-2">

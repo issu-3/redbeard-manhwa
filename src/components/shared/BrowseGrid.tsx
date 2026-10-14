@@ -35,7 +35,7 @@ export function BrowseGrid({ title, subtitle, description, icon, series }: Brows
 
       {series.length === 0 ? (
         <div className="rounded-xl border border-border bg-surface/50 p-12 text-center">
-          <h3 className="text-lg font-bold text-text-primary">No series found</h3>
+          <h2 className="text-lg font-bold text-text-primary">No series found</h2>
           <p className="mt-2 text-sm text-text-muted">
             There are currently no series available in this category. Please check back later!
           </p>

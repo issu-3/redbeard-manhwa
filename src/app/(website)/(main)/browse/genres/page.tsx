@@ -9,7 +9,7 @@ import { APP_URL } from '@/lib/constants';
 
 export const metadata: Metadata = generateMetadata({
   title: 'Genres',
-  description: 'Browse thousands of series by your favorite categories and genres.',
+  description: 'Browse thousands of free manga, manhwa, and comics categorized by genre on REDBEARD. Find your next favorite action, romance, or fantasy story.',
   url: `${APP_URL}/browse/genres`
 });
 

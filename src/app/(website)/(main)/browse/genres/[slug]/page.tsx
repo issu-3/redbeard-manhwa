@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const url = `${APP_URL}/browse/genres/${slug}`;
 
   return { 
-    title,
+    title: { absolute: title },
     description,
     keywords: [genre.name, 'download', 'comics', 'manga', 'webtoon', `${genre.name} series`, 'hindi', 'manhwa in hindi'],
     openGraph: {
@@ -54,6 +54,11 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
       description,
       url,
       type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
     },
     alternates: {
       canonical: url,

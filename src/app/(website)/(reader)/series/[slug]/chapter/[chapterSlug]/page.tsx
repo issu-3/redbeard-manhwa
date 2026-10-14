@@ -257,7 +257,7 @@ export async function generateMetadata({
   const keywords = typeof seo.keywords === 'string' ? seo.keywords.split(',').map((k: string) => k.trim()) : undefined;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     keywords,
     robots: parseRobotsDirectives(seo),

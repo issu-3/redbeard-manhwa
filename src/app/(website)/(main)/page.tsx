@@ -13,12 +13,20 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getCachedSettings();
   const title = settings.seo_site_title || 'REDBEARD - The Ultimate Reading Experience';
   const description = settings.seo_site_description || 'Read the best series and comics online.';
+  const baseUrl = APP_URL || 'https://redbeard.store';
   
-  return generateSeoMetadata({
+  const seo = generateSeoMetadata({
     title: title.split(' | ')[0], // generateSeoMetadata appends APP_NAME
     description,
-    url: APP_URL
+    url: baseUrl
   });
+
+  return {
+    ...seo,
+    alternates: {
+      canonical: baseUrl,
+    },
+  };
 }
 
 import { getCachedHomepageSections, getCachedHeroBanners, getCachedSectionSeries } from '@/app/actions/public/homepage';
@@ -55,8 +63,38 @@ export default async function HomePage() {
     }
   }
 
+  const baseUrl = APP_URL || 'https://redbeard.store';
+  const websiteLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': `${baseUrl}/#website`,
+        url: baseUrl,
+        name: settings.siteName || 'REDBEARD',
+        description: settings.seo_site_description || 'Read the best series and comics online.',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: `${baseUrl}/search?q={search_term_string}`,
+          'query-input': 'required name=search_term_string'
+        }
+      },
+      {
+        '@type': 'Organization',
+        '@id': `${baseUrl}/#organization`,
+        name: settings.siteName || 'REDBEARD',
+        url: baseUrl,
+        logo: `${baseUrl}/icons/icon-512x512.png`
+      }
+    ]
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
+      />
       <h1 className="sr-only">REDBEARD - The Ultimate Reading Experience</h1>
       <div className="my-2 px-4 md:my-5 md:px-8 lg:px-16 xl:px-20 flex justify-center overflow-hidden">
         <AdRenderer placement="homepage" />

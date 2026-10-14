@@ -203,10 +203,10 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                   </Badge>
                 </motion.div>
 
-                <motion.h1 variants={itemVariants} className="mb-1.5 md:mb-4 text-xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
+                <motion.h2 variants={itemVariants} className="mb-1.5 md:mb-4 text-xl font-black leading-tight text-text-primary md:text-5xl lg:text-6xl"
                     style={{ fontFamily: 'var(--font-heading)' }}>
                   {slide.title}
-                </motion.h1>
+                </motion.h2>
 
                 <motion.p variants={itemVariants} className="mb-8 hidden md:block line-clamp-3 max-w-lg text-sm font-medium leading-relaxed text-text-secondary md:text-base md:leading-relaxed">
                   {slide.description}
@@ -216,6 +216,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                   {slide.slug ? (
                     <Link
                       href={`/series/${slide.slug}`}
+                      prefetch={false}
                       className="inline-flex h-8 md:h-10 items-center justify-center gap-1.5 md:gap-2 rounded-xl bg-primary px-3 md:px-4 py-1 md:py-2 text-xs md:text-base font-bold text-white transition-all duration-200 hover:bg-primary-hover hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/40 active:scale-[0.97] shadow-md shadow-primary/25"
                     >
                       <BookOpen className="h-4 w-4 md:h-5 md:w-5" />

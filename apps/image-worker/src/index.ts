@@ -20,31 +20,46 @@ export default {
 
     // Handle Next.js image proxying (covers, thumbnails) to bypass Vercel Image Optimization
     if (url.pathname === '/_next/image') {
-      const targetUrlStr = url.searchParams.get('url');
-      if (!targetUrlStr) return fetch(request);
+      const targetUrlParam = url.searchParams.get('url');
+      if (!targetUrlParam) return fetch(request);
+
+      let resolvedUrlStr = targetUrlParam;
+      try {
+        resolvedUrlStr = decodeURIComponent(targetUrlParam);
+      } catch {
+        resolvedUrlStr = targetUrlParam;
+      }
+
+      // Resolve relative /uploads/... URLs to Cloudflare R2 / CDN
+      if (resolvedUrlStr.startsWith('/uploads/')) {
+        resolvedUrlStr = `https://cdn.redbeard.store${resolvedUrlStr}`;
+      }
 
       let targetUrl: URL;
       try {
         // Provide a dummy base to safely parse relative URLs
-        targetUrl = new URL(targetUrlStr, 'http://localhost');
+        targetUrl = new URL(resolvedUrlStr, 'http://localhost');
       } catch (e) {
         return fetch(request);
       }
 
       // If it's a relative URL or matches the origin, fallback to origin Next.js handling
-      if (targetUrlStr.startsWith('/') || targetUrl.hostname === 'localhost' || targetUrlStr.startsWith(env.ORIGIN_URL)) {
+      if (resolvedUrlStr.startsWith('/') || targetUrl.hostname === 'localhost' || (env.ORIGIN_URL && resolvedUrlStr.startsWith(env.ORIGIN_URL))) {
         return fetch(request);
       }
 
       // SSRF Protection: Strict Allowlist based on Redbeard architecture
       const allowedExactHosts = [
+        'cdn.redbeard.store',
         'drive.google.com',
         'cdn.discordapp.com',
-        'public.blob.vercel-storage.com'
+        'public.blob.vercel-storage.com',
       ];
       
       const isAllowed = 
         allowedExactHosts.includes(targetUrl.hostname) ||
+        targetUrl.hostname.endsWith('.redbeard.store') ||
+        targetUrl.hostname.endsWith('.r2.dev') ||
         targetUrl.hostname.endsWith('.public.blob.vercel-storage.com') ||
         targetUrl.hostname.endsWith('.googleusercontent.com') ||
         targetUrl.hostname.endsWith('.r2.cloudflarestorage.com');
@@ -70,7 +85,14 @@ export default {
       try {
         const fetchRes = await fetch(targetUrl.toString(), {
           method: 'GET',
-          headers: { 'User-Agent': 'Cloudflare-Worker-Image-Proxy' },
+          cf: {
+            cacheEverything: true,
+            cacheTtl: 31536000,
+          },
+          headers: {
+            'Accept': request.headers.get('Accept') || 'image/webp,image/avif,image/*,*/*',
+            'User-Agent': 'Cloudflare-Worker-Image-Proxy',
+          },
         });
 
         if (!fetchRes.ok) {
@@ -79,10 +101,26 @@ export default {
           return fetch(request);
         }
 
-        const mimeType = fetchRes.headers.get('content-type') || 'application/octet-stream';
-        // Prevent proxying of HTML/scripts even if hosted on an allowed domain
+        let mimeType = fetchRes.headers.get('content-type') || 'application/octet-stream';
+        // If R2 returns application/octet-stream or generic content-type, infer from file extension
         if (!mimeType.startsWith('image/')) {
-           return fetch(request);
+          const lowerPath = targetUrl.pathname.toLowerCase();
+          if (lowerPath.endsWith('.webp')) {
+            mimeType = 'image/webp';
+          } else if (lowerPath.endsWith('.jpg') || lowerPath.endsWith('.jpeg')) {
+            mimeType = 'image/jpeg';
+          } else if (lowerPath.endsWith('.png')) {
+            mimeType = 'image/png';
+          } else if (lowerPath.endsWith('.gif')) {
+            mimeType = 'image/gif';
+          } else if (lowerPath.endsWith('.avif')) {
+            mimeType = 'image/avif';
+          } else if (lowerPath.endsWith('.svg')) {
+            mimeType = 'image/svg+xml';
+          } else {
+            // Prevent proxying of HTML/scripts even if hosted on an allowed domain
+            return fetch(request);
+          }
         }
 
         response = new Response(fetchRes.body, {
@@ -90,8 +128,10 @@ export default {
           headers: {
             'Content-Type': mimeType,
             'Cache-Control': 'public, max-age=31536000, immutable',
-            'CDN-Cache-Control': 'max-age=31536000',
+            'CDN-Cache-Control': 'public, max-age=31536000, immutable',
+            'Cloudflare-CDN-Cache-Control': 'public, max-age=31536000, immutable',
             'Access-Control-Allow-Origin': '*',
+            'X-Proxy-By': 'redbeard-image-worker',
           }
         });
 

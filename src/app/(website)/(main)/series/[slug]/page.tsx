@@ -151,7 +151,7 @@ export async function generateMetadata({
   const isNSFW = (series as any).isNSFW || series.type === 'PORNHWA' || series.type === 'DOUJINSHI';
 
   return {
-    title,
+    title: { absolute: title },
     description,
     keywords,
     robots,
@@ -374,6 +374,7 @@ export default async function SeriesDetailPage({
                 <Link
                   key={genre.slug}
                   href={`/browse/genres/${genre.slug}`}
+                  prefetch={false}
                   className="rounded-md bg-card/60 backdrop-blur-md px-3 py-1 text-sm font-medium text-text-primary border border-border/50 hover:bg-primary/20 hover:text-primary transition-colors"
                 >
                   {genre.name}

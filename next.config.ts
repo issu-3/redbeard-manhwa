@@ -27,6 +27,18 @@ const nextConfig: NextConfig = {
       ],
     },
     {
+      source: '/:path*\\.(ico|png|jpg|jpeg|svg|webp|woff|woff2|ttf|eot)',
+      headers: [
+        { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+      ],
+    },
+    {
+      source: '/images/:path*',
+      headers: [
+        { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+      ],
+    },
+    {
       source: '/(.*)',
       headers: [
         { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
@@ -38,7 +50,7 @@ const nextConfig: NextConfig = {
     },
   ],
   images: {
-    unoptimized: isCapacitor, // Required for static export
+    unoptimized: true, // Bypass Next.js Image Optimization to eliminate Vercel 402 errors and serve WebP directly from R2 CDN
     remotePatterns: [
       {
         protocol: 'https',

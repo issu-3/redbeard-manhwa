@@ -57,6 +57,7 @@ export default async function HistoryPage() {
             <Link 
               key={item.id} 
               href={href}
+              prefetch={false}
               target={['DOWNLOAD', 'EXTERNAL'].includes(item.chapter.sourceType as string) ? '_blank' : undefined}
               rel={['DOWNLOAD', 'EXTERNAL'].includes(item.chapter.sourceType as string) ? 'noopener noreferrer' : undefined}
               className="group flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors"

@@ -37,6 +37,7 @@ export default async function SearchPage() {
 
   return (
     <div className="flex flex-col w-full">
+      <h1 className="sr-only">Search Comics, Manga & Manhwa Online</h1>
       <SearchClient dynamicGenres={genres} dynamicTrending={trendingSearches} />
     </div>
   );

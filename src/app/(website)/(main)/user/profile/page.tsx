@@ -199,6 +199,7 @@ export default async function ProfilePage() {
                   return (
                   <Link 
                     href={href}
+                    prefetch={false}
                     target={['DOWNLOAD', 'EXTERNAL'].includes(item.chapter.sourceType as string) ? '_blank' : undefined}
                     rel={['DOWNLOAD', 'EXTERNAL'].includes(item.chapter.sourceType as string) ? 'noopener noreferrer' : undefined}
                     key={item.id}
