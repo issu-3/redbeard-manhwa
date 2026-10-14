@@ -17,6 +17,7 @@ export async function getExistingChapters(seriesId: string) {
 }
 
 import { deleteFromR2 } from '@/lib/s3';
+import { notifyChapterPublished, notifyGoogleIndex } from '@/lib/google-indexing';
 
 async function checkAdmin() {
   const session = await auth();
@@ -153,10 +154,15 @@ export async function createChapter(seriesId: string, formData: FormData, preven
     const updateData: any = { chapterCount: { increment: 1 } };
     if (isPublished) updateData.updatedAt = new Date();
 
-    await prisma.series.update({
+    const updatedSeries = await prisma.series.update({
       where: { id: seriesId },
-      data: updateData
+      data: updateData,
+      select: { slug: true }
     });
+
+    if (isPublished && updatedSeries?.slug) {
+      notifyChapterPublished(updatedSeries.slug, slug);
+    }
 
     revalidatePath(`/admin/series/${seriesId}/chapters`);
     revalidatePath(`/series/[slug]`, 'page');
@@ -256,10 +262,14 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
     }
 
     if (isPublished) {
-      await prisma.series.update({
+      const updatedSeries = await prisma.series.update({
         where: { id: seriesId },
-        data: { updatedAt: new Date() }
+        data: { updatedAt: new Date() },
+        select: { slug: true }
       });
+      if (updatedSeries?.slug) {
+        notifyChapterPublished(updatedSeries.slug, slug);
+      }
     }
 
     revalidatePath(`/admin/series/${seriesId}/chapters`);
@@ -288,7 +298,7 @@ export async function createBulkChapters(seriesId: string, chapters: { label: st
   if (!chapters || chapters.length === 0) return { error: 'No chapters provided' };
 
   try {
-    const series = await prisma.series.findUnique({ where: { id: seriesId }, select: { title: true } });
+    const series = await prisma.series.findUnique({ where: { id: seriesId }, select: { title: true, slug: true } });
     const seriesTitle = series?.title || 'Series';
 
     const created = await prisma.$transaction(async (tx) => {
@@ -328,6 +338,15 @@ export async function createBulkChapters(seriesId: string, chapters: { label: st
 
       return createResult.count;
     });
+
+    if (isPublished && series?.slug && created > 0) {
+      const chapterUrls = chapters.map(ch => {
+        const chSlug = `chapter-${ch.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+        return `/series/${series.slug}/chapter/${chSlug}`;
+      });
+      chapterUrls.push(`/series/${series.slug}`, '/', '/browse/latest');
+      void notifyGoogleIndex(chapterUrls);
+    }
 
     revalidatePath(`/admin/series/${seriesId}/chapters`);
     revalidatePath(`/series/[slug]`, 'page');

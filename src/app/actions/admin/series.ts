@@ -8,6 +8,7 @@ import { slugify } from '@/lib/utils';
 import { seriesSchema } from '@/lib/validators';
 import { generateSeriesSeo } from '@/lib/seo-generator';
 import { deleteFromR2 } from '@/lib/s3';
+import { notifySeriesPublished } from '@/lib/google-indexing';
 
 async function checkAdmin() {
   const session = await auth();
@@ -163,6 +164,8 @@ export async function createSeries(formData: FormData) {
     redirect(`/admin/series/new?error=${encodeURIComponent(dbError)}`);
   }
 
+  notifySeriesPublished(slug);
+
   revalidatePath('/admin/series');
   updateTag('homepage_data');
   redirect('/admin/series');
@@ -280,6 +283,8 @@ export async function updateSeries(formData: FormData) {
   if (dbError) {
     redirect(`/admin/series/${id}/edit?error=${encodeURIComponent(dbError)}`);
   }
+
+  notifySeriesPublished(slug);
 
   revalidatePath('/admin/series');
   revalidatePath(`/series/${slug}`);

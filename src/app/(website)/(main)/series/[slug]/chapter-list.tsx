@@ -153,12 +153,27 @@ export function ChapterListSection({
                         {/* Title and Metadata Column */}
                         <div className="flex flex-col min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className={cn(
-                              "text-[18px] font-bold leading-tight truncate transition-colors",
-                              isLatest ? "text-primary" : "text-text-primary group-hover:text-primary"
-                            )}>
-                              {chapter.label || `Chapter ${chapter.number}`}
-                            </h3>
+                            {safeSlug ? (
+                              <Link
+                                href={`/series/${seriesSlug}/chapter/${safeSlug}`}
+                                prefetch={false}
+                                className="min-w-0"
+                              >
+                                <h3 className={cn(
+                                  "text-[18px] font-bold leading-tight truncate transition-colors",
+                                  isLatest ? "text-primary hover:underline" : "text-text-primary group-hover:text-primary hover:underline"
+                                )}>
+                                  {chapter.label || `Chapter ${chapter.number}`}
+                                </h3>
+                              </Link>
+                            ) : (
+                              <h3 className={cn(
+                                "text-[18px] font-bold leading-tight truncate transition-colors",
+                                isLatest ? "text-primary" : "text-text-primary group-hover:text-primary"
+                              )}>
+                                {chapter.label || `Chapter ${chapter.number}`}
+                              </h3>
+                            )}
                             {isLatest && (
                               <span className="bg-primary text-white text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm shrink-0">
                                 New

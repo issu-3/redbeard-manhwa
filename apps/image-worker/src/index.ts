@@ -30,27 +30,31 @@ export default {
         resolvedUrlStr = targetUrlParam;
       }
 
-      // Resolve relative /uploads/... URLs to Cloudflare R2 / CDN
+      // Resolve relative /uploads/... URLs or origin /uploads/... to Cloudflare R2 / CDN
       if (resolvedUrlStr.startsWith('/uploads/')) {
         resolvedUrlStr = `https://cdn.redbeard.store${resolvedUrlStr}`;
+      } else if (resolvedUrlStr.startsWith('https://redbeard.store/uploads/')) {
+        resolvedUrlStr = resolvedUrlStr.replace('https://redbeard.store/uploads/', 'https://cdn.redbeard.store/uploads/');
+      } else if (resolvedUrlStr.startsWith('/')) {
+        resolvedUrlStr = `${env.ORIGIN_URL || 'https://redbeard.store'}${resolvedUrlStr}`;
       }
 
       let targetUrl: URL;
       try {
-        // Provide a dummy base to safely parse relative URLs
         targetUrl = new URL(resolvedUrlStr, 'http://localhost');
       } catch (e) {
         return fetch(request);
       }
 
-      // If it's a relative URL or matches the origin, fallback to origin Next.js handling
-      if (resolvedUrlStr.startsWith('/') || targetUrl.hostname === 'localhost' || (env.ORIGIN_URL && resolvedUrlStr.startsWith(env.ORIGIN_URL))) {
+      // If it cannot be resolved or is localhost, fallback to origin Next.js handling
+      if (targetUrl.hostname === 'localhost') {
         return fetch(request);
       }
 
       // SSRF Protection: Strict Allowlist based on Redbeard architecture
       const allowedExactHosts = [
         'cdn.redbeard.store',
+        'redbeard.store',
         'drive.google.com',
         'cdn.discordapp.com',
         'public.blob.vercel-storage.com',
@@ -58,6 +62,7 @@ export default {
       
       const isAllowed = 
         allowedExactHosts.includes(targetUrl.hostname) ||
+        targetUrl.hostname === 'redbeard.store' ||
         targetUrl.hostname.endsWith('.redbeard.store') ||
         targetUrl.hostname.endsWith('.r2.dev') ||
         targetUrl.hostname.endsWith('.public.blob.vercel-storage.com') ||

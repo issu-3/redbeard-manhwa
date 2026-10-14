@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -302,50 +303,47 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
        
        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md px-4">
          {prevSlug && (
-           <button 
-             onClick={(e) => { 
-                e.stopPropagation(); 
+            <Link 
+              href={`/series/${chapter.seriesSlug}/chapter/${prevSlug}`}
+              onClick={(e) => { 
                 if (typeof window !== 'undefined' && window.location.pathname.includes('android-reader')) {
+                  e.preventDefault();
                   window.location.href = `/android-reader/index.html?seriesSlug=${chapter.seriesSlug}&chapterSlug=${prevSlug}&id=${chapter.prevChapter?.id}&seriesId=${chapter.seriesId}`;
-                } else {
-                  router.push(`/series/${chapter.seriesSlug}/chapter/${prevSlug}`); 
                 }
               }}
-             className="w-full sm:w-auto bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-           >
-             <ChevronLeft className="w-5 h-5" /> Prev
-           </button>
-         )}
-         
-         <button 
-           onClick={(e) => { 
-              e.stopPropagation(); 
+              className="w-full sm:w-auto bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              <ChevronLeft className="w-5 h-5" /> Prev
+            </Link>
+          )}
+          
+          <Link 
+            href={`/series/${chapter.seriesSlug}`}
+            onClick={(e) => { 
               if (typeof window !== 'undefined' && window.location.pathname.includes('android-reader')) {
+                e.preventDefault();
                 window.history.back();
-              } else {
-                router.push(`/series/${chapter.seriesSlug}`);
               }
             }}
-           className="w-full sm:w-auto bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-         >
-           <Layout className="w-5 h-5" /> Series
-         </button>
+            className="w-full sm:w-auto bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <Layout className="w-5 h-5" /> Series
+          </Link>
 
-         {nextSlug ? (
-           <button 
-             onClick={(e) => { 
-                e.stopPropagation(); 
+          {nextSlug ? (
+            <Link 
+              href={`/series/${chapter.seriesSlug}/chapter/${nextSlug}`}
+              onClick={(e) => { 
                 if (typeof window !== 'undefined' && window.location.pathname.includes('android-reader')) {
+                  e.preventDefault();
                   window.location.href = `/android-reader/index.html?seriesSlug=${chapter.seriesSlug}&chapterSlug=${nextSlug}&id=${chapter.nextChapter?.id}&seriesId=${chapter.seriesId}`;
-                } else {
-                  router.push(`/series/${chapter.seriesSlug}/chapter/${nextSlug}`); 
                 }
               }}
-             className="w-full sm:w-auto bg-[#E53935] text-white px-8 py-3 rounded-full font-bold hover:bg-[#E53935]/90 active:scale-95 transition-all flex items-center justify-center gap-2"
-           >
-             Next <ChevronRight className="w-5 h-5" />
-           </button>
-         ) : (
+              className="w-full sm:w-auto bg-[#E53935] text-white px-8 py-3 rounded-full font-bold hover:bg-[#E53935]/90 active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              Next <ChevronRight className="w-5 h-5" />
+            </Link>
+          ) : (
             <div className="w-full sm:w-auto px-6 py-3 rounded-full border border-white/10 flex items-center justify-center">
               <span className="text-white/30 text-xs font-bold uppercase tracking-wider">Latest Chapter</span>
             </div>
@@ -602,22 +600,25 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
               className="absolute top-0 inset-x-0 z-50 bg-[#0F1115]/90 backdrop-blur-xl border-b border-white/5 pt-safe"
             >
               <div className="flex h-14 items-center px-4 justify-between">
-                <button 
-                  onClick={() => {
+                <Link 
+                  href={`/series/${chapter.seriesSlug}`}
+                  onClick={(e) => {
                     if (typeof window !== 'undefined' && window.location.pathname.includes('android-reader')) {
+                      e.preventDefault();
                       window.history.back();
-                    } else {
-                      router.push(`/series/${chapter.seriesSlug}`);
                     }
                   }} 
                   className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors"
+                  aria-label="Back to series"
                 >
                   <ArrowLeft className="h-6 w-6" />
-                </button>
+                </Link>
                 <div className="flex-1 px-4 flex flex-col items-center overflow-hidden">
-                  <h1 className="text-white font-bold text-[15px] truncate w-full text-center tracking-wide">
-                    {chapter.seriesTitle} - {chapter.label || `Chapter ${chapter.number}`}
-                  </h1>
+                  <Link href={`/series/${chapter.seriesSlug}`} className="hover:underline truncate w-full text-center">
+                    <h1 className="text-white font-bold text-[15px] truncate w-full text-center tracking-wide">
+                      {chapter.seriesTitle} - {chapter.label || `Chapter ${chapter.number}`}
+                    </h1>
+                  </Link>
                   <span className="text-[#E53935] text-[11px] font-semibold tracking-wider uppercase truncate w-full text-center">Chapter {chapter.number || ''} {chapter.title ? `- ${chapter.title}` : ''}</span>
                 </div>
                 <div className="flex items-center gap-1 -mr-2">
@@ -664,20 +665,19 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                     <span className="text-[10px] font-semibold">Previous</span>
                   </button>
                   
-                  <button 
+                  <Link 
+                    href={`/series/${chapter.seriesSlug}`}
                     onClick={(e) => { 
-                      e.stopPropagation(); 
                       if (typeof window !== 'undefined' && window.location.pathname.includes('android-reader')) {
+                        e.preventDefault();
                         window.history.back();
-                      } else {
-                        router.push(`/series/${chapter.seriesSlug}`);
                       }
                     }} 
                     className="flex flex-col items-center gap-1 opacity-70 hover:opacity-100 hover:text-[#E53935] transition-all"
                   >
                     <Layout className="w-6 h-6" />
                     <span className="text-[10px] font-semibold">Chapters</span>
-                  </button>
+                  </Link>
                   
                   <button onClick={(e) => { e.stopPropagation(); setSettingsOpen(true); }} className="flex flex-col items-center gap-1 text-[#E53935] hover:opacity-80 transition-all">
                     <Settings className="w-6 h-6" />
