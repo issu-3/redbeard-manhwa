@@ -4,8 +4,11 @@ import { prisma } from '@/lib/prisma';
 import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
 import type { HomepageSection } from '@prisma/client';
 import { normalizeSeriesLink } from '@/lib/utils';
+import { unstable_cache } from 'next/cache';
 
-export const getCachedHomepageSections = async (): Promise<HomepageSection[]> => {
+// ⚡ Bolt Optimization: Wrap homepage sections query in unstable_cache to prevent hitting the DB on every homepage load.
+// Expected impact: Significant reduction in DB read load and improved homepage TTFB.
+export const getCachedHomepageSections = unstable_cache(async (): Promise<HomepageSection[]> => {
     try {
       const sections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
       if (sections.length > 0) return sections;
@@ -20,9 +23,13 @@ export const getCachedHomepageSections = async (): Promise<HomepageSection[]> =>
       { id: '5', type: 'RECENTLY_UPDATED', isActive: true, order: 4, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true, manualSeriesId: [] as string[] },
       { id: '6', type: 'NEW_RELEASES', isActive: true, order: 5, limit: 10, isManual: false, title: 'New Releases', subtitle: 'Fresh series and latest additions', showViewAll: true, manualSeriesId: [] as string[] }
     ];
-};
+  },
+  ['homepage-sections'],
+  { revalidate: 300, tags: ['homepage-sections'] }
+);
 
-export const getCachedHeroBanners = async () => {
+// ⚡ Bolt Optimization: Cache hero banners query to reduce repeated DB fetches on the homepage.
+export const getCachedHeroBanners = unstable_cache(async () => {
     try {
       const banners = await prisma.heroBanner.findMany({ orderBy: { order: 'asc' } });
       
@@ -56,9 +63,14 @@ export const getCachedHeroBanners = async () => {
     } catch (e) {
       return [];
     }
-};
+  },
+  ['hero-banners'],
+  { revalidate: 300, tags: ['hero-banners'] }
+);
 
-export const getCachedSectionSeries = async (type: string, limit: number, isManual: boolean, manualIds: string[]): Promise<any[]> => {
+// ⚡ Bolt Optimization: Cache section series queries to eliminate heavy DB aggregation/filtering on every render.
+// Next.js automatically creates a composite cache key from the arguments (type, limit, isManual, manualIds).
+export const getCachedSectionSeries = unstable_cache(async (type: string, limit: number, isManual: boolean, manualIds: string[]): Promise<any[]> => {
       try {
         const SAFE_SEARCH_FILTER = {};
 
@@ -138,6 +150,9 @@ export const getCachedSectionSeries = async (type: string, limit: number, isManu
         console.warn(`Database error fetching section ${type}:`, e);
       }
       return [];
-};
+  },
+  ['homepage-section-series'],
+  { revalidate: 300, tags: ['homepage-section-series'] }
+);
 
 
