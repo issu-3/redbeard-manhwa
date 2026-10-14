@@ -1,0 +1,3 @@
+## 2024-03-24 - [SeriesCard Optimization]
+**Learning:** Found an opportunity to optimize `SeriesCard` component rendering using `React.memo()`. `SeriesCard` is heavily used across the application in lists and grids (like Popular, Trending, New Releases, etc.), and since its props (`series`, `variant`, `index`) rarely change for a given instance, memoizing it can significantly reduce unnecessary re-renders when parent components re-render or when the global library store state changes (though `useAppLibraryStore` is used inside).
+**Action:** Wrap `SeriesCard` with `React.memo` to prevent re-renders when props haven't changed.
