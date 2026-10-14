@@ -1,5 +1,6 @@
 'use client';
 
+import React, { memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -33,7 +34,7 @@ const typeBadges: Record<string, string> = {
   LIGHT_NOVEL: 'Light Novel',
 };
 
-export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCardProps) {
+const SeriesCardComponent = ({ series, variant = 'default', index = 0 }: SeriesCardProps) => {
   const store = useAppLibraryStore();
   const isBookmarked = store.hasHydrated && store.isSaved(series.id);
   const isPorn = series.isNSFW || series.type === 'PORNHWA' || series.type === 'DOUJINSHI';
@@ -206,3 +207,7 @@ export function SeriesCard({ series, variant = 'default', index = 0 }: SeriesCar
     </motion.div>
   );
 }
+
+
+// ⚡ BOLT: Memoized SeriesCard to prevent unnecessary re-renders in large grids/lists
+export const SeriesCard = memo(SeriesCardComponent);
