@@ -434,7 +434,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
           {/* Header */}
           <div className="shrink-0 flex items-center justify-between p-4 border-b border-neutral-800 bg-[#1C1C1C] z-10">
             <h3 className="font-bold text-white capitalize">{activeSheet}</h3>
-            <button onClick={() => setActiveSheet(null)} className="p-1 active:bg-neutral-800 rounded-full text-neutral-400">
+            <button onClick={() => setActiveSheet(null)} className="p-1 active:bg-neutral-800 rounded-full text-neutral-400" aria-label="Close sheet">
               <X className="h-6 w-6" />
             </button>
           </div>
@@ -647,11 +647,12 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
         <button
           onClick={() => window.history.back()}
           className="p-2 bg-black/40 backdrop-blur rounded-full text-white"
+          aria-label="Go back"
         >
           <ArrowLeft className="h-6 w-6" />
         </button>
         <div className="flex items-center gap-2">
-          <button onClick={() => setActiveSheet('more')} className="p-2 bg-black/40 backdrop-blur rounded-full text-white">
+          <button onClick={() => setActiveSheet('more')} className="p-2 bg-black/40 backdrop-blur rounded-full text-white" aria-label="More options">
             <MoreVertical className="h-5 w-5" />
           </button>
         </div>
@@ -759,13 +760,13 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
             </h2>
           </div>
           <div className="flex items-center gap-4 px-4 text-neutral-400">
-            <button onClick={() => setActiveSheet('filter')} className={cn("flex items-center gap-1.5 p-1", (filterUnread || filterDownloaded) && "text-[#E5092F]")}>
+            <button onClick={() => setActiveSheet('filter')} className={cn("flex items-center gap-1.5 p-1", (filterUnread || filterDownloaded) && "text-[#E5092F]")} aria-label="Filter chapters">
               <Filter className="h-5 w-5" />
             </button>
-            <button onClick={() => setActiveSheet('sort')} className="flex items-center gap-1.5 p-1">
+            <button onClick={() => setActiveSheet('sort')} className="flex items-center gap-1.5 p-1" aria-label="Sort chapters">
               <List className="h-5 w-5" />
             </button>
-            <button onClick={() => setActiveSheet('display')} className="flex items-center gap-1.5 p-1">
+            <button onClick={() => setActiveSheet('display')} className="flex items-center gap-1.5 p-1" aria-label="Display options">
               <MoreVertical className="h-5 w-5" />
             </button>
           </div>
@@ -812,6 +813,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                     "p-2 transition-colors active:scale-95",
                     ch.isRead ? "text-[#E5092F]" : "text-neutral-600"
                   )}
+                  aria-label={ch.isRead ? "Mark as unread" : "Mark as read"}
                 >
                   <CheckCircle2 className="h-5 w-5" />
                 </button>
@@ -826,6 +828,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                       handleDownload(ch);
                     }}
                     className="p-2 text-neutral-500 active:text-neutral-300"
+                    aria-label="Download chapter"
                   >
                     <Download className="h-5 w-5" />
                   </button>
@@ -838,6 +841,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
                     setActiveSheet('chapterMenu');
                   }}
                   className="p-2 -mr-2 text-neutral-500 active:text-neutral-300"
+                  aria-label="Chapter options"
                 >
                   <MoreVertical className="h-5 w-5" />
                 </button>
