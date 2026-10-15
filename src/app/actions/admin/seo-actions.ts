@@ -16,13 +16,20 @@ export async function runSeoAudit() {
   return { success: true, message: `SEO Audit completed. Calculated score: ${newData.overview.overallScore}/100.` };
 }
 
+export async function triggerSitemapRevalidation() {
+  revalidatePath('/sitemap.xml');
+  revalidatePath('/sitemap-feed/sitemap/static.xml');
+  revalidatePath('/sitemap-feed/sitemap/series.xml');
+  revalidatePath('/sitemap-feed/sitemap/chapters.xml');
+  revalidatePath('/feed.xml');
+  revalidatePath('/archive');
+}
+
 export async function regenerateSitemap() {
   const session = await auth();
   if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) throw new Error('Unauthorized');
 
-  // Next.js uses revalidatePath for file-based route caching
-  revalidatePath('/sitemap.xml');
-  revalidatePath('/sitemap-[id].xml');
+  await triggerSitemapRevalidation();
   
   // @ts-expect-error - Next.js canary type expects 2 arguments
   revalidateTag('admin-seo');

@@ -85,7 +85,7 @@ export default function SeriesCreateClient({ genres, tags }: SeriesCreateClientP
     if (!keywords && title) setKeywords(`${title}, ${typeLabel}, Download`);
     if (!canonicalUrl && title) {
       const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      setCanonicalUrl(`https://redbeard-manhwa.vercel.app/series/${slug}`);
+      setCanonicalUrl(`https://redbeard.store/series/${slug}`);
     }
   };
 

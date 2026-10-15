@@ -144,7 +144,12 @@ export async function generateMetadata({
       ];
 
   const robots = seo.robots || { index: true, follow: true };
-  const canonical = seo.canonicalUrl || `${APP_URL}/series/${slug}`;
+  const rawCanonical = seo.canonicalUrl || seo.canonical || `${APP_URL}/series/${slug}`;
+  const canonical = rawCanonical
+    .replace(/^http:\/\//, 'https://')
+    .replace('https://www.redbeard.store', 'https://redbeard.store')
+    .replace('https://redbeard-manhwa.vercel.app', 'https://redbeard.store')
+    .replace(/\/+$/, '');
   const ogImage = seo.ogImage || series.coverImage;
   const twitterImage = seo.twitterImage || series.coverImage;
 

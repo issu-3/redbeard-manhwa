@@ -16,6 +16,34 @@ const nextConfig: NextConfig = {
     },
   },
   allowedDevOrigins: ['10.156.22.77'],
+  redirects: isCapacitor ? undefined : async () => [
+    {
+      source: '/:path*',
+      has: [{ type: 'host', value: 'www.redbeard.store' }],
+      destination: 'https://redbeard.store/:path*',
+      permanent: true,
+    },
+    {
+      source: '/series',
+      destination: '/browse/trending',
+      permanent: true,
+    },
+    {
+      source: '/browse',
+      destination: '/browse/trending',
+      permanent: true,
+    },
+    {
+      source: '/sitemap',
+      destination: '/sitemap.xml',
+      permanent: true,
+    },
+    {
+      source: '/feed',
+      destination: '/feed.xml',
+      permanent: true,
+    },
+  ],
   // H1 FIX: Security headers (not supported in static export)
   headers: isCapacitor ? undefined : async () => [
     {

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
+import { triggerSitemapRevalidation } from './seo-actions';
 
 export async function getExistingChapters(seriesId: string) {
   const session = await auth();
@@ -56,6 +57,7 @@ export async function deleteChapter(chapterId: string, seriesId: string) {
   revalidatePath('/');
   revalidatePath('/browse/latest');
   updateTag('homepage_data');
+  await triggerSitemapRevalidation();
 }
 
 export async function bulkDeleteChapters(chapterIds: string[], seriesId: string) {
@@ -94,6 +96,7 @@ export async function bulkDeleteChapters(chapterIds: string[], seriesId: string)
   revalidatePath('/');
   revalidatePath('/browse/latest');
   updateTag('homepage_data');
+  await triggerSitemapRevalidation();
 
   return { success: true, count: deleteResult.count };
 }
@@ -170,6 +173,7 @@ export async function createChapter(seriesId: string, formData: FormData, preven
     revalidatePath('/');
     revalidatePath('/browse/latest');
     updateTag('homepage_data');
+    await triggerSitemapRevalidation();
   } catch (error: any) {
     if (error?.code === 'P2002') {
       return { success: false, error: 'A chapter with this number already exists for this series.' };
@@ -278,6 +282,7 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
     revalidatePath('/');
     revalidatePath('/browse/latest');
     updateTag('homepage_data');
+    await triggerSitemapRevalidation();
   } catch (error: any) {
     if (error?.code === 'P2002') {
       return { success: false, error: 'A chapter with this number already exists for this series.' };

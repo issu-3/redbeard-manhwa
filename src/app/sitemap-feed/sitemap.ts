@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 import { APP_URL } from '@/lib/constants';
 
-// Cache sitemap for 24 hours
-export const revalidate = 86400;
+// Cache sitemap for 1 hour
+export const revalidate = 3600;
 
 /**
  * Generate sitemap index entries.
@@ -73,7 +73,12 @@ export default async function sitemap(props: {
     // ── Chapters ──
     if (id === 'chapters') {
       const chapters = await prisma.chapter.findMany({
-        where: { isPublished: true },
+        where: {
+          isPublished: true,
+          NOT: {
+            sourceType: 'DOWNLOAD',
+          },
+        },
         select: { slug: true, number: true, updatedAt: true, series: { select: { slug: true } } },
       });
 

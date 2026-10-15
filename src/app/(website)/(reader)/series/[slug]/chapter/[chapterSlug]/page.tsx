@@ -60,18 +60,6 @@ const getCachedChapterDataInternal = unstable_cache(
       }
     }
 
-    if (!chapter) {
-      chapter = await prisma.chapter.findFirst({
-        where: { seriesId: series.id, isPublished: true },
-        orderBy: [{ number: 'asc' }, { createdAt: 'asc' }],
-        include: {
-          images: {
-            orderBy: { pageNumber: 'asc' },
-          },
-        },
-      });
-    }
-
     if (!chapter) return null;
 
     // Find adjacent chapters concurrently
@@ -251,7 +239,12 @@ export async function generateMetadata({
 
   const title = seo.title || defaultTitle;
   const description = seo.description || defaultDesc;
-  const canonical = seo.canonicalUrl || defaultUrl;
+  const rawCanonical = seo.canonicalUrl || seo.canonical || defaultUrl;
+  const canonical = rawCanonical
+    .replace(/^http:\/\//, 'https://')
+    .replace('https://www.redbeard.store', 'https://redbeard.store')
+    .replace('https://redbeard-manhwa.vercel.app', 'https://redbeard.store')
+    .replace(/\/+$/, '');
   const ogImage = seo.ogImage || defaultImage;
   const twitterImage = seo.twitterImage || defaultImage;
   const keywords = typeof seo.keywords === 'string' ? seo.keywords.split(',').map((k: string) => k.trim()) : undefined;

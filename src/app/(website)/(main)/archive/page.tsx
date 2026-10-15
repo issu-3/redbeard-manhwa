@@ -54,7 +54,12 @@ async function getArchiveData(): Promise<{
       coverImage: true,
       chapterCount: true,
       chapters: {
-        where: { isPublished: true },
+        where: {
+          isPublished: true,
+          NOT: {
+            sourceType: 'DOWNLOAD',
+          },
+        },
         select: {
           slug: true,
           number: true,

@@ -17,9 +17,14 @@ export async function GET() {
   const baseUrl = APP_URL || 'https://redbeard.store';
 
   try {
-    // Fetch latest 100 published chapters with their series info
+    // Fetch latest 100 published chapters with their series info (excluding external download redirects)
     const latestChapters = await prisma.chapter.findMany({
-      where: { isPublished: true },
+      where: {
+        isPublished: true,
+        NOT: {
+          sourceType: 'DOWNLOAD',
+        },
+      },
       select: {
         slug: true,
         number: true,

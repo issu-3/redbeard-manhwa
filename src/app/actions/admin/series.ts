@@ -9,6 +9,7 @@ import { seriesSchema } from '@/lib/validators';
 import { generateSeriesSeo } from '@/lib/seo-generator';
 import { deleteFromR2 } from '@/lib/s3';
 import { notifySeriesPublished } from '@/lib/google-indexing';
+import { triggerSitemapRevalidation } from './seo-actions';
 
 async function checkAdmin() {
   const session = await auth();
@@ -52,6 +53,7 @@ export async function deleteSeries(id: string) {
   revalidatePath('/browse/popular');
   revalidatePath('/');
   updateTag('homepage_data');
+  await triggerSitemapRevalidation();
 }
 
 export async function createSeries(formData: FormData) {
@@ -168,6 +170,7 @@ export async function createSeries(formData: FormData) {
 
   revalidatePath('/admin/series');
   updateTag('homepage_data');
+  await triggerSitemapRevalidation();
   redirect('/admin/series');
 }
 
@@ -290,5 +293,6 @@ export async function updateSeries(formData: FormData) {
   revalidatePath(`/series/${slug}`);
   revalidatePath('/');
   updateTag('homepage_data');
+  await triggerSitemapRevalidation();
   redirect('/admin/series');
 }

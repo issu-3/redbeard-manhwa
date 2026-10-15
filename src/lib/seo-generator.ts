@@ -111,7 +111,7 @@ export function generateSeriesSeo(
     ? (tryParseJson(existingSeo) || {}) 
     : (existingSeo || {});
 
-  const baseUrl = APP_URL.startsWith('http') ? APP_URL : 'https://redbeard-manhwa.vercel.app';
+  const baseUrl = APP_URL.startsWith('http') ? APP_URL : 'https://redbeard.store';
   const defaultCanonical = `${baseUrl}/series/${series.slug}`;
 
   const typeLabel = getContentTypeLabel(series.type);

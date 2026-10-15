@@ -1,6 +1,6 @@
 import { APP_URL } from '@/lib/constants';
 
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 export async function GET() {
   const baseUrl = APP_URL || 'https://redbeard.store';
@@ -27,7 +27,7 @@ export async function GET() {
   return new Response(xml, {
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
     },
   });
 }

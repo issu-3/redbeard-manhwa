@@ -59,7 +59,7 @@ export function SeoFormFields({
     }
     if (!canonicalUrl && seriesTitle) {
       const slug = seriesTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      setCanonicalUrl(`https://redbeard-manhwa.vercel.app/series/${slug}`);
+      setCanonicalUrl(`https://redbeard.store/series/${slug}`);
     }
   };
 
@@ -204,7 +204,7 @@ export function SeoFormFields({
             name="seoCanonicalUrl" 
             value={canonicalUrl}
             onChange={(e) => setCanonicalUrl(e.target.value)}
-            placeholder="https://redbeard-manhwa.vercel.app/series/my-series"
+            placeholder="https://redbeard.store/series/my-series"
             className={`w-full rounded-xl border bg-card px-4 py-2 text-sm focus:outline-none focus:ring-2 transition-all ${
               isMissingCanonical || isInvalidCanonical ? 'border-warning focus:ring-warning/20' : 'border-border focus:ring-primary/20'
             }`} 
