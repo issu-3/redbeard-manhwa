@@ -60,6 +60,8 @@ export async function Footer() {
             <Link href="/browse/completed" className="text-xs text-text-muted hover:text-text-primary transition-colors">Completed</Link>
             <Link href="/browse/new-releases" className="text-xs text-text-muted hover:text-text-primary transition-colors">New Releases</Link>
             <Link href="/browse/genres" className="text-xs text-text-muted hover:text-text-primary transition-colors">Genres</Link>
+            <Link href="/archive" className="text-xs text-text-muted hover:text-text-primary transition-colors">Series Directory</Link>
+            <Link href="/feed.xml" className="text-xs text-text-muted hover:text-text-primary transition-colors">RSS Feed</Link>
           </nav>
 
           <p className="mt-6 text-xs text-text-muted">

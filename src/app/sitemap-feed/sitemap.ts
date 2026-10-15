@@ -33,6 +33,7 @@ export default async function sitemap(props: {
 
       const staticRoutes: MetadataRoute.Sitemap = [
         { url: baseUrl, changeFrequency: 'daily', priority: 1.0 },
+        { url: `${baseUrl}/archive`, changeFrequency: 'daily', priority: 0.9 },
         { url: `${baseUrl}/browse/trending`, changeFrequency: 'hourly', priority: 0.9 },
         { url: `${baseUrl}/browse/popular`, changeFrequency: 'daily', priority: 0.9 },
         { url: `${baseUrl}/browse/latest`, changeFrequency: 'hourly', priority: 0.9 },

@@ -59,6 +59,11 @@ export async function generateMetadata(): Promise<Metadata> {
       google: settings.seo_gsc_verification || undefined,
     },
     manifest: '/manifest.json',
+    alternates: {
+      types: {
+        'application/rss+xml': `${APP_URL || 'https://redbeard.store'}/feed.xml`,
+      },
+    },
   };
 }
 
