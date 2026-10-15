@@ -142,7 +142,7 @@ export default function SearchClient({ dynamicGenres, dynamicTrending }: SearchC
           />
           <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2">
             {query && (
-              <button onClick={() => setQuery('')} className="p-1 text-text-muted hover:text-text-secondary">
+              <button aria-label="Clear search" onClick={() => setQuery('')} className="p-1 text-text-muted hover:text-text-secondary">
                 <X className="h-4 w-4" />
               </button>
             )}
