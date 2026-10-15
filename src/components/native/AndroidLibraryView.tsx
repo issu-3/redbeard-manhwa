@@ -268,7 +268,7 @@ export function AndroidLibraryView() {
                 Library
               </h1>
               <div className="flex items-center gap-4 text-white">
-                <button onClick={() => setIsSearchMode(true)} className="active:opacity-70 transition-opacity p-1">
+                <button onClick={() => setIsSearchMode(true)} className="active:opacity-70 transition-opacity p-1" aria-label="Search library">
                   <Search className="h-[22px] w-[22px]" />
                 </button>
                 <button onClick={() => { setTempFilterState(filterState); setIsFilterOpen(true); }} className="active:opacity-70 transition-opacity p-1 relative">
@@ -304,6 +304,7 @@ export function AndroidLibraryView() {
                     setSelectedSeriesIds(new Set());
                   }}
                   className="p-2 -ml-2 text-neutral-300 active:bg-neutral-800 rounded-full"
+                  aria-label="Exit selection mode"
                 >
                   <ArrowLeft className="h-6 w-6" />
                 </button>
@@ -326,6 +327,7 @@ export function AndroidLibraryView() {
                   onClick={handleRemoveSelected}
                   disabled={selectedSeriesIds.size === 0}
                   className={cn("active:opacity-70 transition-opacity p-1 -mr-2", selectedSeriesIds.size > 0 ? "text-[#E5092F]" : "text-neutral-600")}
+                  aria-label="Remove selected series"
                 >
                   <Trash2 className="h-[22px] w-[22px]" />
                 </button>
@@ -339,6 +341,7 @@ export function AndroidLibraryView() {
                   setSearchQuery('');
                 }}
                 className="p-2 -ml-2 text-neutral-300 active:bg-neutral-800 rounded-full"
+                aria-label="Exit search mode"
               >
                 <ArrowLeft className="h-6 w-6" />
               </button>
@@ -353,7 +356,7 @@ export function AndroidLibraryView() {
                   className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-sm text-white placeholder:text-neutral-500 p-0"
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="p-1 -mr-1 text-neutral-400 active:text-white rounded-full ml-1">
+                  <button onClick={() => setSearchQuery('')} className="p-1 -mr-1 text-neutral-400 active:text-white rounded-full ml-1" aria-label="Clear search query">
                     <X className="h-4 w-4" />
                   </button>
                 )}

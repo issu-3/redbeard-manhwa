@@ -181,7 +181,7 @@ export function BulkChapterAdder({ seriesId }: { seriesId: string }) {
                     </td>
                     <td className="px-6 py-3">{ch.provider}</td>
                     <td className="px-6 py-3 text-right">
-                      <button onClick={() => handleRemove(idx)} className="text-text-muted hover:text-red-500 p-1">
+                      <button onClick={() => handleRemove(idx)} className="text-text-muted hover:text-red-500 p-1" aria-label={`Remove chapter ${idx + 1}`}>
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </td>

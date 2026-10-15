@@ -185,13 +185,13 @@ export function MediaManager({ name, label, recommendedDimensions, defaultValue 
           
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-4">
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={copyToClipboard} className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-md transition" title="Copy URL">
+              <button type="button" onClick={copyToClipboard} className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-md transition" title="Copy URL" aria-label="Copy URL">
                 <Copy className="w-4 h-4" />
               </button>
-              <a href={finalUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-md transition" title="Open Original">
+              <a href={finalUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-md transition" title="Open Original" aria-label="Open Original">
                 <ExternalLink className="w-4 h-4" />
               </a>
-              <a href={finalUrl} download className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-md transition" title="Download">
+              <a href={finalUrl} download className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-md transition" title="Download" aria-label="Download Image">
                 <Download className="w-4 h-4" />
               </a>
             </div>
