@@ -124,7 +124,7 @@ export async function generateMetadata({
   const series = await getSeriesData(slug);
   const settings = await getCachedSettings();
   
-  if (!series) return { title: 'Series Not Found' };
+  if (!series) notFound();
 
   const seo = (series.seo as Record<string, string>) || {};
   const siteTitle = settings.seo_site_title || 'REDBEARD';

@@ -223,7 +223,7 @@ export async function generateMetadata({
   const chapter = await getChapterData(slug, chapterSlug);
   const settings = await getCachedSettings();
 
-  if (!chapter) return { title: 'Chapter Not Found' };
+  if (!chapter) notFound();
 
   const seo = (chapter.seo || {}) as Record<string, any>;
   const _siteTitle = settings.seo_site_title || 'REDBEARD';
@@ -232,7 +232,7 @@ export async function generateMetadata({
   const defaultDesc = `Read ${chapter.seriesTitle} ${chapter.label || `Chapter ${chapter.number}`}${chapter.title ? ` - ${chapter.title}` : ''} online on ${settings.siteName || 'REDBEARD'}. High quality reading experience.`;
   const safeSlug = typeof chapter.slug === 'string' && chapter.slug.trim() ? chapter.slug : chapter.number != null ? String(chapter.number) : null;
 
-  if (!safeSlug) return { title: 'Chapter Not Found' };
+  if (!safeSlug) notFound();
 
   const defaultUrl = `${APP_URL}/series/${slug}/chapter/${safeSlug}`;
   const defaultImage = chapter.images.length > 0 ? chapter.images[0].imageUrl : undefined;
