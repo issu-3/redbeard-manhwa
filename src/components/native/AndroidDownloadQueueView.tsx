@@ -66,6 +66,7 @@ export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
         <button 
           onClick={() => onBack ? onBack() : window.history.back()}
           className="rounded-full p-2 -ml-2 active:bg-neutral-800 transition-colors"
+          aria-label="Go back"
         >
           <ArrowLeft className="h-6 w-6 text-white" />
         </button>
@@ -138,6 +139,7 @@ export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
                       onClick={() => handleRetry(item)}
                       className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-400 active:bg-neutral-800 transition-colors"
                       title="Retry"
+                      aria-label="Retry download"
                     >
                       <RotateCcw className="h-5 w-5" />
                     </button>
@@ -146,6 +148,7 @@ export function AndroidDownloadQueueView({ onBack }: { onBack?: () => void }) {
                     onClick={() => handleCancel(item)}
                     className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-400 active:bg-neutral-800 active:text-[#E5092F] transition-colors"
                     title="Cancel"
+                    aria-label="Cancel download"
                   >
                     <X className="h-5 w-5" />
                   </button>
