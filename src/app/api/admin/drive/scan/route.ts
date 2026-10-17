@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getGoogleDriveConfig, getAccessToken } from '@/lib/google-drive';
+import { auth } from '@/auth';
 
 export async function POST(req: Request) {
   try {
+    const session = await auth();
+    if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
+      return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+    }
+
     const { folderUrl, apiKey } = await req.json();
     if (!folderUrl) return NextResponse.json({ error: 'Folder URL is required' }, { status: 400 });
 
