@@ -628,16 +628,17 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                       "p-2 rounded-full transition-colors",
                       isSaved ? "text-[#E53935] hover:bg-[#E53935]/20" : "text-white hover:bg-[#E53935]/20 hover:text-[#E53935]"
                     )}
+                    aria-label={isSaved ? "Remove bookmark" : "Add bookmark"}
                   >
                     <Bookmark className="w-5 h-5" fill={isSaved ? "currentColor" : "none"} />
                   </button>
-                  <button onClick={() => setCommentsOpen(true)} className="p-2 text-white hover:bg-white/10 rounded-full transition-colors relative">
+                  <button onClick={() => setCommentsOpen(true)} className="p-2 text-white hover:bg-white/10 rounded-full transition-colors relative" aria-label="Open comments">
                     <MessageSquare className="w-5 h-5" />
                     {comments?.length > 0 && (
                       <span className="absolute top-2 right-2 w-2 h-2 bg-[#E53935] rounded-full" />
                     )}
                   </button>
-                  <button className="p-2 text-white hover:bg-white/10 rounded-full transition-colors hidden sm:flex">
+                  <button className="p-2 text-white hover:bg-white/10 rounded-full transition-colors hidden sm:flex" aria-label="More options">
                     <MoreVertical className="w-5 h-5" />
                   </button>
                 </div>
@@ -707,6 +708,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
               <button 
                 onClick={() => goToPage(1)} 
                 className="w-10 h-10 rounded-full bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white shadow-2xl active:scale-95 transition-all hover:bg-[#E53935]"
+                aria-label="Go to first page"
               >
                 <ChevronLeft className="w-5 h-5 rotate-90" />
               </button>
@@ -732,6 +734,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
               <button 
                 onClick={() => goToPage(chapter.images.length)} 
                 className="w-10 h-10 rounded-full bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white shadow-2xl active:scale-95 transition-all hover:bg-[#E53935]"
+                aria-label="Go to last page"
               >
                 <ChevronRight className="w-5 h-5 rotate-90" />
               </button>
@@ -771,7 +774,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
             >
               <div className="p-4 flex justify-between items-center border-b border-white/10 text-white shrink-0">
                 <h3 className="font-bold text-lg flex items-center gap-2"><MessageSquare className="w-5 h-5"/> Comments</h3>
-                <button onClick={() => setCommentsOpen(false)} className="p-2"><X className="w-5 h-5"/></button>
+                <button onClick={() => setCommentsOpen(false)} className="p-2" aria-label="Close comments"><X className="w-5 h-5"/></button>
               </div>
               <div className="p-4 flex-1 overflow-y-auto thin-scrollbar bg-black/20">
                 <CommentSection chapterId={chapter.id} comments={comments || []} currentUserId={currentUserId} />
