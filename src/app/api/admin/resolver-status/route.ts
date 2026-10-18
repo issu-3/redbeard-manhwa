@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
 import { TeraBoxResolver } from '@/lib/providers/terabox';
 
 const PROBE_URL = process.env.TERABOX_PROBE_URL!;   // known-good test link (.env)
@@ -8,7 +9,12 @@ let probeCache: { ok: boolean; message: string; checkedAt: number } | null = nul
 const teraboxResolver = new TeraBoxResolver();
 
 export async function GET(request: Request) {
-  // TODO: admin auth check
+  // SECURITY: Ensure endpoint is protected since it handles external provider integration checks.
+  // Restrict access to ADMIN/MODERATOR roles to prevent probing and potential abuse.
+  const session = await auth();
+  if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
 
   const configured = !!process.env.TERABOX_NDUS_COOKIE;
 
