@@ -3,15 +3,20 @@ import { prisma } from '@/lib/prisma';
 import SearchClient from './SearchClient';
 import { unstable_cache } from 'next/cache';
 
-import { generateMetadata } from '@/lib/seo';
+import { generateMetadata as generateSeoMetadata } from '@/lib/seo';
 import { APP_URL } from '@/lib/constants';
+import { getCachedSettings } from '@/app/actions/public/settings';
 
-export const metadata: Metadata = generateMetadata({
-  title: 'Search',
-  description: 'Search thousands of series. Find your next read on REDBEARD.',
-  url: `${APP_URL}/search`,
-  noindex: true
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getCachedSettings();
+  return generateSeoMetadata({
+    title: 'Search',
+    description: 'Search thousands of series. Find your next read on REDBEARD.',
+    url: `${APP_URL}/search`,
+    noindex: true,
+    settings,
+  });
+}
 
 const getCachedSearchFilterData = unstable_cache(
   async () => {

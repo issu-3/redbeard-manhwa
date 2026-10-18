@@ -7,14 +7,19 @@ import { prisma } from '@/lib/prisma';
 import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
 import { unstable_cache } from 'next/cache';
 
-import { generateMetadata } from '@/lib/seo';
+import { generateMetadata as generateSeoMetadata } from '@/lib/seo';
 import { APP_URL } from '@/lib/constants';
+import { getCachedSettings } from '@/app/actions/public/settings';
 
-export const metadata: Metadata = generateMetadata({
-  title: 'Popular',
-  description: 'Read the most popular all-time fan favorite manga, manhwa, and webtoons on REDBEARD. Explore top-rated comics with millions of views online.',
-  url: `${APP_URL}/browse/popular`
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getCachedSettings();
+  return generateSeoMetadata({
+    title: 'Popular',
+    description: 'Read the most popular all-time fan favorite manga, manhwa, and webtoons on REDBEARD. Explore top-rated comics with millions of views online.',
+    url: `${APP_URL}/browse/popular`,
+    settings,
+  });
+}
 
 const getCachedPopularSeries = unstable_cache(
   async () => {

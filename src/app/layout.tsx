@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
+import { resolveSocialImages } from '@/lib/seo';
 import './globals.css';
 
 const inter = Inter({
@@ -19,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const robotsSetting = settings.seo_robots || 'index, follow';
   const shouldIndex = robotsSetting.includes('index') && !robotsSetting.includes('noindex');
   const shouldFollow = robotsSetting.includes('follow') && !robotsSetting.includes('nofollow');
-  const ogImage = settings.seo_og_image || '/images/og-default.png';
+  const { ogImage, twitterImage } = resolveSocialImages({ settings });
   const twitterHandle = settings.seo_twitter_handle || '@redbeard';
 
   return {
@@ -47,6 +48,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: siteTitle,
       description: siteDescription,
       creator: twitterHandle,
+      images: [twitterImage],
     },
     robots: {
       index: shouldIndex,

@@ -59,12 +59,6 @@ export const reportSchema = z.object({
   reason: z.string().min(10, 'Reason must be at least 10 characters').max(1000),
 });
 
-export const readingListSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100),
-  description: z.string().max(500).optional(),
-  isPublic: z.boolean().default(true),
-});
-
 export const searchSchema = z.object({
   query: z.string().max(200).optional(),
   genres: z.array(z.string()).optional(),
@@ -112,7 +106,6 @@ export type CommentInput = z.infer<typeof commentSchema>;
 export type ReviewInput = z.infer<typeof reviewSchema>;
 export type RatingInput = z.infer<typeof ratingSchema>;
 export type ReportInput = z.infer<typeof reportSchema>;
-export type ReadingListInput = z.infer<typeof readingListSchema>;
 export type SearchInput = z.infer<typeof searchSchema>;
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type PreferencesInput = z.infer<typeof preferencesSchema>;

@@ -7,6 +7,7 @@ import type { ChapterData } from '@/types';
 import { auth } from '@/auth';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
+import { resolveSocialImages } from '@/lib/seo';
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { getDirectCdnUrl } from '@/lib/s3';
@@ -245,8 +246,11 @@ export async function generateMetadata({
     .replace('https://www.redbeard.store', 'https://redbeard.store')
     .replace('https://redbeard-manhwa.vercel.app', 'https://redbeard.store')
     .replace(/\/+$/, '');
-  const ogImage = seo.ogImage || defaultImage;
-  const twitterImage = seo.twitterImage || defaultImage;
+  const { ogImage, twitterImage } = resolveSocialImages({
+    customOgImage: seo.ogImage || defaultImage,
+    customTwitterImage: seo.twitterImage,
+    settings,
+  });
   const keywords = typeof seo.keywords === 'string' ? seo.keywords.split(',').map((k: string) => k.trim()) : undefined;
 
   return {
@@ -257,7 +261,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      images: ogImage ? [{ url: ogImage, width: 800, height: 1200, alt: title }] : [],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
       url: canonical,
       type: 'article',
     },
@@ -265,7 +269,7 @@ export async function generateMetadata({
       card: 'summary_large_image',
       title,
       description,
-      images: twitterImage ? [twitterImage] : undefined,
+      images: [twitterImage],
     },
     alternates: {
       canonical: canonical,

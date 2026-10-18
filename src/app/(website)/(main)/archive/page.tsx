@@ -5,13 +5,16 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { APP_URL, APP_NAME } from '@/lib/constants';
 import { generateMetadata as generateSeoMetadata } from '@/lib/seo';
+import { getCachedSettings } from '@/app/actions/public/settings';
 import { ArchiveChapterList } from './archive-client';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getCachedSettings();
   const seo = generateSeoMetadata({
     title: 'Series Directory & Archive',
     description: `Browse the complete directory of all series and chapters available on ${APP_NAME}. Find manhwa, manga, manhua, and webtoons organized alphabetically.`,
     url: `${APP_URL}/archive`,
+    settings,
   });
 
   return {

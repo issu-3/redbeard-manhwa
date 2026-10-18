@@ -7,14 +7,19 @@ import { prisma } from '@/lib/prisma';
 import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
 import { unstable_cache } from 'next/cache';
 
-import { generateMetadata } from '@/lib/seo';
+import { generateMetadata as generateSeoMetadata } from '@/lib/seo';
 import { APP_URL } from '@/lib/constants';
+import { getCachedSettings } from '@/app/actions/public/settings';
 
-export const metadata: Metadata = generateMetadata({
-  title: 'Ongoing Series',
-  description: 'Discover the best ongoing series with regular updates on REDBEARD.',
-  url: `${APP_URL}/browse/ongoing`
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getCachedSettings();
+  return generateSeoMetadata({
+    title: 'Ongoing Series',
+    description: 'Discover the best ongoing series with regular updates on REDBEARD.',
+    url: `${APP_URL}/browse/ongoing`,
+    settings,
+  });
+}
 
 const getCachedOngoingSeries = unstable_cache(
   async () => {

@@ -18,6 +18,7 @@ import { DescriptionClient } from './description-client';
 import { ReviewsSection } from '@/components/series/ReviewsSection';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
+import { resolveSocialImages } from '@/lib/seo';
 import { AdRenderer } from '@/components/ads/AdRenderer';
 import { unstable_cache } from 'next/cache';
 
@@ -162,8 +163,11 @@ export async function generateMetadata({
     .replace('https://www.redbeard.store', 'https://redbeard.store')
     .replace('https://redbeard-manhwa.vercel.app', 'https://redbeard.store')
     .replace(/\/+$/, '');
-  const ogImage = seo.ogImage || series.coverImage;
-  const twitterImage = seo.twitterImage || series.coverImage;
+  const { ogImage, twitterImage } = resolveSocialImages({
+    customOgImage: seo.ogImage || series.coverImage,
+    customTwitterImage: seo.twitterImage,
+    settings,
+  });
 
   const isNSFW = (series as any).isNSFW || series.type === 'PORNHWA' || series.type === 'DOUJINSHI';
 
@@ -175,7 +179,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      images: [{ url: ogImage, width: 800, height: 1200, alt: title }],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
       type: 'book',
       url: canonical,
     },
@@ -332,7 +336,7 @@ export default async function SeriesDetailPage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       
       {/* ── Banner Section ────────────────────────────────── */}
-      <section className="relative h-[30vh] min-h-[250px] md:h-[45vh] md:min-h-[400px] w-full overflow-hidden">
+      <section className="relative h-[30vh] min-h-62.5 md:h-[45vh] md:min-h-100 w-full overflow-hidden">
         <Image
           src={series.bannerImage || series.coverImage}
           alt=""
@@ -341,8 +345,8 @@ export default async function SeriesDetailPage({
           priority
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-background via-background/80 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-background/90 via-background/60 to-transparent" />
       </section>
 
       {/* ── Main Content (overlapping banner) ─────────────── */}
@@ -352,8 +356,8 @@ export default async function SeriesDetailPage({
         </div>
         <div className="flex flex-col md:flex-row gap-8 lg:gap-12 mt-8">
           {/* ── Cover Image ─────────────────────────────── */}
-          <div className="shrink-0 flex flex-col items-center md:items-start md:w-[280px] lg:w-[320px]">
-            <div className="relative w-[160px] md:w-full aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-border/50">
+          <div className="shrink-0 flex flex-col items-center md:items-start md:w-70 lg:w-[320px]">
+            <div className="relative w-40 md:w-full aspect-2/3 rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-border/50">
               <Image
                 src={series.coverImage}
                 alt={series.title}
@@ -488,7 +492,7 @@ export default async function SeriesDetailPage({
       </div>
 
       {/* ── Mobile Sticky Action Bar (positioned above MobileNav) ──────── */}
-      <div id="series-action-bar" className="md:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border p-2.5 md:p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] transition-transform duration-300 ease-in-out [.mobile-menu-open_&]:translate-y-[200%]">
+      <div id="series-action-bar" className="md:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border p-2.5 md:p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] transition-transform duration-300 ease-in-out in-[.mobile-menu-open]:translate-y-[200%]">
         <div className="flex gap-3 max-w-7xl mx-auto">
           <SeriesActionsClient
             seriesId={series.id}

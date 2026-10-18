@@ -5,6 +5,7 @@ import { Settings, Home, BookOpen, MonitorPlay, Shield, Globe, Save } from 'luci
 import { saveSettings } from '@/app/actions/admin/settings';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { SeoImageUploader } from './SeoImageUploader';
 
 const TABS = [
   { id: 'general', label: 'General', icon: Settings },
@@ -419,14 +420,35 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">Default OpenGraph Image URL</label>
-                  <input
-                    name="seo_og_image"
-                    defaultValue={initialSettings.seo_og_image || '/images/og-default.png'}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+
+                {/* Social Media Default Images */}
+                <div className="pt-2 border-t border-border/50">
+                  <h3 className="text-base font-semibold text-text-primary mb-1">Default Social Media Images</h3>
+                  <p className="text-xs text-text-muted mb-4">
+                    Set global default images for Open Graph (Facebook, LinkedIn, etc.) and Twitter/X cards.
+                    These are used across the entire site unless a page has its own custom image configured.
+                  </p>
+                  <div className="space-y-4">
+                    <SeoImageUploader
+                      name="seo_og_image"
+                      label="Open Graph Image"
+                      recommendedSize="1200 × 630 px"
+                      currentUrl={initialSettings.seo_og_image || ''}
+                      fallbackUrl="/images/og-default.png"
+                    />
+                    <SeoImageUploader
+                      name="seo_twitter_image"
+                      label="Twitter/X Card Image"
+                      recommendedSize="1200 × 600 px"
+                      currentUrl={initialSettings.seo_twitter_image || ''}
+                    />
+                    <p className="text-[10px] text-text-muted italic">
+                      If no Twitter/X image is set, the Open Graph image will be used as fallback.
+                      Per-series and per-chapter custom images always take priority over these global defaults.
+                    </p>
+                  </div>
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-1">Twitter/X Handle</label>
                   <input

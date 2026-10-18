@@ -5,14 +5,19 @@ import { GenreCard } from '@/components/shared/GenreCard';
 import { prisma } from '@/lib/prisma';
 import { unstable_cache } from 'next/cache';
 
-import { generateMetadata } from '@/lib/seo';
+import { generateMetadata as generateSeoMetadata } from '@/lib/seo';
 import { APP_URL } from '@/lib/constants';
+import { getCachedSettings } from '@/app/actions/public/settings';
 
-export const metadata: Metadata = generateMetadata({
-  title: 'Genres',
-  description: 'Browse thousands of free manga, manhwa, and comics categorized by genre on REDBEARD. Find your next favorite action, romance, or fantasy story.',
-  url: `${APP_URL}/browse/genres`
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getCachedSettings();
+  return generateSeoMetadata({
+    title: 'Genres',
+    description: 'Browse thousands of free manga, manhwa, and comics categorized by genre on REDBEARD. Find your next favorite action, romance, or fantasy story.',
+    url: `${APP_URL}/browse/genres`,
+    settings,
+  });
+}
 
 const getCachedGenres = unstable_cache(
   async () => {

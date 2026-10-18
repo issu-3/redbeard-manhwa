@@ -17,7 +17,7 @@ import {
   ChevronDown,
   Bookmark,
   History,
-  List,
+  Download,
   Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -28,7 +28,7 @@ const USER_MENU_ITEMS = USER_NAV_ITEMS.map((item) => {
     User,
     Bookmark,
     History,
-    List,
+    Download,
     Bell,
     Settings,
   };
@@ -375,11 +375,12 @@ export function Header() {
                 >
                   {isLoggedIn ? (
                     <div className="flex flex-col gap-1">
-                      {USER_MENU_ITEMS.slice(0, 4).map(
+                      {USER_MENU_ITEMS.map(
                         ({ label, href, Icon }) => (
                           <Link
                             key={href}
                             href={href}
+                            onClick={() => setMobileMenuOpen(false)}
                             className="flex items-center gap-3 rounded-xl px-4 py-3 text-[15px] text-text-secondary transition-colors hover:bg-foreground/[0.04] hover:text-text-primary"
                           >
                             <Icon className="h-4.5 w-4.5" />

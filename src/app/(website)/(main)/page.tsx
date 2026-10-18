@@ -18,7 +18,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const seo = generateSeoMetadata({
     title: title.split(' | ')[0], // generateSeoMetadata appends APP_NAME
     description,
-    url: baseUrl
+    url: baseUrl,
+    settings,
   });
 
   return {

@@ -103,7 +103,6 @@ export const USER_NAV_ITEMS = [
   { label: 'Profile', href: '/user/profile', icon: 'User' },
   { label: 'Bookmarks', href: '/user/bookmarks', icon: 'Bookmark' },
   { label: 'History', href: '/user/history', icon: 'History' },
-  { label: 'Reading Lists', href: '/user/reading-lists', icon: 'List' },
   { label: 'Offline Library', href: '/library', icon: 'Download' },
   { label: 'Notifications', href: '/user/notifications', icon: 'Bell' },
   { label: 'Settings', href: '/user/settings', icon: 'Settings' },
