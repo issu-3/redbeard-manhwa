@@ -17,7 +17,6 @@ import {
   ChevronDown,
   Bookmark,
   History,
-  Download,
   Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -28,8 +27,6 @@ const USER_MENU_ITEMS = USER_NAV_ITEMS.map((item) => {
     User,
     Bookmark,
     History,
-    Download,
-    Bell,
     Settings,
   };
   return { ...item, Icon: iconMap[item.icon] || User };

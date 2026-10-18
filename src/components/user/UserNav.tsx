@@ -4,13 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { User, Bookmark, History, Settings, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { USER_NAV_ITEMS } from '@/lib/constants';
 
-export const USER_NAV_ITEMS = [
-  { name: 'Profile', href: '/user/profile', icon: User },
-  { name: 'Bookmarks', href: '/user/bookmarks', icon: Bookmark },
-  { name: 'History', href: '/user/history', icon: History },
-  { name: 'Settings', href: '/user/settings', icon: Settings },
-];
+const ICON_MAP: Record<string, React.ElementType> = {
+  User,
+  Bookmark,
+  History,
+  Settings,
+};
 
 export function UserNav() {
   const pathname = usePathname();
@@ -23,6 +24,7 @@ export function UserNav() {
         aria-label="Account navigation"
       >
         {USER_NAV_ITEMS.map((item) => {
+          const Icon = ICON_MAP[item.icon] || User;
           const isActive =
             pathname === item.href ||
             (item.href !== '/user/profile' && pathname.startsWith(item.href));
@@ -39,8 +41,8 @@ export function UserNav() {
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
               )}
             >
-              <item.icon className="h-3.5 w-3.5 shrink-0" />
-              <span>{item.name}</span>
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <span>{item.label}</span>
             </Link>
           );
         })}
@@ -51,6 +53,7 @@ export function UserNav() {
         <h2 className="mb-4 px-2 text-lg font-semibold tracking-tight text-foreground">Account</h2>
         <nav className="flex flex-col gap-1" aria-label="Account pages">
           {USER_NAV_ITEMS.map((item) => {
+            const Icon = ICON_MAP[item.icon] || User;
             const isActive =
               pathname === item.href ||
               (item.href !== '/user/profile' && pathname.startsWith(item.href));
@@ -68,13 +71,13 @@ export function UserNav() {
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <item.icon
+                  <Icon
                     className={cn(
                       'h-4 w-4',
                       isActive ? 'text-primary' : 'text-muted-foreground'
                     )}
                   />
-                  <span>{item.name}</span>
+                  <span>{item.label}</span>
                 </div>
                 <ChevronRight
                   className={cn(
