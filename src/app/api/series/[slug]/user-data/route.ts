@@ -41,7 +41,9 @@ export async function GET(
           updatedAt: 'desc'
         },
         include: {
-          chapter: true
+          chapter: {
+            select: { number: true }
+          }
         }
       })
     ]);

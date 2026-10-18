@@ -4,8 +4,10 @@ import { prisma } from '@/lib/prisma';
 import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
 import type { HomepageSection } from '@prisma/client';
 import { normalizeSeriesLink } from '@/lib/utils';
+import { unstable_cache } from 'next/cache';
 
-export const getCachedHomepageSections = async (): Promise<HomepageSection[]> => {
+export const getCachedHomepageSections = unstable_cache(
+  async (): Promise<HomepageSection[]> => {
     try {
       const sections = await prisma.homepageSection.findMany({ orderBy: { order: 'asc' } });
       if (sections.length > 0) return sections;
@@ -20,9 +22,16 @@ export const getCachedHomepageSections = async (): Promise<HomepageSection[]> =>
       { id: '5', type: 'RECENTLY_UPDATED', isActive: true, order: 4, limit: 10, isManual: false, title: '🆕 Recently Updated', subtitle: 'Fresh chapters just dropped', showViewAll: true, manualSeriesId: [] as string[] },
       { id: '6', type: 'NEW_RELEASES', isActive: true, order: 5, limit: 10, isManual: false, title: 'New Releases', subtitle: 'Fresh series and latest additions', showViewAll: true, manualSeriesId: [] as string[] }
     ];
-};
+  },
+  ['homepage-sections'],
+  {
+    revalidate: 300,
+    tags: ['homepage-sections']
+  }
+);
 
-export const getCachedHeroBanners = async () => {
+export const getCachedHeroBanners = unstable_cache(
+  async () => {
     try {
       const banners = await prisma.heroBanner.findMany({ orderBy: { order: 'asc' } });
       
@@ -56,88 +65,99 @@ export const getCachedHeroBanners = async () => {
     } catch (e) {
       return [];
     }
-};
+  },
+  ['hero-banners'],
+  {
+    revalidate: 300,
+    tags: ['hero-banners']
+  }
+);
 
-export const getCachedSectionSeries = async (type: string, limit: number, isManual: boolean, manualIds: string[]): Promise<any[]> => {
-      try {
-        const SAFE_SEARCH_FILTER = {};
+export const getCachedSectionSeries = unstable_cache(
+  async (type: string, limit: number, isManual: boolean, manualIds: string[]): Promise<any[]> => {
+    try {
+      const SAFE_SEARCH_FILTER = {};
 
-        if (isManual && manualIds.length > 0) {
-          const seriesList = await prisma.series.findMany({
-            where: { id: { in: manualIds } },
-            select: SERIES_CARD_SELECT
-          });
-          const seriesMap = new Map(seriesList.map(s => [s.id, s]));
-          return manualIds.map(id => seriesMap.get(id)).filter(Boolean).map(s => toSeriesCardData(s as any));
-        }
-
-        if (type === 'POPULAR') {
-          const automated = await prisma.series.findMany({ 
-            where: { ...SAFE_SEARCH_FILTER },
-            orderBy: [{ totalViews: 'desc' }, { createdAt: 'desc' }], 
-            select: SERIES_CARD_SELECT, 
-            take: limit 
-          });
-          return automated.map(toSeriesCardData as any);
-        }
-
-        if (type === 'MANGA' || type === 'MANHWA') {
-          const content = await prisma.series.findMany({ 
-            where: { type, ...SAFE_SEARCH_FILTER },
-            orderBy: [{ totalViews: 'desc' }, { createdAt: 'desc' }], 
-            select: SERIES_CARD_SELECT, 
-            take: limit 
-          });
-          return content.map(toSeriesCardData as any);
-        }
-
-        if (type === 'RECENTLY_UPDATED') {
-          const chapters = await prisma.chapter.findMany({
-            where: { 
-              isPublished: true,
-              series: {}
-            },
-            orderBy: [
-              { publishedAt: { sort: 'desc', nulls: 'last' } },
-              { createdAt: 'desc' }
-            ],
-            distinct: ['seriesId'],
-            take: limit,
-            select: {
-              number: true,
-              slug: true,
-              label: true,
-              sourceType: true,
-              publishedAt: true,
-              createdAt: true,
-              seriesId: true,
-              series: { select: SERIES_CARD_SELECT }
-            }
-          });
-          return chapters.map(ch => ({
-            series: toSeriesCardData(ch.series as any),
-            chapterNumber: ch.number,
-            chapterSlug: ch.slug,
-            chapterLabel: ['DOWNLOAD', 'EXTERNAL'].includes(ch.sourceType as string) ? ch.label : null,
-            publishedAt: ch.publishedAt?.toISOString() ?? ch.createdAt.toISOString()
-          }));
-        }
-
-
-
-        if (type === 'NEW_RELEASES' || type === 'LATEST') {
-          const latest = await prisma.series.findMany({
-            where: { ...SAFE_SEARCH_FILTER },
-            orderBy: { createdAt: 'desc' },
-            take: limit,
-            select: SERIES_CARD_SELECT
-          });
-          return latest.map(toSeriesCardData as any);
-        }
-      } catch (e) {
-        console.warn(`Database error fetching section ${type}:`, e);
+      if (isManual && manualIds.length > 0) {
+        const seriesList = await prisma.series.findMany({
+          where: { id: { in: manualIds } },
+          select: SERIES_CARD_SELECT
+        });
+        const seriesMap = new Map(seriesList.map(s => [s.id, s]));
+        return manualIds.map(id => seriesMap.get(id)).filter(Boolean).map(s => toSeriesCardData(s as any));
       }
-      return [];
-};
+
+      if (type === 'POPULAR') {
+        const automated = await prisma.series.findMany({
+          where: { ...SAFE_SEARCH_FILTER },
+          orderBy: [{ totalViews: 'desc' }, { createdAt: 'desc' }],
+          select: SERIES_CARD_SELECT,
+          take: limit
+        });
+        return automated.map(toSeriesCardData as any);
+      }
+
+      if (type === 'MANGA' || type === 'MANHWA') {
+        const content = await prisma.series.findMany({
+          where: { type, ...SAFE_SEARCH_FILTER },
+          orderBy: [{ totalViews: 'desc' }, { createdAt: 'desc' }],
+          select: SERIES_CARD_SELECT,
+          take: limit
+        });
+        return content.map(toSeriesCardData as any);
+      }
+
+      if (type === 'RECENTLY_UPDATED') {
+        const chapters = await prisma.chapter.findMany({
+          where: {
+            isPublished: true,
+            series: {}
+          },
+          orderBy: [
+            { publishedAt: { sort: 'desc', nulls: 'last' } },
+            { createdAt: 'desc' }
+          ],
+          distinct: ['seriesId'],
+          take: limit,
+          select: {
+            number: true,
+            slug: true,
+            label: true,
+            sourceType: true,
+            publishedAt: true,
+            createdAt: true,
+            seriesId: true,
+            series: { select: SERIES_CARD_SELECT }
+          }
+        });
+        return chapters.map(ch => ({
+          series: toSeriesCardData(ch.series as any),
+          chapterNumber: ch.number,
+          chapterSlug: ch.slug,
+          chapterLabel: ['DOWNLOAD', 'EXTERNAL'].includes(ch.sourceType as string) ? ch.label : null,
+          publishedAt: ch.publishedAt?.toISOString() ?? ch.createdAt.toISOString()
+        }));
+      }
+
+      if (type === 'NEW_RELEASES' || type === 'LATEST') {
+        const latest = await prisma.series.findMany({
+          where: { ...SAFE_SEARCH_FILTER },
+          orderBy: { createdAt: 'desc' },
+          take: limit,
+          select: SERIES_CARD_SELECT
+        });
+        return latest.map(toSeriesCardData as any);
+      }
+    } catch (e) {
+      console.warn(`Database error fetching section ${type}:`, e);
+    }
+    return [];
+  },
+  ['homepage-section-series'],
+  {
+    revalidate: 300,
+    tags: ['homepage-section-series']
+  }
+);
 
 

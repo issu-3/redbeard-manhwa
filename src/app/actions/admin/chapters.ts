@@ -57,6 +57,10 @@ export async function deleteChapter(chapterId: string, seriesId: string) {
   revalidatePath('/');
   revalidatePath('/browse/latest');
   updateTag('homepage_data');
+  updateTag('chapter-data');
+  updateTag('series-data');
+  updateTag('homepage-sections');
+  updateTag('homepage-section-series');
   await triggerSitemapRevalidation();
 }
 
@@ -96,6 +100,10 @@ export async function bulkDeleteChapters(chapterIds: string[], seriesId: string)
   revalidatePath('/');
   revalidatePath('/browse/latest');
   updateTag('homepage_data');
+  updateTag('chapter-data');
+  updateTag('series-data');
+  updateTag('homepage-sections');
+  updateTag('homepage-section-series');
   await triggerSitemapRevalidation();
 
   return { success: true, count: deleteResult.count };
@@ -173,6 +181,10 @@ export async function createChapter(seriesId: string, formData: FormData, preven
     revalidatePath('/');
     revalidatePath('/browse/latest');
     updateTag('homepage_data');
+    updateTag('chapter-data');
+    updateTag('series-data');
+    updateTag('homepage-sections');
+    updateTag('homepage-section-series');
     await triggerSitemapRevalidation();
   } catch (error: any) {
     if (error?.code === 'P2002') {
@@ -282,6 +294,10 @@ export async function updateChapter(id: string, seriesId: string, formData: Form
     revalidatePath('/');
     revalidatePath('/browse/latest');
     updateTag('homepage_data');
+    updateTag('chapter-data');
+    updateTag('series-data');
+    updateTag('homepage-sections');
+    updateTag('homepage-section-series');
     await triggerSitemapRevalidation();
   } catch (error: any) {
     if (error?.code === 'P2002') {
@@ -359,6 +375,11 @@ export async function createBulkChapters(seriesId: string, chapters: { label: st
     revalidatePath('/');
     revalidatePath('/browse/latest');
     updateTag('homepage_data');
+    updateTag('chapter-data');
+    updateTag('series-data');
+    updateTag('homepage-sections');
+    updateTag('homepage-section-series');
+    await triggerSitemapRevalidation();
 
     return { success: true, count: created };
   } catch (error: any) {

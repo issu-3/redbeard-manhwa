@@ -53,6 +53,9 @@ export async function deleteSeries(id: string) {
   revalidatePath('/browse/popular');
   revalidatePath('/');
   updateTag('homepage_data');
+  updateTag('series-data');
+  updateTag('homepage-sections');
+  updateTag('homepage-section-series');
   await triggerSitemapRevalidation();
 }
 
@@ -169,7 +172,11 @@ export async function createSeries(formData: FormData) {
   notifySeriesPublished(slug);
 
   revalidatePath('/admin/series');
+  revalidatePath('/');
   updateTag('homepage_data');
+  updateTag('series-data');
+  updateTag('homepage-sections');
+  updateTag('homepage-section-series');
   await triggerSitemapRevalidation();
   redirect('/admin/series');
 }
@@ -293,6 +300,9 @@ export async function updateSeries(formData: FormData) {
   revalidatePath(`/series/${slug}`);
   revalidatePath('/');
   updateTag('homepage_data');
+  updateTag('series-data');
+  updateTag('homepage-sections');
+  updateTag('homepage-section-series');
   await triggerSitemapRevalidation();
   redirect('/admin/series');
 }

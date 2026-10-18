@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { unstable_cache } from 'next/cache';
 
-export async function GET(request: NextRequest) {
-  try {
-    const genres = await prisma.genre.findMany({
+const getCachedApiGenres = unstable_cache(
+  async () => {
+    return prisma.genre.findMany({
       orderBy: { name: 'asc' },
       select: {
         id: true,
@@ -12,8 +13,23 @@ export async function GET(request: NextRequest) {
         slug: true,
       }
     });
+  },
+  ['api-genres-list'],
+  { tags: ['genres'], revalidate: 86400 }
+);
+
+export async function GET(request: NextRequest) {
+  try {
+    const genres = await getCachedApiGenres();
     
-    return NextResponse.json({ success: true, data: genres });
+    return NextResponse.json(
+      { success: true, data: genres },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800'
+        }
+      }
+    );
   } catch (error) {
     console.error('Failed to fetch genres:', error);
     return NextResponse.json(

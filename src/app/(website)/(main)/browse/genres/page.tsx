@@ -3,6 +3,7 @@ export const revalidate = 3600;
 import { Metadata } from 'next';
 import { GenreCard } from '@/components/shared/GenreCard';
 import { prisma } from '@/lib/prisma';
+import { unstable_cache } from 'next/cache';
 
 import { generateMetadata } from '@/lib/seo';
 import { APP_URL } from '@/lib/constants';
@@ -13,7 +14,8 @@ export const metadata: Metadata = generateMetadata({
   url: `${APP_URL}/browse/genres`
 });
 
-const getCachedGenres = async () => {
+const getCachedGenres = unstable_cache(
+  async () => {
     return prisma.genre.findMany({
       include: {
         _count: {
@@ -22,7 +24,10 @@ const getCachedGenres = async () => {
       },
       orderBy: { name: 'asc' }
     });
-  };
+  },
+  ['browse-genres-list'],
+  { tags: ['genres-list', 'genres'], revalidate: 86400 }
+);
 
 export default async function GenresPage() {
   const genres = await getCachedGenres();

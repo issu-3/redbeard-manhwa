@@ -34,7 +34,13 @@ if (process.env.NODE_ENV !== 'production' && !process.env.DATABASE_URL && typeof
   } catch (e) {}
 }
 
-let connectionString = process.env.DATABASE_URL || process.env.PRISMA_DATABASE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL;
+let connectionString = process.env.DATABASE_URL;
+if (process.env.POSTGRES_PRISMA_URL && (!connectionString?.includes('-pooler') || connectionString?.includes('prisma_migration'))) {
+  connectionString = process.env.POSTGRES_PRISMA_URL;
+}
+if (!connectionString) {
+  connectionString = process.env.PRISMA_DATABASE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL;
+}
 
 if (connectionString?.includes('prisma_migration')) {
   console.warn('WARNING: DATABASE_URL is using the "prisma_migration" role, which has low connection limits. This will cause P2037 errors during builds.');
@@ -47,8 +53,9 @@ const prismaClientSingleton = () => {
   const isLocal = connectionString?.includes('localhost') || connectionString?.includes('127.0.0.1');
   const pool = new Pool({
     connectionString,
-    max: process.env.NODE_ENV === 'production' ? 5 : 2,
-    idleTimeoutMillis: 15000,
+    max: process.env.NODE_ENV === 'production' ? 3 : 2,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 10000,
     allowExitOnIdle: true,
     ssl: isLocal ? undefined : { rejectUnauthorized: false },
   });

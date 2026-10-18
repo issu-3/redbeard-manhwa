@@ -1,10 +1,42 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getRemoteFileSize, getRemoteCbzMetadata, getRemoteCbzPage } from '@/lib/cbz-remote';
+import { unstable_cache } from 'next/cache';
 
 // Share the same cache
 const metadataCache = globalThis._cbzMetadataCache ?? new Map<string, any>();
 if (!globalThis._cbzMetadataCache) globalThis._cbzMetadataCache = metadataCache;
+
+const getCachedChapterAndPage = unstable_cache(
+  async (chapterId: string, pageIndex: number) => {
+    const chapter = await prisma.chapter.findUnique({
+      where: { id: chapterId },
+      select: { id: true, downloadUrl: true, sourceType: true, downloadProvider: true }
+    });
+
+    if (!chapter) return null;
+
+    let imageUrl: string | null = null;
+    if (!chapter.downloadUrl) {
+      let image = await prisma.chapterImage.findFirst({
+        where: { chapterId, pageNumber: pageIndex + 1 },
+        select: { imageUrl: true }
+      });
+
+      if (!image) {
+        image = await prisma.chapterImage.findFirst({
+          where: { chapterId, pageNumber: pageIndex },
+          select: { imageUrl: true }
+        });
+      }
+      imageUrl = image?.imageUrl || null;
+    }
+
+    return { chapter, imageUrl };
+  },
+  ['chapter-page-image-lookup'],
+  { tags: ['chapter-data'], revalidate: 86400 }
+);
 
 export async function GET(
   request: Request,
@@ -30,35 +62,20 @@ export async function GET(
       return new NextResponse('Unauthorized worker', { status: 401 });
     }
 
-    // 1. Fetch the chapter
-    const chapter = await prisma.chapter.findUnique({
-      where: { id },
-      select: { id: true, downloadUrl: true, sourceType: true, downloadProvider: true }
-    });
-
-    if (!chapter) {
+    // 1. Fetch the chapter and image info using cache
+    const lookup = await getCachedChapterAndPage(id, index);
+    if (!lookup) {
       return new NextResponse('Chapter not found', { status: 404 });
     }
 
+    const { chapter, imageUrl } = lookup;
+
     // 2. UPLOAD-type chapters: images are stored as individual ChapterImage records.
     if (!chapter.downloadUrl) {
-      let image = await prisma.chapterImage.findFirst({
-        where: { chapterId: id, pageNumber: index + 1 },
-        select: { imageUrl: true }
-      });
-
-      if (!image) {
-        // Try 0-indexed match
-        image = await prisma.chapterImage.findFirst({
-          where: { chapterId: id, pageNumber: index },
-          select: { imageUrl: true }
-        });
-        if (!image) {
-          return new NextResponse('Page not found', { status: 404 });
-        }
+      if (!imageUrl) {
+        return new NextResponse('Page not found', { status: 404 });
       }
 
-      const imageUrl = image.imageUrl;
       let finalUrl = imageUrl;
 
       // Handle Google Drive lazy caching

@@ -5,6 +5,7 @@ import { TrendingUp } from 'lucide-react';
 import { BrowseGrid } from '@/components/shared/BrowseGrid';
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
+import { unstable_cache } from 'next/cache';
 
 import { generateMetadata } from '@/lib/seo';
 import { APP_URL } from '@/lib/constants';
@@ -15,14 +16,18 @@ export const metadata: Metadata = generateMetadata({
   url: `${APP_URL}/browse/popular`
 });
 
-const getCachedPopularSeries = async () => {
+const getCachedPopularSeries = unstable_cache(
+  async () => {
     return prisma.series.findMany({
       where: {},
       select: SERIES_CARD_SELECT,
       take: 40,
       orderBy: { totalViews: 'desc' }
     });
-  };
+  },
+  ['browse-popular-series'],
+  { tags: ['browse-popular', 'series-data'], revalidate: 3600 }
+);
 
 export default async function PopularPage() {
   const dbSeries = await getCachedPopularSeries();

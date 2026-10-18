@@ -48,6 +48,28 @@ export const SERIES_CARD_SELECT = {
   },
 } as const;
 
+function toIsoString(val: any): string {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (val instanceof Date) return val.toISOString();
+  try {
+    return new Date(val).toISOString();
+  } catch {
+    return String(val);
+  }
+}
+
+function toOptionalIsoString(val: any): string | undefined {
+  if (!val) return undefined;
+  if (typeof val === 'string') return val;
+  if (val instanceof Date) return val.toISOString();
+  try {
+    return new Date(val).toISOString();
+  } catch {
+    return undefined;
+  }
+}
+
 export function toSeriesCardData(series: SeriesCardInput | SeriesWithGenres | any): SeriesCardData {
   return {
     id: series.id,
@@ -63,7 +85,7 @@ export function toSeriesCardData(series: SeriesCardInput | SeriesWithGenres | an
     totalBookmarks: series.totalBookmarks,
     chapterCount: series.chapterCount,
     genres: series.genres.map((g: any) => ({ name: g.name, slug: g.slug })),
-    updatedAt: series.updatedAt.toISOString(),
+    updatedAt: toIsoString(series.updatedAt),
   };
 }
 
@@ -93,12 +115,12 @@ export function toSeriesDetail(series: FullSeries): SeriesDetail {
         slug: c.slug,
         totalPages: c.totalPages,
         totalViews: c.totalViews,
-        publishedAt: c.publishedAt?.toISOString(),
+        publishedAt: toOptionalIsoString(c.publishedAt),
         isRead: false,
         sourceType: c.sourceType || 'UPLOAD',
         downloadUrl: c.downloadUrl || undefined,
         downloadProvider: c.downloadProvider || undefined,
       })),
-    createdAt: series.createdAt.toISOString(),
+    createdAt: toIsoString(series.createdAt),
   };
 }

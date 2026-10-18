@@ -2,7 +2,7 @@
 
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { commentSchema } from '@/lib/validators';
 
 export async function postComment(chapterId: string, content: string) {
@@ -27,6 +27,7 @@ export async function postComment(chapterId: string, content: string) {
   });
 
   revalidatePath('/series/[slug]/chapter/[chapterSlug]', 'page');
+  updateTag('chapter-comments');
   return { success: true, commentId: comment.id };
 }
 
@@ -71,6 +72,7 @@ export async function replyToComment(commentId: string, content: string, parentR
   }
 
   revalidatePath('/series/[slug]/chapter/[chapterSlug]', 'page');
+  updateTag('chapter-comments');
   return { success: true, replyId: reply.id };
 }
 
@@ -123,5 +125,6 @@ export async function likeComment(id: string, isReply: boolean = false) {
   }
 
   revalidatePath('/series/[slug]/chapter/[chapterSlug]', 'page');
+  updateTag('chapter-comments');
   return { success: true };
 }

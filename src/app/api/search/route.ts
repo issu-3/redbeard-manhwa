@@ -3,26 +3,6 @@ import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
 
-declare global {
-  var _searchLogBuffer: any[] | undefined;
-}
-
-const searchBuffer = globalThis._searchLogBuffer ?? [];
-if (!globalThis._searchLogBuffer) globalThis._searchLogBuffer = searchBuffer;
-
-async function flushSearchBuffer() {
-  if (searchBuffer.length === 0) return;
-  const items = [...searchBuffer];
-  searchBuffer.length = 0;
-  try {
-    await prisma.auditLog.createMany({
-      data: items,
-      skipDuplicates: true
-    });
-  } catch (e) {
-    console.error('Failed to flush search logs:', e);
-  }
-}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -96,25 +76,17 @@ export async function GET(request: NextRequest) {
       orderBy: orderByClause,
     });
 
-    if (query && query.length >= 3) {
-      // OPT-10: Skip auth() — it was only used for optional userId in audit logs.
-      // Saves JWT verification CPU on every search keystroke.
-      searchBuffer.push({
-        action: 'SEARCH',
-        targetType: 'SearchQuery',
-        targetId: 'public',
-        userId: undefined,
-        metadata: { query: query.toLowerCase() }
-      });
-      if (searchBuffer.length >= 10) {
-        flushSearchBuffer().catch(err => console.error('Failed to log search:', err));
+    return NextResponse.json(
+      {
+        success: true,
+        data: results.map(toSeriesCardData),
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+        }
       }
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: results.map(toSeriesCardData),
-    });
+    );
   } catch (error) {
     console.error('Search API error:', error);
     return NextResponse.json(

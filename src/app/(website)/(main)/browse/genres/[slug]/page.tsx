@@ -8,14 +8,25 @@ import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
 
 type Params = { slug: string };
 
+import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 
-const getCachedGenreData = async (slug: string) => {
+const getCachedGenreDataInternal = unstable_cache(
+  async (slug: string) => {
     return prisma.genre.findUnique({ where: { slug } });
-  };
+  },
+  ['genre-detail-data'],
+  { tags: ['genres'], revalidate: 86400 }
+);
 
-const getCachedGenreSeries = async (slug: string) => {
+const getCachedGenreData = cache(async (slug: string) => {
+  return getCachedGenreDataInternal(slug);
+});
+
+const getCachedGenreSeries = unstable_cache(
+  async (slug: string) => {
     return prisma.series.findMany({
       where: { 
         genres: { some: { slug } }
@@ -24,7 +35,10 @@ const getCachedGenreSeries = async (slug: string) => {
       take: 40,
       orderBy: { totalViews: 'desc' }
     });
-  };
+  },
+  ['genre-series-list'],
+  { tags: ['series-data'], revalidate: 3600 }
+);
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { slug } = await params;

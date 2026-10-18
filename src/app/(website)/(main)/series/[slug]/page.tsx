@@ -19,6 +19,7 @@ import { ReviewsSection } from '@/components/series/ReviewsSection';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { AdRenderer } from '@/components/ads/AdRenderer';
+import { unstable_cache } from 'next/cache';
 
 // OPT-21: Pre-render top 100 most popular series at build time
 export async function generateStaticParams() {
@@ -37,49 +38,57 @@ export async function generateStaticParams() {
   }
 }
 
-// OPT-04: React cache() deduplicates getSeriesData between generateMetadata and page component
-const getSeriesData = cache(async (slug: string) => {
-  // OPT-03: Use select instead of include to fetch only needed columns for chapters
-  const series = await prisma.series.findUnique({
-    where: { slug },
-    include: {
-      genres: true,
-      tags: true,
-      authors: true,
-      artists: true,
-      chapters: {
-        where: { isPublished: true },
-        orderBy: [{ number: 'desc' }, { createdAt: 'desc' }],
-        select: {
-          id: true,
-          number: true,
-          label: true,
-          title: true,
-          slug: true,
-          totalPages: true,
-          totalViews: true,
-          publishedAt: true,
-          sourceType: true,
-          downloadUrl: true,
-          downloadProvider: true,
+// OPT-04: Next.js unstable_cache caches across requests; React cache() deduplicates within same request render
+const getCachedSeriesDataInternal = unstable_cache(
+  async (slug: string) => {
+    // OPT-03: Use select instead of include to fetch only needed columns for chapters
+    return prisma.series.findUnique({
+      where: { slug },
+      include: {
+        genres: true,
+        tags: true,
+        authors: true,
+        artists: true,
+        chapters: {
+          where: { isPublished: true },
+          orderBy: [{ number: 'desc' }, { createdAt: 'desc' }],
+          select: {
+            id: true,
+            number: true,
+            label: true,
+            title: true,
+            slug: true,
+            totalPages: true,
+            totalViews: true,
+            publishedAt: true,
+            sourceType: true,
+            downloadUrl: true,
+            downloadProvider: true,
+          },
         },
+        reviews: {
+          include: {
+            user: {
+              select: { id: true, displayName: true, username: true, avatarUrl: true, role: true }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        }
       },
-      reviews: {
-        include: {
-          user: {
-            select: { id: true, displayName: true, username: true, avatarUrl: true, role: true }
-          }
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 20,
-      }
-    },
-  });
-  return series;
+    });
+  },
+  ['series-detail-data'],
+  { tags: ['series-data'], revalidate: 3600 }
+);
+
+const getSeriesData = cache(async (slug: string) => {
+  return getCachedSeriesDataInternal(slug);
 });
 
-// OPT-02: Cache recommendation queries — these change infrequently
-const getCachedRelatedSeries = async (seriesId: string, genreIds: string[]) => {
+// OPT-02: Cache recommendation queries with unstable_cache — these change infrequently
+const getCachedRelatedSeries = unstable_cache(
+  async (seriesId: string, genreIds: string[]) => {
     return prisma.series.findMany({
       where: { 
         id: { not: seriesId },
@@ -88,7 +97,10 @@ const getCachedRelatedSeries = async (seriesId: string, genreIds: string[]) => {
       take: 6,
       select: SERIES_CARD_SELECT
     });
-};
+  },
+  ['series-related-data'],
+  { tags: ['series-data'], revalidate: 3600 }
+);
 
 
 
@@ -432,7 +444,7 @@ export default async function SeriesDetailPage({
               slug: c.slug,
               totalPages: c.totalPages,
               totalViews: c.totalViews,
-              publishedAt: c.publishedAt?.toISOString(),
+              publishedAt: typeof c.publishedAt === 'string' ? c.publishedAt : c.publishedAt?.toISOString ? c.publishedAt.toISOString() : undefined,
               sourceType: c.sourceType || 'UPLOAD',
               downloadUrl: c.downloadUrl || undefined,
               downloadProvider: c.downloadProvider || undefined,

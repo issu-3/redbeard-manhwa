@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { auth } from '@/auth';
 import { deleteFromR2 } from '@/lib/s3';
 
@@ -58,6 +58,7 @@ export async function upsertBanner(data: any) {
   }
   
   revalidatePath('/', 'layout');
+  updateTag('hero-banners');
 }
 
 export async function deleteBanner(id: string) {
@@ -76,6 +77,7 @@ export async function deleteBanner(id: string) {
   
   await prisma.heroBanner.delete({ where: { id } });
   revalidatePath('/', 'layout');
+  updateTag('hero-banners');
 }
 
 export async function reorderBanners(orderedIds: string[]) {
@@ -89,6 +91,7 @@ export async function reorderBanners(orderedIds: string[]) {
     )
   );
   revalidatePath('/', 'layout');
+  updateTag('hero-banners');
 }
 
 // ==========================================
@@ -143,6 +146,8 @@ export async function updateSection(id: string, data: any) {
     data
   });
   revalidatePath('/', 'layout');
+  updateTag('homepage-sections');
+  updateTag('homepage-section-series');
 }
 
 export async function reorderSections(orderedIds: string[]) {
@@ -156,6 +161,8 @@ export async function reorderSections(orderedIds: string[]) {
     )
   );
   revalidatePath('/', 'layout');
+  updateTag('homepage-sections');
+  updateTag('homepage-section-series');
 }
 
 // ==========================================

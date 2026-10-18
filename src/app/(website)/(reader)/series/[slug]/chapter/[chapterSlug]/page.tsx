@@ -150,7 +150,7 @@ const getCachedChapterComments = unstable_cache(
     });
   },
   ['chapter-comments'],
-  { tags: ['comments'], revalidate: 60 }
+  { tags: ['comments', 'chapter-comments'], revalidate: 3600 }
 );
 
 // ─── Metadata ──────────────────────────────────────────────────

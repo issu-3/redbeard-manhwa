@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 type ViewLogItem = {
@@ -8,9 +8,9 @@ type ViewLogItem = {
   ipAddress: string | null;
 };
 
-const DEDUPE_WINDOW_MS = 60_000; // 60 seconds
+const DEDUPE_WINDOW_MS = 300_000; // 5 minutes
 const FLUSH_INTERVAL_MS = 5_000; // 5 seconds
-const MAX_BUFFER_SIZE = 20;
+const MAX_BUFFER_SIZE = 10;
 
 declare global {
   var _viewDedupeMap: Map<string, number> | undefined;
@@ -130,14 +130,11 @@ export async function POST(request: Request) {
         ipAddress
       });
 
-      if (buffer.length >= MAX_BUFFER_SIZE) {
-        flushViewBuffer().catch(e => console.error('Flush error:', e));
-      } else if (!globalThis._viewFlushTimer) {
-        globalThis._viewFlushTimer = setTimeout(() => {
-          globalThis._viewFlushTimer = undefined;
-          flushViewBuffer().catch(e => console.error('Flush timer error:', e));
-        }, FLUSH_INTERVAL_MS);
-      }
+      // In serverless runtimes, setTimeout freezes when the response finishes.
+      // after() ensures the background flush executes reliably without blocking the client.
+      after(() => {
+        flushViewBuffer().catch(e => console.error('View tracking flush error:', e));
+      });
     }
 
     return NextResponse.json({ success: true, deduplicated: Boolean(isDuplicate) });
