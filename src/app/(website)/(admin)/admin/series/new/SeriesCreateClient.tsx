@@ -123,6 +123,8 @@ export default function SeriesCreateClient({ genres, tags }: SeriesCreateClientP
                   <option value="MANGA">Manga</option>
                   <option value="PORNHWA">Pornhwa</option>
                   <option value="WEBTOON">Webtoon</option>
+                  <option value="LIGHT_NOVEL">Light Novel</option>
+                  <option value="DOUJINSHI">Doujinshi</option>
                 </select>
               </div>
             </div>

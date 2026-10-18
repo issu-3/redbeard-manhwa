@@ -15,7 +15,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <Footer />
       <MobileNav />
       {/* Global spacer for MobileNav to prevent content from hiding behind it */}
-      <div className="h-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:hidden shrink-0" />
+      <div className="h-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:hidden shrink-0" />
     </div>
   );
 }

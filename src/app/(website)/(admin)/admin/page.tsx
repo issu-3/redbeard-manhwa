@@ -3,6 +3,7 @@ import { Library, Users, BookOpen, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { unstable_cache } from 'next/cache';
+import { getContentTypeLabel } from '@/lib/content-types';
 
 const getCachedAdminDashboardData = unstable_cache(
   async () => {
@@ -138,7 +139,7 @@ export default async function AdminDashboard() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-text-primary">{series.title}</p>
-                      <p className="text-xs text-text-secondary">{series.status} • {series.type}</p>
+                      <p className="text-xs text-text-secondary">{series.status} • {getContentTypeLabel(series.type)}</p>
                     </div>
                   </div>
                 ))

@@ -21,6 +21,7 @@ import { getCachedSettings } from '@/app/actions/public/settings';
 import { resolveSocialImages } from '@/lib/seo';
 import { AdRenderer } from '@/components/ads/AdRenderer';
 import { unstable_cache } from 'next/cache';
+import { cn } from '@/lib/utils';
 
 // OPT-21: Pre-render top 100 most popular series at build time
 export async function generateStaticParams() {
@@ -316,15 +317,24 @@ export default async function SeriesDetailPage({
     downloadUrl: c.downloadUrl
   }));
 
-  // Only show metadata that actually has a value — never render
-  // placeholder noise like "Unknown", "N/A" or "None".
-  const metaItems = [
+  // Information card items: Type, Release year, Reading direction, Alternative names
+  const infoCardItems = [
     { label: 'Type', value: typeLabel },
     { label: 'Release Year', value: series.releaseYear?.toString() || '' },
-    { label: 'Author', value: series.authors.map((a: { name: string }) => a.name).join(', ') },
-    { label: 'Artist', value: series.artists.map((a: { name: string }) => a.name).join(', ') },
-    { label: 'Reading Direction', value: series.readingDirection === 'VERTICAL' ? 'Vertical' : (series.readingDirection || '') },
-    { label: 'Alt Names', value: series.alternativeTitles[0] || '' },
+    { 
+      label: 'Reading Direction', 
+      value: series.readingDirection === 'VERTICAL' 
+        ? 'Vertical' 
+        : series.readingDirection === 'RTL' 
+          ? 'Right to Left' 
+          : series.readingDirection === 'LTR' 
+            ? 'Left to Right' 
+            : (series.readingDirection || '') 
+    },
+    { 
+      label: 'Alternative Names', 
+      value: series.alternativeTitles?.filter(Boolean).join(', ') || '' 
+    },
   ].filter((item) => {
     const v = item.value.trim().toLowerCase();
     return v !== '' && v !== 'unknown' && v !== 'n/a' && v !== 'none';
@@ -336,84 +346,155 @@ export default async function SeriesDetailPage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       
       {/* ── Banner Section ────────────────────────────────── */}
-      <section className="relative h-[30vh] min-h-62.5 md:h-[45vh] md:min-h-100 w-full overflow-hidden">
+      <section className="relative h-44 sm:h-52 md:h-72 lg:h-80 w-full overflow-hidden">
         <Image
           src={series.bannerImage || series.coverImage}
           alt=""
           fill
-          className="object-cover scale-110 blur-xl opacity-40"
+          className="object-cover scale-105 blur-lg opacity-35"
           priority
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-linear-to-t from-background via-background/80 to-transparent" />
-        <div className="absolute inset-0 bg-linear-to-r from-background/90 via-background/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-transparent" />
       </section>
 
       {/* ── Main Content (overlapping banner) ─────────────── */}
-      <div className="relative -mt-64 z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-6 md:pb-16">
-        <div className="flex justify-center overflow-hidden w-full">
+      <div className="relative -mt-20 sm:-mt-24 md:-mt-36 z-10 mx-auto max-w-7xl px-3.5 sm:px-6 lg:px-8 pb-[calc(10rem+env(safe-area-inset-bottom,0px))] md:pb-16">
+        <div className="w-full max-w-full overflow-hidden flex justify-center mb-3 sm:mb-5">
           <AdRenderer placement="series_detail" />
         </div>
-        <div className="flex flex-col md:flex-row gap-8 lg:gap-12 mt-8">
-          {/* ── Cover Image ─────────────────────────────── */}
-          <div className="shrink-0 flex flex-col items-center md:items-start md:w-70 lg:w-[320px]">
-            <div className="relative w-40 md:w-full aspect-2/3 rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-border/50">
+
+        <div className="flex flex-col md:flex-row gap-4 sm:gap-6 lg:gap-10">
+          {/* ── Cover Image (Left column on desktop, side-by-side header on mobile) ── */}
+          <div className="flex md:flex-col gap-3.5 sm:gap-4 md:w-60 lg:w-72 shrink-0 items-start">
+            <div className="relative w-28 sm:w-36 md:w-full aspect-2/3 shrink-0 rounded-xl md:rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-white/10">
               <Image
                 src={series.coverImage}
                 alt={series.title}
                 fill
                 className="object-cover"
                 priority
-                sizes="(max-width: 768px) 220px, 320px"
+                sizes="(max-width: 640px) 112px, (max-width: 768px) 144px, 288px"
               />
+            </div>
+
+            {/* Mobile Header: Info alongside cover to eliminate dead vertical space */}
+            <div className="flex flex-col justify-end flex-1 min-w-0 md:hidden pt-0.5">
+              <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                <Badge variant={statusVariant[series.status]} size="sm" className="text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider">
+                  {series.status}
+                </Badge>
+                {series.isHot && <Badge variant="danger" size="sm" className="text-[10px] px-2 py-0.5 font-bold">🔥 HOT</Badge>}
+                <Badge variant="primary" size="sm" className="text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider">
+                  {getContentTypeLabel(series.type as any)}
+                </Badge>
+                {((series as any).isNSFW || series.type === 'PORNHWA' || series.type === 'DOUJINSHI') && (
+                  <Badge variant="danger" size="sm" className="text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider">
+                    🔞 NSFW
+                  </Badge>
+                )}
+              </div>
+
+              <h1 className="text-lg sm:text-2xl font-black text-text-primary tracking-tight leading-snug line-clamp-2 sm:line-clamp-3 mb-1.5">
+                {series.title}
+              </h1>
+
+              {/* Quick stats row on mobile */}
+              <div className="flex items-center gap-2.5 text-xs text-text-muted mb-2 font-medium">
+                {series.averageRating > 0 && (
+                  <span className="flex items-center gap-1 text-amber-400 font-bold">
+                    ★ {series.averageRating.toFixed(1)}
+                    <span className="text-text-muted font-normal text-[11px]">({series.ratingCount})</span>
+                  </span>
+                )}
+                {series.totalViews > 0 && (
+                  <span>{series.totalViews.toLocaleString()} views</span>
+                )}
+              </div>
+
+              {/* Mobile Genre chips */}
+              <div className="flex flex-wrap gap-1.5">
+                {series.genres.slice(0, 3).map((genre: { slug: string, name: string }) => (
+                  <Link
+                    key={genre.slug}
+                    href={`/browse/genres/${genre.slug}`}
+                    prefetch={false}
+                    className="rounded-md bg-card/80 border border-border/60 px-2 py-0.5 text-[11px] font-medium text-text-secondary hover:text-text-primary hover:border-primary/40 transition-colors"
+                  >
+                    {genre.name}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* ── Series Hero Info ──────────────────────────────── */}
-          <div className="flex-1 min-w-0 flex flex-col justify-end pt-4 md:pt-16">
-            <div className="flex items-center gap-2 mb-2 md:mb-3 flex-wrap">
-              <Badge variant={statusVariant[series.status]} size="sm" className="font-bold uppercase tracking-wider">
-                {series.status}
-              </Badge>
-              {series.isHot && <Badge variant="danger" size="sm">🔥 HOT</Badge>}
-              <Badge variant="primary" size="sm" className="font-bold uppercase tracking-wider">
-                {getContentTypeLabel(series.type as any)}
-              </Badge>
-              {((series as any).isNSFW || series.type === 'PORNHWA' || series.type === 'DOUJINSHI') && (
-                <Badge variant="danger" size="sm" className="font-bold uppercase tracking-wider">
-                  🔞 NSFW
+          {/* ── Desktop Right Column & Full details ─────────────────────── */}
+          <div className="flex-1 min-w-0 flex flex-col justify-end">
+            {/* Desktop Hero Header */}
+            <div className="hidden md:flex flex-col">
+              <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                <Badge variant={statusVariant[series.status]} size="sm" className="text-xs px-2.5 py-0.5 font-bold uppercase tracking-wider">
+                  {series.status}
                 </Badge>
-              )}
-            </div>
-            
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-text-primary tracking-tight leading-tight mb-2 md:mb-4">
-              {series.title}
-            </h1>
+                {series.isHot && <Badge variant="danger" size="sm" className="text-xs px-2.5 py-0.5 font-bold">🔥 HOT</Badge>}
+                <Badge variant="primary" size="sm" className="text-xs px-2.5 py-0.5 font-bold uppercase tracking-wider">
+                  {getContentTypeLabel(series.type as any)}
+                </Badge>
+                {((series as any).isNSFW || series.type === 'PORNHWA' || series.type === 'DOUJINSHI') && (
+                  <Badge variant="danger" size="sm" className="text-xs px-2.5 py-0.5 font-bold uppercase tracking-wider">
+                    🔞 NSFW
+                  </Badge>
+                )}
+              </div>
 
-            <div className="flex flex-wrap items-center gap-2 mb-4 md:mb-6">
-              {series.genres.slice(0, 4).map((genre: { slug: string, name: string }) => (
-                <Link
-                  key={genre.slug}
-                  href={`/browse/genres/${genre.slug}`}
-                  prefetch={false}
-                  className="rounded-md bg-card/60 backdrop-blur-md px-3 py-1 text-sm font-medium text-text-primary border border-border/50 hover:bg-primary/20 hover:text-primary transition-colors"
-                >
-                  {genre.name}
-                </Link>
-              ))}
-              {series.tags.slice(0, 3).map((tag: { slug: string, name: string }) => (
-                <span key={tag.slug} className="text-sm font-medium text-text-muted">
-                  #{tag.name}
-                </span>
-              ))}
+              <h1 className="text-3xl md:text-5xl font-black text-text-primary tracking-tight leading-tight mb-2.5">
+                {series.title}
+              </h1>
+
+              {/* Desktop Rating, Views, and Chapter stats */}
+              <div className="flex items-center gap-3.5 text-sm text-text-muted mb-4 font-medium">
+                {series.averageRating > 0 && (
+                  <span className="flex items-center gap-1.5 text-amber-400 font-bold text-base">
+                    ★ {series.averageRating.toFixed(1)}
+                    <span className="text-xs text-text-muted font-normal">({series.ratingCount} reviews)</span>
+                  </span>
+                )}
+                {series.totalViews > 0 && (
+                  <span>{series.totalViews.toLocaleString()} views</span>
+                )}
+                {series.chapterCount > 0 && (
+                  <span>{series.chapterCount} chapters</span>
+                )}
+              </div>
+
+              {/* Desktop Genre Chips & Tags */}
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                {series.genres.map((genre: { slug: string, name: string }) => (
+                  <Link
+                    key={genre.slug}
+                    href={`/browse/genres/${genre.slug}`}
+                    prefetch={false}
+                    className="rounded-lg bg-card/80 border border-border/60 px-3 py-1 text-xs font-semibold text-text-secondary hover:text-text-primary hover:border-primary/50 transition-colors"
+                  >
+                    {genre.name}
+                  </Link>
+                ))}
+                {series.tags.slice(0, 4).map((tag: { slug: string, name: string }) => (
+                  <span key={tag.slug} className="text-xs font-medium text-text-muted">
+                    #{tag.name}
+                  </span>
+                ))}
+              </div>
             </div>
 
-            <div className="mb-4 md:mb-8 max-w-3xl">
+            {/* Description (both mobile & desktop) */}
+            <div className="mt-2 md:mt-0 mb-3 md:mb-5 max-w-3xl">
               <DescriptionClient description={series.synopsis || series.description} />
             </div>
 
-            {/* Action Buttons (Desktop) */}
-            <div className="hidden md:flex flex-wrap gap-4">
+            {/* Desktop Action Buttons */}
+            <div className="hidden md:flex flex-wrap items-center gap-3 mt-1">
               <SeriesActionsClient
                 seriesId={series.id}
                 seriesSlug={series.slug}
@@ -426,19 +507,35 @@ export default async function SeriesDetailPage({
           </div>
         </div>
 
-        {/* ── Metadata Grid ──────────────────────────────────── */}
-        {metaItems.length > 0 && (
-          <div className="mt-6 mb-6 md:mt-12 md:mb-12">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4 p-4 md:p-6 rounded-2xl bg-card border border-border">
-              {metaItems.map((item) => (
-                <MetaItem key={item.label} label={item.label} value={item.value} />
+        {/* ── Information Card (Responsive 2-column grid) ──────────── */}
+        {infoCardItems.length > 0 && (
+          <div className="mt-4 mb-6 md:mt-8 md:mb-8">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 p-3.5 sm:p-4 rounded-xl bg-card/60 border border-border/60">
+              {infoCardItems.map((item) => (
+                <div 
+                  key={item.label} 
+                  className={cn(
+                    "flex flex-col gap-0.5 min-w-0",
+                    item.label === 'Alternative Names' && "col-span-2"
+                  )}
+                >
+                  <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">
+                    {item.label}
+                  </span>
+                  <span 
+                    className="text-xs sm:text-sm font-semibold text-text-primary truncate" 
+                    title={item.value}
+                  >
+                    {item.value}
+                  </span>
+                </div>
               ))}
             </div>
           </div>
         )}
 
         {/* ── Chapter List ──────────────────────────────────── */}
-        <section className="mt-8 md:mt-12">
+        <section className="mt-6 md:mt-10">
           <ChapterListSection
             chapters={series.chapters.map((c: any) => ({
               id: c.id,
@@ -491,9 +588,12 @@ export default async function SeriesDetailPage({
         )}
       </div>
 
-      {/* ── Mobile Sticky Action Bar (positioned above MobileNav) ──────── */}
-      <div id="series-action-bar" className="md:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border p-2.5 md:p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] transition-transform duration-300 ease-in-out in-[.mobile-menu-open]:translate-y-[200%]">
-        <div className="flex gap-3 max-w-7xl mx-auto">
+      {/* ── Mobile Sticky Action Bar (positioned directly above MobileNav) ──────── */}
+      <div 
+        id="series-action-bar" 
+        className="md:hidden fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border/70 px-3.5 py-2 sm:px-4 sm:py-2.5 shadow-[0_-8px_30px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-in-out [.mobile-menu-open_&]:translate-y-[200%]"
+      >
+        <div className="max-w-md mx-auto w-full">
           <SeriesActionsClient
             seriesId={series.id}
             seriesSlug={series.slug}
@@ -511,19 +611,6 @@ export default async function SeriesDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-    </div>
-  );
-}
-
-function MetaItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
-        {label}
-      </span>
-      <span className="text-sm font-semibold text-text-primary truncate" title={value}>
-        {value}
-      </span>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useAppLibraryStore } from '@/store/app-library-store';
 import { Capacitor } from '@capacitor/core';
 import { cacheCoverImage } from '@/lib/cache-utils';
+import { cn } from '@/lib/utils';
 
 interface BookmarkButtonProps {
   seriesId: string;
@@ -23,6 +24,7 @@ interface BookmarkButtonProps {
   latestChapterId?: string | null;
   latestChapterNumber?: number | null;
   continueReadingChapter?: number | null;
+  className?: string;
 }
 
 export function BookmarkButton({ 
@@ -35,7 +37,8 @@ export function BookmarkButton({
   status,
   latestChapterId,
   latestChapterNumber,
-  continueReadingChapter
+  continueReadingChapter,
+  className,
 }: BookmarkButtonProps) {
   const store = useAppLibraryStore();
   const isSavedInStore = store.isSaved(seriesId);
@@ -110,12 +113,18 @@ export function BookmarkButton({
       variant={isBookmarked ? "default" : "outline"} 
       onClick={handleToggle}
       disabled={isPending}
-      className={`gap-2 ${isBookmarked ? 'bg-primary text-primary-foreground' : ''}`}
+      className={cn(
+        "gap-2 font-semibold transition-all active:scale-95",
+        isBookmarked 
+          ? "bg-primary hover:bg-primary-hover text-white border-primary shadow-xs" 
+          : "border-border/80 bg-card/60 hover:bg-card text-text-primary hover:text-white",
+        className
+      )}
     >
-      <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
-      {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+      <Bookmark className={cn("w-4 h-4 shrink-0", isBookmarked ? "fill-current text-white" : "")} />
+      <span className="truncate">{isBookmarked ? 'Bookmarked' : 'Bookmark'}</span>
       {bookmarkCount > 0 && !isBookmarked && (
-        <span className="ml-1 text-xs opacity-70">({bookmarkCount})</span>
+        <span className="ml-1 text-xs opacity-70 shrink-0">({bookmarkCount})</span>
       )}
     </Button>
   );

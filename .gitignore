@@ -50,3 +50,6 @@ indexed-urls.json
 .dev.vars*
 *service-account*.json
 *credentials*.json
+
+# Playwright MCP artifacts
+.playwright-mcp/

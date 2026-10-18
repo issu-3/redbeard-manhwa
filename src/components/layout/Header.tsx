@@ -96,13 +96,13 @@ export function Header() {
             : 'bg-background border-b border-transparent'
         )}
       >
-        <div className="mx-auto flex h-[60px] md:h-16 max-w-7xl items-center justify-between gap-4 px-4 lg:px-6">
+        <div className="mx-auto flex h-14 md:h-16 max-w-7xl items-center justify-between gap-3 px-3.5 sm:px-6">
           {/* Logo */}
-          <Link href="/" className="group flex shrink-0 items-center gap-2.5">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden shadow-lg shadow-primary/25">
+          <Link href="/" className="group flex shrink-0 items-center gap-2">
+            <div className="relative flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-lg overflow-hidden shadow-md shadow-primary/25">
               <Image src="/images/logo.jpg" alt="REDBEARD Logo" fill className="object-cover" />
             </div>
-            <span className="bg-gradient-to-r from-text-primary via-white to-text-secondary bg-clip-text text-xl font-extrabold tracking-tight text-transparent">
+            <span className="bg-gradient-to-r from-text-primary via-white to-text-secondary bg-clip-text text-lg md:text-xl font-extrabold tracking-tight text-transparent">
               {APP_NAME}
             </span>
           </Link>
@@ -143,24 +143,24 @@ export function Header() {
           </nav>
 
           {/* Right Side Actions */}
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {/* Search Button */}
             <Link
               href="/search"
-              className="flex h-11 w-11 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary"
+              className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary"
               aria-label="Search"
             >
-              <Search className="h-[18px] w-[18px]" />
+              <Search className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
             </Link>
 
             {/* Notifications (logged in only) */}
             {isLoggedIn && (
               <Link
                 href="/user/notifications"
-                className="relative flex h-11 w-11 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary"
+                className="relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary"
                 aria-label="Notifications"
               >
-                <Bell className="h-[18px] w-[18px]" />
+                <Bell className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
               </Link>
             )}
 
@@ -271,7 +271,7 @@ export function Header() {
             {/* Mobile Hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex h-11 w-11 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary md:hidden"
+              className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/[0.06] hover:text-text-primary md:hidden"
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
               <AnimatePresence mode="wait">

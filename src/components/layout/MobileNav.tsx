@@ -36,11 +36,11 @@ export function MobileNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-surface/80 backdrop-blur-xl safe-bottom md:hidden transition-transform duration-300 ease-in-out [.mobile-menu-open_&]:translate-y-[150%]"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/80 bg-surface/95 backdrop-blur-xl md:hidden pb-[env(safe-area-inset-bottom,0px)] transition-transform duration-300 ease-in-out [.mobile-menu-open_&]:translate-y-[150%]"
       role="navigation"
       aria-label="Mobile navigation"
     >
-      <div className="flex items-center justify-around px-2 py-2">
+      <div className="flex h-14 items-center justify-around px-1">
         {navItems.map((item) => {
           const Icon = ICON_MAP[item.icon] || BookOpen;
           const isActive =
@@ -53,8 +53,8 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                'relative flex flex-1 flex-col items-center gap-1 py-3 text-[10px] font-medium transition-colors',
-                isActive ? 'text-primary' : 'text-text-muted'
+                'relative flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium transition-colors',
+                isActive ? 'text-primary' : 'text-text-muted hover:text-text-secondary'
               )}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
@@ -63,7 +63,7 @@ export function MobileNav() {
               {isActive && (
                 <motion.div
                   layoutId="mobile-nav-indicator"
-                  className="absolute -top-1 h-0.5 w-6 rounded-full bg-gradient-to-r from-primary to-accent"
+                  className="absolute top-0 h-0.5 w-6 rounded-full bg-primary"
                   transition={{
                     type: 'spring',
                     stiffness: 400,
@@ -73,7 +73,7 @@ export function MobileNav() {
               )}
 
               <motion.div
-                whileTap={{ scale: 0.8 }}
+                whileTap={{ scale: 0.85 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 20 }}
               >
                 <Icon
@@ -85,7 +85,7 @@ export function MobileNav() {
                 />
               </motion.div>
 
-              <span className={cn(isActive && 'font-semibold')}>
+              <span className={cn('leading-none text-[10px]', isActive ? 'font-bold text-primary' : 'font-medium')}>
                 {item.label}
               </span>
             </Link>

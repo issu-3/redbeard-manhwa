@@ -58,17 +58,46 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
 
   const targetLink = hasHistory ? continueLink : firstChapterLink;
 
-  // Placeholder with same dimensions — shown during SSR and before detection completes.
-  const buttonPlaceholder = (
-    <div className={isMobile
-      ? "flex flex-col items-center justify-center gap-1 px-4 py-2 w-full max-w-[120px] opacity-0 pointer-events-none"
-      : "w-14 h-[52px] rounded-xl border-2 border-transparent opacity-0 pointer-events-none"
-    } aria-hidden="true" />
-  );
+  const rawChapterNumber = continueChapterObj?.label || continueChapterObj?.number || continueReadingChapter;
+  const formattedChapter = rawChapterNumber 
+    ? String(rawChapterNumber).replace(/^(ch\.|chapter)\s*/i, '')
+    : '';
+
+  const readLabel = isLoading
+    ? 'Loading...'
+    : hasHistory
+      ? `Continue Ch. ${formattedChapter}`
+      : 'Read First Chapter';
+
+  const handleShare = async () => {
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : `https://redbeard.store/series/${seriesSlug}`;
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: seriesTitle,
+          text: `Read ${seriesTitle} online on REDBEARD`,
+          url: shareUrl,
+        });
+        return;
+      } catch {
+        // User dismissed or share failed, fallback to clipboard
+      }
+    }
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        const { toast } = await import('sonner');
+        toast.success('Link copied to clipboard!');
+      } catch (err) {
+        console.error('Failed to copy link', err);
+      }
+    }
+  };
 
   if (isMobile) {
     return (
-      <>
+      <div className="flex items-center gap-2.5 w-full">
+        {/* Primary Action (approx. 60% width) */}
         {targetLink !== '#' && (
           <Link
             href={targetLink}
@@ -134,30 +163,31 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
                 }
               }
             }}
-            className="flex-1 flex items-center justify-center gap-1.5 md:gap-2 rounded-xl bg-primary px-3 py-2.5 md:px-4 md:py-3.5 font-bold text-sm md:text-base text-white active:scale-95 transition-transform shadow-lg shadow-primary/25"
+            className="flex-[6] min-w-0 h-[52px] flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary-hover active:bg-primary/90 text-white font-bold text-xs sm:text-sm shadow-md shadow-primary/25 transition-all active:scale-[0.98] px-3"
+            aria-label={readLabel}
           >
-            <BookOpen className="h-4 w-4 md:h-5 md:w-5" />
-            {isLoading 
-              ? 'Loading...' 
-              : (hasHistory 
-                  ? `Continue Ch. ${continueChapterObj?.label || continueChapterObj?.number || continueReadingChapter}` 
-                  : 'Read First Chapter'
-                )
-            }
+            <BookOpen className="h-4 w-4 shrink-0" />
+            <span className="truncate">{readLabel}</span>
           </Link>
         )}
-        {!isMounted
-          ? buttonPlaceholder
-          : <BookmarkButton 
+
+        {/* Secondary Action (Bookmark) — approx 40% width */}
+        <div className="flex-[4] min-w-0">
+          {!isMounted ? (
+            <div className="w-full h-[52px] rounded-xl border border-border/80 bg-card/60 animate-pulse" aria-hidden="true" />
+          ) : (
+            <BookmarkButton 
               seriesId={seriesId} 
               initialBookmarked={isBookmarked} 
               title={seriesTitle}
               slug={seriesSlug}
               coverImage={coverImage}
               continueReadingChapter={continueReadingChapter}
+              className="w-full h-[52px] rounded-xl text-xs sm:text-sm px-2 justify-center"
             />
-        }
-      </>
+          )}
+        </div>
+      </div>
     );
   }
 
@@ -228,33 +258,35 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
               }
             }
           }}
-          className="flex items-center gap-2 rounded-xl bg-primary px-10 py-4 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25"
+          className="flex items-center gap-2 h-12 rounded-xl bg-primary px-8 font-bold text-white transition-all hover:bg-primary-hover hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/25 text-sm"
+          aria-label={readLabel}
         >
-          <BookOpen className="h-5 w-5" />
-            {isLoading 
-              ? 'Loading...' 
-              : (hasHistory 
-                  ? `Continue Ch. ${continueChapterObj?.label || continueChapterObj?.number || continueReadingChapter}` 
-                  : 'Read First Chapter'
-                )
-            }
+          <BookOpen className="h-5 w-5 shrink-0" />
+          <span>{readLabel}</span>
         </Link>
       )}
       
-      {!isMounted
-        ? buttonPlaceholder
-        : <BookmarkButton 
-            seriesId={seriesId} 
-            initialBookmarked={isBookmarked} 
-            title={seriesTitle}
-            slug={seriesSlug}
-            coverImage={coverImage}
-            continueReadingChapter={continueReadingChapter}
-          />
-      }
+      {!isMounted ? (
+        <div className="w-36 h-12 rounded-xl border border-border/80 bg-card/60 animate-pulse" aria-hidden="true" />
+      ) : (
+        <BookmarkButton 
+          seriesId={seriesId} 
+          initialBookmarked={isBookmarked} 
+          title={seriesTitle}
+          slug={seriesSlug}
+          coverImage={coverImage}
+          continueReadingChapter={continueReadingChapter}
+          className="h-12 px-6 rounded-xl border-border/80 bg-card/70 hover:bg-card text-text-primary text-sm font-semibold"
+        />
+      )}
       
-      <button className="flex items-center justify-center rounded-xl border-2 border-border bg-card/50 backdrop-blur-sm w-[56px] text-text-primary transition-all hover:border-primary/50 hover:bg-card-hover hover:text-primary">
-        <Share2 className="h-5 w-5" />
+      <button 
+        onClick={handleShare}
+        className="flex items-center justify-center rounded-xl border border-border/80 bg-card/70 backdrop-blur-sm h-12 w-12 text-text-primary transition-all hover:border-primary/50 hover:bg-card hover:text-primary active:scale-95"
+        title="Share series"
+        aria-label="Share series"
+      >
+        <Share2 className="h-4 w-4" />
       </button>
     </>
   );

@@ -15,6 +15,7 @@ import { nativeUserId } from '@/components/native/NativeInitializer';
 import { Preferences } from '@capacitor/preferences';
 import { Share } from '@capacitor/share';
 import { Browser } from '@capacitor/browser';
+import { getContentTypeLabel } from '@/lib/content-types';
 
 type SortOption = 'chapterNumber_desc' | 'chapterNumber_asc' | 'uploadDate_desc' | 'uploadDate_asc';
 type DisplayMode = 'compact' | 'comfortable';
@@ -692,7 +693,7 @@ export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }:
             </p>
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[9px] tracking-wider uppercase font-bold bg-white/10 backdrop-blur-md px-1.5 py-0.5 rounded text-white">{series.status || 'UNKNOWN'}</span>
-              <span className="text-[9px] tracking-wider uppercase font-bold bg-[#E5092F]/20 backdrop-blur-md px-1.5 py-0.5 rounded text-[#E5092F]">{series.type || 'MANGA'}</span>
+              <span className="text-[9px] tracking-wider uppercase font-bold bg-[#E5092F]/20 backdrop-blur-md px-1.5 py-0.5 rounded text-[#E5092F]">{getContentTypeLabel(series.type) || 'Manga'}</span>
             </div>
           </div>
         </div>

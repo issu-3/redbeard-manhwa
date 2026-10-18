@@ -80,16 +80,16 @@ export function ChapterListSection({
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <h2 className="text-xl sm:text-2xl font-bold text-text-primary flex items-center gap-2">
           Chapters
-          <span className="text-sm font-medium bg-card px-2 py-0.5 rounded-full text-text-muted border border-border">
+          <span className="text-xs font-semibold bg-card/80 px-2.5 py-0.5 rounded-full text-text-muted border border-border/60">
             {totalChapters}
           </span>
         </h2>
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 sm:flex-initial">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
+        <div className="flex items-center gap-2.5">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
             <input
               type="text"
               placeholder="Search chapters..."
@@ -98,27 +98,28 @@ export function ChapterListSection({
                 setSearchQuery(e.target.value);
                 setDisplayLimit(100);
               }}
-              className="w-full sm:w-64 rounded-xl border border-border bg-card pl-9 pr-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 transition-all"
+              className="w-full h-10 rounded-xl border border-border/70 bg-card/80 pl-9 pr-3 text-xs sm:text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 transition-all"
             />
           </div>
           <button
             onClick={() => setSortAsc(!sortAsc)}
-            className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold transition-all hover:border-primary/40 hover:bg-card-hover text-text-secondary whitespace-nowrap"
+            className="h-10 flex items-center gap-1.5 rounded-xl border border-border/70 bg-card/80 px-3.5 text-xs sm:text-sm font-semibold transition-all hover:border-primary/40 hover:bg-card text-text-secondary hover:text-text-primary shrink-0 active:scale-95"
+            aria-label={sortAsc ? 'Sort by newest first' : 'Sort by oldest first'}
           >
-            {sortAsc ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
-            {sortAsc ? 'Oldest' : 'Newest'}
+            {sortAsc ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
+            <span>{sortAsc ? 'Oldest' : 'Newest'}</span>
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
         <AnimatePresence initial={false}>
           {filteredChapters.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-center py-12 text-text-muted"
+              className="text-center py-12 text-text-muted col-span-full text-sm"
             >
               No chapters found matching your search.
             </motion.div>
@@ -135,59 +136,69 @@ export function ChapterListSection({
                   <motion.div
                     key={chapter.id}
                     layout
-                    initial={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0, scale: 0.97 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.2) }}
+                    exit={{ opacity: 0, scale: 0.97 }}
+                    transition={{ duration: 0.15, delay: Math.min(index * 0.015, 0.15) }}
                   >
                     <div
                       className={cn(
-                        'group relative flex flex-col justify-center p-3.5 rounded-[16px] border transition-all min-h-[85px]',
+                        'group relative flex flex-col justify-center p-3 rounded-xl border transition-all duration-150',
                         isLatest 
-                          ? 'bg-primary/5 border-primary/30 hover:border-primary/60 hover:bg-primary/10 shadow-sm'
-                          : 'bg-card border-border hover:border-primary/40 hover:bg-card-hover',
+                          ? 'bg-primary/[0.06] border-primary/30 hover:border-primary/60 hover:bg-primary/[0.1] shadow-xs'
+                          : 'bg-card/70 border-border/60 hover:border-primary/40 hover:bg-card',
                         chapter.isRead && 'opacity-60'
                       )}
                     >
                       <div className="flex items-center justify-between gap-3">
                         {/* Title and Metadata Column */}
                         <div className="flex flex-col min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-1.5 min-w-0 mb-0.5">
                             {safeSlug ? (
                               <Link
                                 href={`/series/${seriesSlug}/chapter/${safeSlug}`}
                                 prefetch={false}
-                                className="min-w-0"
+                                className="min-w-0 truncate"
                               >
-                                <h3 className={cn(
-                                  "text-[18px] font-bold leading-tight truncate transition-colors",
+                                <span className={cn(
+                                  "text-sm sm:text-base font-bold leading-tight truncate transition-colors",
                                   isLatest ? "text-primary hover:underline" : "text-text-primary group-hover:text-primary hover:underline"
                                 )}>
                                   {chapter.label || `Chapter ${chapter.number}`}
-                                </h3>
+                                </span>
                               </Link>
                             ) : (
-                              <h3 className={cn(
-                                "text-[18px] font-bold leading-tight truncate transition-colors",
+                              <span className={cn(
+                                "text-sm sm:text-base font-bold leading-tight truncate transition-colors",
                                 isLatest ? "text-primary" : "text-text-primary group-hover:text-primary"
                               )}>
                                 {chapter.label || `Chapter ${chapter.number}`}
-                              </h3>
+                              </span>
                             )}
                             {isLatest && (
-                              <span className="bg-primary text-white text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm shrink-0">
+                              <span className="bg-primary text-white text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shadow-xs shrink-0">
                                 New
                               </span>
                             )}
                             {chapter.isRead && (
-                              <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                             )}
                           </div>
+
+                          {/* Chapter title if distinct from label/number */}
+                          {chapter.title && chapter.title !== chapter.label && chapter.title !== `Chapter ${chapter.number}` && (
+                            <p 
+                              className="text-xs text-text-secondary truncate leading-snug mb-1 font-normal" 
+                              title={chapter.title}
+                            >
+                              {chapter.title}
+                            </p>
+                          )}
                           
-                          <div className="flex items-center gap-3 text-[13px] font-medium text-text-muted mt-0.5">
+                          <div className="flex items-center gap-3 text-[11px] font-medium text-text-muted">
                             {chapter.publishedAt && (
                               <span className="flex items-center gap-1" suppressHydrationWarning>
-                                <Calendar className="h-3 w-3" />
+                                <Calendar className="h-3 w-3 shrink-0" />
                                 {formatRelativeTime(chapter.publishedAt)}
                               </span>
                             )}
@@ -199,24 +210,26 @@ export function ChapterListSection({
                           </div>
                         </div>
                         
-                        {/* READ and Download Buttons Row */}
+                        {/* Download & Read Actions */}
                         <div className="flex items-center gap-2 shrink-0">
                           {chapter.downloadUrl && (
                             <a
                               href={`/api/chapter/${chapter.id}/download`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="w-[34px] h-[34px] flex items-center justify-center bg-surface border border-border hover:bg-card-hover text-text-secondary hover:text-text-primary rounded-full transition-colors"
-                              title="Download"
+                              className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-lg border border-border/70 bg-surface/80 hover:bg-card-hover text-text-secondary hover:text-text-primary transition-colors shrink-0 active:scale-95"
+                              title={`Download ${chapter.label || 'Chapter ' + chapter.number}`}
+                              aria-label={`Download ${chapter.label || 'Chapter ' + chapter.number}`}
                             >
-                              <Download className="h-4 w-4" />
+                              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </a>
                           )}
                           {safeSlug ? (
                             <Link
                               href={`/series/${seriesSlug}/chapter/${safeSlug}`}
                               prefetch={false}
-                              className="w-[68px] h-[34px] flex items-center justify-center bg-primary text-white hover:bg-primary/90 rounded-full text-[12px] font-bold transition-colors shadow-sm"
+                              className="h-8 sm:h-9 px-3 sm:px-3.5 flex items-center justify-center bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 active:scale-95"
+                              aria-label={`Read ${chapter.label || 'Chapter ' + chapter.number}`}
                             >
                               READ
                             </Link>
@@ -242,7 +255,7 @@ export function ChapterListSection({
         </AnimatePresence>
       </div>
 
-      {filteredChapters.length < totalChapters && (
+      {!searchQuery.trim() && chapters.length < totalChapters && (
         <div className="mt-8 flex justify-center">
           <button
             onClick={async () => {
@@ -264,17 +277,17 @@ export function ChapterListSection({
               }
             }}
             disabled={isLoadingMore}
-            className="rounded-xl border-2 border-border bg-card px-8 py-3 text-sm font-bold text-text-primary transition-all hover:border-primary/50 hover:text-primary active:scale-95 disabled:opacity-50"
+            className="rounded-xl border border-border bg-card px-8 py-3 text-sm font-bold text-text-primary transition-all hover:border-primary/50 hover:text-primary active:scale-95 disabled:opacity-50"
           >
-            {isLoadingMore ? 'Loading...' : `Load More Chapters (${totalChapters - chapters.length} remaining)`}
+            {isLoadingMore ? 'Loading...' : `Load More Chapters (${Math.max(0, totalChapters - chapters.length)} remaining)`}
           </button>
         </div>
       )}
-      {filteredChapters.length >= totalChapters && filteredChapters.length > displayLimit && (
+      {filteredChapters.length > displayLimit && (
         <div className="mt-8 flex justify-center">
           <button
             onClick={() => setDisplayLimit((prev) => prev + 100)}
-            className="rounded-xl border-2 border-border bg-card px-8 py-3 text-sm font-bold text-text-primary transition-all hover:border-primary/50 hover:text-primary active:scale-95"
+            className="rounded-xl border border-border bg-card px-8 py-3 text-sm font-bold text-text-primary transition-all hover:border-primary/50 hover:text-primary active:scale-95"
           >
             Show More ({filteredChapters.length - displayLimit} hidden)
           </button>
