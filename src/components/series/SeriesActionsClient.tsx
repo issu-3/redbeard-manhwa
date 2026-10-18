@@ -253,7 +253,7 @@ export function SeriesActionsClient({ seriesId, seriesSlug, seriesTitle, coverIm
           />
       }
       
-      <button className="flex items-center justify-center rounded-xl border-2 border-border bg-card/50 backdrop-blur-sm w-[56px] text-text-primary transition-all hover:border-primary/50 hover:bg-card-hover hover:text-primary">
+      <button aria-label="Share series" className="flex items-center justify-center rounded-xl border-2 border-border bg-card/50 backdrop-blur-sm w-[56px] text-text-primary transition-all hover:border-primary/50 hover:bg-card-hover hover:text-primary">
         <Share2 className="h-5 w-5" />
       </button>
     </>
