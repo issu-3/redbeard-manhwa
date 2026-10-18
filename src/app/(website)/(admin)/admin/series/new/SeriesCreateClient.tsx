@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { CompactMediaUpload } from '@/components/admin/CompactMediaUpload';
 import { MultiSelectField } from '@/components/admin/MultiSelectField';
 import { createSeries } from '@/app/actions/admin/series';
+import { createGenreInline, createTagInline } from '@/app/actions/admin/taxonomy';
 import Link from 'next/link';
 import { Star, Sparkles, AlertTriangle } from 'lucide-react';
 import { getContentTypeLabel } from '@/lib/content-types';
@@ -147,11 +148,25 @@ export default function SeriesCreateClient({ genres, tags }: SeriesCreateClientP
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-white">Genres *</label>
-              <MultiSelectField name="genres" placeholder="Search genres..." options={genres} onChange={setSelectedGenres} required />
+              <MultiSelectField
+                name="genres"
+                placeholder="Search genres..."
+                options={genres}
+                onChange={setSelectedGenres}
+                required
+                onCreate={createGenreInline}
+                createItemLabel="Genre"
+              />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-white">Tags</label>
-              <MultiSelectField name="tags" placeholder="Search tags..." options={tags} />
+              <MultiSelectField
+                name="tags"
+                placeholder="Search tags..."
+                options={tags}
+                onCreate={createTagInline}
+                createItemLabel="Tag"
+              />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-white">Description *</label>

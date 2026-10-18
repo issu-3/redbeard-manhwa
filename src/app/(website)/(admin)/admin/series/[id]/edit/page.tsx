@@ -1,4 +1,5 @@
 import { updateSeries } from '@/app/actions/admin/series';
+import { createGenreInline, createTagInline } from '@/app/actions/admin/taxonomy';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
@@ -97,6 +98,8 @@ export default async function EditSeriesPage({
               options={genres.map((g: any) => ({ id: g.id, name: g.name }))}
               initialSelectedIds={selectedGenreIds}
               required
+              onCreate={createGenreInline}
+              createItemLabel="Genre"
             />
           </div>
           <div className="space-y-2">
@@ -106,6 +109,8 @@ export default async function EditSeriesPage({
               placeholder="Search tags..."
               options={tags.map((t: any) => ({ id: t.id, name: t.name }))}
               initialSelectedIds={selectedTagIds}
+              onCreate={createTagInline}
+              createItemLabel="Tag"
             />
           </div>
         </div>
