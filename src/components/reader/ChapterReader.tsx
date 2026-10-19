@@ -292,9 +292,11 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
 
   const endOfChapterView = (
     <div className="py-24 text-center w-full h-full flex flex-col items-center justify-center pointer-events-auto z-10 relative bg-[#0F1115]">
-       <div className="w-full flex justify-center mb-8">
-         <AdsterraAd placement="BOTTOM" htmlScript={adsterraBannerScript} />
-       </div>
+       {adsterraBannerScript && (
+         <div className="w-full flex justify-center mb-6">
+           <AdsterraAd placement="BOTTOM" htmlScript={adsterraBannerScript} />
+         </div>
+       )}
        <div className="max-w-[900px] w-full mx-auto px-4 mb-12">
          <SubscribeCard youtubeUrl={youtubeUrl || null} />
        </div>
@@ -408,13 +410,13 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                     }}
                     className={cn("flex flex-col items-center bg-transparent", store.longStripGap ? "py-2" : "py-0")}
                   >
-                    {virtualRow.index === 0 && (
-                      <div className="w-full flex justify-center pt-16 pb-6 pointer-events-auto shrink-0">
+                    {virtualRow.index === 0 && adsterraBannerScript && (
+                      <div className="w-full flex justify-center pt-4 pb-4 pointer-events-auto shrink-0">
                         <AdsterraAd placement="TOP" htmlScript={adsterraBannerScript} className="w-full max-w-[728px]" />
                       </div>
                     )}
-                    {virtualRow.index === midIndex && (
-                      <div className="w-full flex justify-center py-6 pointer-events-auto shrink-0">
+                    {virtualRow.index === midIndex && adsterraBannerScript && (
+                      <div className="w-full flex justify-center py-3 pointer-events-auto shrink-0">
                         <AdsterraAd placement="MID" htmlScript={adsterraBannerScript} className="w-full max-w-[300px]" />
                       </div>
                     )}
@@ -471,12 +473,12 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                endOfChapterView
              ) : (
                <div className="w-full h-full flex flex-col items-center justify-center">
-                 {store.currentPage === 1 && (
-                   <div className="w-full flex justify-center pt-16 pb-2 pointer-events-auto shrink-0 z-20">
+                 {store.currentPage === 1 && adsterraBannerScript && (
+                   <div className="w-full flex justify-center pt-4 pb-2 pointer-events-auto shrink-0 z-20">
                      <AdsterraAd placement="TOP" htmlScript={adsterraBannerScript} className="w-full max-w-[728px]" />
                    </div>
                  )}
-                 {store.currentPage === midIndex && (
+                 {store.currentPage === midIndex && adsterraBannerScript && (
                    <div className="w-full flex justify-center py-2 pointer-events-auto shrink-0 z-20">
                      <AdsterraAd placement="MID" htmlScript={adsterraBannerScript} className="w-full max-w-[300px]" />
                    </div>

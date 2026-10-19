@@ -1,28 +1,32 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 
 interface MonetagRendererProps {
   placement: string;
   html: string;
 }
 
-
-
 export function MonetagRenderer({ placement, html }: MonetagRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isInView, setIsInView] = useState(false);
-  const [decodedHtml, setDecodedHtml] = useState('');
 
-  useEffect(() => {
+  const decodedHtml = useMemo(() => {
     try {
-      setDecodedHtml(atob(html));
-    } catch (e) {
+      if (typeof window !== 'undefined') {
+        return atob(html);
+      }
+      return Buffer.from(html, 'base64').toString('utf-8');
+    } catch {
       console.error('Failed to decode ad payload');
+      return '';
     }
   }, [html]);
 
+  const isTopPlacement = placement === 'homepage' || placement === 'series_detail' || placement === 'download';
+  const [isInView, setIsInView] = useState(isTopPlacement);
+
   useEffect(() => {
+    if (isInView) return;
     const currentRef = containerRef.current;
     if (!currentRef) return;
 
@@ -38,10 +42,16 @@ export function MonetagRenderer({ placement, html }: MonetagRendererProps) {
 
     observer.observe(currentRef);
     return () => observer.disconnect();
-  }, []);
+  }, [isInView]);
 
-  const minHeightClass = 'min-h-[90px]';
-  const containerClass = `w-full overflow-hidden flex justify-center my-4 ad-container relative ${minHeightClass} items-center`;
+  if (!decodedHtml) {
+    return null;
+  }
+
+  const minHeightClass = 'min-h-[50px] md:min-h-[90px]';
+  const isFooter = placement === 'footer';
+  const marginClass = isFooter ? "mt-3 mb-1 sm:mt-4 sm:mb-1.5" : "my-2";
+  const containerClass = `w-full overflow-hidden flex justify-center ${marginClass} ad-container relative ${minHeightClass} items-center`;
 
   const iframeContent = `
     <!DOCTYPE html>
@@ -89,7 +99,8 @@ export function MonetagRenderer({ placement, html }: MonetagRendererProps) {
         <div className="relative z-10 w-full flex justify-center" data-ad-placement={placement}>
           <iframe
             srcDoc={iframeContent}
-            style={{ width: '100%', minHeight: '90px', border: 'none', overflow: 'hidden', background: 'transparent' }}
+            className="w-full max-w-[728px] h-[50px] md:h-[90px]"
+            style={{ border: 'none', overflow: 'hidden', background: 'transparent' }}
             scrolling="no"
             title="Advertisement"
             allowTransparency={true}

@@ -271,3 +271,16 @@ html.is-native, html.is-native.dark {
   --foreground: #FFFFFF;
   --glass-bg: rgba(20, 20, 20, 0.85);
 }
+
+/* ── Advertisement Layout & Collapse ────────────────────── */
+
+.ad-container {
+  contain: layout;
+}
+
+.ad-container:empty {
+  display: none !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}

@@ -97,7 +97,7 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
       />
       <h1 className="sr-only">REDBEARD - The Ultimate Reading Experience</h1>
-      <div className="my-2 px-4 md:my-5 md:px-8 lg:px-16 xl:px-20 flex justify-center overflow-hidden">
+      <div className="px-4 md:px-8 lg:px-16 xl:px-20 flex justify-center overflow-hidden [&:not(:has(.ad-container))]:hidden">
         <AdRenderer placement="homepage" />
       </div>
       <HomepageClient
@@ -105,7 +105,7 @@ export default async function HomePage() {
         sectionData={sectionData}
         isLoggedIn={false} // Managed internally by HomepageClient via next-auth
       />
-      <div className="px-4 md:px-8 lg:px-16 xl:px-20 pb-16">
+      <div className="px-4 md:px-8 lg:px-16 xl:px-20 pb-6 md:pb-8">
         <SubscribeCard youtubeUrl={settings.youtubeUrl || null} />
       </div>
     </>

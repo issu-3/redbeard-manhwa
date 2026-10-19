@@ -361,7 +361,7 @@ export default async function SeriesDetailPage({
 
       {/* ── Main Content (overlapping banner) ─────────────── */}
       <div className="relative -mt-20 sm:-mt-24 md:-mt-36 z-10 mx-auto max-w-7xl px-3.5 sm:px-6 lg:px-8 pb-[calc(10rem+env(safe-area-inset-bottom,0px))] md:pb-16">
-        <div className="w-full max-w-full overflow-hidden flex justify-center mb-3 sm:mb-5">
+        <div className="w-full max-w-full overflow-hidden flex justify-center [&:not(:has(.ad-container))]:hidden">
           <AdRenderer placement="series_detail" />
         </div>
 

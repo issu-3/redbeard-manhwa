@@ -1,28 +1,32 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 
 interface AdsterraRendererProps {
   placement: string;
   html: string;
 }
 
-
-
 export function AdsterraRenderer({ placement, html }: AdsterraRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isInView, setIsInView] = useState(false);
-  const [decodedHtml, setDecodedHtml] = useState('');
 
-  useEffect(() => {
+  const decodedHtml = useMemo(() => {
     try {
-      setDecodedHtml(atob(html));
-    } catch (e) {
+      if (typeof window !== 'undefined') {
+        return atob(html);
+      }
+      return Buffer.from(html, 'base64').toString('utf-8');
+    } catch {
       console.error('Failed to decode ad payload');
+      return '';
     }
   }, [html]);
 
+  const isTopPlacement = placement === 'homepage' || placement === 'series_detail' || placement === 'download';
+  const [isInView, setIsInView] = useState(isTopPlacement);
+
   useEffect(() => {
+    if (isInView) return;
     const currentRef = containerRef.current;
     if (!currentRef) return;
 
@@ -38,9 +42,14 @@ export function AdsterraRenderer({ placement, html }: AdsterraRendererProps) {
 
     observer.observe(currentRef);
     return () => observer.disconnect();
-  }, []);
+  }, [isInView]);
+
+  if (!decodedHtml) {
+    return null;
+  }
 
   const isNative = placement.includes('reader');
+  const isFooter = placement === 'footer';
   
   // Provide a minimum height to the container to ensure IntersectionObserver 
   // reliably detects it on desktop and to prevent layout shift.
@@ -48,7 +57,8 @@ export function AdsterraRenderer({ placement, html }: AdsterraRendererProps) {
     ? "min-h-[250px]" 
     : "min-h-[50px] md:min-h-[90px]";
     
-  const containerClass = `w-full overflow-hidden flex justify-center my-4 ad-container relative items-center ${minHeightClass}`;
+  const marginClass = isFooter ? "mt-3 mb-1 sm:mt-4 sm:mb-1.5" : "my-2";
+  const containerClass = `w-full overflow-hidden flex justify-center ${marginClass} ad-container relative items-center ${minHeightClass}`;
 
   const iframeContent = `
     <!DOCTYPE html>

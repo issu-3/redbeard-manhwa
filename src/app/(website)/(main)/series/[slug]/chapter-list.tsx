@@ -243,7 +243,7 @@ export function ChapterListSection({
 
               if (limit > 0 && adSlotMiddle) {
                 nodes.splice(adIndex, 0, (
-                  <div key="ad-middle" className="col-span-full flex justify-center w-full my-4 md:my-6 overflow-hidden">
+                  <div key="ad-middle" className="col-span-full flex justify-center w-full overflow-hidden [&:not(:has(.ad-container))]:hidden my-1 sm:my-2">
                     {adSlotMiddle}
                   </div>
                 ));

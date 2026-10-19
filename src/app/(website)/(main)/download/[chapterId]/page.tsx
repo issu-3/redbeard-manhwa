@@ -39,7 +39,7 @@ export default async function DownloadInterstitialPage({ params }: { params: Pro
           </p>
 
           {/* Ad Container */}
-          <div className="w-full flex justify-center my-8 min-h-[90px] bg-background/50 rounded-lg p-2 border border-border/30">
+          <div className="w-full flex justify-center my-4 bg-background/50 rounded-lg p-2 border border-border/30 [&:not(:has(.ad-container))]:hidden">
              <AdRenderer placement="download" />
           </div>
 
