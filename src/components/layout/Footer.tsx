@@ -5,13 +5,13 @@ import { APP_NAME, APP_TAGLINE } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { cn } from '@/lib/utils';
 
-export async function Footer() {
+export async function Footer({ className }: { className?: string } = {}) {
   const settings = await getCachedSettings();
   
   const hasSocials = settings.youtubeUrl || settings.telegramUrl || settings.instagramUrl || settings.tiktokUrl;
 
   return (
-    <footer className="relative mt-auto border-t border-border bg-surface">
+    <footer className={cn("relative mt-auto border-t border-border bg-surface hidden md:block", className)}>
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
       <div className="mx-auto max-w-7xl px-4 lg:px-6">
         <div className="pt-6 sm:pt-7 pb-3.5 sm:pb-4 flex flex-col items-center justify-center text-center">
