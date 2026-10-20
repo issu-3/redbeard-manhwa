@@ -42,7 +42,7 @@ export function ReaderSettingsSheet({ onClose }: { onClose: () => void }) {
     >
       <div className="flex flex-col shrink-0">
         <div className="p-4 flex items-center justify-between relative">
-          <button onClick={onClose} className="p-2 bg-transparent text-white/70 hover:text-white transition-colors">
+          <button onClick={onClose} className="p-2 bg-transparent text-white/70 hover:text-white transition-colors" aria-label="Close settings">
             <X className="w-6 h-6"/>
           </button>
           <h3 className="font-bold text-lg text-white absolute left-1/2 -translate-x-1/2">Reading Settings</h3>
