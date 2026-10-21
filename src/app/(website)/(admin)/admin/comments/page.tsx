@@ -51,7 +51,7 @@ export default async function AdminCommentsPage() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button className="rounded-lg p-2 text-red-500 hover:bg-red-500/10 transition-colors" title="Delete Comment">
+                <button aria-label="Delete comment" className="rounded-lg p-2 text-red-500 hover:bg-red-500/10 transition-colors" title="Delete Comment">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>

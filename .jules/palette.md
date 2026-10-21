@@ -1,0 +1,3 @@
+## 2024-10-21 - [Icon-Only Buttons in Admin Pages Need ARIA Labels]
+**Learning:** Admin pages often contain list tables with action buttons that lack visible text, and the icon components used (from `lucide-react`) do not inherently provide accessible names. The `title` attribute alone is insufficient for screen-reader robust accessibility. Additionally, the user object from Prisma does not have a `name` field; you have to use `displayName` or `username`.
+**Action:** When adding or modifying interactive elements containing only icons in table lists, always ensure they are paired with a descriptive `aria-label` that includes context (e.g., `aria-label={"Edit " + genre.name}`), using correct user model fields.

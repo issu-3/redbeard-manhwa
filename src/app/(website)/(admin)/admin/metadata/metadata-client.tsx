@@ -162,10 +162,10 @@ export function MetadataClient({ genres, tags }: { genres: Genre[]; tags: Tag[] 
                     </td>
                     <td className="px-6 py-4 text-text-secondary">{genre.slug}</td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => openEditGenre(genre)} className="p-2 text-text-secondary hover:text-primary transition-colors">
+                      <button aria-label={`Edit ${genre.name}`} onClick={() => openEditGenre(genre)} className="p-2 text-text-secondary hover:text-primary transition-colors">
                         <Edit2 className="h-4 w-4" />
                       </button>
-                      <button onClick={() => handleDeleteGenre(genre.id)} disabled={isPending} className="p-2 text-text-secondary hover:text-red-500 transition-colors">
+                      <button aria-label={`Delete ${genre.name}`} onClick={() => handleDeleteGenre(genre.id)} disabled={isPending} className="p-2 text-text-secondary hover:text-red-500 transition-colors">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </td>
@@ -211,10 +211,10 @@ export function MetadataClient({ genres, tags }: { genres: Genre[]; tags: Tag[] 
                     <td className="px-6 py-4 font-semibold">{tag.name}</td>
                     <td className="px-6 py-4 text-text-secondary">{tag.slug}</td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => openEditTag(tag)} className="p-2 text-text-secondary hover:text-primary transition-colors">
+                      <button aria-label={`Edit ${tag.name}`} onClick={() => openEditTag(tag)} className="p-2 text-text-secondary hover:text-primary transition-colors">
                         <Edit2 className="h-4 w-4" />
                       </button>
-                      <button onClick={() => handleDeleteTag(tag.id)} disabled={isPending} className="p-2 text-text-secondary hover:text-red-500 transition-colors">
+                      <button aria-label={`Delete ${tag.name}`} onClick={() => handleDeleteTag(tag.id)} disabled={isPending} className="p-2 text-text-secondary hover:text-red-500 transition-colors">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </td>
