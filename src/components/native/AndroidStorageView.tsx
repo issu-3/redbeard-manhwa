@@ -159,7 +159,7 @@ export function AndroidStorageView({ onBack }: { onBack: () => void }) {
   return (
     <div className="flex h-[100dvh] w-full flex-col bg-[#0B0D10] pt-[env(safe-area-inset-top,0px)] pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]">
       <header className="flex h-14 items-center gap-4 px-4 border-b border-white/5 bg-[#0B0D10]/95 backdrop-blur-md">
-        <button onClick={onBack} className="rounded-full p-2 -ml-2 active:bg-neutral-800 transition-colors">
+        <button onClick={onBack} className="rounded-full p-2 -ml-2 active:bg-neutral-800 transition-colors" aria-label="Go back">
           <ArrowLeft className="h-6 w-6 text-white" />
         </button>
         <h1 className="text-[20px] font-bold text-white tracking-tight">Storage</h1>
@@ -434,6 +434,7 @@ function DownloadedSeriesDetailView({ seriesId, onBack }: { seriesId: string, on
              <button 
                onClick={() => handleDelete(c)}
                className="h-10 w-10 rounded-full bg-neutral-800 flex items-center justify-center active:bg-red-500/20 active:text-red-500 transition-colors"
+               aria-label="Delete chapter"
              >
                <Trash2 className="h-4 w-4 text-neutral-400" />
              </button>

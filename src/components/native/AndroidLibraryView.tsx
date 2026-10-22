@@ -268,17 +268,17 @@ export function AndroidLibraryView() {
                 Library
               </h1>
               <div className="flex items-center gap-4 text-white">
-                <button onClick={() => setIsSearchMode(true)} className="active:opacity-70 transition-opacity p-1">
+                <button onClick={() => setIsSearchMode(true)} className="active:opacity-70 transition-opacity p-1" aria-label="Search library">
                   <Search className="h-[22px] w-[22px]" />
                 </button>
-                <button onClick={() => { setTempFilterState(filterState); setIsFilterOpen(true); }} className="active:opacity-70 transition-opacity p-1 relative">
+                <button onClick={() => { setTempFilterState(filterState); setIsFilterOpen(true); }} className="active:opacity-70 transition-opacity p-1 relative" aria-label="Filter library">
                   <Filter className="h-[22px] w-[22px]" />
                   {isFilterActive && (
                     <div className="absolute top-1 right-1 w-2 h-2 bg-[#E5092F] rounded-full border border-[#0B0D10]" />
                   )}
                 </button>
                 <div className="relative">
-                  <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="active:opacity-70 transition-opacity p-1 -mr-2">
+                  <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="active:opacity-70 transition-opacity p-1 -mr-2" aria-label="Library options menu">
                     <MoreVertical className="h-[22px] w-[22px]" />
                   </button>
                   {isMenuOpen && (
@@ -304,6 +304,7 @@ export function AndroidLibraryView() {
                     setSelectedSeriesIds(new Set());
                   }}
                   className="p-2 -ml-2 text-neutral-300 active:bg-neutral-800 rounded-full"
+                  aria-label="Close selection mode"
                 >
                   <ArrowLeft className="h-6 w-6" />
                 </button>
@@ -326,6 +327,7 @@ export function AndroidLibraryView() {
                   onClick={handleRemoveSelected}
                   disabled={selectedSeriesIds.size === 0}
                   className={cn("active:opacity-70 transition-opacity p-1 -mr-2", selectedSeriesIds.size > 0 ? "text-[#E5092F]" : "text-neutral-600")}
+                  aria-label="Delete selected"
                 >
                   <Trash2 className="h-[22px] w-[22px]" />
                 </button>
@@ -339,6 +341,7 @@ export function AndroidLibraryView() {
                   setSearchQuery('');
                 }}
                 className="p-2 -ml-2 text-neutral-300 active:bg-neutral-800 rounded-full"
+                aria-label="Close search"
               >
                 <ArrowLeft className="h-6 w-6" />
               </button>
