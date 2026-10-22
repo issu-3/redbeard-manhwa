@@ -123,6 +123,7 @@ export function CommentItem({
         <div className="flex items-center gap-4 pt-1">
           <button 
             onClick={handleLike}
+            aria-label={likes > 0 ? `Like comment, ${likes} likes` : "Like comment"}
             className="flex items-center gap-1.5 text-xs font-medium text-text-muted hover:text-primary transition-colors"
           >
             <ThumbsUp className="w-3.5 h-3.5" />
@@ -130,6 +131,7 @@ export function CommentItem({
           </button>
           <button 
             onClick={() => setIsReplying(!isReplying)}
+            aria-label="Reply to comment"
             className="flex items-center gap-1.5 text-xs font-medium text-text-muted hover:text-text-primary transition-colors"
           >
             <MessageSquare className="w-3.5 h-3.5" />
