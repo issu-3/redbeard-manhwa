@@ -176,6 +176,7 @@ export function Header() {
                     aria-expanded={userMenuOpen}
                     aria-haspopup="menu"
                     aria-controls="user-menu"
+                    aria-label="User menu"
                     className="flex items-center gap-3"
                   >
                     {user?.image ? (
