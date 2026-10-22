@@ -40,12 +40,17 @@ export function BookmarkButton({
   continueReadingChapter,
   className,
 }: BookmarkButtonProps) {
-  const store = useAppLibraryStore();
-  const isSavedInStore = store.isSaved(seriesId);
+  // ⚡ BOLT OPTIMIZATION:
+  // Subscribing to specific atomic state (isSaved, hasHydrated) instead of the whole store
+  // prevents O(N) cascading re-renders when rendering lists of series with BookmarkButton.
+  // Expected impact: Significantly reduced React rendering overhead for lists/sliders.
+  const isSavedInStore = useAppLibraryStore((state) => state.isSaved(seriesId));
+  const hasHydrated = useAppLibraryStore((state) => state.hasHydrated);
+
   const [internalBookmarked, setInternalBookmarked] = useState(initialBookmarked);
   
   // Use store as source of truth if hydrated, otherwise fallback to local/prop state
-  const isBookmarked = store.hasHydrated ? isSavedInStore : internalBookmarked;
+  const isBookmarked = hasHydrated ? isSavedInStore : internalBookmarked;
 
   const [isPending, setIsPending] = useState(false);
   const router = useRouter();
@@ -66,8 +71,9 @@ export function BookmarkButton({
 
       // Sync to AppLibraryStore (Works for Web Memory + Native SQLite)
       if (title && slug) {
+        const { addToLibrary, removeFromLibrary, updateLibrarySeries } = useAppLibraryStore.getState();
         if (newBookmarkedState) {
-          await store.addToLibrary({
+          await addToLibrary({
             seriesId,
             title,
             slug,
@@ -83,12 +89,12 @@ export function BookmarkButton({
           if (isNative && coverImage) {
             cacheCoverImage(seriesId, coverImage).then(cachedUri => {
               if (cachedUri) {
-                store.updateLibrarySeries(seriesId, { cachedCoverUri: cachedUri });
+                updateLibrarySeries(seriesId, { cachedCoverUri: cachedUri });
               }
             }).catch(e => console.error("Failed to cache cover:", e));
           }
         } else {
-          await store.removeFromLibrary(seriesId);
+          await removeFromLibrary(seriesId);
         }
       }
 
