@@ -131,9 +131,10 @@ export async function GET(request: NextRequest) {
         }
       } catch (notifErr) {}
 
-      return NextResponse.json({ success: false, error: testErr.message }, { status: 500 });
+      return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
     }
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`[RecoveryTest] Fatal error:`, error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

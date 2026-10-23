@@ -348,7 +348,8 @@ export async function GET(
           });
         }
       } catch (err: any) {
-        return NextResponse.json({ success: false, error: { message: err.message } }, { status: 500 });
+        console.error('CBZ resolver error:', err);
+        return NextResponse.json({ success: false, error: { message: 'Internal server error' } }, { status: 500 });
       }
 
       return NextResponse.json({
