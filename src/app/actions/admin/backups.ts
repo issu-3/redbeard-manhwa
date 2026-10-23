@@ -76,7 +76,7 @@ export async function triggerManualBackup(
     return { success: true, backupId: updated.id };
   } catch (error: any) {
     console.error('[BackupAction] Failed:', error.message);
-    return { success: false, error: error.message };
+    return { success: false, error: 'Operation failed' };
   }
 }
 
@@ -121,7 +121,7 @@ export async function triggerRestore(
     }
   } catch (error: any) {
     console.error('[RestoreAction] Failed:', error.message);
-    return { success: false, error: error.message };
+    return { success: false, error: 'Operation failed' };
   }
 }
 
@@ -169,7 +169,8 @@ export async function uploadAndRestoreBackup(
     revalidatePath('/admin/backups');
     return { success: true, verification, restoredRecords: restoreRes.restoredRecords };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    console.error('[UploadRestoreAction] Failed:', error.message);
+    return { success: false, error: 'Operation failed' };
   }
 }
 
@@ -201,7 +202,8 @@ export async function verifyBackupById(backupId: string): Promise<{ success: boo
 
     return { success: true, verification };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    console.error('[VerifyBackupAction] Failed:', error.message);
+    return { success: false, error: 'Operation failed' };
   }
 }
 
@@ -215,7 +217,8 @@ export async function deleteBackupRecord(backupId: string): Promise<{ success: b
     revalidatePath('/admin/backups');
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    console.error('[DeleteBackupAction] Failed:', error.message);
+    return { success: false, error: 'Operation failed' };
   }
 }
 
@@ -233,7 +236,8 @@ export async function saveBackupSettings(config: BackupScheduleConfig): Promise<
     revalidatePath('/admin/backups');
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    console.error('[SaveBackupSettingsAction] Failed:', error.message);
+    return { success: false, error: 'Operation failed' };
   }
 }
 

@@ -122,9 +122,10 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      return NextResponse.json({ success: false, error: innerError.message }, { status: 500 });
+      return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
     }
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`[CronBackup] Fatal error:`, error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
