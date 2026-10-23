@@ -13,6 +13,9 @@ const ToggleSwitch = ({ checked, onChange, label }: { checked: boolean, onChange
     {label && <span className="text-sm font-medium text-white/90">{label}</span>}
     <button 
       onClick={onChange} 
+      role="switch"
+      aria-checked={checked}
+      aria-label={label || "Toggle setting"}
       className={cn("w-12 h-6 rounded-full transition-colors relative flex-shrink-0", checked ? "bg-[#E53935]" : "bg-white/10")}
     >
       <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-transform", checked ? "left-7" : "left-1")} />
@@ -42,7 +45,7 @@ export function ReaderSettingsSheet({ onClose }: { onClose: () => void }) {
     >
       <div className="flex flex-col shrink-0">
         <div className="p-4 flex items-center justify-between relative">
-          <button onClick={onClose} className="p-2 bg-transparent text-white/70 hover:text-white transition-colors">
+          <button onClick={onClose} aria-label="Close settings" className="p-2 bg-transparent text-white/70 hover:text-white transition-colors">
             <X className="w-6 h-6"/>
           </button>
           <h3 className="font-bold text-lg text-white absolute left-1/2 -translate-x-1/2">Reading Settings</h3>
