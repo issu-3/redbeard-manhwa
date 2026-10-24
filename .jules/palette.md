@@ -1,0 +1,3 @@
+## 2026-03-24 - Screen Reader Support for Custom Reader Interfaces
+**Learning:** Custom reader interfaces often rely heavily on icon-only buttons (like bookmarking, comments, options, and vertical pagination controls). Without explicit `aria-label`s, these critical navigation and interaction points become completely inaccessible to screen reader users, breaking the reading experience.
+**Action:** Always verify that all icon-only interactive elements in custom UI components (especially complex ones like readers or players) have descriptive `aria-label` attributes to ensure keyboard and screen reader accessibility.
