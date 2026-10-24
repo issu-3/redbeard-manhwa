@@ -12,9 +12,9 @@ import { useRouter } from 'next/navigation';
 
 export function OfflineLibraryClient() {
   const router = useRouter();
-  const { downloads } = useDownloadStore();
-  const { savedSeries } = useAppLibraryStore();
-  const { hasHydrated } = useAppLibraryStore();
+  const downloads = useDownloadStore((state) => state.downloads);
+  const savedSeries = useAppLibraryStore((state) => state.savedSeries);
+  const hasHydrated = useAppLibraryStore((state) => state.hasHydrated);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
