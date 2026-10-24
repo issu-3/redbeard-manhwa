@@ -625,7 +625,8 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                 </div>
                 <div className="flex items-center gap-1 -mr-2">
                   <button 
-                    onClick={handleBookmarkToggle} 
+                    onClick={handleBookmarkToggle}
+                    aria-label={isSaved ? 'Remove bookmark' : 'Add bookmark'}
                     className={cn(
                       "p-2 rounded-full transition-colors",
                       isSaved ? "text-[#E53935] hover:bg-[#E53935]/20" : "text-white hover:bg-[#E53935]/20 hover:text-[#E53935]"
@@ -633,13 +634,13 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                   >
                     <Bookmark className="w-5 h-5" fill={isSaved ? "currentColor" : "none"} />
                   </button>
-                  <button onClick={() => setCommentsOpen(true)} className="p-2 text-white hover:bg-white/10 rounded-full transition-colors relative">
+                  <button onClick={() => setCommentsOpen(true)} aria-label={`Open comments (${comments?.length || 0})`} className="p-2 text-white hover:bg-white/10 rounded-full transition-colors relative">
                     <MessageSquare className="w-5 h-5" />
                     {comments?.length > 0 && (
                       <span className="absolute top-2 right-2 w-2 h-2 bg-[#E53935] rounded-full" />
                     )}
                   </button>
-                  <button className="p-2 text-white hover:bg-white/10 rounded-full transition-colors hidden sm:flex">
+                  <button aria-label="More options" className="p-2 text-white hover:bg-white/10 rounded-full transition-colors hidden sm:flex">
                     <MoreVertical className="w-5 h-5" />
                   </button>
                 </div>
@@ -707,7 +708,8 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
               onClick={(e) => e.stopPropagation()}
             >
               <button 
-                onClick={() => goToPage(1)} 
+                onClick={() => goToPage(1)}
+                aria-label="Go to first page"
                 className="w-10 h-10 rounded-full bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white shadow-2xl active:scale-95 transition-all hover:bg-[#E53935]"
               >
                 <ChevronLeft className="w-5 h-5 rotate-90" />
@@ -732,7 +734,8 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
               </div>
 
               <button 
-                onClick={() => goToPage(chapter.images.length)} 
+                onClick={() => goToPage(chapter.images.length)}
+                aria-label="Go to last page"
                 className="w-10 h-10 rounded-full bg-[#1A1D24]/90 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white shadow-2xl active:scale-95 transition-all hover:bg-[#E53935]"
               >
                 <ChevronRight className="w-5 h-5 rotate-90" />
@@ -773,7 +776,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
             >
               <div className="p-4 flex justify-between items-center border-b border-white/10 text-white shrink-0">
                 <h3 className="font-bold text-lg flex items-center gap-2"><MessageSquare className="w-5 h-5"/> Comments</h3>
-                <button onClick={() => setCommentsOpen(false)} className="p-2"><X className="w-5 h-5"/></button>
+                <button onClick={() => setCommentsOpen(false)} aria-label="Close comments" className="p-2"><X className="w-5 h-5"/></button>
               </div>
               <div className="p-4 flex-1 overflow-y-auto thin-scrollbar bg-black/20">
                 <CommentSection chapterId={chapter.id} comments={comments || []} currentUserId={currentUserId} />
