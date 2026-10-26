@@ -124,15 +124,17 @@ export function CommentItem({
           <button 
             onClick={handleLike}
             className="flex items-center gap-1.5 text-xs font-medium text-text-muted hover:text-primary transition-colors"
+            aria-label={likes > 0 ? `Like comment, ${likes} likes` : 'Like comment'}
           >
-            <ThumbsUp className="w-3.5 h-3.5" />
-            {likes > 0 && <span>{likes}</span>}
+            <ThumbsUp className="w-3.5 h-3.5" aria-hidden="true" />
+            {likes > 0 && <span aria-hidden="true">{likes}</span>}
           </button>
           <button 
             onClick={() => setIsReplying(!isReplying)}
             className="flex items-center gap-1.5 text-xs font-medium text-text-muted hover:text-text-primary transition-colors"
+            aria-expanded={isReplying}
           >
-            <MessageSquare className="w-3.5 h-3.5" />
+            <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
             Reply
           </button>
         </div>
