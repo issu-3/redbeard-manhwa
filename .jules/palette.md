@@ -1,0 +1,3 @@
+## 2024-05-24 - Dynamic ARIA labels for stateful buttons with icons
+**Learning:** Icon-only buttons or buttons with dynamic visible text (like a like count) can be confusing for screen reader users if the accessible name is not explicitly set and synced with the state. The SVG icons are often not read, and reading just a number is unhelpful.
+**Action:** When adding `aria-label` to elements that also contain dynamic visible text (e.g., rendering a count like `<span>{likes}</span>`), ensure the dynamic text is interpolated into the `aria-label`. Also, add `aria-hidden="true"` to the inner dynamic elements and icons to avoid screen reader double-reading.
