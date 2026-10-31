@@ -40,12 +40,12 @@ export function BookmarkButton({
   continueReadingChapter,
   className,
 }: BookmarkButtonProps) {
-  const store = useAppLibraryStore();
-  const isSavedInStore = store.isSaved(seriesId);
+  const isSavedInStore = useAppLibraryStore((state) => state.isSaved(seriesId));
+  const hasHydrated = useAppLibraryStore((state) => state.hasHydrated);
   const [internalBookmarked, setInternalBookmarked] = useState(initialBookmarked);
   
   // Use store as source of truth if hydrated, otherwise fallback to local/prop state
-  const isBookmarked = store.hasHydrated ? isSavedInStore : internalBookmarked;
+  const isBookmarked = hasHydrated ? isSavedInStore : internalBookmarked;
 
   const [isPending, setIsPending] = useState(false);
   const router = useRouter();
@@ -67,7 +67,7 @@ export function BookmarkButton({
       // Sync to AppLibraryStore (Works for Web Memory + Native SQLite)
       if (title && slug) {
         if (newBookmarkedState) {
-          await store.addToLibrary({
+          await useAppLibraryStore.getState().addToLibrary({
             seriesId,
             title,
             slug,
@@ -83,12 +83,12 @@ export function BookmarkButton({
           if (isNative && coverImage) {
             cacheCoverImage(seriesId, coverImage).then(cachedUri => {
               if (cachedUri) {
-                store.updateLibrarySeries(seriesId, { cachedCoverUri: cachedUri });
+                useAppLibraryStore.getState().updateLibrarySeries(seriesId, { cachedCoverUri: cachedUri });
               }
             }).catch(e => console.error("Failed to cache cover:", e));
           }
         } else {
-          await store.removeFromLibrary(seriesId);
+          await useAppLibraryStore.getState().removeFromLibrary(seriesId);
         }
       }
 
