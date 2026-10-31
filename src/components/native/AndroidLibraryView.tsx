@@ -268,17 +268,17 @@ export function AndroidLibraryView() {
                 Library
               </h1>
               <div className="flex items-center gap-4 text-white">
-                <button onClick={() => setIsSearchMode(true)} className="active:opacity-70 transition-opacity p-1">
+                <button aria-label="Search library" onClick={() => setIsSearchMode(true)} className="active:opacity-70 transition-opacity p-1">
                   <Search className="h-[22px] w-[22px]" />
                 </button>
-                <button onClick={() => { setTempFilterState(filterState); setIsFilterOpen(true); }} className="active:opacity-70 transition-opacity p-1 relative">
+                <button aria-label={isFilterActive ? 'Filter library (filters applied)' : 'Filter library'} onClick={() => { setTempFilterState(filterState); setIsFilterOpen(true); }} className="active:opacity-70 transition-opacity p-1 relative">
                   <Filter className="h-[22px] w-[22px]" />
                   {isFilterActive && (
                     <div className="absolute top-1 right-1 w-2 h-2 bg-[#E5092F] rounded-full border border-[#0B0D10]" />
                   )}
                 </button>
                 <div className="relative">
-                  <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="active:opacity-70 transition-opacity p-1 -mr-2">
+                  <button aria-label="Library options" onClick={() => setIsMenuOpen(!isMenuOpen)} className="active:opacity-70 transition-opacity p-1 -mr-2">
                     <MoreVertical className="h-[22px] w-[22px]" />
                   </button>
                   {isMenuOpen && (
@@ -299,6 +299,7 @@ export function AndroidLibraryView() {
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-3">
                 <button
+                  aria-label="Exit selection mode"
                   onClick={() => {
                     setIsSelectionMode(false);
                     setSelectedSeriesIds(new Set());
@@ -323,6 +324,7 @@ export function AndroidLibraryView() {
                   {selectedSeriesIds.size === libraryItems.length ? 'None' : 'All'}
                 </button>
                 <button 
+                  aria-label="Remove selected series from library"
                   onClick={handleRemoveSelected}
                   disabled={selectedSeriesIds.size === 0}
                   className={cn("active:opacity-70 transition-opacity p-1 -mr-2", selectedSeriesIds.size > 0 ? "text-[#E5092F]" : "text-neutral-600")}
@@ -334,6 +336,7 @@ export function AndroidLibraryView() {
           ) : (
             <div className="flex items-center w-full gap-3">
               <button
+                aria-label="Exit search"
                 onClick={() => {
                   setIsSearchMode(false);
                   setSearchQuery('');
@@ -353,7 +356,7 @@ export function AndroidLibraryView() {
                   className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-sm text-white placeholder:text-neutral-500 p-0"
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="p-1 -mr-1 text-neutral-400 active:text-white rounded-full ml-1">
+                  <button aria-label="Clear search" onClick={() => setSearchQuery('')} className="p-1 -mr-1 text-neutral-400 active:text-white rounded-full ml-1">
                     <X className="h-4 w-4" />
                   </button>
                 )}
