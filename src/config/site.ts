@@ -5,7 +5,7 @@ export const siteConfig = {
   tagline: 'The Ultimate Reading Experience',
   description: APP_DESCRIPTION,
   url: APP_URL,
-  ogImage: '/images/og-default.png',
+  ogImage: '/images/og-default-v2.png',
   links: {
     twitter: 'https://twitter.com/redbeard',
     discord: 'https://discord.gg/redbeard',

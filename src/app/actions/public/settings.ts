@@ -47,7 +47,7 @@ export async function getSettings(): Promise<Record<string, string>> {
         { key: 'seo_robots', value: 'index, follow' },
         { key: 'seo_gsc_verification', value: '' },
         { key: 'seo_ga_measurement_id', value: '' },
-        { key: 'seo_og_image', value: '/images/og-default.png' },
+        { key: 'seo_og_image', value: '/images/og-default-v2.png' },
         { key: 'seo_twitter_image', value: '' },
         { key: 'seo_twitter_handle', value: '@redbeard' },
         // Ad Settings
@@ -88,7 +88,7 @@ export async function getSettings(): Promise<Record<string, string>> {
         if (s.key === 'siteName') fallback = 'REDBEARD';
         if (s.key === 'seo_site_title') fallback = 'REDBEARD - The Ultimate Reading Experience';
         if (s.key === 'seo_site_description') fallback = 'Premium reading platform offering the best reading experience.';
-        if (s.key === 'seo_og_image') fallback = '/images/og-default.png';
+        if (s.key === 'seo_og_image') fallback = '/images/og-default-v2.png';
         settingsMap[s.key] = fallback;
       } else {
         settingsMap[s.key] = s.value;
@@ -96,7 +96,7 @@ export async function getSettings(): Promise<Record<string, string>> {
     }
 
     if (!settingsMap.seo_og_image) {
-      settingsMap.seo_og_image = '/images/og-default.png';
+      settingsMap.seo_og_image = '/images/og-default-v2.png';
     }
     if (!settingsMap.seo_twitter_image) {
       settingsMap.seo_twitter_image = '';

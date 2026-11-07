@@ -100,7 +100,7 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="group flex shrink-0 items-center gap-2">
             <div className="relative flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-lg overflow-hidden shadow-md shadow-primary/25">
-              <Image src="/images/logo.jpg" alt="REDBEARD Logo" fill className="object-cover" />
+              <Image src="/images/logo-v2.jpg" alt="REDBEARD Logo" fill className="object-cover" />
             </div>
             <span className="bg-gradient-to-r from-text-primary via-white to-text-secondary bg-clip-text text-lg md:text-xl font-extrabold tracking-tight text-transparent">
               {APP_NAME}

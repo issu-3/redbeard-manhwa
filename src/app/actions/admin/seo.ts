@@ -99,7 +99,7 @@ export async function generateMissingSeoData(forceRegenerate: boolean = false) {
     const baseUrl = APP_URL.startsWith('http') ? APP_URL : 'https://redbeard.store';
     const safeSlug = typeof c.slug === 'string' && c.slug.trim() ? c.slug : c.number != null ? String(c.number) : null;
     const autoCanonical = safeSlug ? `${baseUrl}/series/${c.series.slug}/chapter/${safeSlug}` : `${baseUrl}/series/${c.series.slug}`;
-    const autoImg = existingSeo.ogImage || c.series.bannerImage || c.series.coverImage || '/images/og-default.png';
+    const autoImg = existingSeo.ogImage || c.series.bannerImage || c.series.coverImage || '/images/og-default-v2.png';
 
     const newTitle = (!forceRegenerate && existingSeo.title && existingSeo.title.trim()) ? existingSeo.title.trim() : autoTitle;
     const newDesc = (!forceRegenerate && existingSeo.description && existingSeo.description.trim()) ? existingSeo.description.trim() : autoDesc;
