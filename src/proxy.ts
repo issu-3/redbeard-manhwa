@@ -1,5 +1,42 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { auth } from '@/auth';
+
+// Soft-404 v2: on Vercel the /404 page is a prerendered static page held in
+// the CDN cache, so a middleware rewrite to /404 is served with that page's
+// own 200 status (observed in production request logs: "Middleware 200,
+// Cache HIT, Key /404") — the rewrite pattern only yields a real 404 under
+// `next start`. Instead the middleware returns the response itself with an
+// explicit 404 status, reusing the site's real /404 page body (fetched once
+// per middleware instance and cached in memory; a minimal branded body is
+// the fallback if that fetch ever fails, e.g. preview deployment
+// protection). no-store keeps the CDN from caching the 404 under the
+// requested URL, so a slug created later is never stuck behind it.
+let cachedNotFoundHtml: string | null = null;
+
+async function serveNotFound(req: NextRequest): Promise<NextResponse> {
+  try {
+    if (!cachedNotFoundHtml) {
+      const res = await fetch(new URL('/404', req.nextUrl.origin));
+      if (res.ok) {
+        cachedNotFoundHtml = await res.text();
+      }
+    }
+  } catch {
+    // Fall through to the minimal body below; the 404 status is the point.
+  }
+
+  const html =
+    cachedNotFoundHtml ??
+    '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>404 — Page Not Found | REDBEARD</title><meta name="robots" content="noindex"></head><body><h1>404 — Page Not Found</h1><p>The page you are looking for does not exist. <a href="/">Go to homepage</a></p></body></html>';
+
+  return new NextResponse(html, {
+    status: 404,
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      'cache-control': 'no-store',
+    },
+  });
+}
 
 export default auth(async (req) => {
   const host = req.headers.get('host') || req.nextUrl.hostname;
@@ -12,9 +49,9 @@ export default auth(async (req) => {
   // loading.tsx Suspense boundaries, so streaming starts (HTTP 200) before
   // the page's notFound() can set a 404 status — missing resources were
   // served as soft 404s. Verify existence here, before any streaming, and
-  // rewrite missing resources to the 404 route (the pattern the Next.js
-  // docs recommend for streamed routes). Fails open on any error so a
-  // database problem can never take these routes down.
+  // answer missing resources directly with a real 404 (see serveNotFound
+  // above for why a rewrite to /404 does not work on Vercel). Fails open on
+  // any error so a database problem can never take these routes down.
   if (req.method === 'GET' || req.method === 'HEAD') {
     const pathname = req.nextUrl.pathname;
     const chapterMatch = pathname.match(/^\/series\/([^/]+)\/chapter\/([^/]+)$/);
@@ -51,10 +88,7 @@ export default auth(async (req) => {
         }
 
         if (!exists) {
-          const notFoundUrl = req.nextUrl.clone();
-          notFoundUrl.pathname = '/404';
-          notFoundUrl.search = '';
-          return NextResponse.rewrite(notFoundUrl);
+          return serveNotFound(req);
         }
       } catch {
         // Fail open: serve the page normally if the check cannot run.
