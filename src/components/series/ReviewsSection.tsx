@@ -129,6 +129,10 @@ export function ReviewsSection({
   const [isSpoiler, setIsSpoiler] = useState(userReview?.isSpoiler || false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
+  // In-app delete confirmation (replaces window.confirm, which silently
+  // no-ops when the native dialog is suppressed — the click looked dead).
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Sync edit values if user review changes
   useEffect(() => {
@@ -237,14 +241,19 @@ export function ReviewsSection({
     }
   };
 
-  // Delete review
+  // Delete review — confirmation is the inline `confirmingDelete` panel in
+  // the "Your Review" card, NOT window.confirm: the native dialog can be
+  // suppressed/dismissed without any feedback, which made this click look
+  // completely dead in live testing. Every outcome now surfaces a toast.
   const handleDelete = async (reviewId: string) => {
-    if (!window.confirm('Are you sure you want to delete your review?')) return;
+    if (isDeleting) return;
 
+    setIsDeleting(true);
     try {
       const res = await deleteReview(reviewId);
       if (res.success) {
         toast.success('Review deleted successfully');
+        setConfirmingDelete(false);
         setIsEditing(false);
         handleClear();
         router.refresh();
@@ -253,7 +262,9 @@ export function ReviewsSection({
       }
     } catch (err) {
       console.error('Failed to delete review:', err);
-      toast.error('Failed to delete review');
+      toast.error('Failed to delete review. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -433,13 +444,41 @@ export function ReviewsSection({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDelete(userReview.id)}
+                  onClick={() => setConfirmingDelete(true)}
+                  disabled={isDeleting}
                   className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 px-2.5 rounded-lg"
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
                 </Button>
               </div>
             </div>
+
+            {confirmingDelete && (
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+                <span className="text-xs sm:text-sm font-medium text-red-300">
+                  Delete your review? This cannot be undone.
+                </span>
+                <span className="ml-auto flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setConfirmingDelete(false)}
+                    disabled={isDeleting}
+                    className="text-xs text-[#9CA3AF] hover:text-[#F5F5F5] hover:bg-white/5 h-8 px-3 rounded-lg"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleDelete(userReview.id)}
+                    disabled={isDeleting}
+                    className="text-xs bg-red-500 hover:bg-red-600 text-white font-semibold h-8 px-3 rounded-lg"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </Button>
+                </span>
+              </div>
+            )}
 
             {userReview.content ? (
               <p className="text-sm text-[#F5F5F5] whitespace-pre-wrap leading-relaxed bg-[#0F1115]/60 p-4 rounded-xl border border-[#2A2E39]/60">

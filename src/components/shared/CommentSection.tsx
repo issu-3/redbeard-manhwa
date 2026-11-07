@@ -1,21 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CommentData, CommentItem } from './CommentItem';
 import { postComment } from '@/app/actions/comments';
 import { toast } from 'sonner';
 
-export function CommentSection({ 
-  chapterId, 
+export function CommentSection({
+  chapterId,
   comments,
-  currentUserId 
-}: { 
+  currentUserId
+}: {
   chapterId: string;
   comments: CommentData[];
   currentUserId?: string;
 }) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Local copy so a deleted comment disappears immediately; server
+  // revalidation syncs the fresh list back in through the effect below.
+  const [visibleComments, setVisibleComments] = useState<CommentData[]>(comments);
+
+  useEffect(() => {
+    setVisibleComments(comments);
+  }, [comments]);
+
+  const handleCommentDeleted = (commentId: string) => {
+    setVisibleComments((prev) => prev.filter((c) => c.id !== commentId));
+  };
 
   const handleSubmit = async () => {
     if (!currentUserId) {
@@ -41,7 +52,7 @@ export function CommentSection({
     <div className="space-y-8">
       <div>
         <h3 className="text-xl font-bold text-text-primary mb-4">
-          Comments ({comments.length})
+          Comments ({visibleComments.length})
         </h3>
         
         {/* New Comment Input */}
@@ -67,15 +78,16 @@ export function CommentSection({
 
       {/* Comments List */}
       <div className="space-y-6">
-        {comments.map((comment) => (
-          <CommentItem 
-            key={comment.id} 
-            comment={comment} 
-            currentUserId={currentUserId} 
+        {visibleComments.map((comment) => (
+          <CommentItem
+            key={comment.id}
+            comment={comment}
+            currentUserId={currentUserId}
+            onDeleted={handleCommentDeleted}
           />
         ))}
 
-        {comments.length === 0 && (
+        {visibleComments.length === 0 && (
           <div className="text-center py-12 text-text-muted">
             <p>No comments yet. Be the first to share your thoughts!</p>
           </div>
