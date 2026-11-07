@@ -37,7 +37,7 @@ export default async function WebsiteLayout({
         '@type': 'Organization',
         url: siteUrl,
         name: siteName,
-        logo: `${siteUrl}/logo.png`,
+        logo: `${siteUrl}/logo.png`, // /logo.png verified present in /public
         sameAs: [
           settings.seo_twitter_handle ? `https://twitter.com/${settings.seo_twitter_handle.replace('@', '')}` : '',
           settings.youtubeUrl || '',

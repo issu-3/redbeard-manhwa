@@ -54,9 +54,16 @@ export default async function sitemap(props: {
       return [...staticRoutes, ...genreRoutes];
     }
 
-    // ── All Series ──
+    // ── All Series (only indexable series — no draft or unpublished placeholders) ──
     if (id === 'series') {
       const series = await prisma.series.findMany({
+        where: {
+          // Only include series that have at least one published chapter
+          // (i.e., have actual readable content for Googlebot)
+          chapters: {
+            some: { isPublished: true },
+          },
+        },
         select: { slug: true, updatedAt: true },
       });
 

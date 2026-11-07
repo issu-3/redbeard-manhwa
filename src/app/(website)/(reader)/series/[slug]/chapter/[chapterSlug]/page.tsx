@@ -58,6 +58,45 @@ const getCachedChapterDataInternal = unstable_cache(
             },
           },
         });
+
+        // Range alias resolution: If chapterSlug corresponds to a chapter number (e.g. "chapter-1", "1", "ch-15"),
+        // check if any published chapter for this series defines a volume range containing that chapter number.
+        if (!chapter) {
+          const numMatch = chapterSlug.match(/^(?:chapter[-_]|ch[-_])?(\d+(?:\.\d+)?)$/i);
+          if (numMatch) {
+            const reqNum = parseFloat(numMatch[1]);
+            const candidateChapters = await prisma.chapter.findMany({
+              where: {
+                seriesId: series.id,
+                isPublished: true,
+              },
+              select: {
+                id: true,
+                slug: true,
+                label: true,
+              },
+            });
+
+            for (const cand of candidateChapters) {
+              const rangeMatch = `${cand.slug} ${cand.label || ''}`.match(/(\d+)\s*[-–—]\s*(\d+)/);
+              if (rangeMatch) {
+                const start = parseInt(rangeMatch[1], 10);
+                const end = parseInt(rangeMatch[2], 10);
+                if (reqNum >= start && reqNum <= end) {
+                  chapter = await prisma.chapter.findUnique({
+                    where: { id: cand.id },
+                    include: {
+                      images: {
+                        orderBy: { pageNumber: 'asc' },
+                      },
+                    },
+                  });
+                  break;
+                }
+              }
+            }
+          }
+        }
       }
     }
 

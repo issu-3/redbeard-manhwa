@@ -15,7 +15,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     rules: {
       userAgent: '*',
       allow: isNoIndex ? undefined : '/',
-      disallow: isNoIndex ? ['/'] : ['/admin', '/api', '/user', '/android-shell', '/android-reader', '/library', '/download', '/downloads', '/login', '/register'],
+      disallow: isNoIndex ? ['/'] : ['/admin', '/api', '/user', '/android-shell', '/android-reader', '/library', '/download', '/downloads'],
     },
     sitemap: [`${baseUrl}/sitemap.xml`],
   };

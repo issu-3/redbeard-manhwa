@@ -85,7 +85,7 @@ export default async function HomePage() {
         '@id': `${baseUrl}/#organization`,
         name: settings.siteName || 'REDBEARD',
         url: baseUrl,
-        logo: `${baseUrl}/icons/icon-512x512.png`
+        logo: `${baseUrl}/logo.png`
       }
     ]
   };

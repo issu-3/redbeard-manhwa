@@ -181,7 +181,7 @@ export async function generateMetadata({
       title,
       description,
       images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
-      type: 'book',
+      type: 'website', // 'book' is not a valid OG protocol type; 'website' is the correct fallback
       url: canonical,
     },
     twitter: {
@@ -606,11 +606,7 @@ export default async function SeriesDetailPage({
         </div>
       </div>
 
-      {/* SEO: Inject JSON-LD Schema */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {/* NOTE: JSON-LD already injected above the banner section — duplicate removed */}
     </div>
   );
 }
