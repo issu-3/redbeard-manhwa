@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Carousel } from '@/components/shared/Carousel';
-import { Clock } from 'lucide-react';
-import { formatRelativeTime } from '@/lib/utils';
+import { Clock, MessageSquare, Star } from 'lucide-react';
+import { formatNumber, formatRelativeTime } from '@/lib/utils';
 import type { SeriesCardData } from '@/types';
 
 export interface RecentUpdate {
@@ -41,6 +41,18 @@ export function RecentlyUpdatedCarousel({ updates }: { updates: RecentUpdate[] }
               <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-60 transition-opacity group-hover:opacity-80" />
               
               <div className="absolute bottom-2.5 left-2.5 right-2.5">
+                  {/* Same rating overlay as SeriesCard, so homepage cards are
+                      consistent across every row; unrated series show "New". */}
+                  <div className="flex items-center gap-2 text-[10px] font-medium text-white/90 mb-1.5">
+                    <span className="flex items-center gap-0.5">
+                      <Star className="h-3 w-3 fill-warning text-warning" />
+                      {update.series.averageRating > 0 ? update.series.averageRating.toFixed(1) : 'New'}
+                    </span>
+                    <span className="flex items-center gap-0.5">
+                      <MessageSquare className="h-3 w-3" />
+                      {formatNumber(update.series.ratingCount)}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="truncate rounded-md bg-primary/90 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-white shadow-sm border border-white/10">
                       {update.chapterLabel || `Ch. ${update.chapterNumber}`}
