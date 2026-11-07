@@ -4,11 +4,12 @@ import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import { SeriesCard } from '@/components/shared/SeriesCard';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { LibraryTabs } from '@/components/user/LibraryTabs';
 import { Bookmark } from 'lucide-react';
 import type { SeriesCardData } from '@/types';
 
 export const metadata: Metadata = {
-  title: 'My Bookmarks',
+  title: 'Library',
   description: 'Manage your bookmarked series',
 };
 
@@ -56,11 +57,15 @@ export default async function BookmarksPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">My Bookmarks</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Library</h1>
           <p className="text-muted-foreground">
             You have {series.length} bookmarked series.
           </p>
         </div>
+      </div>
+
+      <div>
+        <LibraryTabs />
       </div>
 
       {series.length > 0 ? (
