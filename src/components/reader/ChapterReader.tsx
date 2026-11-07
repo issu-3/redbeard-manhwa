@@ -76,6 +76,14 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
   const [activeSettingsTab, setActiveSettingsTab] = useState<'display' | 'reading' | 'navigation' | 'advanced'>('display');
   const [showSeekbar, setShowSeekbar] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+  const [uiActivity, setUiActivity] = useState(0);
+
+  // Interacting with the bars themselves restarts the auto-hide timer, so
+  // the chrome never vanishes mid-reach for the Settings gear.
+  const pokeUi = useCallback(() => {
+    setShowUI(true);
+    setUiActivity(Date.now());
+  }, []);
 
   // Auto-hide UI
   useEffect(() => {
@@ -84,10 +92,10 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
         if (!settingsOpen && !commentsOpen) {
           setShowUI(false);
         }
-      }, 4000);
+      }, 7000);
       return () => clearTimeout(timer);
     }
-  }, [showUI, settingsOpen, commentsOpen, store.autoHideControls]);
+  }, [showUI, uiActivity, settingsOpen, commentsOpen, store.autoHideControls]);
   
   // Slugs
   const nextSlug = getSafeSlug(chapter.nextChapter);
@@ -599,6 +607,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '-100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onPointerDown={pokeUi}
               className="absolute top-0 inset-x-0 z-50 bg-[#0F1115]/90 backdrop-blur-xl border-b border-white/5 pt-safe"
             >
               <div className="flex h-14 items-center px-4 justify-between">
@@ -652,6 +661,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onPointerDown={pokeUi}
               className="absolute bottom-0 inset-x-0 z-50 bg-gradient-to-t from-[#0F1115] via-[#0F1115]/90 to-transparent pb-safe pointer-events-none"
             >
               <div className="px-4 pb-4 pt-12 flex flex-col items-center justify-center gap-4">
