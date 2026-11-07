@@ -448,9 +448,10 @@ export default async function SeriesDetailPage({
                 )}
               </div>
 
-              <h1 className="text-3xl md:text-5xl font-black text-text-primary tracking-tight leading-tight mb-2.5">
+              {/* Desktop visual title only — the page's single <h1> is the mobile header above (mobile-first indexing). Keep this a <p> so series pages never render two H1s. */}
+              <p className="text-3xl md:text-5xl font-black text-text-primary tracking-tight leading-tight mb-2.5">
                 {series.title}
-              </h1>
+              </p>
 
               {/* Desktop Rating, Views, and Chapter stats */}
               <div className="flex items-center gap-3.5 text-sm text-text-muted mb-4 font-medium">
