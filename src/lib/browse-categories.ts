@@ -2,6 +2,7 @@ import { unstable_cache } from 'next/cache';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { SERIES_CARD_SELECT, toSeriesCardData } from '@/lib/data-mappers';
+import type { BrowseCategory } from '@/lib/browse-constants';
 import type { SeriesCardData } from '@/types';
 
 // Shared data layer for the /browse/* category pages and their Load More
@@ -9,16 +10,8 @@ import type { SeriesCardData } from '@/types';
 // with no way to reach the remaining series; pages now fetch the first
 // BROWSE_PAGE_SIZE results plus a total count, and the client Load More
 // button pages through the rest via loadMoreBrowseSeries.
-
-export const BROWSE_PAGE_SIZE = 24;
-
-export type BrowseCategory =
-  | 'trending'
-  | 'popular'
-  | 'completed'
-  | 'ongoing'
-  | 'new-releases'
-  | 'latest';
+// (BROWSE_PAGE_SIZE / BrowseCategory live in browse-constants.ts so the
+// client BrowseGrid never imports this server-only module.)
 
 interface BrowseCategoryConfig {
   where: Prisma.SeriesWhereInput;

@@ -1,10 +1,7 @@
 'use server';
 
-import {
-  BROWSE_PAGE_SIZE,
-  getCachedBrowsePage,
-  type BrowseCategory,
-} from '@/lib/browse-categories';
+import { getCachedBrowsePage } from '@/lib/browse-categories';
+import { BROWSE_PAGE_SIZE, type BrowseCategory } from '@/lib/browse-constants';
 import { getCachedSectionSeries } from '@/app/actions/public/homepage';
 import type { SeriesCardData } from '@/types';
 

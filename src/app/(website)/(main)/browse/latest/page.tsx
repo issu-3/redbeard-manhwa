@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import { Clock } from 'lucide-react';
 import { BrowseGrid } from '@/components/shared/BrowseGrid';
 import { getCachedSectionSeries } from '@/app/actions/public/homepage';
-import { BROWSE_PAGE_SIZE } from '@/lib/browse-categories';
+import { BROWSE_PAGE_SIZE } from '@/lib/browse-constants';
 
 import { generateMetadata as generateSeoMetadata } from '@/lib/seo';
 import { APP_URL } from '@/lib/constants';

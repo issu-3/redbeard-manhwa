@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { SeriesCard } from '@/components/shared/SeriesCard';
 import { loadMoreBrowseSeries } from '@/app/actions/public/browse';
-import { BROWSE_PAGE_SIZE, type BrowseCategory } from '@/lib/browse-categories';
+import { BROWSE_PAGE_SIZE, type BrowseCategory } from '@/lib/browse-constants';
 import type { SeriesCardData } from '@/types';
 
 interface BrowseGridProps {

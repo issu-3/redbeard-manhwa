@@ -3,7 +3,8 @@ export const revalidate = 3600;
 import { Metadata } from 'next';
 import { BookCheck } from 'lucide-react';
 import { BrowseGrid } from '@/components/shared/BrowseGrid';
-import { BROWSE_PAGE_SIZE, getCachedBrowsePage, getCachedBrowseTotal } from '@/lib/browse-categories';
+import { getCachedBrowsePage, getCachedBrowseTotal } from '@/lib/browse-categories';
+import { BROWSE_PAGE_SIZE } from '@/lib/browse-constants';
 
 import { generateMetadata as generateSeoMetadata } from '@/lib/seo';
 import { APP_URL } from '@/lib/constants';
