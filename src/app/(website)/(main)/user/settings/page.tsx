@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { ProfileForm } from './ProfileForm';
 
 export const metadata: Metadata = {
-  title: 'Account Settings | REDBEARD',
+  title: 'Account Settings',
   description: 'Manage your account settings',
 };
 

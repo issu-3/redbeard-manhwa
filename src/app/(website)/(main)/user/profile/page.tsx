@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { calculateLevel } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'Profile | REDBEARD',
+  title: 'Profile',
   description: 'Your user profile and statistics on REDBEARD',
 };
 

@@ -3,7 +3,7 @@ import { OfflineLibraryClient } from './ClientWrapper';
 import { AndroidLibraryClientWrapper } from './AndroidLibraryClientWrapper';
 
 export const metadata: Metadata = {
-  title: 'Offline Library | REDBEARD',
+  title: 'Offline Library',
   description: 'Read your downloaded and imported chapters offline.',
 };
 
