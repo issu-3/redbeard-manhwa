@@ -154,7 +154,7 @@ export async function generateMetadata({
         ...series.tags.map(t => t.name),
         ...series.authors.map(a => a.name),
         series.title,
-        `read ${typeLabel.toLowerCase()} hindi`
+        `read ${typeLabel.toLowerCase()} english`
       ];
 
   const robots = seo.robots || { index: true, follow: true };
