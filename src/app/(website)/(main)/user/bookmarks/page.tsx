@@ -8,7 +8,7 @@ import { Bookmark } from 'lucide-react';
 import type { SeriesCardData } from '@/types';
 
 export const metadata: Metadata = {
-  title: 'My Bookmarks | REDBEARD',
+  title: 'My Bookmarks',
   description: 'Manage your bookmarked series',
 };
 

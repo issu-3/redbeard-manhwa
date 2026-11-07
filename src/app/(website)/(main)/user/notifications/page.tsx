@@ -5,7 +5,7 @@ import { Bell } from 'lucide-react';
 import { NotificationClient } from './NotificationClient';
 
 export const metadata = {
-  title: 'Notifications | REDBEARD',
+  title: 'Notifications',
 };
 
 export default async function NotificationsPage() {

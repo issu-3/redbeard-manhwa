@@ -7,9 +7,10 @@ import { History, Clock, BookOpen, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
+import { ClearHistoryButton, RemoveHistoryItemButton } from './HistoryActions';
 
 export const metadata: Metadata = {
-  title: 'Reading History | REDBEARD',
+  title: 'Reading History',
   description: 'View your recently read chapters',
 };
 
@@ -45,6 +46,7 @@ export default async function HistoryPage() {
             Continue where you left off. Showing last {history.length} items.
           </p>
         </div>
+        {history.length > 0 && <ClearHistoryButton />}
       </div>
 
       {history.length > 0 ? (
@@ -54,8 +56,11 @@ export default async function HistoryPage() {
             if (!safeSlug && item.chapter.sourceType !== 'DOWNLOAD' && item.chapter.sourceType !== 'EXTERNAL') return null;
             const href = item.chapter.sourceType === 'DOWNLOAD' && item.chapter.downloadUrl ? item.chapter.downloadUrl : `/series/${item.series.slug}/chapter/${safeSlug}`;
             return (
-            <Link 
-              key={item.id} 
+            <div key={item.id} className="relative">
+            <div className="absolute top-3 right-3 z-10">
+              <RemoveHistoryItemButton itemId={item.id} />
+            </div>
+            <Link
               href={href}
               prefetch={false}
               target={['DOWNLOAD', 'EXTERNAL'].includes(item.chapter.sourceType as string) ? '_blank' : undefined}
@@ -74,7 +79,7 @@ export default async function HistoryPage() {
               
               <div className="flex-1 flex flex-col justify-between py-1">
                 <div>
-                  <h3 className="text-lg font-semibold line-clamp-1 group-hover:text-primary transition-colors">
+                  <h3 className="text-lg font-semibold line-clamp-1 pr-8 group-hover:text-primary transition-colors">
                     {item.series.title}
                   </h3>
                   <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
@@ -98,6 +103,7 @@ export default async function HistoryPage() {
                 </div>
               </div>
             </Link>
+            </div>
           );
           })}
         </div>
