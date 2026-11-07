@@ -41,8 +41,7 @@ export default function TermsPage() {
           history, lists, reviews, comments and follows) require a free account.
         </li>
         <li>
-          You can register with an email address, a username and a password, or sign in using a
-          supported third-party sign-in provider shown on the sign-in page.
+          You can register with an email address, a username and a password.
         </li>
         <li>
           You are responsible for keeping your sign-in details confidential and for activity that

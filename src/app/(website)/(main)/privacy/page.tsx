@@ -31,9 +31,6 @@ export default function PrivacyPage() {
       <p className="mt-3 leading-relaxed text-text-secondary">
         <strong className="font-semibold text-text-primary">Account information.</strong> When you
         register, we collect your email address, a username and a password (stored in hashed form).
-        If you sign in with a third-party provider (such as Google or Discord), we receive the
-        basic profile information that provider shares with us, such as your name, email address
-        and profile picture.
       </p>
       <p className="mt-3 leading-relaxed text-text-secondary">
         <strong className="font-semibold text-text-primary">Profile information.</strong> You may
@@ -83,10 +80,6 @@ export default function PrivacyPage() {
           comments and follows, to other users.
         </li>
         <li>
-          Send account emails, such as email-verification and password-reset messages, through our
-          email service provider.
-        </li>
-        <li>
           Understand reading trends through aggregated view statistics, maintain the Service,
           prevent abuse and enforce our Terms.
         </li>
@@ -106,7 +99,6 @@ export default function PrivacyPage() {
           Cloud file storage for chapter images and media (including Cloudflare R2 and Google
           Drive).
         </li>
-        <li>An email provider (Resend) that sends account emails on our behalf.</li>
         <li>
           Advertising networks (see Section 5). Separately from the providers above, advertising
           networks collect information directly through their own scripts and cookies when ads load;
