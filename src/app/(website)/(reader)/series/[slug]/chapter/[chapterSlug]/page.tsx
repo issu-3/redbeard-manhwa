@@ -11,6 +11,7 @@ import { resolveSocialImages } from '@/lib/seo';
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { getDirectCdnUrl } from '@/lib/s3';
+import { resolveReaderChapterId } from '@/lib/chapter-lookup';
 
 // ─── Data Fetching ───────────────────────────────────────────────
 
@@ -23,82 +24,17 @@ const getCachedChapterDataInternal = unstable_cache(
 
     if (!series) return null;
 
-    let chapter = null;
-    if (chapterSlug && chapterSlug !== 'null' && chapterSlug !== 'undefined') {
-      chapter = await prisma.chapter.findUnique({
-        where: {
-          seriesId_slug: {
-            seriesId: series.id,
-            slug: chapterSlug,
-          },
+    const chapterId = await resolveReaderChapterId(series.id, chapterSlug);
+    if (!chapterId) return null;
+
+    const chapter = await prisma.chapter.findUnique({
+      where: { id: chapterId },
+      include: {
+        images: {
+          orderBy: { pageNumber: 'asc' },
         },
-        include: {
-          images: {
-            orderBy: { pageNumber: 'asc' },
-          },
-        },
-      });
-
-      if (!chapter) {
-        const numericSlug = Number(chapterSlug);
-        chapter = await prisma.chapter.findFirst({
-          where: {
-            seriesId: series.id,
-            isPublished: true,
-            OR: [
-              ...(!isNaN(numericSlug) ? [{ number: numericSlug }] : []),
-              { slug: `chapter-${chapterSlug}` },
-              { slug: { equals: chapterSlug, mode: 'insensitive' as const } },
-              { label: { equals: chapterSlug, mode: 'insensitive' as const } },
-            ],
-          },
-          include: {
-            images: {
-              orderBy: { pageNumber: 'asc' },
-            },
-          },
-        });
-
-        // Range alias resolution: If chapterSlug corresponds to a chapter number (e.g. "chapter-1", "1", "ch-15"),
-        // check if any published chapter for this series defines a volume range containing that chapter number.
-        if (!chapter) {
-          const numMatch = chapterSlug.match(/^(?:chapter[-_]|ch[-_])?(\d+(?:\.\d+)?)$/i);
-          if (numMatch) {
-            const reqNum = parseFloat(numMatch[1]);
-            const candidateChapters = await prisma.chapter.findMany({
-              where: {
-                seriesId: series.id,
-                isPublished: true,
-              },
-              select: {
-                id: true,
-                slug: true,
-                label: true,
-              },
-            });
-
-            for (const cand of candidateChapters) {
-              const rangeMatch = `${cand.slug} ${cand.label || ''}`.match(/(\d+)\s*[-–—]\s*(\d+)/);
-              if (rangeMatch) {
-                const start = parseInt(rangeMatch[1], 10);
-                const end = parseInt(rangeMatch[2], 10);
-                if (reqNum >= start && reqNum <= end) {
-                  chapter = await prisma.chapter.findUnique({
-                    where: { id: cand.id },
-                    include: {
-                      images: {
-                        orderBy: { pageNumber: 'asc' },
-                      },
-                    },
-                  });
-                  break;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+      },
+    });
 
     if (!chapter) return null;
 

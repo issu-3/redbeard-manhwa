@@ -66,9 +66,13 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     settings,
   });
 
-  return { 
+  return {
     title: { absolute: title },
     description,
+    // Explicit robots: the root layout no longer emits a global robots tag
+    // (it conflicted with the noindex Next.js injects on 404 pages), so this
+    // page declares the same directive it previously inherited.
+    robots: { index: true, follow: true, 'max-image-preview': 'large' as const, 'max-snippet': -1, 'max-video-preview': -1 },
     keywords: [genre.name, 'download', 'comics', 'manga', 'webtoon', `${genre.name} series`, 'hindi', 'manhwa in hindi'],
     openGraph: {
       title,

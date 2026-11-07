@@ -17,9 +17,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteTitle = settings.seo_site_title || 'REDBEARD - The Ultimate Reading Experience';
   const siteDescription = settings.seo_site_description || 'REDBEARD is a premium reading platform offering the best reading experience with thousands of series.';
   const defaultKeywords = settings.seo_default_keywords ? settings.seo_default_keywords.split(',').map(k => k.trim()) : ['comics', 'manga', 'webtoon', 'read online'];
-  const robotsSetting = settings.seo_robots || 'index, follow';
-  const shouldIndex = robotsSetting.includes('index') && !robotsSetting.includes('noindex');
-  const shouldFollow = robotsSetting.includes('follow') && !robotsSetting.includes('nofollow');
+  // NOTE: no global `robots` here on purpose. Next.js injects its own
+  // <meta name="robots" content="noindex"> on not-found renders, so a
+  // layout-level index/follow tag produced two conflicting robots tags on
+  // every 404 page. Indexable pages declare their own robots (directly or
+  // via the src/lib/seo.ts helper); the seo_robots setting still drives
+  // robots.txt via src/app/robots.ts.
   const { ogImage, twitterImage } = resolveSocialImages({ settings });
   const twitterHandle = settings.seo_twitter_handle || '@redbeard';
 
@@ -49,13 +52,6 @@ export async function generateMetadata(): Promise<Metadata> {
       description: siteDescription,
       creator: twitterHandle,
       images: [twitterImage],
-    },
-    robots: {
-      index: shouldIndex,
-      follow: shouldFollow,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-      'max-video-preview': -1,
     },
     verification: {
       google: settings.seo_gsc_verification || undefined,
