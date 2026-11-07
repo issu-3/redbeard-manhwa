@@ -366,6 +366,32 @@ export default async function ChapterPage({
   // OPT-05: Use cached comments query
   const commentsData = await getCachedChapterComments(chapter.id);
 
+  // Per-user like state cannot live in the cached comments query above, so
+  // fetch the current user's likes separately (uncached) and merge them in.
+  let comments = commentsData;
+  if (session?.user?.id && commentsData.length > 0) {
+    const myLikes = await prisma.commentLike.findMany({
+      where: {
+        userId: session.user.id,
+        OR: [
+          { commentId: { in: commentsData.map((c) => c.id) } },
+          { replyId: { in: commentsData.flatMap((c) => c.replies.map((r) => r.id)) } },
+        ],
+      },
+      select: { commentId: true, replyId: true },
+    });
+    const likedCommentIds = new Set(myLikes.map((l) => l.commentId).filter(Boolean));
+    const likedReplyIds = new Set(myLikes.map((l) => l.replyId).filter(Boolean));
+    comments = commentsData.map((comment) => ({
+      ...comment,
+      hasLiked: likedCommentIds.has(comment.id),
+      replies: comment.replies.map((reply) => ({
+        ...reply,
+        hasLiked: likedReplyIds.has(reply.id),
+      })),
+    }));
+  }
+
   // Fetch User Preferences
   let userPreferences = {};
   if (session?.user?.id) {
@@ -448,7 +474,7 @@ export default async function ChapterPage({
       <ChapterSSRTakeover />
       <ChapterReader
         chapter={chapter}
-        comments={commentsData}
+        comments={comments}
         currentUserId={session?.user?.id}
         userPreferences={userPreferences}
         defaultReadingMode={'longStrip'}
