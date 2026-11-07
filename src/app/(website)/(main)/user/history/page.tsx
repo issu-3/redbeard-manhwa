@@ -7,6 +7,7 @@ import { History, Clock, BookOpen, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
+import { LibraryTabs } from '@/components/user/LibraryTabs';
 import { ClearHistoryButton, RemoveHistoryItemButton } from './HistoryActions';
 
 export const metadata: Metadata = {
@@ -41,12 +42,16 @@ export default async function HistoryPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Reading History</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Library</h1>
           <p className="text-muted-foreground">
             Continue where you left off. Showing last {history.length} items.
           </p>
         </div>
         {history.length > 0 && <ClearHistoryButton />}
+      </div>
+
+      <div>
+        <LibraryTabs />
       </div>
 
       {history.length > 0 ? (
