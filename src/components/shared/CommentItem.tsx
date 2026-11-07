@@ -23,7 +23,7 @@ export interface CommentData {
   isPinned: boolean;
   isSpoiler: boolean;
   isEdited: boolean;
-  createdAt: Date;
+  createdAt: Date | string;
   user: {
     displayName: string | null;
     username: string | null;
@@ -40,7 +40,7 @@ export interface CommentReplyData {
   content: string;
   likesCount: number;
   hasLiked?: boolean;
-  createdAt: Date;
+  createdAt: Date | string;
   user: {
     displayName: string | null;
     username: string | null;
@@ -337,7 +337,7 @@ function CommentReplyItem({
             </span>
           )}
           <span className="text-[11px] text-text-muted" suppressHydrationWarning>
-            {formatRelativeTime(reply.createdAt.toISOString())}
+            {formatRelativeTime(reply.createdAt)}
           </span>
         </div>
         <p className="text-sm text-text-secondary mt-1 whitespace-pre-wrap">
@@ -436,7 +436,7 @@ export function CommentItem({
           )}
           <span className="text-xs text-text-muted flex items-center gap-1" suppressHydrationWarning>
             <Clock className="w-3 h-3" />
-            {formatRelativeTime(comment.createdAt.toISOString())}
+            {formatRelativeTime(comment.createdAt)}
           </span>
         </div>
 
