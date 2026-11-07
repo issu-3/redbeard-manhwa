@@ -56,8 +56,8 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   // Custom SEO from DB overrides defaults
   const seo = (genre.seo as Record<string, any>) || {};
   
-  const defaultTitle = `Read Best ${genre.name} Manhwa & Manga in Hindi | ${_siteTitle}`;
-  const defaultDescription = `Read the best ${genre.name} manhwa, manga, and comics in Hindi on ${_siteTitle}. ${genre.description || ''}`.trim();
+  const defaultTitle = `Read Best ${genre.name} Manhwa & Manga in English | ${_siteTitle}`;
+  const defaultDescription = `Read the best ${genre.name} manhwa, manga, and comics in English on ${_siteTitle}. ${genre.description || ''}`.trim();
   
   const title = seo.title || defaultTitle;
   const description = seo.description || defaultDescription;
@@ -76,7 +76,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     // (it conflicted with the noindex Next.js injects on 404 pages), so this
     // page declares the same directive it previously inherited.
     robots: { index: true, follow: true, 'max-image-preview': 'large' as const, 'max-snippet': -1, 'max-video-preview': -1 },
-    keywords: [genre.name, 'download', 'comics', 'manga', 'webtoon', `${genre.name} series`, 'hindi', 'manhwa in hindi'],
+    keywords: [genre.name, 'download', 'comics', 'manga', 'webtoon', `${genre.name} series`, 'english', 'manhwa in english'],
     openGraph: {
       title,
       description,
