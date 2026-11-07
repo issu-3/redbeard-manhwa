@@ -3,10 +3,15 @@ import Image from 'next/image';
 import { MonitorPlay as Youtube, Camera as Instagram, Send, Video } from 'lucide-react';
 import { APP_NAME, APP_TAGLINE } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
+import { getCachedGenreList } from '@/lib/genres';
 import { cn } from '@/lib/utils';
 
 export async function Footer({ className }: { className?: string } = {}) {
   const settings = await getCachedSettings();
+  const genreList = await getCachedGenreList();
+  const topGenres = [...genreList]
+    .sort((a, b) => (b._count?.series ?? 0) - (a._count?.series ?? 0))
+    .slice(0, 10);
   
   const hasSocials = settings.youtubeUrl || settings.telegramUrl || settings.instagramUrl || settings.tiktokUrl;
 
@@ -97,6 +102,17 @@ export async function Footer({ className }: { className?: string } = {}) {
             <Link href="/archive" className="transition-colors hover:text-text-primary">Series Directory</Link>
             <Link href="/feed.xml" className="transition-colors hover:text-text-primary">RSS Feed</Link>
           </nav>
+
+          {/* SEO: top genre pages linked site-wide for crawl discovery */}
+          {topGenres.length > 0 && (
+            <nav aria-label="Top genres" className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs text-text-muted">
+              {topGenres.map((g) => (
+                <Link key={g.slug} href={`/browse/genres/${g.slug}`} className="transition-colors hover:text-text-primary">
+                  {g.name}
+                </Link>
+              ))}
+            </nav>
+          )}
 
           <p className="mt-4 sm:mt-4.5 text-xs text-text-muted">
             &copy; 2026 {APP_NAME}. All rights reserved.

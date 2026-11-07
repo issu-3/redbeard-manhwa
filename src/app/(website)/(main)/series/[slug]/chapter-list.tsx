@@ -32,7 +32,10 @@ export function ChapterListSection({
   const [chapters, setChapters] = useState<ChapterListItem[]>(initialChapters);
   const [sortAsc, setSortAsc] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [displayLimit, setDisplayLimit] = useState(100);
+  // Render every chapter as a crawlable anchor in the initial HTML.
+  // The previous cap of 100 hid chapters 101+ of long series (e.g. a
+  // 108-chapter series) behind a client-side "Load More" interaction.
+  const [displayLimit, setDisplayLimit] = useState(1000);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // When initialChapters change (e.g., from navigation), reset state

@@ -13,6 +13,7 @@ import { unstable_cache } from 'next/cache';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { resolveSocialImages } from '@/lib/seo';
+import { getCachedGenreList } from '@/lib/genres';
 
 const getCachedGenreDataInternal = unstable_cache(
   async (slug: string) => {
@@ -33,7 +34,9 @@ const getCachedGenreSeries = unstable_cache(
         genres: { some: { slug } }
       },
       select: SERIES_CARD_SELECT,
-      take: 40,
+      // Link every series in the genre (46 series exist site-wide today);
+      // the old cap of 40 silently dropped series from genre discovery.
+      take: 100,
       orderBy: { totalViews: 'desc' }
     });
   },
@@ -100,6 +103,8 @@ export default async function GenreDetailPage({ params }: { params: Promise<Para
   if (!genre) notFound();
 
   const dbSeries = await getCachedGenreSeries(slug);
+  const allGenres = await getCachedGenreList();
+  const otherGenres = allGenres.filter((g) => g.slug !== slug);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -147,6 +152,26 @@ export default async function GenreDetailPage({ params }: { params: Promise<Para
         }
         series={dbSeries.map(s => toSeriesCardData(s as any))}
       />
+      {/* Internal linking: cross-links so every genre page is discoverable
+          from every other genre page (previously only the genres index
+          linked to them). */}
+      {otherGenres.length > 0 && (
+        <nav aria-label="More genres" className="mt-10 border-t border-border pt-6">
+          <h2 className="mb-3 text-base font-semibold text-text-primary">Explore more genres</h2>
+          <div className="flex flex-wrap gap-1.5">
+            {otherGenres.map((g) => (
+              <Link
+                key={g.slug}
+                href={`/browse/genres/${g.slug}`}
+                prefetch={false}
+                className="rounded-md bg-card/80 border border-border/60 px-2 py-0.5 text-[11px] font-medium text-text-secondary hover:text-text-primary hover:border-primary/40 transition-colors"
+              >
+                {g.name}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }

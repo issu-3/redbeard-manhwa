@@ -1,5 +1,6 @@
 export const revalidate = 300;
 import { Metadata } from 'next';
+import Link from 'next/link';
 // Removed Link import since it's unused
 import { HomepageClient } from './homepage-client';
 import { getCachedSettings } from '@/app/actions/public/settings';
@@ -31,9 +32,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 import { getCachedHomepageSections, getCachedHeroBanners, getCachedSectionSeries } from '@/app/actions/public/homepage';
+import { getCachedGenreList } from '@/lib/genres';
 
 export default async function HomePage() {
   const settings = await getCachedSettings();
+  const genreList = await getCachedGenreList();
   const allSections = await getCachedHomepageSections();
   const activeSections = allSections.filter((s) => s.isActive).sort((a, b) => a.order - b.order);
 
@@ -105,6 +108,27 @@ export default async function HomePage() {
         sectionData={sectionData}
         isLoggedIn={false} // Managed internally by HomepageClient via next-auth
       />
+      {/* Internal linking: genre discovery from the homepage. Genre pages
+          previously received links almost only from the genres index. */}
+      {genreList.length > 0 && (
+        <section aria-label="Browse by genre" className="px-4 md:px-8 lg:px-16 xl:px-20 pb-6 md:pb-8">
+          <h2 className="mb-4 text-xl font-bold text-text-primary" style={{ fontFamily: 'var(--font-heading)' }}>
+            Browse by Genre
+          </h2>
+          <div className="flex flex-wrap gap-1.5">
+            {genreList.map((g) => (
+              <Link
+                key={g.slug}
+                href={`/browse/genres/${g.slug}`}
+                prefetch={false}
+                className="rounded-md bg-card/80 border border-border/60 px-2.5 py-1 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-primary/40 transition-colors"
+              >
+                {g.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
       <div className="px-4 md:px-8 lg:px-16 xl:px-20 pb-6 md:pb-8">
         <SubscribeCard youtubeUrl={settings.youtubeUrl || null} />
       </div>
