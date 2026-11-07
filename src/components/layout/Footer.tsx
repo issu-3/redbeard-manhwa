@@ -22,7 +22,7 @@ export async function Footer({ className }: { className?: string } = {}) {
         <div className="pt-6 sm:pt-7 pb-3.5 sm:pb-4 flex flex-col items-center justify-center text-center">
           <Link href="/" className="group inline-flex items-center gap-2.5">
             <div className="relative flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg overflow-hidden shadow-md shadow-primary/20">
-              <Image src="/images/logo.jpg" alt="REDBEARD Logo" fill className="object-cover" />
+              <Image src="/images/logo-v2.jpg" alt="REDBEARD Logo" fill className="object-cover" />
             </div>
             <span className="bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-xl sm:text-2xl font-extrabold tracking-tight text-transparent">
               {APP_NAME}

@@ -144,13 +144,13 @@ export function generateSeriesSeo(
   const canonicalUrl = (!forceRegenerate && isCurrentCanonicalValid && currentCanonical) ? currentCanonical.trim() : defaultCanonical;
 
   // 6. Open Graph Image: Custom OG -> Banner -> Cover
-  const autoOgImage = series.bannerImage || series.coverImage || '/images/og-default.png';
+  const autoOgImage = series.bannerImage || series.coverImage || '/images/og-default-v2.png';
   const ogImage = (!forceRegenerate && current.ogImage && current.ogImage.trim()) 
     ? current.ogImage.trim() 
     : autoOgImage;
 
   // 7. Twitter Card Image: Custom Twitter -> OG -> Banner -> Cover
-  const autoTwitterImage = current.ogImage || series.bannerImage || series.coverImage || '/images/og-default.png';
+  const autoTwitterImage = current.ogImage || series.bannerImage || series.coverImage || '/images/og-default-v2.png';
   const twitterImage = (!forceRegenerate && current.twitterImage && current.twitterImage.trim()) 
     ? current.twitterImage.trim() 
     : autoTwitterImage;

@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { APP_NAME, APP_DESCRIPTION, APP_URL } from './constants';
 
-export const HARDCODED_FALLBACK_IMAGE = '/images/og-default.png';
+export const HARDCODED_FALLBACK_IMAGE = '/images/og-default-v2.png';
 
 export interface SocialImages {
   ogImage: string;
@@ -25,7 +25,7 @@ export function toAbsoluteUrl(url?: string | null): string {
  * 1. Specific custom image (custom OG / Twitter image, or series cover / chapter image).
  * 2. Saved global defaults from site settings (seo_og_image, seo_twitter_image).
  * 3. Graceful fallback of Twitter image to OG image if Twitter image is not explicitly set.
- * 4. Hardcoded safe project fallback asset (/images/og-default.png).
+ * 4. Hardcoded safe project fallback asset (/images/og-default-v2.png).
  */
 export function resolveSocialImages(params?: {
   customOgImage?: string | null;

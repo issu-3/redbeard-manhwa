@@ -37,7 +37,7 @@ export default async function WebsiteLayout({
         '@type': 'Organization',
         url: siteUrl,
         name: siteName,
-        logo: `${siteUrl}/logo.png`, // /logo.png verified present in /public
+        logo: `${siteUrl}/logo-v2.png`, // /logo-v2.png present in /public (v2: same-URL image caches are immutable for 1y, so logo changes need a new path)
         sameAs: [
           settings.seo_twitter_handle ? `https://twitter.com/${settings.seo_twitter_handle.replace('@', '')}` : '',
           settings.youtubeUrl || '',

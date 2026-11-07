@@ -109,7 +109,7 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                   <input
                     name="logoUrl"
                     defaultValue={initialSettings.logoUrl || ''}
-                    placeholder="/logo.png"
+                    placeholder="/logo-v2.png"
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
@@ -434,7 +434,7 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                       label="Open Graph Image"
                       recommendedSize="1200 × 630 px"
                       currentUrl={initialSettings.seo_og_image || ''}
-                      fallbackUrl="/images/og-default.png"
+                      fallbackUrl="/images/og-default-v2.png"
                     />
                     <SeoImageUploader
                       name="seo_twitter_image"
