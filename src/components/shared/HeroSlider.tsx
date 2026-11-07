@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence, useMotionValue, useSpring, useReducedMotion, Variants } from 'framer-motion';
 import { ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
-import { BookmarkButton } from '@/components/shared/BookmarkButton';
 import { Badge } from '@/components/shared/Badge';
 
 interface HeroSlide {
@@ -223,16 +222,6 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                       Read Now
                     </Link>
                   ) : null}
-                  <div className="flex h-8 md:h-10 items-center transition-all duration-200 hover:scale-[1.02] active:scale-[0.97]">
-                    <BookmarkButton 
-                      seriesId={slide.id} 
-                      initialBookmarked={false} 
-                      title={slide.title}
-                      slug={slide.slug || undefined}
-                      coverImage={slide.coverImage}
-                      status={slide.status}
-                    />
-                  </div>
                 </motion.div>
               </motion.div>
             </AnimatePresence>
