@@ -115,7 +115,11 @@ export const getCachedSectionSeries = unstable_cache(
           },
           orderBy: [
             { publishedAt: { sort: 'desc', nulls: 'last' } },
-            { createdAt: 'desc' }
+            { createdAt: 'desc' },
+            // Tiebreaker so the distinct-series order is deterministic —
+            // the Latest browse page pages through this feed by growing the
+            // limit and slicing, which gaps/dupes when tied rows shuffle.
+            { seriesId: 'asc' }
           ],
           distinct: ['seriesId'],
           take: limit,

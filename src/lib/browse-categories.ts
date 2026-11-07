@@ -15,18 +15,23 @@ import type { SeriesCardData } from '@/types';
 
 interface BrowseCategoryConfig {
   where: Prisma.SeriesWhereInput;
-  orderBy: Prisma.SeriesOrderByWithRelationInput;
+  // Array form with an id tiebreaker: skip/take pagination across separate
+  // queries is only stable if the ordering is total. With a single sort key,
+  // tied values (e.g. many series with 0 bookmarks, or bulk-imported rows
+  // sharing updatedAt) come back in different orders per query, so Load More
+  // batches overlap/gap and some series become unreachable.
+  orderBy: Prisma.SeriesOrderByWithRelationInput[];
 }
 
 export const BROWSE_CATEGORY_CONFIG: Record<
   Exclude<BrowseCategory, 'latest'>,
   BrowseCategoryConfig
 > = {
-  trending: { where: {}, orderBy: { totalBookmarks: 'desc' } },
-  popular: { where: {}, orderBy: { totalViews: 'desc' } },
-  completed: { where: { status: 'COMPLETED' }, orderBy: { updatedAt: 'desc' } },
-  ongoing: { where: { status: 'ONGOING' }, orderBy: { updatedAt: 'desc' } },
-  'new-releases': { where: {}, orderBy: { createdAt: 'desc' } },
+  trending: { where: {}, orderBy: [{ totalBookmarks: 'desc' }, { id: 'asc' }] },
+  popular: { where: {}, orderBy: [{ totalViews: 'desc' }, { id: 'asc' }] },
+  completed: { where: { status: 'COMPLETED' }, orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }] },
+  ongoing: { where: { status: 'ONGOING' }, orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }] },
+  'new-releases': { where: {}, orderBy: [{ createdAt: 'desc' }, { id: 'asc' }] },
 };
 
 export const getCachedBrowsePage = unstable_cache(
