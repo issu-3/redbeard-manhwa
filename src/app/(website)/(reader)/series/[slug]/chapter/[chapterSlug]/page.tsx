@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ChapterReader } from '@/components/reader/ChapterReader';
+import { ChapterSSRContent } from '@/components/reader/ChapterSSRContent';
+import { ChapterSSRTakeover } from '@/components/reader/ChapterSSRTakeover';
 import type { ChapterData } from '@/types';
 import { auth } from '@/auth';
 import { APP_URL } from '@/lib/constants';
@@ -437,6 +439,13 @@ export default async function ChapterPage({
       <Link href={`/series/${slug}`} className="sr-only">
         Back to {chapter.seriesTitle}
       </Link>
+      {/* SEO SSR: the real chapter content (heading, page images, breadcrumb
+          and prev/next anchors) in the initial HTML. ChapterReader renders
+          an empty shell until it mounts client-side, so without this block
+          crawlers only ever saw a "Loading..." page. The reader hides this
+          block on mount via ChapterSSRTakeover and takes over unchanged. */}
+      <ChapterSSRContent chapter={chapter} />
+      <ChapterSSRTakeover />
       <ChapterReader
         chapter={chapter}
         comments={commentsData}
