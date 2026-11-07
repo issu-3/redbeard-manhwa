@@ -3,9 +3,7 @@ export const revalidate = 3600;
 import { Metadata } from 'next';
 import { Rows3 } from 'lucide-react';
 import { BrowseGrid } from '@/components/shared/BrowseGrid';
-import { prisma } from '@/lib/prisma';
-import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
-import { unstable_cache } from 'next/cache';
+import { BROWSE_PAGE_SIZE, getCachedBrowsePage, getCachedBrowseTotal } from '@/lib/browse-categories';
 
 import { generateMetadata as generateSeoMetadata } from '@/lib/seo';
 import { APP_URL } from '@/lib/constants';
@@ -21,28 +19,20 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-const getCachedOngoingSeries = unstable_cache(
-  async () => {
-    return prisma.series.findMany({
-      where: { status: 'ONGOING' },
-      select: SERIES_CARD_SELECT,
-      take: 40,
-      orderBy: { updatedAt: 'desc' }
-    });
-  },
-  ['browse-ongoing-series'],
-  { tags: ['browse-ongoing', 'series-data'], revalidate: 3600 }
-);
-
 export default async function OngoingPage() {
-  const dbSeries = await getCachedOngoingSeries();
-  
+  const [dbSeries, total] = await Promise.all([
+    getCachedBrowsePage('ongoing', 0, BROWSE_PAGE_SIZE),
+    getCachedBrowseTotal('ongoing'),
+  ]);
+
   return (
-    <BrowseGrid 
-      title="Ongoing" 
-      subtitle="Series currently being published" 
-      icon={<Rows3 className="h-5 w-5 text-primary" />} 
-      series={dbSeries.map(toSeriesCardData)} 
+    <BrowseGrid
+      title="Ongoing"
+      subtitle="Series currently being published"
+      icon={<Rows3 className="h-5 w-5 text-primary" />}
+      series={dbSeries}
+      category="ongoing"
+      total={total}
     />
   );
 }

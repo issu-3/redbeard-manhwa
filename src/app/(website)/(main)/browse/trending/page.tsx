@@ -3,9 +3,7 @@ export const revalidate = 3600;
 import { Metadata } from 'next';
 import { Flame } from 'lucide-react';
 import { BrowseGrid } from '@/components/shared/BrowseGrid';
-import { prisma } from '@/lib/prisma';
-import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
-import { unstable_cache } from 'next/cache';
+import { BROWSE_PAGE_SIZE, getCachedBrowsePage, getCachedBrowseTotal } from '@/lib/browse-categories';
 
 import { generateMetadata as generateSeoMetadata } from '@/lib/seo';
 import { APP_URL } from '@/lib/constants';
@@ -21,28 +19,20 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-const getCachedTrendingSeries = unstable_cache(
-  async () => {
-    return prisma.series.findMany({
-      where: {},
-      select: SERIES_CARD_SELECT,
-      take: 40,
-      orderBy: { totalBookmarks: 'desc' }
-    });
-  },
-  ['browse-trending-series'],
-  { tags: ['browse-trending', 'series-data'], revalidate: 3600 }
-);
-
 export default async function TrendingPage() {
-  const dbSeries = await getCachedTrendingSeries();
-  
+  const [dbSeries, total] = await Promise.all([
+    getCachedBrowsePage('trending', 0, BROWSE_PAGE_SIZE),
+    getCachedBrowseTotal('trending'),
+  ]);
+
   return (
-    <BrowseGrid 
-      title="Trending" 
-      subtitle="What everyone is reading right now" 
-      icon={<Flame className="h-5 w-5 text-primary" />} 
-      series={dbSeries.map(toSeriesCardData)} 
+    <BrowseGrid
+      title="Trending"
+      subtitle="What everyone is reading right now"
+      icon={<Flame className="h-5 w-5 text-primary" />}
+      series={dbSeries}
+      category="trending"
+      total={total}
     />
   );
 }
