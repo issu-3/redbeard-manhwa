@@ -1,1 +1,137 @@
-ZXhwb3J0IGNvbnN0IHJldmFsaWRhdGUgPSAzMDA7CmltcG9ydCB7IE1ldGFkYXRhIH0gZnJvbSAnbmV4dCc7CmltcG9ydCBMaW5rIGZyb20gJ25leHQvbGluayc7Ci8vIFJlbW92ZWQgTGluayBpbXBvcnQgc2luY2UgaXQncyB1bnVzZWQKaW1wb3J0IHsgSG9tZXBhZ2VDbGllbnQgfSBmcm9tICcuL2hvbWVwYWdlLWNsaWVudCc7CmltcG9ydCB7IGdldENhY2hlZFNldHRpbmdzIH0gZnJvbSAnQC9hcHAvYWN0aW9ucy9wdWJsaWMvc2V0dGluZ3MnOwppbXBvcnQgeyBBZFJlbmRlcmVyIH0gZnJvbSAnQC9jb21wb25lbnRzL2Fkcy9BZFJlbmRlcmVyJzsKaW1wb3J0IHsgU3Vic2NyaWJlQ2FyZCB9IGZyb20gJ0AvY29tcG9uZW50cy9zaGFyZWQvU3Vic2NyaWJlQ2FyZCc7CgppbXBvcnQgeyBnZW5lcmF0ZU1ldGFkYXRhIGFzIGdlbmVyYXRlU2VvTWV0YWRhdGEgfSBmcm9tICdAL2xpYi9zZW8nOwppbXBvcnQgeyBBUFBfVVJMIH0gZnJvbSAnQC9saWIvY29uc3RhbnRzJzsKCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBnZW5lcmF0ZU1ldGFkYXRhKCk6IFByb21pc2U8TWV0YWRhdGE+IHsKICBjb25zdCBzZXR0aW5ncyA9IGF3YWl0IGdldENhY2hlZFNldHRpbmdzKCk7CiAgY29uc3QgdGl0bGUgPSBzZXR0aW5ncy5zZW9fc2l0ZV90aXRsZSB8fCAnUkVEQkVBUkQgLSBUaGUgVWx0aW1hdGUgUmVhZGluZyBFeHBlcmllbmNlJzsKICBjb25zdCBkZXNjcmlwdGlvbiA9IHNldHRpbmdzLnNlb19zaXRlX2Rlc2NyaXB0aW9uIHx8ICdSZWFkIHRoZSBiZXN0IHNlcmllcyBhbmQgY29taWNzIG9ubGluZS4nOwogIGNvbnN0IGJhc2VVcmwgPSBBUFBfVVJMIHx8ICdodHRwczovL3JlZGJlYXJkLnN0b3JlJzsKICAKICBjb25zdCBzZW8gPSBnZW5lcmF0ZVNlb01ldGFkYXRhKHsKICAgIHRpdGxlOiB0aXRsZS5zcGxpdCgnIHwgJylbMF0sIC8vIGdlbmVyYXRlU2VvTWV0YWRhdGEgYXBwZW5kcyBBUFBfTkFNRQogICAgZGVzY3JpcHRpb24sCiAgICB1cmw6IGJhc2VVcmwsCiAgICBzZXR0aW5ncywKICB9KTsKCiAgcmV0dXJuIHsKICAgIC4uLnNlbywKICAgIGFsdGVybmF0ZXM6IHsKICAgICAgY2Fub25pY2FsOiBiYXNlVXJsLAogICAgfSwKICB9Owp9CgppbXBvcnQgeyBnZXRDYWNoZWRIb21lcGFnZVNlY3Rpb25zLCBnZXRDYWNoZWRIZXJvQmFubmVycywgZ2V0Q2FjaGVkU2VjdGlvblNlcmllcyB9IGZyb20gJ0AvYXBwL2FjdGlvbnMvcHVibGljL2hvbWVwYWdlJzsKaW1wb3J0IHsgZ2V0Q2FjaGVkR2VucmVMaXN0IH0gZnJvbSAnQC9saWIvZ2VucmVzJzsKCmV4cG9ydCBkZWZhdWx0IGFzeW5jIGZ1bmN0aW9uIEhvbWVQYWdlKCkgewogIGNvbnN0IHNldHRpbmdzID0gYXdhaXQgZ2V0Q2FjaGVkU2V0dGluZ3MoKTsKICBjb25zdCBnZW5yZUxpc3QgPSBhd2FpdCBnZXRDYWNoZWRHZW5yZUxpc3QoKTsKICBjb25zdCBhbGxTZWN0aW9ucyA9IGF3YWl0IGdldENhY2hlZEhvbWVwYWdlU2VjdGlvbnMoKTsKICBjb25zdCBhY3RpdmVTZWN0aW9ucyA9IGFsbFNlY3Rpb25zLmZpbHRlcigocykgPT4gcy5pc0FjdGl2ZSkuc29ydCgoYSwgYikgPT4gYS5vcmRlciAtIGIub3JkZXIpOwoKICBjb25zdCBzZWN0aW9uRGF0YTogUmVjb3JkPHN0cmluZywgYW55W10+ID0ge307CgogIGNvbnN0IHNlY3Rpb25Qcm9taXNlcyA9IGFjdGl2ZVNlY3Rpb25zLm1hcChhc3luYyAoc2VjKSA9PiB7CiAgICBsZXQgZGF0YTogdW5rbm93bltdID0gW107CiAgICB0cnkgewogICAgICBpZiAoc2VjLnR5cGUgPT09ICdIRVJPX0JBTk5FUicpIHsKICAgICAgICBkYXRhID0gYXdhaXQgZ2V0Q2FjaGVkSGVyb0Jhbm5lcnMoKTsKICAgICAgfSBlbHNlIGlmIChzZWMudHlwZSA9PT0gJ0NPTlRJTlVFX1JFQURJTkcnKSB7CiAgICAgICAgZGF0YSA9IFtdOwogICAgICB9IGVsc2UgewogICAgICAgIGRhdGEgPSBhd2FpdCBnZXRDYWNoZWRTZWN0aW9uU2VyaWVzKHNlYy50eXBlLCBzZWMubGltaXQsIHNlYy5pc01hbnVhbCB8fCBmYWxzZSwgc2VjLm1hbnVhbFNlcmllc0lkIHx8IFtdKTsKICAgICAgfQogICAgfSBjYXRjaCAoZSkgewogICAgICBjb25zb2xlLndhcm4oYEVycm9yIGxvYWRpbmcgaG9tZXBhZ2Ugc2VjdGlvbiAke3NlYy50eXBlfTpgLCBlKTsKICAgIH0KICAgIHJldHVybiB7IHR5cGU6IHNlYy50eXBlLCBkYXRhIH07CiAgfSk7CgogIGNvbnN0IHJlc3VsdHMgPSBhd2FpdCBQcm9taXNlLmFsbFNldHRsZWQoc2VjdGlvblByb21pc2VzKTsKICBmb3IgKGNvbnN0IHJlc3VsdCBvZiByZXN1bHRzKSB7CiAgICBpZiAocmVzdWx0LnN0YXR1cyA9PT0gJ2Z1bGZpbGxlZCcpIHsKICAgICAgc2VjdGlvbkRhdGFbcmVzdWx0LnZhbHVlLnR5cGVdID0gcmVzdWx0LnZhbHVlLmRhdGE7CiAgICB9IGVsc2UgewogICAgICBjb25zb2xlLmVycm9yKCdGYWlsZWQgdG8gbG9hZCBob21lcGFnZSBzZWN0aW9uOicsIHJlc3VsdC5yZWFzb24pOwogICAgfQogIH0KCiAgY29uc3QgYmFzZVVybCA9IEFQUF9VUkwgfHwgJ2h0dHBzOi8vcmVkYmVhcmQuc3RvcmUnOwogIGNvbnN0IHdlYnNpdGVMZCA9IHsKICAgICdAY29udGV4dCc6ICdodHRwczovL3NjaGVtYS5vcmcnLAogICAgJ0BncmFwaCc6IFsKICAgICAgewogICAgICAgICdAdHlwZSc6ICdXZWJTaXRlJywKICAgICAgICAnQGlkJzogYCR7YmFzZVVybH0vI3dlYnNpdGVgLAogICAgICAgIHVybDogYmFzZVVybCwKICAgICAgICBuYW1lOiBzZXR0aW5ncy5zaXRlTmFtZSB8fCAnUkVEQkVBUkQnLAogICAgICAgIGRlc2NyaXB0aW9uOiBzZXR0aW5ncy5zZW9fc2l0ZV9kZXNjcmlwdGlvbiB8fCAnUmVhZCB0aGUgYmVzdCBzZXJpZXMgYW5kIGNvbWljcyBvbmxpbmUuJywKICAgICAgICBwb3RlbnRpYWxBY3Rpb246IHsKICAgICAgICAgICdAdHlwZSc6ICdTZWFyY2hBY3Rpb24nLAogICAgICAgICAgdGFyZ2V0OiBgJHtiYXNlVXJsfS9zZWFyY2g/cT17c2VhcmNoX3Rlcm1fc3RyaW5nfWAsCiAgICAgICAgICAncXVlcnktaW5wdXQnOiAncmVxdWlyZWQgbmFtZT1zZWFyY2hfdGVybV9zdHJpbmcnCiAgICAgICAgfQogICAgICB9LAogICAgICB7CiAgICAgICAgJ0B0eXBlJzogJ09yZ2FuaXphdGlvbicsCiAgICAgICAgJ0BpZCc6IGAke2Jhc2VVcmx9LyNvcmdhbml6YXRpb25gLAogICAgICAgIG5hbWU6IHNldHRpbmdzLnNpdGVOYW1lIHx8ICdSRURCRUFSRCcsCiAgICAgICAgdXJsOiBiYXNlVXJsLAogICAgICAgIGxvZ286IGAke2Jhc2VVcmx9L2xvZ28ucG5nYAogICAgICB9CiAgICBdCiAgfTsKCiAgcmV0dXJuICgKICAgIDw+CiAgICAgIDxzY3JpcHQKICAgICAgICB0eXBlPSJhcHBsaWNhdGlvbi9sZCtqc29uIgogICAgICAgIGRhbmdlcm91c2x5U2V0SW5uZXJIVE1MPXt7IF9faHRtbDogSlNPTi5zdHJpbmdpZnkod2Vic2l0ZUxkKSB9fQogICAgICAvPgogICAgICA8aDEgY2xhc3NOYW1lPSJzci1vbmx5Ij5SRURCRUFSRCAtIFRoZSBVbHRpbWF0ZSBSZWFkaW5nIEV4cGVyaWVuY2U8L2gxPgogICAgICA8ZGl2IGNsYXNzTmFtZT0icHgtNCBtZDpweC04IGxnOnB4LTE2IHhsOnB4LTIwIGZsZXgganVzdGlmeS1jZW50ZXIgb3ZlcmZsb3ctaGlkZGVuIFsmOm5vdCg6aGFzKC5hZC1jb250YWluZXIpKV06aGlkZGVuIj4KICAgICAgICA8QWRSZW5kZXJlciBwbGFjZW1lbnQ9ImhvbWVwYWdlIiAvPgogICAgICA8L2Rpdj4KICAgICAgPEhvbWVwYWdlQ2xpZW50CiAgICAgICAgc2VjdGlvbnM9e2FjdGl2ZVNlY3Rpb25zfQogICAgICAgIHNlY3Rpb25EYXRhPXtzZWN0aW9uRGF0YX0KICAgICAgICBpc0xvZ2dlZEluPXtmYWxzZX0gLy8gTWFuYWdlZCBpbnRlcm5hbGx5IGJ5IEhvbWVwYWdlQ2xpZW50IHZpYSBuZXh0LWF1dGgKICAgICAgLz4KICAgICAgey8qIEludGVybmFsIGxpbmtpbmc6IGdlbnJlIGRpc2NvdmVyeSBmcm9tIHRoZSBob21lcGFnZS4gR2VucmUgcGFnZXMKICAgICAgICAgIHByZXZpb3VzbHkgcmVjZWl2ZWQgbGlua3MgYWxtb3N0IG9ubHkgZnJvbSB0aGUgZ2VucmVzIGluZGV4LiAqL30KICAgICAge2dlbnJlTGlzdC5sZW5ndGggPiAwICYmICgKICAgICAgICA8c2VjdGlvbiBhcmlhLWxhYmVsPSJCcm93c2UgYnkgZ2VucmUiIGNsYXNzTmFtZT0icHgtNCBtZDpweC04IGxnOnB4LTE2IHhsOnB4LTIwIHBiLTYgbWQ6cGItOCI+CiAgICAgICAgICA8aDIgY2xhc3NOYW1lPSJtYi00IHRleHQteGwgZm9udC1ib2xkIHRleHQtdGV4dC1wcmltYXJ5IiBzdHlsZT17eyBmb250RmFtaWx5OiAndmFyKC0tZm9udC1oZWFkaW5nKScgfX0+CiAgICAgICAgICAgIEJyb3dzZSBieSBHZW5yZQogICAgICAgICAgPC9oMj4KICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGZsZXgtd3JhcCBnYXAtMS41Ij4KICAgICAgICAgICAge2dlbnJlTGlzdC5tYXAoKGcpID0+ICgKICAgICAgICAgICAgICA8TGluawogICAgICAgICAgICAgICAga2V5PXtnLnNsdWd9CiAgICAgICAgICAgICAgICBocmVmPXtgL2Jyb3dzZS9nZW5yZXMvJHtnLnNsdWd9YH0KICAgICAgICAgICAgICAgIHByZWZldGNoPXtmYWxzZX0KICAgICAgICAgICAgICAgIGNsYXNzTmFtZT0icm91bmRlZC1tZCBiZy1jYXJkLzgwIGJvcmRlciBib3JkZXItYm9yZGVyLzYwIHB4LTIuNSBweS0xIHRleHQteHMgZm9udC1tZWRpdW0gdGV4dC10ZXh0LXNlY29uZGFyeSBob3Zlcjp0ZXh0LXRleHQtcHJpbWFyeSBob3Zlcjpib3JkZXItcHJpbWFyeS80MCB0cmFuc2l0aW9uLWNvbG9ycyIKICAgICAgICAgICAgICA+CiAgICAgICAgICAgICAgICB7Zy5uYW1lfQogICAgICAgICAgICAgIDwvTGluaz4KICAgICAgICAgICAgKSl9CiAgICAgICAgICA8L2Rpdj4KICAgICAgICA8L3NlY3Rpb24+CiAgICAgICl9CiAgICAgIDxkaXYgY2xhc3NOYW1lPSJweC00IG1kOnB4LTggbGc6cHgtMTYgeGw6cHgtMjAgcGItNiBtZDpwYi04Ij4KICAgICAgICA8U3Vic2NyaWJlQ2FyZCB5b3V0dWJlVXJsPXtzZXR0aW5ncy55b3V0dWJlVXJsIHx8IG51bGx9IC8+CiAgICAgIDwvZGl2PgogICAgPC8+CiAgKTsKfQo=
+export const revalidate = 300;
+import { Metadata } from 'next';
+import Link from 'next/link';
+// Removed Link import since it's unused
+import { HomepageClient } from './homepage-client';
+import { getCachedSettings } from '@/app/actions/public/settings';
+import { AdRenderer } from '@/components/ads/AdRenderer';
+import { SubscribeCard } from '@/components/shared/SubscribeCard';
+
+import { generateMetadata as generateSeoMetadata } from '@/lib/seo';
+import { APP_URL } from '@/lib/constants';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getCachedSettings();
+  const title = settings.seo_site_title || 'REDBEARD - The Ultimate Reading Experience';
+  const description = settings.seo_site_description || 'Read the best series and comics online.';
+  const baseUrl = APP_URL || 'https://redbeard.store';
+  
+  const seo = generateSeoMetadata({
+    title: title.split(' | ')[0], // generateSeoMetadata appends APP_NAME
+    description,
+    url: baseUrl,
+    settings,
+  });
+
+  return {
+    ...seo,
+    alternates: {
+      canonical: baseUrl,
+    },
+  };
+}
+
+import { getCachedHomepageSections, getCachedHeroBanners, getCachedSectionSeries } from '@/app/actions/public/homepage';
+import { getCachedGenreList } from '@/lib/genres';
+
+export default async function HomePage() {
+  const settings = await getCachedSettings();
+  const genreList = await getCachedGenreList();
+  const allSections = await getCachedHomepageSections();
+  const activeSections = allSections.filter((s) => s.isActive).sort((a, b) => a.order - b.order);
+
+  const sectionData: Record<string, any[]> = {};
+
+  const sectionPromises = activeSections.map(async (sec) => {
+    let data: unknown[] = [];
+    try {
+      if (sec.type === 'HERO_BANNER') {
+        data = await getCachedHeroBanners();
+      } else if (sec.type === 'CONTINUE_READING') {
+        data = [];
+      } else {
+        data = await getCachedSectionSeries(sec.type, sec.limit, sec.isManual || false, sec.manualSeriesId || []);
+      }
+    } catch (e) {
+      console.warn(`Error loading homepage section ${sec.type}:`, e);
+    }
+    return { type: sec.type, data };
+  });
+
+  const results = await Promise.allSettled(sectionPromises);
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      sectionData[result.value.type] = result.value.data;
+    } else {
+      console.error('Failed to load homepage section:', result.reason);
+    }
+  }
+
+  const baseUrl = APP_URL || 'https://redbeard.store';
+  const websiteLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': `${baseUrl}/#website`,
+        url: baseUrl,
+        name: settings.siteName || 'REDBEARD',
+        description: settings.seo_site_description || 'Read the best series and comics online.',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: `${baseUrl}/search?q={search_term_string}`,
+          'query-input': 'required name=search_term_string'
+        }
+      },
+      {
+        '@type': 'Organization',
+        '@id': `${baseUrl}/#organization`,
+        name: settings.siteName || 'REDBEARD',
+        url: baseUrl,
+        logo: `${baseUrl}/logo.png`
+      }
+    ]
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
+      />
+      <h1 className="sr-only">REDBEARD - The Ultimate Reading Experience</h1>
+      <div className="px-4 md:px-8 lg:px-16 xl:px-20 flex justify-center overflow-hidden [&:not(:has(.ad-container))]:hidden">
+        <AdRenderer placement="homepage" />
+      </div>
+      <HomepageClient
+        sections={activeSections}
+        sectionData={sectionData}
+        isLoggedIn={false} // Managed internally by HomepageClient via next-auth
+      />
+      {/* Internal linking: genre discovery from the homepage. Genre pages
+          previously received links almost only from the genres index. */}
+      {genreList.length > 0 && (
+        <section aria-label="Browse by genre" className="px-4 md:px-8 lg:px-16 xl:px-20 pb-6 md:pb-8">
+          <h2 className="mb-4 text-xl font-bold text-text-primary" style={{ fontFamily: 'var(--font-heading)' }}>
+            Browse by Genre
+          </h2>
+          <div className="flex flex-wrap gap-1.5">
+            {genreList.map((g) => (
+              <Link
+                key={g.slug}
+                href={`/browse/genres/${g.slug}`}
+                prefetch={false}
+                className="rounded-md bg-card/80 border border-border/60 px-2.5 py-1 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-primary/40 transition-colors"
+              >
+                {g.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+      <div className="px-4 md:px-8 lg:px-16 xl:px-20 pb-6 md:pb-8">
+        <SubscribeCard youtubeUrl={settings.youtubeUrl || null} />
+      </div>
+    </>
+  );
+}

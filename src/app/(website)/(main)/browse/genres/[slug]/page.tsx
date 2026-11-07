@@ -1,1 +1,178 @@
-ZXhwb3J0IGNvbnN0IHJldmFsaWRhdGUgPSAzNjAwOwppbXBvcnQgeyBNZXRhZGF0YSB9IGZyb20gJ25leHQnOwppbXBvcnQgTGluayBmcm9tICduZXh0L2xpbmsnOwppbXBvcnQgeyBub3RGb3VuZCB9IGZyb20gJ25leHQvbmF2aWdhdGlvbic7CmltcG9ydCB7IEJyb3dzZUdyaWQgfSBmcm9tICdAL2NvbXBvbmVudHMvc2hhcmVkL0Jyb3dzZUdyaWQnOwppbXBvcnQgeyBwcmlzbWEgfSBmcm9tICdAL2xpYi9wcmlzbWEnOwppbXBvcnQgeyB0b1Nlcmllc0NhcmREYXRhLCBTRVJJRVNfQ0FSRF9TRUxFQ1QgfSBmcm9tICdAL2xpYi9kYXRhLW1hcHBlcnMnOwoKdHlwZSBQYXJhbXMgPSB7IHNsdWc6IHN0cmluZyB9OwoKaW1wb3J0IHsgY2FjaGUgfSBmcm9tICdyZWFjdCc7CmltcG9ydCB7IHVuc3RhYmxlX2NhY2hlIH0gZnJvbSAnbmV4dC9jYWNoZSc7CmltcG9ydCB7IEFQUF9VUkwgfSBmcm9tICdAL2xpYi9jb25zdGFudHMnOwppbXBvcnQgeyBnZXRDYWNoZWRTZXR0aW5ncyB9IGZyb20gJ0AvYXBwL2FjdGlvbnMvcHVibGljL3NldHRpbmdzJzsKaW1wb3J0IHsgcmVzb2x2ZVNvY2lhbEltYWdlcyB9IGZyb20gJ0AvbGliL3Nlbyc7CmltcG9ydCB7IGdldENhY2hlZEdlbnJlTGlzdCB9IGZyb20gJ0AvbGliL2dlbnJlcyc7Cgpjb25zdCBnZXRDYWNoZWRHZW5yZURhdGFJbnRlcm5hbCA9IHVuc3RhYmxlX2NhY2hlKAogIGFzeW5jIChzbHVnOiBzdHJpbmcpID0+IHsKICAgIHJldHVybiBwcmlzbWEuZ2VucmUuZmluZFVuaXF1ZSh7IHdoZXJlOiB7IHNsdWcgfSB9KTsKICB9LAogIFsnZ2VucmUtZGV0YWlsLWRhdGEnXSwKICB7IHRhZ3M6IFsnZ2VucmVzJ10sIHJldmFsaWRhdGU6IDg2NDAwIH0KKTsKCmNvbnN0IGdldENhY2hlZEdlbnJlRGF0YSA9IGNhY2hlKGFzeW5jIChzbHVnOiBzdHJpbmcpID0+IHsKICByZXR1cm4gZ2V0Q2FjaGVkR2VucmVEYXRhSW50ZXJuYWwoc2x1Zyk7Cn0pOwoKY29uc3QgZ2V0Q2FjaGVkR2VucmVTZXJpZXMgPSB1bnN0YWJsZV9jYWNoZSgKICBhc3luYyAoc2x1Zzogc3RyaW5nKSA9PiB7CiAgICByZXR1cm4gcHJpc21hLnNlcmllcy5maW5kTWFueSh7CiAgICAgIHdoZXJlOiB7IAogICAgICAgIGdlbnJlczogeyBzb21lOiB7IHNsdWcgfSB9CiAgICAgIH0sCiAgICAgIHNlbGVjdDogU0VSSUVTX0NBUkRfU0VMRUNULAogICAgICAvLyBMaW5rIGV2ZXJ5IHNlcmllcyBpbiB0aGUgZ2VucmUgKDQ2IHNlcmllcyBleGlzdCBzaXRlLXdpZGUgdG9kYXkpOwogICAgICAvLyB0aGUgb2xkIGNhcCBvZiA0MCBzaWxlbnRseSBkcm9wcGVkIHNlcmllcyBmcm9tIGdlbnJlIGRpc2NvdmVyeS4KICAgICAgdGFrZTogMTAwLAogICAgICBvcmRlckJ5OiB7IHRvdGFsVmlld3M6ICdkZXNjJyB9CiAgICB9KTsKICB9LAogIFsnZ2VucmUtc2VyaWVzLWxpc3QnXSwKICB7IHRhZ3M6IFsnc2VyaWVzLWRhdGEnXSwgcmV2YWxpZGF0ZTogMzYwMCB9Cik7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gZ2VuZXJhdGVNZXRhZGF0YSh7IHBhcmFtcyB9OiB7IHBhcmFtczogUHJvbWlzZTxQYXJhbXM+IH0pOiBQcm9taXNlPE1ldGFkYXRhPiB7CiAgY29uc3QgeyBzbHVnIH0gPSBhd2FpdCBwYXJhbXM7CiAgY29uc3QgZ2VucmUgPSBhd2FpdCBnZXRDYWNoZWRHZW5yZURhdGEoc2x1Zyk7CiAgY29uc3Qgc2V0dGluZ3MgPSBhd2FpdCBnZXRDYWNoZWRTZXR0aW5ncygpOwogIAogIGlmICghZ2VucmUpIHJldHVybiB7IHRpdGxlOiAnR2VucmUgTm90IEZvdW5kJyB9OwogIAogIGNvbnN0IF9zaXRlVGl0bGUgPSBzZXR0aW5ncy5zZW9fc2l0ZV90aXRsZSB8fCAnUkVEQkVBUkQnOwogIAogIC8vIEN1c3RvbSBTRU8gZnJvbSBEQiBvdmVycmlkZXMgZGVmYXVsdHMKICBjb25zdCBzZW8gPSAoZ2VucmUuc2VvIGFzIFJlY29yZDxzdHJpbmcsIGFueT4pIHx8IHt9OwogIAogIGNvbnN0IGRlZmF1bHRUaXRsZSA9IGBSZWFkIEJlc3QgJHtnZW5yZS5uYW1lfSBNYW5od2EgJiBNYW5nYSBpbiBIaW5kaSB8ICR7X3NpdGVUaXRsZX1gOwogIGNvbnN0IGRlZmF1bHREZXNjcmlwdGlvbiA9IGBSZWFkIHRoZSBiZXN0ICR7Z2VucmUubmFtZX0gbWFuaHdhLCBtYW5nYSwgYW5kIGNvbWljcyBpbiBIaW5kaSBvbiAke19zaXRlVGl0bGV9LiAke2dlbnJlLmRlc2NyaXB0aW9uIHx8ICcnfWAudHJpbSgpOwogIAogIGNvbnN0IHRpdGxlID0gc2VvLnRpdGxlIHx8IGRlZmF1bHRUaXRsZTsKICBjb25zdCBkZXNjcmlwdGlvbiA9IHNlby5kZXNjcmlwdGlvbiB8fCBkZWZhdWx0RGVzY3JpcHRpb247CiAgY29uc3QgdXJsID0gYCR7QVBQX1VSTH0vYnJvd3NlL2dlbnJlcy8ke3NsdWd9YDsKCiAgY29uc3QgeyBvZ0ltYWdlLCB0d2l0dGVySW1hZ2UgfSA9IHJlc29sdmVTb2NpYWxJbWFnZXMoewogICAgY3VzdG9tT2dJbWFnZTogc2VvLm9nSW1hZ2UgfHwgc2VvLmltYWdlLAogICAgY3VzdG9tVHdpdHRlckltYWdlOiBzZW8udHdpdHRlckltYWdlLAogICAgc2V0dGluZ3MsCiAgfSk7CgogIHJldHVybiB7CiAgICB0aXRsZTogeyBhYnNvbHV0ZTogdGl0bGUgfSwKICAgIGRlc2NyaXB0aW9uLAogICAgLy8gRXhwbGljaXQgcm9ib3RzOiB0aGUgcm9vdCBsYXlvdXQgbm8gbG9uZ2VyIGVtaXRzIGEgZ2xvYmFsIHJvYm90cyB0YWcKICAgIC8vIChpdCBjb25mbGljdGVkIHdpdGggdGhlIG5vaW5kZXggTmV4dC5qcyBpbmplY3RzIG9uIDQwNCBwYWdlcyksIHNvIHRoaXMKICAgIC8vIHBhZ2UgZGVjbGFyZXMgdGhlIHNhbWUgZGlyZWN0aXZlIGl0IHByZXZpb3VzbHkgaW5oZXJpdGVkLgogICAgcm9ib3RzOiB7IGluZGV4OiB0cnVlLCBmb2xsb3c6IHRydWUsICdtYXgtaW1hZ2UtcHJldmlldyc6ICdsYXJnZScgYXMgY29uc3QsICdtYXgtc25pcHBldCc6IC0xLCAnbWF4LXZpZGVvLXByZXZpZXcnOiAtMSB9LAogICAga2V5d29yZHM6IFtnZW5yZS5uYW1lLCAnZG93bmxvYWQnLCAnY29taWNzJywgJ21hbmdhJywgJ3dlYnRvb24nLCBgJHtnZW5yZS5uYW1lfSBzZXJpZXNgLCAnaGluZGknLCAnbWFuaHdhIGluIGhpbmRpJ10sCiAgICBvcGVuR3JhcGg6IHsKICAgICAgdGl0bGUsCiAgICAgIGRlc2NyaXB0aW9uLAogICAgICB1cmwsCiAgICAgIHR5cGU6ICd3ZWJzaXRlJywKICAgICAgaW1hZ2VzOiBbeyB1cmw6IG9nSW1hZ2UsIHdpZHRoOiAxMjAwLCBoZWlnaHQ6IDYzMCwgYWx0OiB0aXRsZSB9XSwKICAgIH0sCiAgICB0d2l0dGVyOiB7CiAgICAgIGNhcmQ6ICdzdW1tYXJ5X2xhcmdlX2ltYWdlJywKICAgICAgdGl0bGUsCiAgICAgIGRlc2NyaXB0aW9uLAogICAgICBpbWFnZXM6IFt0d2l0dGVySW1hZ2VdLAogICAgfSwKICAgIGFsdGVybmF0ZXM6IHsKICAgICAgY2Fub25pY2FsOiB1cmwsCiAgICB9CiAgfTsKfQoKZXhwb3J0IGRlZmF1bHQgYXN5bmMgZnVuY3Rpb24gR2VucmVEZXRhaWxQYWdlKHsgcGFyYW1zIH06IHsgcGFyYW1zOiBQcm9taXNlPFBhcmFtcz4gfSkgewogIGNvbnN0IHsgc2x1ZyB9ID0gYXdhaXQgcGFyYW1zOwogIAogIGNvbnN0IGdlbnJlID0gYXdhaXQgZ2V0Q2FjaGVkR2VucmVEYXRhKHNsdWcpOwogIGlmICghZ2VucmUpIG5vdEZvdW5kKCk7CgogIGNvbnN0IGRiU2VyaWVzID0gYXdhaXQgZ2V0Q2FjaGVkR2VucmVTZXJpZXMoc2x1Zyk7CiAgY29uc3QgYWxsR2VucmVzID0gYXdhaXQgZ2V0Q2FjaGVkR2VucmVMaXN0KCk7CiAgY29uc3Qgb3RoZXJHZW5yZXMgPSBhbGxHZW5yZXMuZmlsdGVyKChnKSA9PiBnLnNsdWcgIT09IHNsdWcpOwoKICBjb25zdCBqc29uTGQgPSB7CiAgICAnQGNvbnRleHQnOiAnaHR0cHM6Ly9zY2hlbWEub3JnJywKICAgICdAdHlwZSc6ICdCcmVhZGNydW1iTGlzdCcsCiAgICAnaXRlbUxpc3RFbGVtZW50JzogWwogICAgICB7CiAgICAgICAgJ0B0eXBlJzogJ0xpc3RJdGVtJywKICAgICAgICAncG9zaXRpb24nOiAxLAogICAgICAgICduYW1lJzogJ0hvbWUnLAogICAgICAgICdpdGVtJzogYCR7QVBQX1VSTH1gCiAgICAgIH0sCiAgICAgIHsKICAgICAgICAnQHR5cGUnOiAnTGlzdEl0ZW0nLAogICAgICAgICdwb3NpdGlvbic6IDIsCiAgICAgICAgJ25hbWUnOiAnR2VucmVzJywKICAgICAgICAnaXRlbSc6IGAke0FQUF9VUkx9L2Jyb3dzZS9nZW5yZXNgCiAgICAgIH0sCiAgICAgIHsKICAgICAgICAnQHR5cGUnOiAnTGlzdEl0ZW0nLAogICAgICAgICdwb3NpdGlvbic6IDMsCiAgICAgICAgJ25hbWUnOiBnZW5yZS5uYW1lLAogICAgICAgICdpdGVtJzogYCR7QVBQX1VSTH0vYnJvd3NlL2dlbnJlcy8ke3NsdWd9YAogICAgICB9CiAgICBdCiAgfTsKCiAgcmV0dXJuICgKICAgIDxkaXY+CiAgICAgIDxzY3JpcHQKICAgICAgICB0eXBlPSJhcHBsaWNhdGlvbi9sZCtqc29uIgogICAgICAgIGRhbmdlcm91c2x5U2V0SW5uZXJIVE1MPXt7IF9faHRtbDogSlNPTi5zdHJpbmdpZnkoanNvbkxkKSB9fQogICAgICAvPgogICAgICB7LyogU0VPOiBCcmVhZGNydW1iIGxpbmsgYmFjayB0byBnZW5yZXMgaW5kZXggKi99CiAgICAgIDxuYXYgYXJpYS1sYWJlbD0iQnJlYWRjcnVtYiIgY2xhc3NOYW1lPSJtYi00IHRleHQtc20gdGV4dC10ZXh0LW11dGVkIj4KICAgICAgICA8TGluayBocmVmPSIvYnJvd3NlL2dlbnJlcyIgY2xhc3NOYW1lPSJob3Zlcjp0ZXh0LXRleHQtcHJpbWFyeSB0cmFuc2l0aW9uLWNvbG9ycyI+CiAgICAgICAgICDihpAgQWxsIEdlbnJlcwogICAgICAgIDwvTGluaz4KICAgICAgPC9uYXY+CiAgICAgIDxCcm93c2VHcmlkCiAgICAgICAgdGl0bGU9e2dlbnJlLm5hbWV9CiAgICAgICAgc3VidGl0bGU9e2BFeHBsb3JlIGFsbCAke2dlbnJlLm5hbWUudG9Mb3dlckNhc2UoKX0gc2VyaWVzYH0KICAgICAgICBkZXNjcmlwdGlvbj17Z2VucmUuZGVzY3JpcHRpb259CiAgICAgICAgaWNvbj17CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iaC01IHctNSByb3VuZGVkLWZ1bGwiIHN0eWxlPXt7IGJhY2tncm91bmRDb2xvcjogZ2VucmUuY29sb3IgfHwgJyNFNTM5MzUnIH19IC8+CiAgICAgICAgfQogICAgICAgIHNlcmllcz17ZGJTZXJpZXMubWFwKHMgPT4gdG9TZXJpZXNDYXJkRGF0YShzIGFzIGFueSkpfQogICAgICAvPgogICAgICB7LyogSW50ZXJuYWwgbGlua2luZzogY3Jvc3MtbGlua3Mgc28gZXZlcnkgZ2VucmUgcGFnZSBpcyBkaXNjb3ZlcmFibGUKICAgICAgICAgIGZyb20gZXZlcnkgb3RoZXIgZ2VucmUgcGFnZSAocHJldmlvdXNseSBvbmx5IHRoZSBnZW5yZXMgaW5kZXgKICAgICAgICAgIGxpbmtlZCB0byB0aGVtKS4gKi99CiAgICAgIHtvdGhlckdlbnJlcy5sZW5ndGggPiAwICYmICgKICAgICAgICA8bmF2IGFyaWEtbGFiZWw9Ik1vcmUgZ2VucmVzIiBjbGFzc05hbWU9Im10LTEwIGJvcmRlci10IGJvcmRlci1ib3JkZXIgcHQtNiI+CiAgICAgICAgICA8aDIgY2xhc3NOYW1lPSJtYi0zIHRleHQtYmFzZSBmb250LXNlbWlib2xkIHRleHQtdGV4dC1wcmltYXJ5Ij5FeHBsb3JlIG1vcmUgZ2VucmVzPC9oMj4KICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGZsZXgtd3JhcCBnYXAtMS41Ij4KICAgICAgICAgICAge290aGVyR2VucmVzLm1hcCgoZykgPT4gKAogICAgICAgICAgICAgIDxMaW5rCiAgICAgICAgICAgICAgICBrZXk9e2cuc2x1Z30KICAgICAgICAgICAgICAgIGhyZWY9e2AvYnJvd3NlL2dlbnJlcy8ke2cuc2x1Z31gfQogICAgICAgICAgICAgICAgcHJlZmV0Y2g9e2ZhbHNlfQogICAgICAgICAgICAgICAgY2xhc3NOYW1lPSJyb3VuZGVkLW1kIGJnLWNhcmQvODAgYm9yZGVyIGJvcmRlci1ib3JkZXIvNjAgcHgtMiBweS0wLjUgdGV4dC1bMTFweF0gZm9udC1tZWRpdW0gdGV4dC10ZXh0LXNlY29uZGFyeSBob3Zlcjp0ZXh0LXRleHQtcHJpbWFyeSBob3Zlcjpib3JkZXItcHJpbWFyeS80MCB0cmFuc2l0aW9uLWNvbG9ycyIKICAgICAgICAgICAgICA+CiAgICAgICAgICAgICAgICB7Zy5uYW1lfQogICAgICAgICAgICAgIDwvTGluaz4KICAgICAgICAgICAgKSl9CiAgICAgICAgICA8L2Rpdj4KICAgICAgICA8L25hdj4KICAgICAgKX0KICAgIDwvZGl2PgogICk7Cn0KCg==
+export const revalidate = 3600;
+import { Metadata } from 'next';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { BrowseGrid } from '@/components/shared/BrowseGrid';
+import { prisma } from '@/lib/prisma';
+import { toSeriesCardData, SERIES_CARD_SELECT } from '@/lib/data-mappers';
+
+type Params = { slug: string };
+
+import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
+import { APP_URL } from '@/lib/constants';
+import { getCachedSettings } from '@/app/actions/public/settings';
+import { resolveSocialImages } from '@/lib/seo';
+import { getCachedGenreList } from '@/lib/genres';
+
+const getCachedGenreDataInternal = unstable_cache(
+  async (slug: string) => {
+    return prisma.genre.findUnique({ where: { slug } });
+  },
+  ['genre-detail-data'],
+  { tags: ['genres'], revalidate: 86400 }
+);
+
+const getCachedGenreData = cache(async (slug: string) => {
+  return getCachedGenreDataInternal(slug);
+});
+
+const getCachedGenreSeries = unstable_cache(
+  async (slug: string) => {
+    return prisma.series.findMany({
+      where: { 
+        genres: { some: { slug } }
+      },
+      select: SERIES_CARD_SELECT,
+      // Link every series in the genre (46 series exist site-wide today);
+      // the old cap of 40 silently dropped series from genre discovery.
+      take: 100,
+      orderBy: { totalViews: 'desc' }
+    });
+  },
+  ['genre-series-list'],
+  { tags: ['series-data'], revalidate: 3600 }
+);
+
+export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+  const { slug } = await params;
+  const genre = await getCachedGenreData(slug);
+  const settings = await getCachedSettings();
+  
+  if (!genre) return { title: 'Genre Not Found' };
+  
+  const _siteTitle = settings.seo_site_title || 'REDBEARD';
+  
+  // Custom SEO from DB overrides defaults
+  const seo = (genre.seo as Record<string, any>) || {};
+  
+  const defaultTitle = `Read Best ${genre.name} Manhwa & Manga in Hindi | ${_siteTitle}`;
+  const defaultDescription = `Read the best ${genre.name} manhwa, manga, and comics in Hindi on ${_siteTitle}. ${genre.description || ''}`.trim();
+  
+  const title = seo.title || defaultTitle;
+  const description = seo.description || defaultDescription;
+  const url = `${APP_URL}/browse/genres/${slug}`;
+
+  const { ogImage, twitterImage } = resolveSocialImages({
+    customOgImage: seo.ogImage || seo.image,
+    customTwitterImage: seo.twitterImage,
+    settings,
+  });
+
+  return {
+    title: { absolute: title },
+    description,
+    // Explicit robots: the root layout no longer emits a global robots tag
+    // (it conflicted with the noindex Next.js injects on 404 pages), so this
+    // page declares the same directive it previously inherited.
+    robots: { index: true, follow: true, 'max-image-preview': 'large' as const, 'max-snippet': -1, 'max-video-preview': -1 },
+    keywords: [genre.name, 'download', 'comics', 'manga', 'webtoon', `${genre.name} series`, 'hindi', 'manhwa in hindi'],
+    openGraph: {
+      title,
+      description,
+      url,
+      type: 'website',
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [twitterImage],
+    },
+    alternates: {
+      canonical: url,
+    }
+  };
+}
+
+export default async function GenreDetailPage({ params }: { params: Promise<Params> }) {
+  const { slug } = await params;
+  
+  const genre = await getCachedGenreData(slug);
+  if (!genre) notFound();
+
+  const dbSeries = await getCachedGenreSeries(slug);
+  const allGenres = await getCachedGenreList();
+  const otherGenres = allGenres.filter((g) => g.slug !== slug);
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': 'Home',
+        'item': `${APP_URL}`
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': 'Genres',
+        'item': `${APP_URL}/browse/genres`
+      },
+      {
+        '@type': 'ListItem',
+        'position': 3,
+        'name': genre.name,
+        'item': `${APP_URL}/browse/genres/${slug}`
+      }
+    ]
+  };
+
+  return (
+    <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      {/* SEO: Breadcrumb link back to genres index */}
+      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-text-muted">
+        <Link href="/browse/genres" className="hover:text-text-primary transition-colors">
+          ← All Genres
+        </Link>
+      </nav>
+      <BrowseGrid
+        title={genre.name}
+        subtitle={`Explore all ${genre.name.toLowerCase()} series`}
+        description={genre.description}
+        icon={
+          <div className="h-5 w-5 rounded-full" style={{ backgroundColor: genre.color || '#E53935' }} />
+        }
+        series={dbSeries.map(s => toSeriesCardData(s as any))}
+      />
+      {/* Internal linking: cross-links so every genre page is discoverable
+          from every other genre page (previously only the genres index
+          linked to them). */}
+      {otherGenres.length > 0 && (
+        <nav aria-label="More genres" className="mt-10 border-t border-border pt-6">
+          <h2 className="mb-3 text-base font-semibold text-text-primary">Explore more genres</h2>
+          <div className="flex flex-wrap gap-1.5">
+            {otherGenres.map((g) => (
+              <Link
+                key={g.slug}
+                href={`/browse/genres/${g.slug}`}
+                prefetch={false}
+                className="rounded-md bg-card/80 border border-border/60 px-2 py-0.5 text-[11px] font-medium text-text-secondary hover:text-text-primary hover:border-primary/40 transition-colors"
+              >
+                {g.name}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      )}
+    </div>
+  );
+}
+

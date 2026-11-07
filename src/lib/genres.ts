@@ -1,1 +1,23 @@
-aW1wb3J0IHsgdW5zdGFibGVfY2FjaGUgfSBmcm9tICduZXh0L2NhY2hlJzsKaW1wb3J0IHsgcHJpc21hIH0gZnJvbSAnQC9saWIvcHJpc21hJzsKCi8qKgogKiBMaWdodHdlaWdodCBnZW5yZSBsaXN0IChzbHVnICsgbmFtZSArIHNlcmllcyBjb3VudCkgZm9yIGludGVybmFsLWxpbmtpbmcKICogbmF2aWdhdGlvbjogaG9tZXBhZ2UgZ2VucmUgc2VjdGlvbiwgZ2VucmUtcGFnZSBjcm9zcy1saW5rcyBhbmQgdGhlIGZvb3Rlci4KICogQ2FjaGVkIGZvciAyNGggYW5kIGludmFsaWRhdGVkIHdpdGggdGhlIHNhbWUgdGFncyBhcyB0aGUgYnJvd3NlIGdlbnJlcwogKiBpbmRleCwgc28gcmVuZGVyaW5nIHRoZXNlIGxpbmtzIGFkZHMgbm8gcGVyLXJlcXVlc3QgZGF0YWJhc2UgcXVlcmllcy4KICovCmV4cG9ydCBjb25zdCBnZXRDYWNoZWRHZW5yZUxpc3QgPSB1bnN0YWJsZV9jYWNoZSgKICBhc3luYyAoKSA9PiB7CiAgICByZXR1cm4gcHJpc21hLmdlbnJlLmZpbmRNYW55KHsKICAgICAgc2VsZWN0OiB7CiAgICAgICAgc2x1ZzogdHJ1ZSwKICAgICAgICBuYW1lOiB0cnVlLAogICAgICAgIF9jb3VudDogeyBzZWxlY3Q6IHsgc2VyaWVzOiB0cnVlIH0gfSwKICAgICAgfSwKICAgICAgb3JkZXJCeTogeyBuYW1lOiAnYXNjJyB9LAogICAgfSk7CiAgfSwKICBbJ2dlbnJlLWxpc3QtZm9yLWxpbmtzJ10sCiAgeyB0YWdzOiBbJ2dlbnJlcycsICdnZW5yZXMtbGlzdCddLCByZXZhbGlkYXRlOiA4NjQwMCB9Cik7Cg==
+import { unstable_cache } from 'next/cache';
+import { prisma } from '@/lib/prisma';
+
+/**
+ * Lightweight genre list (slug + name + series count) for internal-linking
+ * navigation: homepage genre section, genre-page cross-links and the footer.
+ * Cached for 24h and invalidated with the same tags as the browse genres
+ * index, so rendering these links adds no per-request database queries.
+ */
+export const getCachedGenreList = unstable_cache(
+  async () => {
+    return prisma.genre.findMany({
+      select: {
+        slug: true,
+        name: true,
+        _count: { select: { series: true } },
+      },
+      orderBy: { name: 'asc' },
+    });
+  },
+  ['genre-list-for-links'],
+  { tags: ['genres', 'genres-list'], revalidate: 86400 }
+);

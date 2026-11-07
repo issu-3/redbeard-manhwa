@@ -1,1 +1,301 @@
-J3VzZSBjbGllbnQnOwoKaW1wb3J0IHsgdXNlU3RhdGUsIHVzZU1lbW8gfSBmcm9tICdyZWFjdCc7CmltcG9ydCBMaW5rIGZyb20gJ25leHQvbGluayc7CmltcG9ydCB7IG1vdGlvbiwgQW5pbWF0ZVByZXNlbmNlIH0gZnJvbSAnZnJhbWVyLW1vdGlvbic7CmltcG9ydCB7CiAgQXJyb3dVcCwKICBBcnJvd0Rvd24sCiAgU2VhcmNoLAogIENhbGVuZGFyLAogIENoZWNrQ2lyY2xlMiwKICBEb3dubG9hZCwKfSBmcm9tICdsdWNpZGUtcmVhY3QnOwppbXBvcnQgeyBmb3JtYXRSZWxhdGl2ZVRpbWUsIGNuIH0gZnJvbSAnQC9saWIvdXRpbHMnOwppbXBvcnQgdHlwZSB7IENoYXB0ZXJMaXN0SXRlbSB9IGZyb20gJ0AvdHlwZXMnOwoKaW50ZXJmYWNlIENoYXB0ZXJMaXN0U2VjdGlvblByb3BzIHsKICBjaGFwdGVyczogQ2hhcHRlckxpc3RJdGVtW107CiAgc2VyaWVzU2x1Zzogc3RyaW5nOwogIHNlcmllc0lkOiBzdHJpbmc7CiAgdG90YWxDaGFwdGVyczogbnVtYmVyOwogIGFkU2xvdE1pZGRsZT86IFJlYWN0LlJlYWN0Tm9kZTsKfQoKZXhwb3J0IGZ1bmN0aW9uIENoYXB0ZXJMaXN0U2VjdGlvbih7CiAgY2hhcHRlcnM6IGluaXRpYWxDaGFwdGVycywKICBzZXJpZXNTbHVnLAogIHNlcmllc0lkLAogIHRvdGFsQ2hhcHRlcnMsCiAgYWRTbG90TWlkZGxlLAp9OiBDaGFwdGVyTGlzdFNlY3Rpb25Qcm9wcykgewogIGNvbnN0IFtjaGFwdGVycywgc2V0Q2hhcHRlcnNdID0gdXNlU3RhdGU8Q2hhcHRlckxpc3RJdGVtW10+KGluaXRpYWxDaGFwdGVycyk7CiAgY29uc3QgW3NvcnRBc2MsIHNldFNvcnRBc2NdID0gdXNlU3RhdGUodHJ1ZSk7CiAgY29uc3QgW3NlYXJjaFF1ZXJ5LCBzZXRTZWFyY2hRdWVyeV0gPSB1c2VTdGF0ZSgnJyk7CiAgLy8gUmVuZGVyIGV2ZXJ5IGNoYXB0ZXIgYXMgYSBjcmF3bGFibGUgYW5jaG9yIGluIHRoZSBpbml0aWFsIEhUTUwuCiAgLy8gVGhlIHByZXZpb3VzIGNhcCBvZiAxMDAgaGlkIGNoYXB0ZXJzIDEwMSsgb2YgbG9uZyBzZXJpZXMgKGUuZy4gYQogIC8vIDEwOC1jaGFwdGVyIHNlcmllcykgYmVoaW5kIGEgY2xpZW50LXNpZGUgIkxvYWQgTW9yZSIgaW50ZXJhY3Rpb24uCiAgY29uc3QgW2Rpc3BsYXlMaW1pdCwgc2V0RGlzcGxheUxpbWl0XSA9IHVzZVN0YXRlKDEwMDApOwogIGNvbnN0IFtpc0xvYWRpbmdNb3JlLCBzZXRJc0xvYWRpbmdNb3JlXSA9IHVzZVN0YXRlKGZhbHNlKTsKCiAgLy8gV2hlbiBpbml0aWFsQ2hhcHRlcnMgY2hhbmdlIChlLmcuLCBmcm9tIG5hdmlnYXRpb24pLCByZXNldCBzdGF0ZQogIC8vIFdlJ2xsIGp1c3QgdHJ1c3QgaW5pdGlhbENoYXB0ZXJzIGZvciB0aGUgaW5pdGlhbCBtb3VudC4KICAKICBjb25zdCBmaWx0ZXJlZENoYXB0ZXJzID0gdXNlTWVtbygoKSA9PiB7CiAgICBsZXQgZmlsdGVyZWQgPSBjaGFwdGVycy5maWx0ZXIoYyA9PiAoYy50b3RhbFBhZ2VzICYmIGMudG90YWxQYWdlcyA+IDApIHx8IGMuZG93bmxvYWRVcmwpOwoKICAgIGlmIChzZWFyY2hRdWVyeS50cmltKCkpIHsKICAgICAgY29uc3QgcSA9IHNlYXJjaFF1ZXJ5LnRyaW0oKS50b0xvd2VyQ2FzZSgpOwogICAgICBmaWx0ZXJlZCA9IGZpbHRlcmVkLmZpbHRlcigKICAgICAgICAoY2gpID0+CiAgICAgICAgICBjaC5udW1iZXI/LnRvU3RyaW5nKCkuaW5jbHVkZXMocSkgfHwKICAgICAgICAgIGNoLnRpdGxlPy50b0xvd2VyQ2FzZSgpLmluY2x1ZGVzKHEpIHx8CiAgICAgICAgICBjaC5sYWJlbD8udG9Mb3dlckNhc2UoKS5pbmNsdWRlcyhxKQogICAgICApOwogICAgfQoKICAgIGZpbHRlcmVkLnNvcnQoKGEsIGIpID0+IHsKICAgICAgaWYgKGEubnVtYmVyICE9PSBudWxsICYmIGIubnVtYmVyICE9PSBudWxsKSB7CiAgICAgICAgcmV0dXJuIHNvcnRBc2MgPyAoYS5udW1iZXIpIC0gKGIubnVtYmVyKSA6IChiLm51bWJlcikgLSAoYS5udW1iZXIpOwogICAgICB9CiAgICAgIGNvbnN0IGRhdGVBID0gYS5wdWJsaXNoZWRBdCA/IG5ldyBEYXRlKGEucHVibGlzaGVkQXQpLmdldFRpbWUoKSA6IDA7CiAgICAgIGNvbnN0IGRhdGVCID0gYi5wdWJsaXNoZWRBdCA/IG5ldyBEYXRlKGIucHVibGlzaGVkQXQpLmdldFRpbWUoKSA6IDA7CiAgICAgIAogICAgICBpZiAoZGF0ZUEgIT09IGRhdGVCKSB7CiAgICAgICAgcmV0dXJuIHNvcnRBc2MgPyBkYXRlQSAtIGRhdGVCIDogZGF0ZUIgLSBkYXRlQTsKICAgICAgfQogICAgICAKICAgICAgLy8gRmFsbGJhY2sgdG8gbGFiZWwgYWxwaGFudW1lcmljIHNvcnRpbmcgZm9yIGlkZW50aWNhbCB0aW1lc3RhbXBzIChidWxrIHVwbG9hZHMpCiAgICAgIGlmIChhLmxhYmVsICYmIGIubGFiZWwpIHsKICAgICAgICByZXR1cm4gc29ydEFzYyAKICAgICAgICAgID8gYS5sYWJlbC5sb2NhbGVDb21wYXJlKGIubGFiZWwsIHVuZGVmaW5lZCwgeyBudW1lcmljOiB0cnVlIH0pCiAgICAgICAgICA6IGIubGFiZWwubG9jYWxlQ29tcGFyZShhLmxhYmVsLCB1bmRlZmluZWQsIHsgbnVtZXJpYzogdHJ1ZSB9KTsKICAgICAgfQogICAgICAKICAgICAgcmV0dXJuIDA7CiAgICB9KTsKCiAgICByZXR1cm4gZmlsdGVyZWQ7CiAgfSwgW2NoYXB0ZXJzLCBzb3J0QXNjLCBzZWFyY2hRdWVyeV0pOwoKICAvLyBJZGVudGlmeSB0aGUgbGF0ZXN0IGNoYXB0ZXIgZ2xvYmFsbHkgdG8gaGlnaGxpZ2h0IGl0CiAgY29uc3QgbGF0ZXN0Q2hhcHRlck51bWJlciA9IGNoYXB0ZXJzLmxlbmd0aCA+IDAgPyBNYXRoLm1heCguLi5jaGFwdGVycy5tYXAoYyA9PiBjLm51bWJlciA/PyAwKSkgOiBudWxsOwoKICByZXR1cm4gKAogICAgPGRpdj4KICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggZmxleC1jb2wgc206ZmxleC1yb3cgc206aXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBnYXAtMyBtYi01Ij4KICAgICAgICA8aDIgY2xhc3NOYW1lPSJ0ZXh0LXhsIHNtOnRleHQtMnhsIGZvbnQtYm9sZCB0ZXh0LXRleHQtcHJpbWFyeSBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiI+CiAgICAgICAgICBDaGFwdGVycwogICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJ0ZXh0LXhzIGZvbnQtc2VtaWJvbGQgYmctY2FyZC84MCBweC0yLjUgcHktMC41IHJvdW5kZWQtZnVsbCB0ZXh0LXRleHQtbXV0ZWQgYm9yZGVyIGJvcmRlci1ib3JkZXIvNjAiPgogICAgICAgICAgICB7dG90YWxDaGFwdGVyc30KICAgICAgICAgIDwvc3Bhbj4KICAgICAgICA8L2gyPgogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMi41Ij4KICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJyZWxhdGl2ZSBmbGV4LTEgc206dy02NCI+CiAgICAgICAgICAgIDxTZWFyY2ggY2xhc3NOYW1lPSJhYnNvbHV0ZSBsZWZ0LTMgdG9wLTEvMiAtdHJhbnNsYXRlLXktMS8yIGgtMy41IHctMy41IHRleHQtdGV4dC1tdXRlZCIgLz4KICAgICAgICAgICAgPGlucHV0CiAgICAgICAgICAgICAgdHlwZT0idGV4dCIKICAgICAgICAgICAgICBwbGFjZWhvbGRlcj0iU2VhcmNoIGNoYXB0ZXJzLi4uIgogICAgICAgICAgICAgIHZhbHVlPXtzZWFyY2hRdWVyeX0KICAgICAgICAgICAgICBvbkNoYW5nZT17KGUpID0+IHsKICAgICAgICAgICAgICAgIHNldFNlYXJjaFF1ZXJ5KGUudGFyZ2V0LnZhbHVlKTsKICAgICAgICAgICAgICAgIHNldERpc3BsYXlMaW1pdCgxMDApOwogICAgICAgICAgICAgIH19CiAgICAgICAgICAgICAgY2xhc3NOYW1lPSJ3LWZ1bGwgaC0xMCByb3VuZGVkLXhsIGJvcmRlciBib3JkZXItYm9yZGVyLzcwIGJnLWNhcmQvODAgcGwtOSBwci0zIHRleHQteHMgc206dGV4dC1zbSB0ZXh0LXRleHQtcHJpbWFyeSBwbGFjZWhvbGRlcjp0ZXh0LXRleHQtbXV0ZWQgZm9jdXM6b3V0bGluZS1ub25lIGZvY3VzOmJvcmRlci1wcmltYXJ5LzUwIGZvY3VzOnJpbmctMSBmb2N1czpyaW5nLXByaW1hcnkvMjUgdHJhbnNpdGlvbi1hbGwiCiAgICAgICAgICAgIC8+CiAgICAgICAgICA8L2Rpdj4KICAgICAgICAgIDxidXR0b24KICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0U29ydEFzYyghc29ydEFzYyl9CiAgICAgICAgICAgIGNsYXNzTmFtZT0iaC0xMCBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41IHJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1ib3JkZXIvNzAgYmctY2FyZC84MCBweC0zLjUgdGV4dC14cyBzbTp0ZXh0LXNtIGZvbnQtc2VtaWJvbGQgdHJhbnNpdGlvbi1hbGwgaG92ZXI6Ym9yZGVyLXByaW1hcnkvNDAgaG92ZXI6YmctY2FyZCB0ZXh0LXRleHQtc2Vjb25kYXJ5IGhvdmVyOnRleHQtdGV4dC1wcmltYXJ5IHNocmluay0wIGFjdGl2ZTpzY2FsZS05NSIKICAgICAgICAgICAgYXJpYS1sYWJlbD17c29ydEFzYyA/ICdTb3J0IGJ5IG5ld2VzdCBmaXJzdCcgOiAnU29ydCBieSBvbGRlc3QgZmlyc3QnfQogICAgICAgICAgPgogICAgICAgICAgICB7c29ydEFzYyA/IDxBcnJvd1VwIGNsYXNzTmFtZT0iaC0zLjUgdy0zLjUiIC8+IDogPEFycm93RG93biBjbGFzc05hbWU9ImgtMy41IHctMy41IiAvPn0KICAgICAgICAgICAgPHNwYW4+e3NvcnRBc2MgPyAnT2xkZXN0JyA6ICdOZXdlc3QnfTwvc3Bhbj4KICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgIDwvZGl2PgogICAgICA8L2Rpdj4KCiAgICAgIDxkaXYgY2xhc3NOYW1lPSJncmlkIGdyaWQtY29scy0xIHNtOmdyaWQtY29scy0yIGxnOmdyaWQtY29scy0zIGdhcC0yLjUgc206Z2FwLTMiPgogICAgICAgIDxBbmltYXRlUHJlc2VuY2UgaW5pdGlhbD17ZmFsc2V9PgogICAgICAgICAge2ZpbHRlcmVkQ2hhcHRlcnMubGVuZ3RoID09PSAwID8gKAogICAgICAgICAgICA8bW90aW9uLmRpdgogICAgICAgICAgICAgIGluaXRpYWw9e3sgb3BhY2l0eTogMCB9fQogICAgICAgICAgICAgIGFuaW1hdGU9e3sgb3BhY2l0eTogMSB9fQogICAgICAgICAgICAgIGV4aXQ9e3sgb3BhY2l0eTogMCB9fQogICAgICAgICAgICAgIGNsYXNzTmFtZT0idGV4dC1jZW50ZXIgcHktMTIgdGV4dC10ZXh0LW11dGVkIGNvbC1zcGFuLWZ1bGwgdGV4dC1zbSIKICAgICAgICAgICAgPgogICAgICAgICAgICAgIE5vIGNoYXB0ZXJzIGZvdW5kIG1hdGNoaW5nIHlvdXIgc2VhcmNoLgogICAgICAgICAgICA8L21vdGlvbi5kaXY+CiAgICAgICAgICApIDogKAogICAgICAgICAgICAoKCkgPT4gewogICAgICAgICAgICAgIGNvbnN0IGxpbWl0ID0gTWF0aC5taW4oZmlsdGVyZWRDaGFwdGVycy5sZW5ndGgsIGRpc3BsYXlMaW1pdCk7CiAgICAgICAgICAgICAgY29uc3QgYWRJbmRleCA9IE1hdGgubWF4KDEsIE1hdGguZmxvb3IobGltaXQgLyAyKSk7CiAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgY29uc3Qgbm9kZXMgPSBmaWx0ZXJlZENoYXB0ZXJzLnNsaWNlKDAsIGRpc3BsYXlMaW1pdCkubWFwKChjaGFwdGVyLCBpbmRleCkgPT4gewogICAgICAgICAgICAgICAgY29uc3QgaXNMYXRlc3QgPSBjaGFwdGVyLm51bWJlciA9PT0gbGF0ZXN0Q2hhcHRlck51bWJlcjsKICAgICAgICAgICAgICAgIGNvbnN0IHNhZmVTbHVnID0gdHlwZW9mIGNoYXB0ZXIuc2x1ZyA9PT0gJ3N0cmluZycgJiYgY2hhcHRlci5zbHVnLnRyaW0oKSA/IGNoYXB0ZXIuc2x1ZyA6IGNoYXB0ZXIubnVtYmVyICE9IG51bGwgPyBTdHJpbmcoY2hhcHRlci5udW1iZXIpIDogbnVsbDsKICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgcmV0dXJuICgKICAgICAgICAgICAgICAgICAgPG1vdGlvbi5kaXYKICAgICAgICAgICAgICAgICAgICBrZXk9e2NoYXB0ZXIuaWR9CiAgICAgICAgICAgICAgICAgICAgbGF5b3V0CiAgICAgICAgICAgICAgICAgICAgaW5pdGlhbD17eyBvcGFjaXR5OiAwLCBzY2FsZTogMC45NyB9fQogICAgICAgICAgICAgICAgICAgIGFuaW1hdGU9e3sgb3BhY2l0eTogMSwgc2NhbGU6IDEgfX0KICAgICAgICAgICAgICAgICAgICBleGl0PXt7IG9wYWNpdHk6IDAsIHNjYWxlOiAwLjk3IH19CiAgICAgICAgICAgICAgICAgICAgdHJhbnNpdGlvbj17eyBkdXJhdGlvbjogMC4xNSwgZGVsYXk6IE1hdGgubWluKGluZGV4ICogMC4wMTUsIDAuMTUpIH19CiAgICAgICAgICAgICAgICAgID4KICAgICAgICAgICAgICAgICAgICA8ZGl2CiAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9e2NuKAogICAgICAgICAgICAgICAgICAgICAgICAnZ3JvdXAgcmVsYXRpdmUgZmxleCBmbGV4LWNvbCBqdXN0aWZ5LWNlbnRlciBwLTMgcm91bmRlZC14bCBib3JkZXIgdHJhbnNpdGlvbi1hbGwgZHVyYXRpb24tMTUwJywKICAgICAgICAgICAgICAgICAgICAgICAgaXNMYXRlc3QgCiAgICAgICAgICAgICAgICAgICAgICAgICAgPyAnYmctcHJpbWFyeS9bMC4wNl0gYm9yZGVyLXByaW1hcnkvMzAgaG92ZXI6Ym9yZGVyLXByaW1hcnkvNjAgaG92ZXI6YmctcHJpbWFyeS9bMC4xXSBzaGFkb3cteHMnCiAgICAgICAgICAgICAgICAgICAgICAgICAgOiAnYmctY2FyZC83MCBib3JkZXItYm9yZGVyLzYwIGhvdmVyOmJvcmRlci1wcmltYXJ5LzQwIGhvdmVyOmJnLWNhcmQnLAogICAgICAgICAgICAgICAgICAgICAgICBjaGFwdGVyLmlzUmVhZCAmJiAnb3BhY2l0eS02MCcKICAgICAgICAgICAgICAgICAgICAgICl9CiAgICAgICAgICAgICAgICAgICAgPgogICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBnYXAtMyI+CiAgICAgICAgICAgICAgICAgICAgICAgIHsvKiBUaXRsZSBhbmQgTWV0YWRhdGEgQ29sdW1uICovfQogICAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBmbGV4LWNvbCBtaW4tdy0wIGZsZXgtMSI+CiAgICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgbWluLXctMCBtYi0wLjUiPgogICAgICAgICAgICAgICAgICAgICAgICAgICAge3NhZmVTbHVnID8gKAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8TGluawogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGhyZWY9e2Avc2VyaWVzLyR7c2VyaWVzU2x1Z30vY2hhcHRlci8ke3NhZmVTbHVnfWB9CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcHJlZmV0Y2g9e2ZhbHNlfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT0ibWluLXctMCB0cnVuY2F0ZSIKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT17Y24oCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAidGV4dC1zbSBzbTp0ZXh0LWJhc2UgZm9udC1ib2xkIGxlYWRpbmctdGlnaHQgdHJ1bmNhdGUgdHJhbnNpdGlvbi1jb2xvcnMiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaXNMYXRlc3QgPyAidGV4dC1wcmltYXJ5IGhvdmVyOnVuZGVybGluZSIgOiAidGV4dC10ZXh0LXByaW1hcnkgZ3JvdXAtaG92ZXI6dGV4dC1wcmltYXJ5IGhvdmVyOnVuZGVybGluZSIKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICApfT4KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHtjaGFwdGVyLmxhYmVsIHx8IGBDaGFwdGVyICR7Y2hhcHRlci5udW1iZXJ9YH0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8L3NwYW4+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwvTGluaz4KICAgICAgICAgICAgICAgICAgICAgICAgICAgICkgOiAoCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT17Y24oCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInRleHQtc20gc206dGV4dC1iYXNlIGZvbnQtYm9sZCBsZWFkaW5nLXRpZ2h0IHRydW5jYXRlIHRyYW5zaXRpb24tY29sb3JzIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBpc0xhdGVzdCA/ICJ0ZXh0LXByaW1hcnkiIDogInRleHQtdGV4dC1wcmltYXJ5IGdyb3VwLWhvdmVyOnRleHQtcHJpbWFyeSIKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKX0+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAge2NoYXB0ZXIubGFiZWwgfHwgYENoYXB0ZXIgJHtjaGFwdGVyLm51bWJlcn1gfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8L3NwYW4+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICApfQogICAgICAgICAgICAgICAgICAgICAgICAgICAge2lzTGF0ZXN0ICYmICgKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJiZy1wcmltYXJ5IHRleHQtd2hpdGUgdGV4dC1bOXB4XSBmb250LWJsYWNrIHVwcGVyY2FzZSB0cmFja2luZy13aWRlciBweC0xLjUgcHktMC41IHJvdW5kZWQgc2hhZG93LXhzIHNocmluay0wIj4KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBOZXcKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9zcGFuPgogICAgICAgICAgICAgICAgICAgICAgICAgICAgKX0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIHtjaGFwdGVyLmlzUmVhZCAmJiAoCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxDaGVja0NpcmNsZTIgY2xhc3NOYW1lPSJoLTMuNSB3LTMuNSB0ZXh0LWVtZXJhbGQtNTAwIHNocmluay0wIiAvPgogICAgICAgICAgICAgICAgICAgICAgICAgICAgKX0KICAgICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj4KCiAgICAgICAgICAgICAgICAgICAgICAgICAgey8qIENoYXB0ZXIgdGl0bGUgaWYgZGlzdGluY3QgZnJvbSBsYWJlbC9udW1iZXIgKi99CiAgICAgICAgICAgICAgICAgICAgICAgICAge2NoYXB0ZXIudGl0bGUgJiYgY2hhcHRlci50aXRsZSAhPT0gY2hhcHRlci5sYWJlbCAmJiBjaGFwdGVyLnRpdGxlICE9PSBgQ2hhcHRlciAke2NoYXB0ZXIubnVtYmVyfWAgJiYgKAogICAgICAgICAgICAgICAgICAgICAgICAgICAgPHAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT0idGV4dC14cyB0ZXh0LXRleHQtc2Vjb25kYXJ5IHRydW5jYXRlIGxlYWRpbmctc251ZyBtYi0xIGZvbnQtbm9ybWFsIiAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdGl0bGU9e2NoYXB0ZXIudGl0bGV9CiAgICAgICAgICAgICAgICAgICAgICAgICAgICA+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHtjaGFwdGVyLnRpdGxlfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9wPgogICAgICAgICAgICAgICAgICAgICAgICAgICl9CiAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGdhcC0zIHRleHQtWzExcHhdIGZvbnQtbWVkaXVtIHRleHQtdGV4dC1tdXRlZCI+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7Y2hhcHRlci5wdWJsaXNoZWRBdCAmJiAoCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0iZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEiIHN1cHByZXNzSHlkcmF0aW9uV2FybmluZz4KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8Q2FsZW5kYXIgY2xhc3NOYW1lPSJoLTMgdy0zIHNocmluay0wIiAvPgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHtmb3JtYXRSZWxhdGl2ZVRpbWUoY2hhcHRlci5wdWJsaXNoZWRBdCl9CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwvc3Bhbj4KICAgICAgICAgICAgICAgICAgICAgICAgICAgICl9CiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7Y2hhcHRlci50b3RhbFBhZ2VzICYmIGNoYXB0ZXIudG90YWxQYWdlcyA+IDAgPyAoCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0iZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEiPgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHtjaGFwdGVyLnRvdGFsUGFnZXN9IHBncwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8L3NwYW4+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICApIDogbnVsbH0KICAgICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICB7LyogRG93bmxvYWQgJiBSZWFkIEFjdGlvbnMgKi99CiAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiBzaHJpbmstMCI+CiAgICAgICAgICAgICAgICAgICAgICAgICAge2NoYXB0ZXIuZG93bmxvYWRVcmwgJiYgKAogICAgICAgICAgICAgICAgICAgICAgICAgICAgPGEKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaHJlZj17YC9hcGkvY2hhcHRlci8ke2NoYXB0ZXIuaWR9L2Rvd25sb2FkYH0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdGFyZ2V0PSJfYmxhbmsiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHJlbD0ibm9vcGVuZXIgbm9yZWZlcnJlciIKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPSJoLTggdy04IHNtOmgtOSBzbTp3LTkgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgcm91bmRlZC1sZyBib3JkZXIgYm9yZGVyLWJvcmRlci83MCBiZy1zdXJmYWNlLzgwIGhvdmVyOmJnLWNhcmQtaG92ZXIgdGV4dC10ZXh0LXNlY29uZGFyeSBob3Zlcjp0ZXh0LXRleHQtcHJpbWFyeSB0cmFuc2l0aW9uLWNvbG9ycyBzaHJpbmstMCBhY3RpdmU6c2NhbGUtOTUiCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHRpdGxlPXtgRG93bmxvYWQgJHtjaGFwdGVyLmxhYmVsIHx8ICdDaGFwdGVyICcgKyBjaGFwdGVyLm51bWJlcn1gfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICBhcmlhLWxhYmVsPXtgRG93bmxvYWQgJHtjaGFwdGVyLmxhYmVsIHx8ICdDaGFwdGVyICcgKyBjaGFwdGVyLm51bWJlcn1gfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgPgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8RG93bmxvYWQgY2xhc3NOYW1lPSJoLTMuNSB3LTMuNSBzbTpoLTQgc206dy00IiAvPgogICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9hPgogICAgICAgICAgICAgICAgICAgICAgICAgICl9CiAgICAgICAgICAgICAgICAgICAgICAgICAge3NhZmVTbHVnID8gKAogICAgICAgICAgICAgICAgICAgICAgICAgICAgPExpbmsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaHJlZj17YC9zZXJpZXMvJHtzZXJpZXNTbHVnfS9jaGFwdGVyLyR7c2FmZVNsdWd9YH0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcHJlZmV0Y2g9e2ZhbHNlfQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9ImgtOCBzbTpoLTkgcHgtMyBzbTpweC0zLjUgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgYmctcHJpbWFyeSBob3ZlcjpiZy1wcmltYXJ5LWhvdmVyIHRleHQtd2hpdGUgcm91bmRlZC1sZyB0ZXh0LXhzIGZvbnQtYm9sZCB0cmFuc2l0aW9uLWFsbCBzaGFkb3cteHMgc2hyaW5rLTAgYWN0aXZlOnNjYWxlLTk1IgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICBhcmlhLWxhYmVsPXtgUmVhZCAke2NoYXB0ZXIubGFiZWwgfHwgJ0NoYXB0ZXIgJyArIGNoYXB0ZXIubnVtYmVyfWB9CiAgICAgICAgICAgICAgICAgICAgICAgICAgICA+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFJFQUQKICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwvTGluaz4KICAgICAgICAgICAgICAgICAgICAgICAgICApIDogbnVsbH0KICAgICAgICAgICAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgICAgPC9tb3Rpb24uZGl2PgogICAgICAgICAgICAgICAgKTsKICAgICAgICAgICAgICB9KTsKCiAgICAgICAgICAgICAgaWYgKGxpbWl0ID4gMCAmJiBhZFNsb3RNaWRkbGUpIHsKICAgICAgICAgICAgICAgIG5vZGVzLnNwbGljZShhZEluZGV4LCAwLCAoCiAgICAgICAgICAgICAgICAgIDxkaXYga2V5PSJhZC1taWRkbGUiIGNsYXNzTmFtZT0iY29sLXNwYW4tZnVsbCBmbGV4IGp1c3RpZnktY2VudGVyIHctZnVsbCBvdmVyZmxvdy1oaWRkZW4gWyY6bm90KDpoYXMoLmFkLWNvbnRhaW5lcikpXTpoaWRkZW4gbXktMSBzbTpteS0yIj4KICAgICAgICAgICAgICAgICAgICB7YWRTbG90TWlkZGxlfQogICAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgICkpOwogICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAKICAgICAgICAgICAgICByZXR1cm4gbm9kZXM7CiAgICAgICAgICAgIH0pKCkKICAgICAgICAgICl9CiAgICAgICAgPC9BbmltYXRlUHJlc2VuY2U+CiAgICAgIDwvZGl2PgoKICAgICAgeyFzZWFyY2hRdWVyeS50cmltKCkgJiYgY2hhcHRlcnMubGVuZ3RoIDwgdG90YWxDaGFwdGVycyAmJiAoCiAgICAgICAgPGRpdiBjbGFzc05hbWU9Im10LTggZmxleCBqdXN0aWZ5LWNlbnRlciI+CiAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgIG9uQ2xpY2s9e2FzeW5jICgpID0+IHsKICAgICAgICAgICAgICBzZXRJc0xvYWRpbmdNb3JlKHRydWUpOwogICAgICAgICAgICAgIHRyeSB7CiAgICAgICAgICAgICAgICAvLyBGZXRjaCBuZXh0IDEwMCBjaGFwdGVycwogICAgICAgICAgICAgICAgY29uc3QgeyBnZXRTZXJpZXNDaGFwdGVycyB9ID0gYXdhaXQgaW1wb3J0KCdAL2FwcC9hY3Rpb25zL3B1YmxpYy9jaGFwdGVycycpOwogICAgICAgICAgICAgICAgY29uc3QgbmV4dENoYXB0ZXJzID0gYXdhaXQgZ2V0U2VyaWVzQ2hhcHRlcnMoc2VyaWVzSWQsIGNoYXB0ZXJzLmxlbmd0aCwgMTAwKTsKICAgICAgICAgICAgICAgIGlmIChuZXh0Q2hhcHRlcnMubGVuZ3RoID4gMCkgewogICAgICAgICAgICAgICAgICBzZXRDaGFwdGVycyhwcmV2ID0+IFsuLi5wcmV2LCAuLi5uZXh0Q2hhcHRlcnNdKTsKICAgICAgICAgICAgICAgIH0gZWxzZSB7CiAgICAgICAgICAgICAgICAgIC8vIEZhbGxiYWNrIGluIGNhc2UgY2hhcHRlckNvdW50IGlzIG91dCBvZiBzeW5jCiAgICAgICAgICAgICAgICAgIHNldERpc3BsYXlMaW1pdChwcmV2ID0+IHByZXYgKyAxMDApOwogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgIH0gY2F0Y2ggKGUpIHsKICAgICAgICAgICAgICAgIGNvbnNvbGUuZXJyb3IoZSk7CiAgICAgICAgICAgICAgfSBmaW5hbGx5IHsKICAgICAgICAgICAgICAgIHNldElzTG9hZGluZ01vcmUoZmFsc2UpOwogICAgICAgICAgICAgIH0KICAgICAgICAgICAgfX0KICAgICAgICAgICAgZGlzYWJsZWQ9e2lzTG9hZGluZ01vcmV9CiAgICAgICAgICAgIGNsYXNzTmFtZT0icm91bmRlZC14bCBib3JkZXIgYm9yZGVyLWJvcmRlciBiZy1jYXJkIHB4LTggcHktMyB0ZXh0LXNtIGZvbnQtYm9sZCB0ZXh0LXRleHQtcHJpbWFyeSB0cmFuc2l0aW9uLWFsbCBob3Zlcjpib3JkZXItcHJpbWFyeS81MCBob3Zlcjp0ZXh0LXByaW1hcnkgYWN0aXZlOnNjYWxlLTk1IGRpc2FibGVkOm9wYWNpdHktNTAiCiAgICAgICAgICA+CiAgICAgICAgICAgIHtpc0xvYWRpbmdNb3JlID8gJ0xvYWRpbmcuLi4nIDogYExvYWQgTW9yZSBDaGFwdGVycyAoJHtNYXRoLm1heCgwLCB0b3RhbENoYXB0ZXJzIC0gY2hhcHRlcnMubGVuZ3RoKX0gcmVtYWluaW5nKWB9CiAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICA8L2Rpdj4KICAgICAgKX0KICAgICAge2ZpbHRlcmVkQ2hhcHRlcnMubGVuZ3RoID4gZGlzcGxheUxpbWl0ICYmICgKICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ibXQtOCBmbGV4IGp1c3RpZnktY2VudGVyIj4KICAgICAgICAgIDxidXR0b24KICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0RGlzcGxheUxpbWl0KChwcmV2KSA9PiBwcmV2ICsgMTAwKX0KICAgICAgICAgICAgY2xhc3NOYW1lPSJyb3VuZGVkLXhsIGJvcmRlciBib3JkZXItYm9yZGVyIGJnLWNhcmQgcHgtOCBweS0zIHRleHQtc20gZm9udC1ib2xkIHRleHQtdGV4dC1wcmltYXJ5IHRyYW5zaXRpb24tYWxsIGhvdmVyOmJvcmRlci1wcmltYXJ5LzUwIGhvdmVyOnRleHQtcHJpbWFyeSBhY3RpdmU6c2NhbGUtOTUiCiAgICAgICAgICA+CiAgICAgICAgICAgIFNob3cgTW9yZSAoe2ZpbHRlcmVkQ2hhcHRlcnMubGVuZ3RoIC0gZGlzcGxheUxpbWl0fSBoaWRkZW4pCiAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICA8L2Rpdj4KICAgICAgKX0KICAgIDwvZGl2PgogICk7Cn0K
+'use client';
+
+import { useState, useMemo } from 'react';
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ArrowUp,
+  ArrowDown,
+  Search,
+  Calendar,
+  CheckCircle2,
+  Download,
+} from 'lucide-react';
+import { formatRelativeTime, cn } from '@/lib/utils';
+import type { ChapterListItem } from '@/types';
+
+interface ChapterListSectionProps {
+  chapters: ChapterListItem[];
+  seriesSlug: string;
+  seriesId: string;
+  totalChapters: number;
+  adSlotMiddle?: React.ReactNode;
+}
+
+export function ChapterListSection({
+  chapters: initialChapters,
+  seriesSlug,
+  seriesId,
+  totalChapters,
+  adSlotMiddle,
+}: ChapterListSectionProps) {
+  const [chapters, setChapters] = useState<ChapterListItem[]>(initialChapters);
+  const [sortAsc, setSortAsc] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  // Render every chapter as a crawlable anchor in the initial HTML.
+  // The previous cap of 100 hid chapters 101+ of long series (e.g. a
+  // 108-chapter series) behind a client-side "Load More" interaction.
+  const [displayLimit, setDisplayLimit] = useState(1000);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // When initialChapters change (e.g., from navigation), reset state
+  // We'll just trust initialChapters for the initial mount.
+  
+  const filteredChapters = useMemo(() => {
+    let filtered = chapters.filter(c => (c.totalPages && c.totalPages > 0) || c.downloadUrl);
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      filtered = filtered.filter(
+        (ch) =>
+          ch.number?.toString().includes(q) ||
+          ch.title?.toLowerCase().includes(q) ||
+          ch.label?.toLowerCase().includes(q)
+      );
+    }
+
+    filtered.sort((a, b) => {
+      if (a.number !== null && b.number !== null) {
+        return sortAsc ? (a.number) - (b.number) : (b.number) - (a.number);
+      }
+      const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+      const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+      
+      if (dateA !== dateB) {
+        return sortAsc ? dateA - dateB : dateB - dateA;
+      }
+      
+      // Fallback to label alphanumeric sorting for identical timestamps (bulk uploads)
+      if (a.label && b.label) {
+        return sortAsc 
+          ? a.label.localeCompare(b.label, undefined, { numeric: true })
+          : b.label.localeCompare(a.label, undefined, { numeric: true });
+      }
+      
+      return 0;
+    });
+
+    return filtered;
+  }, [chapters, sortAsc, searchQuery]);
+
+  // Identify the latest chapter globally to highlight it
+  const latestChapterNumber = chapters.length > 0 ? Math.max(...chapters.map(c => c.number ?? 0)) : null;
+
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <h2 className="text-xl sm:text-2xl font-bold text-text-primary flex items-center gap-2">
+          Chapters
+          <span className="text-xs font-semibold bg-card/80 px-2.5 py-0.5 rounded-full text-text-muted border border-border/60">
+            {totalChapters}
+          </span>
+        </h2>
+        <div className="flex items-center gap-2.5">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
+            <input
+              type="text"
+              placeholder="Search chapters..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setDisplayLimit(100);
+              }}
+              className="w-full h-10 rounded-xl border border-border/70 bg-card/80 pl-9 pr-3 text-xs sm:text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 transition-all"
+            />
+          </div>
+          <button
+            onClick={() => setSortAsc(!sortAsc)}
+            className="h-10 flex items-center gap-1.5 rounded-xl border border-border/70 bg-card/80 px-3.5 text-xs sm:text-sm font-semibold transition-all hover:border-primary/40 hover:bg-card text-text-secondary hover:text-text-primary shrink-0 active:scale-95"
+            aria-label={sortAsc ? 'Sort by newest first' : 'Sort by oldest first'}
+          >
+            {sortAsc ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
+            <span>{sortAsc ? 'Oldest' : 'Newest'}</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
+        <AnimatePresence initial={false}>
+          {filteredChapters.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center py-12 text-text-muted col-span-full text-sm"
+            >
+              No chapters found matching your search.
+            </motion.div>
+          ) : (
+            (() => {
+              const limit = Math.min(filteredChapters.length, displayLimit);
+              const adIndex = Math.max(1, Math.floor(limit / 2));
+              
+              const nodes = filteredChapters.slice(0, displayLimit).map((chapter, index) => {
+                const isLatest = chapter.number === latestChapterNumber;
+                const safeSlug = typeof chapter.slug === 'string' && chapter.slug.trim() ? chapter.slug : chapter.number != null ? String(chapter.number) : null;
+                
+                return (
+                  <motion.div
+                    key={chapter.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.97 }}
+                    transition={{ duration: 0.15, delay: Math.min(index * 0.015, 0.15) }}
+                  >
+                    <div
+                      className={cn(
+                        'group relative flex flex-col justify-center p-3 rounded-xl border transition-all duration-150',
+                        isLatest 
+                          ? 'bg-primary/[0.06] border-primary/30 hover:border-primary/60 hover:bg-primary/[0.1] shadow-xs'
+                          : 'bg-card/70 border-border/60 hover:border-primary/40 hover:bg-card',
+                        chapter.isRead && 'opacity-60'
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        {/* Title and Metadata Column */}
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 min-w-0 mb-0.5">
+                            {safeSlug ? (
+                              <Link
+                                href={`/series/${seriesSlug}/chapter/${safeSlug}`}
+                                prefetch={false}
+                                className="min-w-0 truncate"
+                              >
+                                <span className={cn(
+                                  "text-sm sm:text-base font-bold leading-tight truncate transition-colors",
+                                  isLatest ? "text-primary hover:underline" : "text-text-primary group-hover:text-primary hover:underline"
+                                )}>
+                                  {chapter.label || `Chapter ${chapter.number}`}
+                                </span>
+                              </Link>
+                            ) : (
+                              <span className={cn(
+                                "text-sm sm:text-base font-bold leading-tight truncate transition-colors",
+                                isLatest ? "text-primary" : "text-text-primary group-hover:text-primary"
+                              )}>
+                                {chapter.label || `Chapter ${chapter.number}`}
+                              </span>
+                            )}
+                            {isLatest && (
+                              <span className="bg-primary text-white text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shadow-xs shrink-0">
+                                New
+                              </span>
+                            )}
+                            {chapter.isRead && (
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                            )}
+                          </div>
+
+                          {/* Chapter title if distinct from label/number */}
+                          {chapter.title && chapter.title !== chapter.label && chapter.title !== `Chapter ${chapter.number}` && (
+                            <p 
+                              className="text-xs text-text-secondary truncate leading-snug mb-1 font-normal" 
+                              title={chapter.title}
+                            >
+                              {chapter.title}
+                            </p>
+                          )}
+                          
+                          <div className="flex items-center gap-3 text-[11px] font-medium text-text-muted">
+                            {chapter.publishedAt && (
+                              <span className="flex items-center gap-1" suppressHydrationWarning>
+                                <Calendar className="h-3 w-3 shrink-0" />
+                                {formatRelativeTime(chapter.publishedAt)}
+                              </span>
+                            )}
+                            {chapter.totalPages && chapter.totalPages > 0 ? (
+                              <span className="flex items-center gap-1">
+                                {chapter.totalPages} pgs
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                        
+                        {/* Download & Read Actions */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {chapter.downloadUrl && (
+                            <a
+                              href={`/api/chapter/${chapter.id}/download`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-lg border border-border/70 bg-surface/80 hover:bg-card-hover text-text-secondary hover:text-text-primary transition-colors shrink-0 active:scale-95"
+                              title={`Download ${chapter.label || 'Chapter ' + chapter.number}`}
+                              aria-label={`Download ${chapter.label || 'Chapter ' + chapter.number}`}
+                            >
+                              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </a>
+                          )}
+                          {safeSlug ? (
+                            <Link
+                              href={`/series/${seriesSlug}/chapter/${safeSlug}`}
+                              prefetch={false}
+                              className="h-8 sm:h-9 px-3 sm:px-3.5 flex items-center justify-center bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 active:scale-95"
+                              aria-label={`Read ${chapter.label || 'Chapter ' + chapter.number}`}
+                            >
+                              READ
+                            </Link>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              });
+
+              if (limit > 0 && adSlotMiddle) {
+                nodes.splice(adIndex, 0, (
+                  <div key="ad-middle" className="col-span-full flex justify-center w-full overflow-hidden [&:not(:has(.ad-container))]:hidden my-1 sm:my-2">
+                    {adSlotMiddle}
+                  </div>
+                ));
+              }
+              
+              return nodes;
+            })()
+          )}
+        </AnimatePresence>
+      </div>
+
+      {!searchQuery.trim() && chapters.length < totalChapters && (
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={async () => {
+              setIsLoadingMore(true);
+              try {
+                // Fetch next 100 chapters
+                const { getSeriesChapters } = await import('@/app/actions/public/chapters');
+                const nextChapters = await getSeriesChapters(seriesId, chapters.length, 100);
+                if (nextChapters.length > 0) {
+                  setChapters(prev => [...prev, ...nextChapters]);
+                } else {
+                  // Fallback in case chapterCount is out of sync
+                  setDisplayLimit(prev => prev + 100);
+                }
+              } catch (e) {
+                console.error(e);
+              } finally {
+                setIsLoadingMore(false);
+              }
+            }}
+            disabled={isLoadingMore}
+            className="rounded-xl border border-border bg-card px-8 py-3 text-sm font-bold text-text-primary transition-all hover:border-primary/50 hover:text-primary active:scale-95 disabled:opacity-50"
+          >
+            {isLoadingMore ? 'Loading...' : `Load More Chapters (${Math.max(0, totalChapters - chapters.length)} remaining)`}
+          </button>
+        </div>
+      )}
+      {filteredChapters.length > displayLimit && (
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={() => setDisplayLimit((prev) => prev + 100)}
+            className="rounded-xl border border-border bg-card px-8 py-3 text-sm font-bold text-text-primary transition-all hover:border-primary/50 hover:text-primary active:scale-95"
+          >
+            Show More ({filteredChapters.length - displayLimit} hidden)
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
