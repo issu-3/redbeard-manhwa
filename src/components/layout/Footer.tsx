@@ -114,6 +114,11 @@ export async function Footer({ className }: { className?: string } = {}) {
             </nav>
           )}
 
+          <nav aria-label="Legal" className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs text-text-muted">
+            <Link href="/terms" className="transition-colors hover:text-text-primary">Terms of Service</Link>
+            <Link href="/privacy" className="transition-colors hover:text-text-primary">Privacy Policy</Link>
+          </nav>
+
           <p className="mt-4 sm:mt-4.5 text-xs text-text-muted">
             &copy; 2026 {APP_NAME}. All rights reserved.
           </p>

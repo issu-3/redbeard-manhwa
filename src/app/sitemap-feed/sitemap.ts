@@ -41,6 +41,8 @@ export default async function sitemap(props: {
         { url: `${baseUrl}/browse/new-releases`, changeFrequency: 'daily', priority: 0.8 },
         { url: `${baseUrl}/browse/completed`, changeFrequency: 'daily', priority: 0.8 },
         { url: `${baseUrl}/browse/genres`, changeFrequency: 'weekly', priority: 0.8 },
+        { url: `${baseUrl}/terms`, changeFrequency: 'yearly', priority: 0.3 },
+        { url: `${baseUrl}/privacy`, changeFrequency: 'yearly', priority: 0.3 },
       ];
 
       const genreRoutes: MetadataRoute.Sitemap = genres
