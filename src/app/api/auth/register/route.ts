@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { generateVerificationToken } from '@/lib/tokens';
 import { registerSchema } from '@/lib/validators';
 
-import { sendVerificationEmail } from '@/lib/mail';
 
 export async function POST(request: Request) {
   try {
@@ -50,10 +48,6 @@ export async function POST(request: Request) {
         username,
       },
     });
-
-    const verificationToken = await generateVerificationToken(user.email);
-
-    await sendVerificationEmail(user.email, verificationToken.token);
 
     return NextResponse.json(
       { message: 'User created successfully', id: user.id },
