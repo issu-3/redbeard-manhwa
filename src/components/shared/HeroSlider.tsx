@@ -140,7 +140,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
 
   return (
     <section
-      className="relative w-full overflow-hidden aspect-[16/7.5] max-h-[260px] md:aspect-auto md:max-h-none md:h-[clamp(340px,45vh,500px)]"
+      className="relative w-full overflow-hidden aspect-[16/7.5] max-h-[260px] md:aspect-auto md:max-h-none md:h-[clamp(430px,52vh,560px)]"
       onMouseEnter={stopAutoplay}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -186,7 +186,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
       <div className="relative z-10 flex h-full flex-col justify-end pointer-events-none">
         
         {/* Main Content Safe Area */}
-        <div className="px-4 pt-6 md:px-12 md:pt-16 lg:px-20 pointer-events-auto">
+        <div className="px-4 pt-6 md:px-12 md:pt-10 lg:px-20 pointer-events-auto">
           <div className="max-w-2xl">
             <AnimatePresence mode="wait">
               <motion.div
@@ -207,7 +207,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                   {slide.title}
                 </motion.h2>
 
-                <motion.p variants={itemVariants} className="mb-8 hidden md:block line-clamp-3 max-w-lg text-sm font-medium leading-relaxed text-text-secondary md:text-base md:leading-relaxed">
+                <motion.p variants={itemVariants} className="mb-6 hidden md:block line-clamp-2 max-w-lg text-sm font-medium leading-relaxed text-text-secondary md:text-base md:leading-relaxed">
                   {slide.description}
                 </motion.p>
 

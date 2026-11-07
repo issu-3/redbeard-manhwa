@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { Clock } from 'lucide-react';
 import { BrowseGrid } from '@/components/shared/BrowseGrid';
 import { getCachedSectionSeries } from '@/app/actions/public/homepage';
+import { BROWSE_PAGE_SIZE } from '@/lib/browse-constants';
 
 import { generateMetadata as generateSeoMetadata } from '@/lib/seo';
 import { APP_URL } from '@/lib/constants';
@@ -20,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LatestPage() {
-  const updates = await getCachedSectionSeries('RECENTLY_UPDATED', 40, false, []);
+  const updates = await getCachedSectionSeries('RECENTLY_UPDATED', BROWSE_PAGE_SIZE, false, []);
   // getCachedSectionSeries returns RecentUpdate[] for RECENTLY_UPDATED
   // We map it back to SeriesCardData for BrowseGrid
   const dbSeries = updates.map(u => ({
@@ -32,8 +33,9 @@ export default async function LatestPage() {
     <BrowseGrid 
       title="Latest Updates" 
       subtitle="Fresh chapters just dropped" 
-      icon={<Clock className="h-5 w-5 text-primary" />} 
-      series={dbSeries} 
+      icon={<Clock className="h-5 w-5 text-primary" />}
+      series={dbSeries}
+      category="latest"
     />
   );
 }

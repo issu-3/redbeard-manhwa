@@ -89,18 +89,14 @@ function SeriesCardComponent({ series, variant = 'default', index = 0 }: SeriesC
               </div>
             </div>
             <div className="flex items-center gap-3 text-xs text-text-muted">
-              {series.averageRating > 0 && (
-                <span className="flex items-center gap-1">
-                  <Star className="h-3 w-3 fill-warning text-warning" />
-                  {series.averageRating.toFixed(1)}
-                </span>
-              )}
-              {series.ratingCount > 0 && (
-                <span className="flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" />
-                  {formatNumber(series.ratingCount)}
-                </span>
-              )}
+              <span className="flex items-center gap-1">
+                <Star className="h-3 w-3 fill-warning text-warning" />
+                {series.averageRating > 0 ? series.averageRating.toFixed(1) : 'New'}
+              </span>
+              <span className="flex items-center gap-1">
+                <MessageSquare className="h-3 w-3" />
+                {formatNumber(series.ratingCount)}
+              </span>
               <span className="flex items-center gap-1">
                 <BookOpen className="h-3 w-3" />
                 Ch. {series.chapterCount}
@@ -149,25 +145,21 @@ function SeriesCardComponent({ series, variant = 'default', index = 0 }: SeriesC
             </div>
           )}
 
-          {/* Bottom gradient + info overlay (hidden when there is nothing to show) */}
-          {(series.averageRating > 0 || series.ratingCount > 0) && (
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 pt-12">
-              <div className="flex items-center gap-2 text-[11px] font-medium text-white/90">
-                {series.averageRating > 0 && (
-                  <span className="flex items-center gap-0.5">
-                    <Star className="h-3 w-3 fill-warning text-warning" />
-                    {series.averageRating.toFixed(1)}
-                  </span>
-                )}
-                {series.ratingCount > 0 && (
-                  <span className="flex items-center gap-0.5">
-                    <MessageSquare className="h-3 w-3" />
-                    {formatNumber(series.ratingCount)}
-                  </span>
-                )}
-              </div>
+          {/* Bottom gradient + info overlay — always rendered so every card in a
+              row looks the same; unrated series show a "New" placeholder instead
+              of leaving the card blank. */}
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 pt-12">
+            <div className="flex items-center gap-2 text-[11px] font-medium text-white/90">
+              <span className="flex items-center gap-0.5">
+                <Star className="h-3 w-3 fill-warning text-warning" />
+                {series.averageRating > 0 ? series.averageRating.toFixed(1) : 'New'}
+              </span>
+              <span className="flex items-center gap-0.5">
+                <MessageSquare className="h-3 w-3" />
+                {formatNumber(series.ratingCount)}
+              </span>
             </div>
-          )}
+          </div>
 
           {/* Hover overlay with more info */}
           <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/60 to-transparent p-2.5 md:p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
