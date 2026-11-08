@@ -40,12 +40,19 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    if (typeParam) {
-      whereClause.type = typeParam as import('@prisma/client').SeriesType;
+    // Validate + normalize before casting: an unknown or lowercase
+    // type/status must never reach Prisma as a raw enum cast (that throws
+    // and surfaces as a 500). Unknown values are ignored (no filter).
+    const SERIES_TYPES = ['MANHWA', 'MANGA', 'MANHUA', 'WEBTOON', 'PORNHWA', 'DOUJINSHI', 'COMIC', 'LIGHT_NOVEL'];
+    const normalizedType = typeParam?.toUpperCase();
+    if (normalizedType && SERIES_TYPES.includes(normalizedType)) {
+      whereClause.type = normalizedType as import('@prisma/client').SeriesType;
     }
 
-    if (statusParam) {
-      whereClause.status = statusParam as import('@prisma/client').SeriesStatus;
+    const SERIES_STATUSES = ['ONGOING', 'COMPLETED', 'HIATUS', 'CANCELLED', 'UPCOMING'];
+    const normalizedStatus = statusParam?.toUpperCase();
+    if (normalizedStatus && SERIES_STATUSES.includes(normalizedStatus)) {
+      whereClause.status = normalizedStatus as import('@prisma/client').SeriesStatus;
     }
 
     let orderByClause: import('@prisma/client').Prisma.SeriesOrderByWithRelationInput | import('@prisma/client').Prisma.SeriesOrderByWithRelationInput[] = [

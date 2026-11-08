@@ -43,6 +43,13 @@ const nextConfig: NextConfig = {
       destination: '/feed.xml',
       permanent: true,
     },
+    {
+      // The account library lives at /user/bookmarks (H1 "Library");
+      // keep the legacy /user/library URL working instead of 404ing.
+      source: '/user/library',
+      destination: '/user/bookmarks',
+      permanent: true,
+    },
   ],
   // H1 FIX: Security headers (not supported in static export)
   headers: isCapacitor ? undefined : async () => [
