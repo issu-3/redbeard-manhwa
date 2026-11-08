@@ -16,8 +16,18 @@ export async function generateMetadata(): Promise<Metadata> {
   const description = settings.seo_site_description || 'Read the best series and comics online.';
   const baseUrl = APP_URL || 'https://redbeard.store';
   
+  // The stored site title may itself start with the brand
+  // ("REDBEARD – Read Manhwa, …"); generateSeoMetadata appends
+  // "| REDBEARD", so strip a leading brand segment first to avoid
+  // "REDBEARD … | REDBEARD".
+  let cleanTitle = title
+    .split(' | ')[0]
+    .replace(/^REDBEARD\s*[|–—-]\s*/i, '')
+    .trim();
+  if (cleanTitle.toUpperCase() === 'REDBEARD') cleanTitle = '';
+
   const seo = generateSeoMetadata({
-    title: title.split(' | ')[0], // generateSeoMetadata appends APP_NAME
+    title: cleanTitle || undefined, // generateSeoMetadata appends APP_NAME
     description,
     url: baseUrl,
     settings,

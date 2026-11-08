@@ -101,7 +101,22 @@ export async function getSettings(): Promise<Record<string, string>> {
     if (!settingsMap.seo_twitter_image) {
       settingsMap.seo_twitter_image = '';
     }
-    
+
+    // Legacy default migration: '/images/og-default.png' was the system
+    // default before the 2026-11 logo change. A stored value equal to it is
+    // that old default, not a deliberate choice — and the path carries a
+    // 1-year immutable cache that can keep serving stale bytes — so emit
+    // the versioned v2 path instead.
+    const normalizeLegacyOgPath = (v?: string): string | undefined => {
+      if (!v) return v;
+      const pathOnly = v.trim().replace(/^https?:\/\/[^/]+/i, '');
+      return pathOnly === '/images/og-default.png' ? '/images/og-default-v2.png' : v;
+    };
+    settingsMap.seo_og_image = normalizeLegacyOgPath(settingsMap.seo_og_image) || '/images/og-default-v2.png';
+    if (settingsMap.seo_twitter_image) {
+      settingsMap.seo_twitter_image = normalizeLegacyOgPath(settingsMap.seo_twitter_image) || '';
+    }
+
     return settingsMap;
   } catch (error: any) {
     console.error('Failed to fetch settings (table might not exist):', error.message);

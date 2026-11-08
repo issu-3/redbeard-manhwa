@@ -35,7 +35,7 @@ export default async function DownloadInterstitialPage({ params }: { params: Pro
             Your Download is Ready
           </h1>
           <p className="text-text-secondary mb-8 font-medium">
-            {chapter.series.title} — {chapter.title || `Chapter ${chapter.number}`}
+            {chapter.series.title} — {chapter.title || chapter.label || `Chapter ${chapter.number}`}
           </p>
 
           {/* Ad Container */}

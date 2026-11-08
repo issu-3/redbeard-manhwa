@@ -72,6 +72,7 @@ const getCachedChapterDataInternal = unstable_cache(
       seriesTitle: series.title,
       seriesSlug: series.slug,
       number: chapter.number,
+      label: chapter.label || undefined,
       title: chapter.title || undefined,
       slug: chapter.slug,
       totalPages: chapter.totalPages || chapter.images.length,
@@ -215,8 +216,11 @@ export async function generateMetadata({
   const defaultUrl = `${APP_URL}/series/${slug}/chapter/${safeSlug}`;
   const defaultImage = chapter.images.length > 0 ? chapter.images[0].imageUrl : undefined;
 
-  const title = seo.title || defaultTitle;
-  const description = seo.description || defaultDesc;
+  // Stored SEO text generated at import time can contain the raw chapter
+  // slug (e.g. "chapter-chapter-41-60") for grouped chapters; never surface
+  // that to users or search engines — fall back to the composed default.
+  const title = seo.title && !seo.title.includes(chapter.slug) ? seo.title : defaultTitle;
+  const description = seo.description && !seo.description.includes(chapter.slug) ? seo.description : defaultDesc;
   const rawCanonical = seo.canonicalUrl || seo.canonical || defaultUrl;
   const canonical = rawCanonical
     .replace(/^http:\/\//, 'https://')

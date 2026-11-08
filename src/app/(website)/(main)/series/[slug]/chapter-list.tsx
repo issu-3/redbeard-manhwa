@@ -58,6 +58,14 @@ export function ChapterListSection({
       if (a.number !== null && b.number !== null) {
         return sortAsc ? (a.number) - (b.number) : (b.number) - (a.number);
       }
+      // Grouped/download chapters have no number; order those by label
+      // ("CHAPTER 41-60") rather than upload date so ranges stay in
+      // sequence instead of jumping around.
+      if (a.number == null && b.number == null && a.label && b.label) {
+        return sortAsc
+          ? a.label.localeCompare(b.label, undefined, { numeric: true })
+          : b.label.localeCompare(a.label, undefined, { numeric: true });
+      }
       const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
       const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
       
