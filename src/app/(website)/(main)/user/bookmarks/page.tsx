@@ -20,6 +20,12 @@ async function getBookmarks(userId: string) {
       series: {
         include: {
           genres: true,
+          chapters: {
+            where: { isPublished: true, number: { not: null } },
+            orderBy: [{ number: 'desc' }, { createdAt: 'desc' }],
+            take: 1,
+            select: { number: true },
+          },
         }
       }
     },
@@ -39,6 +45,7 @@ async function getBookmarks(userId: string) {
     totalViews: b.series.totalViews,
     totalBookmarks: b.series.totalBookmarks,
     chapterCount: b.series.chapterCount,
+    latestChapterNumber: b.series.chapters?.[0]?.number ?? undefined,
     genres: b.series.genres,
     updatedAt: b.series.updatedAt.toISOString(),
   }));

@@ -37,13 +37,26 @@ const getCachedSearchFilterData = unstable_cache(
   { tags: ['genres', 'trending'], revalidate: 3600 }
 );
 
-export default async function SearchPage() {
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string | string[] }>;
+}) {
   const { genres, trendingSearches } = await getCachedSearchFilterData();
+  // Shared/bookmarked search links (e.g. /search?q=love) must run the search
+  // on load, so the initial query comes from the URL, not just local state.
+  const sp = await searchParams;
+  const initialQuery = (Array.isArray(sp.q) ? sp.q[0] : sp.q)?.trim() || '';
 
   return (
     <div className="flex flex-col w-full">
       <h1 className="sr-only">Search Comics, Manga & Manhwa Online</h1>
-      <SearchClient dynamicGenres={genres} dynamicTrending={trendingSearches} />
+      <SearchClient
+        key={initialQuery}
+        initialQuery={initialQuery}
+        dynamicGenres={genres}
+        dynamicTrending={trendingSearches}
+      />
     </div>
   );
 }

@@ -99,7 +99,7 @@ function SeriesCardComponent({ series, variant = 'default', index = 0 }: SeriesC
               </span>
               <span className="flex items-center gap-1">
                 <BookOpen className="h-3 w-3" />
-                Ch. {series.chapterCount}
+                Ch. {series.latestChapterNumber ?? series.chapterCount}
               </span>
             </div>
           </div>
@@ -181,7 +181,7 @@ function SeriesCardComponent({ series, variant = 'default', index = 0 }: SeriesC
             <div className="flex items-center gap-2 text-xs text-white/60">
               <span className="flex items-center gap-1">
                 <BookOpen className="h-3 w-3" />
-                {series.chapterCount} Ch
+                {series.latestChapterNumber ?? series.chapterCount} Ch
               </span>
             </div>
           </div>
@@ -193,7 +193,7 @@ function SeriesCardComponent({ series, variant = 'default', index = 0 }: SeriesC
           </h3>
           {!isCompact && (
             <p className="mt-0.5 text-xs text-text-muted">
-              Chapter {series.chapterCount}
+              Chapter {series.latestChapterNumber ?? series.chapterCount}
             </p>
           )}
         </div>
