@@ -17,6 +17,7 @@ type SeriesCardInput = {
   chapterCount: number;
   updatedAt: Date;
   genres: Array<{ name: string; slug: string }>;
+  chapters?: Array<{ number: number | null }>;
 };
 type FullSeries = Series & {
   genres: Genre[];
@@ -45,6 +46,16 @@ export const SERIES_CARD_SELECT = {
       name: true,
       slug: true,
     },
+  },
+  // Latest published chapter, used for latestChapterNumber on cards.
+  // chapterCount is only a row count: decimal chapters (24.5) and numbering
+  // gaps make it differ from the latest chapter's number, so cards must not
+  // render chapterCount as "Chapter N".
+  chapters: {
+    where: { isPublished: true, number: { not: null } },
+    orderBy: { number: 'desc' },
+    take: 1,
+    select: { number: true },
   },
 } as const;
 
@@ -84,6 +95,7 @@ export function toSeriesCardData(series: SeriesCardInput | SeriesWithGenres | an
     totalViews: series.totalViews,
     totalBookmarks: series.totalBookmarks,
     chapterCount: series.chapterCount,
+    latestChapterNumber: series.chapters?.[0]?.number ?? undefined,
     genres: series.genres.map((g: any) => ({ name: g.name, slug: g.slug })),
     updatedAt: toIsoString(series.updatedAt),
   };

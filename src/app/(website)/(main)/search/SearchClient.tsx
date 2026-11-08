@@ -12,10 +12,11 @@ import type { SeriesCardData } from '@/types';
 interface SearchClientProps {
   dynamicGenres: Array<{ name: string; slug: string; iconName?: string | null; color?: string | null }>;
   dynamicTrending: string[];
+  initialQuery?: string;
 }
 
-export default function SearchClient({ dynamicGenres, dynamicTrending }: SearchClientProps) {
-  const [query, setQuery] = useState('');
+export default function SearchClient({ dynamicGenres, dynamicTrending, initialQuery = '' }: SearchClientProps) {
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<SeriesCardData[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
