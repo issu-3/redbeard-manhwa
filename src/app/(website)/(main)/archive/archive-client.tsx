@@ -14,13 +14,19 @@ interface ArchiveChapterListProps {
 }
 
 /**
- * Client component that renders ALL chapter links in the DOM (crawlable by Googlebot)
- * but uses CSS to collapse/expand for better UX. The links are always in the HTML.
+ * Chapter links for one series on /archive. Only the first VISIBLE_COUNT
+ * links are rendered initially (including in the server-rendered HTML) so
+ * the archive page stays small — rendering all ~2,700 chapter links pushed
+ * it past 1 MB, which Bing flags. The full chapter list arrives with the
+ * page as props, so expanding renders the remaining links on the client
+ * with no extra fetch. Chapter discovery for crawlers is covered by the
+ * chapters sitemap and each series page, which link every chapter.
  */
 export function ArchiveChapterList({ seriesSlug, chapters }: ArchiveChapterListProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const VISIBLE_COUNT = 5;
   const hasMore = chapters.length > VISIBLE_COUNT;
+  const visibleChapters = isExpanded ? chapters : chapters.slice(0, VISIBLE_COUNT);
 
   return (
     <div className="mt-3">
@@ -38,9 +44,9 @@ export function ArchiveChapterList({ seriesSlug, chapters }: ArchiveChapterListP
       </button>
 
       {/*
-       * ALL links are rendered in the DOM for Googlebot crawlability.
-       * We use CSS max-height + overflow to hide overflow for human users,
-       * but Googlebot reads the full DOM regardless of CSS.
+       * Collapsed: only the first VISIBLE_COUNT links are rendered (the CSS
+       * max-height clips the row as before). Expanded: all links render on
+       * the client from the props already on the page.
        */}
       <div
         className={
@@ -49,7 +55,7 @@ export function ArchiveChapterList({ seriesSlug, chapters }: ArchiveChapterListP
             : 'flex flex-wrap gap-1.5 max-h-[1.75rem] overflow-hidden'
         }
       >
-        {chapters.map((ch) => {
+        {visibleChapters.map((ch) => {
           const chSlug = ch.slug?.trim() ? ch.slug : String(ch.number);
           const label = ch.number != null ? `Ch. ${ch.number}` : ch.slug;
           return (
