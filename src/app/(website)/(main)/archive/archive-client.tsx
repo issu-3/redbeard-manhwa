@@ -6,11 +6,10 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 
 interface ArchiveChapterListProps {
   seriesSlug: string;
-  chapters: {
-    slug: string;
-    number: number | null;
-    title: string | null;
-  }[];
+  // Compact [slug, number, title] tuples instead of objects: with ~2,700
+  // chapters on /archive, the repeated object keys alone cost ~75 KB of
+  // RSC payload. Order and data are identical to the chapter objects.
+  chapters: (readonly [string, number | null, string | null])[];
 }
 
 /**
@@ -25,8 +24,9 @@ interface ArchiveChapterListProps {
 export function ArchiveChapterList({ seriesSlug, chapters }: ArchiveChapterListProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const VISIBLE_COUNT = 5;
-  const hasMore = chapters.length > VISIBLE_COUNT;
-  const visibleChapters = isExpanded ? chapters : chapters.slice(0, VISIBLE_COUNT);
+  const allChapters = chapters.map(([slug, number, title]) => ({ slug, number, title }));
+  const hasMore = allChapters.length > VISIBLE_COUNT;
+  const visibleChapters = isExpanded ? allChapters : allChapters.slice(0, VISIBLE_COUNT);
 
   return (
     <div className="mt-3">
@@ -40,7 +40,7 @@ export function ArchiveChapterList({ seriesSlug, chapters }: ArchiveChapterListP
         ) : (
           <ChevronRight className="h-3.5 w-3.5" />
         )}
-        {chapters.length} Chapters
+        {allChapters.length} Chapters
       </button>
 
       {/*
@@ -76,7 +76,7 @@ export function ArchiveChapterList({ seriesSlug, chapters }: ArchiveChapterListP
           onClick={() => setIsExpanded(true)}
           className="mt-1.5 text-xs text-primary hover:underline"
         >
-          Show all {chapters.length} chapters
+          Show all {allChapters.length} chapters
         </button>
       )}
     </div>
