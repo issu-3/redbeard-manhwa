@@ -347,9 +347,12 @@ export default async function SeriesDetailPage({
       
       {/* ── Banner Section ────────────────────────────────── */}
       <section className="relative h-44 sm:h-52 md:h-72 lg:h-80 w-full overflow-hidden">
+        {/* Blurred banner backdrop of the series cover. Alt must be meaningful:
+            Bing Site Scan flags an empty alt as "alt attribute missing" on
+            series pages, so describe it instead of leaving it blank. */}
         <Image
           src={series.bannerImage || series.coverImage}
-          alt=""
+          alt={`${series.title} banner`}
           fill
           className="object-cover scale-105 blur-lg opacity-35"
           priority
