@@ -205,7 +205,7 @@ export default async function ArchivePage() {
                       </div>
                     </div>
 
-                    {/* Chapter links — collapsible for UX but all rendered in DOM for Googlebot */}
+                    {/* Chapter links — first 5 rendered in the initial HTML; the rest render client-side on expand (see archive-client.tsx) */}
                     {s.chapters.length > 0 && (
                       <ArchiveChapterList
                         seriesSlug={s.slug}
