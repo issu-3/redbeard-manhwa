@@ -209,11 +209,9 @@ export default async function ArchivePage() {
                     {s.chapters.length > 0 && (
                       <ArchiveChapterList
                         seriesSlug={s.slug}
-                        chapters={s.chapters.map((c) => ({
-                          slug: c.slug,
-                          number: c.number,
-                          title: c.title,
-                        }))}
+                        chapters={s.chapters.map(
+                          (c) => [c.slug, c.number, c.title] as const,
+                        )}
                       />
                     )}
                   </article>
