@@ -10,7 +10,7 @@ type Params = { slug: string };
 
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
-import { APP_URL } from '@/lib/constants';
+import { APP_URL, APP_NAME } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { resolveSocialImages } from '@/lib/seo';
 import { getCachedGenreList } from '@/lib/genres';
@@ -56,7 +56,13 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   // Custom SEO from DB overrides defaults
   const seo = (genre.seo as Record<string, any>) || {};
   
-  const defaultTitle = `Read Best ${genre.name} Manhwa & Manga in English | ${_siteTitle}`;
+  // Keep the rendered title <= 70 chars (Bing Site Scan flags titles over
+  // 70 chars as "Title too long"). The old template appended the full site
+  // tagline (~52 chars), pushing every genre title to ~104 chars. Brand
+  // suffix is the short APP_NAME ("REDBEARD"); the longest genre name
+  // (13 chars) then renders at 60 chars. Keywords kept: genre, Manhwa,
+  // Manga, "in English". _siteTitle is still used in the description below.
+  const defaultTitle = `Read Best ${genre.name} Manhwa & Manga in English | ${APP_NAME}`;
   const defaultDescription = `Read the best ${genre.name} manhwa, manga, and comics in English on ${_siteTitle}. ${genre.description || ''}`.trim();
   
   const title = seo.title || defaultTitle;
