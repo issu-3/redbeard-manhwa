@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ThumbsUp, MessageSquare, Clock, MoreVertical, Flag, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { formatRelativeTime } from '@/lib/utils';
@@ -67,12 +67,24 @@ function useToggleLike(
   const [hasLiked, setHasLiked] = useState(initialHasLiked);
   const [isLiking, setIsLiking] = useState(false);
 
+  // The reader page is cached, so the signed-in user's like state can
+  // arrive after mount (hydrated by CommentSection). Follow the prop
+  // until the user toggles a like themselves; from then on the local
+  // state — corrected by the like action's response — is the truth.
+  const interactedRef = useRef(false);
+  useEffect(() => {
+    if (!interactedRef.current) {
+      setHasLiked(initialHasLiked);
+    }
+  }, [initialHasLiked]);
+
   const toggleLike = async () => {
     if (!currentUserId) {
       toast.error('Must be logged in to like');
       return;
     }
     if (isLiking) return;
+    interactedRef.current = true;
 
     const prevLiked = hasLiked;
     const prevLikes = likes;

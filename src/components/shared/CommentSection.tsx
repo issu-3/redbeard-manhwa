@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CommentData, CommentItem } from './CommentItem';
 import { postComment } from '@/app/actions/comments';
+import { getChapterLikeState } from '@/app/actions/reader';
 import { toast } from 'sonner';
 
 export function CommentSection({
@@ -23,6 +24,35 @@ export function CommentSection({
   useEffect(() => {
     setVisibleComments(comments);
   }, [comments]);
+
+  // The reader page is cached and no longer merges the signed-in user's
+  // like state into the comments server-side; hydrate it here once the
+  // user is known. CommentItem picks the merged hasLiked values up via
+  // its prop-sync until the user toggles a like themselves.
+  useEffect(() => {
+    if (!currentUserId) return;
+    let cancelled = false;
+    getChapterLikeState(chapterId)
+      .then(({ likedCommentIds, likedReplyIds }) => {
+        if (cancelled) return;
+        const likedComments = new Set(likedCommentIds);
+        const likedReplies = new Set(likedReplyIds);
+        setVisibleComments((prev) =>
+          prev.map((comment) => ({
+            ...comment,
+            hasLiked: likedComments.has(comment.id),
+            replies: comment.replies?.map((reply) => ({
+              ...reply,
+              hasLiked: likedReplies.has(reply.id),
+            })),
+          }))
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUserId, chapterId]);
 
   const handleCommentDeleted = (commentId: string) => {
     setVisibleComments((prev) => prev.filter((c) => c.id !== commentId));
