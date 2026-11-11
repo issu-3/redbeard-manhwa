@@ -6,7 +6,6 @@ import { ChapterReader } from '@/components/reader/ChapterReader';
 import { ChapterSSRContent } from '@/components/reader/ChapterSSRContent';
 import { ChapterSSRTakeover } from '@/components/reader/ChapterSSRTakeover';
 import type { ChapterData } from '@/types';
-import { auth } from '@/auth';
 import { APP_URL } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { resolveSocialImages } from '@/lib/seo';
@@ -14,6 +13,15 @@ import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { getDirectCdnUrl } from '@/lib/s3';
 import { resolveReaderChapterId } from '@/lib/chapter-lookup';
+
+// ISR: this page renders identically for every visitor, so it is cached
+// and revalidated hourly instead of being rendered per request. That is
+// only possible because nothing user-specific happens here anymore —
+// comment likes, reader preferences and view tracking are hydrated
+// client-side (see src/app/actions/reader.ts, ChapterReader and
+// CommentSection). Do not call auth(), headers() or cookies() in this
+// file: any of them opts the page back into per-request rendering.
+export const revalidate = 3600;
 
 // ─── Data Fetching ───────────────────────────────────────────────
 
@@ -281,48 +289,13 @@ export default async function ChapterPage({
     redirect(`/series/${slug}/chapter/${safeSlug}`);
   }
 
-  // OPT-06: Call auth() once and reuse throughout the function
-  const session = await auth();
-
   // Handle external redirect
   if (chapter.sourceType === 'DOWNLOAD' && chapter.downloadUrl) {
-    // OPT-07: Parallelize all DB writes instead of running sequentially
-    const writePromises: Promise<any>[] = [];
-
-    // Record view counts for external chapters
-    try {
-      const { headers } = await import('next/headers');
-      const headersList = await headers();
-      const ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
-
-      writePromises.push(
-        prisma.chapter.update({
-          where: { id: chapter.id },
-          data: { totalViews: { increment: 1 } },
-        }),
-        prisma.series.update({
-          where: { id: chapter.seriesId },
-          data: { totalViews: { increment: 1 } },
-        }),
-        prisma.viewLog.create({
-          data: {
-            seriesId: chapter.seriesId,
-            chapterId: chapter.id,
-            userId: session?.user?.id || null,
-            ipAddress: ipAddress ? ipAddress.split(',')[0].trim() : null,
-          }
-        })
-      );
-    } catch (e) {
-      console.error('Failed to prepare view count writes:', e);
-    }
-
-    // OPT-07: Fire all writes concurrently and unblock the response using after()
-    // Make sure to require next/server in the file or dynamically import it
-    const { after } = await import('next/server');
-    after(() => {
-      Promise.allSettled(writePromises).catch(e => console.error(e));
-    });
+    // Views of these chapters are counted client-side (the reader posts
+    // to /api/tracking/view on mount) and in the download route. This
+    // render used to also write view rows server-side, which forced the
+    // page to stay dynamic — and double-counted chapters that render in
+    // the reader, since the client tracks them too.
 
     // Ensure the external URL is absolute to prevent relative redirect bugs
     let targetUrl = chapter.downloadUrl;
@@ -367,46 +340,12 @@ export default async function ChapterPage({
   // Reading history and view tracking is now handled asynchronously via client-side API call
   // to prevent blocking the server render thread (TTFB optimization).
 
-  // OPT-05: Use cached comments query
-  const commentsData = await getCachedChapterComments(chapter.id);
-
-  // Per-user like state cannot live in the cached comments query above, so
-  // fetch the current user's likes separately (uncached) and merge them in.
-  let comments = commentsData;
-  if (session?.user?.id && commentsData.length > 0) {
-    const myLikes = await prisma.commentLike.findMany({
-      where: {
-        userId: session.user.id,
-        OR: [
-          { commentId: { in: commentsData.map((c) => c.id) } },
-          { replyId: { in: commentsData.flatMap((c) => c.replies.map((r) => r.id)) } },
-        ],
-      },
-      select: { commentId: true, replyId: true },
-    });
-    const likedCommentIds = new Set(myLikes.map((l) => l.commentId).filter(Boolean));
-    const likedReplyIds = new Set(myLikes.map((l) => l.replyId).filter(Boolean));
-    comments = commentsData.map((comment) => ({
-      ...comment,
-      hasLiked: likedCommentIds.has(comment.id),
-      replies: comment.replies.map((reply) => ({
-        ...reply,
-        hasLiked: likedReplyIds.has(reply.id),
-      })),
-    }));
-  }
-
-  // Fetch User Preferences
-  let userPreferences = {};
-  if (session?.user?.id) {
-    const userRecord = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { preferences: true }
-    });
-    if (userRecord?.preferences) {
-      userPreferences = userRecord.preferences as Record<string, any>;
-    }
-  }
+  // OPT-05: Use cached comments query. Per-user like state is NOT merged
+  // here anymore — CommentSection hydrates it client-side for the
+  // signed-in user (getChapterLikeState), and reader preferences are
+  // fetched client-side too (getMyReaderPreferences). That keeps this
+  // render identical for everyone, which is what makes it cacheable.
+  const comments = await getCachedChapterComments(chapter.id);
 
   const settings = await getCachedSettings();
 
@@ -479,8 +418,6 @@ export default async function ChapterPage({
       <ChapterReader
         chapter={chapter}
         comments={comments}
-        currentUserId={session?.user?.id}
-        userPreferences={userPreferences}
         defaultReadingMode={'longStrip'}
         youtubeUrl={settings.youtubeUrl || null}
         adsterraBannerScript={adsterraBannerScript}

@@ -16,10 +16,27 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { cn } from '@/lib/utils';
 import { useAppLibraryStore } from '@/store/app-library-store';
 import { saveUserPreferences } from '@/app/actions/preferences';
+import { useSession } from 'next-auth/react';
+import { getMyReaderPreferences } from '@/app/actions/reader';
 import { CommentSection } from '@/components/shared/CommentSection';
 import { ReaderSettingsSheet } from './ReaderSettingsSheet';
 import { SubscribeCard } from '@/components/shared/SubscribeCard';
 import { AdsterraAd } from '@/components/ads/AdsterraAd';
+
+// Apply a saved reader-preferences object to the store. Used both for
+// preferences passed as a prop and for ones fetched from the account
+// after mount (the chapter page itself is cached and user-agnostic).
+function applyReaderPreferences(store: ReturnType<typeof useReaderStore.getState>, prefs: Record<string, any>) {
+  if (prefs.mode) store.setMode(prefs.mode);
+  if (prefs.direction) store.setDirection(prefs.direction);
+  if (prefs.fitMode) store.setFitMode(prefs.fitMode);
+  if (prefs.backgroundColor) store.setBackgroundColor(prefs.backgroundColor);
+  if (prefs.brightness !== undefined) store.setBrightness(prefs.brightness);
+  if (prefs.contrast !== undefined) store.setContrast(prefs.contrast);
+  if (prefs.sepia !== undefined) store.setSepia(prefs.sepia);
+  if (prefs.grayscale !== undefined && prefs.grayscale !== store.grayscale) store.toggleGrayscale();
+  if (prefs.autoNextChapter !== undefined && prefs.autoNextChapter !== store.autoNextChapter) store.toggleAutoNextChapter();
+}
 
 // Helper to safely get the slug
 function getSafeSlug(c?: { slug?: string | null; number?: number | null } | null) {
@@ -68,7 +85,14 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
 
   // Zustand Store
   const store = useReaderStore();
-  
+
+  // The chapter page is ISR-cached and no longer passes the signed-in
+  // user down as props, so resolve the session client-side. A
+  // currentUserId prop (e.g. from the admin preview) still wins.
+  const { data: session, status: sessionStatus } = useSession();
+  const sessionUserId = (session?.user as { id?: string } | undefined)?.id;
+  const effectiveUserId = currentUserId ?? sessionUserId;
+
   // UI State
   const [showUI, setShowUI] = useState(!store.isUIHidden);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -102,37 +126,56 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
   const prevSlug = getSafeSlug(chapter.prevChapter);
   const midIndex = Math.max(1, Math.floor((chapter.images?.length || 0) * 0.35));
 
-  // Initialize
+  // Initialize — visual setup runs immediately, exactly as before, so
+  // the reader is never blocked on the session round-trip below.
   useEffect(() => {
     store.setTotalPages(chapter.images.length);
     store.setCurrentPage(initialPage);
 
     if (!isInitializedRef.current) {
       if (userPreferences && Object.keys(userPreferences).length > 0) {
-        if (userPreferences.mode) store.setMode(userPreferences.mode);
-        if (userPreferences.direction) store.setDirection(userPreferences.direction);
-        if (userPreferences.fitMode) store.setFitMode(userPreferences.fitMode);
-        if (userPreferences.backgroundColor) store.setBackgroundColor(userPreferences.backgroundColor);
-        if (userPreferences.brightness !== undefined) store.setBrightness(userPreferences.brightness);
-        if (userPreferences.contrast !== undefined) store.setContrast(userPreferences.contrast);
-        if (userPreferences.sepia !== undefined) store.setSepia(userPreferences.sepia);
-        if (userPreferences.grayscale !== undefined && userPreferences.grayscale !== store.grayscale) store.toggleGrayscale();
-        if (userPreferences.autoNextChapter !== undefined && userPreferences.autoNextChapter !== store.autoNextChapter) store.toggleAutoNextChapter();
+        applyReaderPreferences(store, userPreferences);
       } else if (defaultReadingMode && !localStorage.getItem('redbeard-reader-preferences')) {
-         store.setMode(defaultReadingMode as ReaderMode);
+        store.setMode(defaultReadingMode as ReaderMode);
       }
-      
-      // Tracking
-      fetch('/api/tracking/view', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chapterId: chapter.id, seriesId: chapter.seriesId, userId: currentUserId })
-      }).catch(err => console.error('Failed to track view:', err));
-
       isInitializedRef.current = true;
     }
     setMounted(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Account-dependent setup. The cached chapter page no longer supplies
+  // the user, so once the session settles: apply the account's saved
+  // reader preferences (when none came as a prop) and fire view tracking
+  // with the real user id — it drives reading history, so it must not
+  // go out before the session is known.
+  const trackedRef = useRef(false);
+  const accountSetupDoneRef = useRef(false);
+  useEffect(() => {
+    if (trackedRef.current) return;
+    if (!currentUserId && sessionStatus === 'loading') return;
+    trackedRef.current = true;
+
+    if (effectiveUserId && !(userPreferences && Object.keys(userPreferences).length > 0)) {
+      getMyReaderPreferences()
+        .then((prefs) => {
+          if (prefs) applyReaderPreferences(useReaderStore.getState(), prefs);
+        })
+        .catch(() => {})
+        .finally(() => {
+          accountSetupDoneRef.current = true;
+        });
+    } else {
+      accountSetupDoneRef.current = true;
+    }
+
+    fetch('/api/tracking/view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chapterId: chapter.id, seriesId: chapter.seriesId, userId: effectiveUserId })
+    }).catch(err => console.error('Failed to track view:', err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionStatus]);
 
   // Container Resize Observer for accurate virtualization
   useEffect(() => {
@@ -144,9 +187,11 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
     return () => observer.disconnect();
   }, [store.mode]);
 
-  // Sync back to server
+  // Sync back to server. Held until account setup (above) has finished,
+  // so a not-yet-loaded account preference can never be overwritten by
+  // the reader's local/default state syncing back first.
   useEffect(() => {
-    if (!isInitializedRef.current || !currentUserId) return;
+    if (!isInitializedRef.current || !effectiveUserId || !accountSetupDoneRef.current) return;
     const timeout = setTimeout(() => {
       saveUserPreferences({
         mode: store.mode,
@@ -161,7 +206,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
       });
     }, 1000);
     return () => clearTimeout(timeout);
-  }, [store.mode, store.direction, store.fitMode, store.backgroundColor, store.brightness, store.contrast, store.sepia, store.grayscale, store.autoNextChapter, currentUserId]);
+  }, [store.mode, store.direction, store.fitMode, store.backgroundColor, store.brightness, store.contrast, store.sepia, store.grayscale, store.autoNextChapter, effectiveUserId]);
 
   // Virtualizer for Webtoon mode
   const rowVirtualizer = useVirtualizer({
@@ -786,7 +831,7 @@ export function ChapterReader({ chapter, comments, currentUserId, userPreference
                 <button onClick={() => setCommentsOpen(false)} className="p-2"><X className="w-5 h-5"/></button>
               </div>
               <div className="p-4 flex-1 overflow-y-auto thin-scrollbar bg-black/20">
-                <CommentSection chapterId={chapter.id} comments={comments || []} currentUserId={currentUserId} />
+                <CommentSection chapterId={chapter.id} comments={comments || []} currentUserId={effectiveUserId} />
               </div>
             </motion.div>
           </>
