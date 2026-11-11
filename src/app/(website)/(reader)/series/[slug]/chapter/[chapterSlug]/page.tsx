@@ -23,6 +23,16 @@ import { resolveReaderChapterId } from '@/lib/chapter-lookup';
 // file: any of them opts the page back into per-request rendering.
 export const revalidate = 3600;
 
+// A dynamic-segment route also needs generateStaticParams for the ISR
+// classification to engage — with revalidate alone the route stays
+// ƒ (dynamic) and every request re-renders (the genre pages have the
+// same issue). Returning [] keeps the build fast: nothing is
+// prerendered; each chapter renders on its first request and is then
+// served from the ISR cache (dynamicParams stays at its default true).
+export async function generateStaticParams() {
+  return [];
+}
+
 // ─── Data Fetching ───────────────────────────────────────────────
 
 const getCachedChapterDataInternal = unstable_cache(
