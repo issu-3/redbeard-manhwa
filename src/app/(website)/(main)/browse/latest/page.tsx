@@ -1,4 +1,4 @@
-export const revalidate = 300;
+export const revalidate = 900; // 15 min (was 5) — latest-list page renders far less often; underlying data stays cached separately
 
 import { Metadata } from 'next';
 import { Clock } from 'lucide-react';

@@ -1,4 +1,4 @@
-export const revalidate = 300;
+export const revalidate = 900; // 15 min (was 5) — homepage data loaders are cached separately; a longer page window cuts ISR writes/renders
 import { Metadata } from 'next';
 import Link from 'next/link';
 // Removed Link import since it's unused

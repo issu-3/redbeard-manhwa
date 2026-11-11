@@ -1,4 +1,4 @@
-export const revalidate = 3600;
+export const revalidate = 21600; // 6 hours (was 1) — the genre list itself changes rarely
 
 import { Metadata } from 'next';
 import { GenreCard } from '@/components/shared/GenreCard';
