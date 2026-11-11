@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getRemoteFileSize, getRemoteCbzMetadata, getRemoteCbzPage } from '@/lib/cbz-remote';
 import { unstable_cache } from 'next/cache';
@@ -37,6 +37,26 @@ const getCachedChapterAndPage = unstable_cache(
   ['chapter-page-image-lookup'],
   { tags: ['chapter-data'], revalidate: 86400 }
 );
+
+// "Lazy caching" is this route's core design: the first fetch of a
+// Drive/CBZ page is stored in R2 under `cache/chapters/<id>/pages/<n>`,
+// so every later request for that page — browser, image worker, any
+// PoP — short-circuits to the cached copy (see the getCachedObjectUrl
+// checks below) instead of re-fetching from the source. Every branch
+// imported uploadToR2 for exactly this step but never called it, so
+// the cache only ever contained pages some other process had stored
+// and every other page re-fetched from Drive/CBZ on every request.
+// Returns the cached object's URL, or null when the write failed.
+async function populatePageCache(cacheKey: string, buffer: Buffer | Uint8Array, mimeType: string): Promise<string | null> {
+  try {
+    const { uploadToR2, getCachedObjectUrl } = await import('@/lib/s3');
+    await uploadToR2(cacheKey, buffer, mimeType);
+    return await getCachedObjectUrl(cacheKey);
+  } catch (e) {
+    console.error('Failed to populate R2 page cache:', e);
+    return null;
+  }
+}
 
 export async function GET(
   request: Request,
@@ -82,7 +102,7 @@ export async function GET(
       if (imageUrl.startsWith('gdrive:')) {
         const fileId = imageUrl.split(':')[1];
         const cacheKey = `cache/chapters/${chapter.id}/pages/${index}`;
-        const { getCachedObjectUrl, uploadToR2 } = await import('@/lib/s3');
+        const { getCachedObjectUrl } = await import('@/lib/s3');
         
         // 1. Check R2 Cache
         try {
@@ -114,23 +134,39 @@ export async function GET(
         
         const driveUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media${authHeader ? '' : `&key=${process.env.GOOGLE_API_KEY}`}`;
 
+        console.log('DEBUG route: fetching driveUrl:', driveUrl);
+        const driveRes = await fetch(driveUrl, { headers: authHeader ? { Authorization: authHeader } : {}, cache: 'no-store' });
+        console.log('DEBUG route: driveRes ok?', driveRes.ok);
+
+        if (!driveRes.ok) {
+          return new NextResponse('Failed to fetch from Google Drive', { status: 500 });
+        }
+
+        const buffer = Buffer.from(await driveRes.arrayBuffer());
+        const mimeType = driveRes.headers.get('content-type') || 'image/jpeg';
+
         if (isResolve) {
+          // The worker asked us to resolve this page: store it in the R2
+          // page cache and point the worker at the cached copy, so the
+          // next resolve of this page (from any PoP) is a cheap cache hit
+          // instead of another Drive fetch. If the cache write fails,
+          // fall back to the raw Drive config the worker can fetch itself.
+          const cachedUrl = await populatePageCache(cacheKey, buffer, mimeType);
+          if (cachedUrl) {
+            return NextResponse.json(
+              { type: 'redirect', url: cachedUrl, cacheKey },
+              { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+            );
+          }
           return NextResponse.json(
             { type: 'gdrive', url: driveUrl, headers: authHeader ? { Authorization: authHeader } : {}, cacheKey },
             { headers: { 'Cache-Control': 'no-store, max-age=0' } }
           );
         }
 
-        console.log('DEBUG route: fetching driveUrl:', driveUrl);
-        const driveRes = await fetch(driveUrl, { headers: authHeader ? { Authorization: authHeader } : {}, cache: 'no-store' });
-        console.log('DEBUG route: driveRes ok?', driveRes.ok);
-        
-        if (!driveRes.ok) {
-          return new NextResponse('Failed to fetch from Google Drive', { status: 500 });
-        }
-        
-        const buffer = Buffer.from(await driveRes.arrayBuffer());
-        const mimeType = driveRes.headers.get('content-type') || 'image/jpeg';
+        // Direct request: fill the R2 page cache in the background so the
+        // next request for this page short-circuits to the cached copy.
+        after(() => populatePageCache(cacheKey, buffer, mimeType));
 
         // 4. Return image
         const responseHeaders = new Headers();
@@ -142,7 +178,7 @@ export async function GET(
         const fileId = parts[1];
         const fileName = parts.slice(2).join(':'); // In case file name has colons
         const cacheKey = `cache/chapters/${chapter.id}/pages/${index}`;
-        const { getCachedObjectUrl, uploadToR2 } = await import('@/lib/s3');
+        const { getCachedObjectUrl } = await import('@/lib/s3');
         
         // 1. Check R2 Cache
         const cachedUrl = await getCachedObjectUrl(cacheKey);
@@ -184,13 +220,6 @@ export async function GET(
           return new NextResponse('Page not found in archive', { status: 404 });
         }
 
-        if (isResolve) {
-          return NextResponse.json(
-            { type: 'cbz', url: driveUrl, headers, pageInfo, cacheKey },
-            { headers: { 'Cache-Control': 'no-store, max-age=0' } }
-          );
-        }
-
         // 4. Extract specific page
         const imageBuffer = await getRemoteCbzPage(driveUrl, headers, pageInfo);
 
@@ -200,6 +229,25 @@ export async function GET(
         else if (nameLower.endsWith('.webp')) mimeType = 'image/webp';
         else if (nameLower.endsWith('.gif')) mimeType = 'image/gif';
         else if (nameLower.endsWith('.avif')) mimeType = 'image/avif';
+
+        if (isResolve) {
+          // Same lazy-cache fill as the gdrive branch: park the extracted
+          // page in R2 and point the worker at the cached copy; on any
+          // cache-write failure, fall back to the raw CBZ config.
+          const cachedUrl = await populatePageCache(cacheKey, imageBuffer, mimeType);
+          if (cachedUrl) {
+            return NextResponse.json(
+              { type: 'redirect', url: cachedUrl, cacheKey },
+              { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+            );
+          }
+          return NextResponse.json(
+            { type: 'cbz', url: driveUrl, headers, pageInfo, cacheKey },
+            { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+          );
+        }
+
+        after(() => populatePageCache(cacheKey, imageBuffer, mimeType));
 
         const responseHeaders = new Headers();
         responseHeaders.set('Content-Type', mimeType);
@@ -245,7 +293,7 @@ export async function GET(
     }
 
     const cacheKey = `cache/chapters/${chapter.id}/pages/${index}`;
-    const { getCachedObjectUrl, uploadToR2 } = await import('@/lib/s3');
+    const { getCachedObjectUrl } = await import('@/lib/s3');
 
     // Check R2 Cache first
     const cachedUrl = await getCachedObjectUrl(cacheKey);
@@ -301,13 +349,6 @@ export async function GET(
       return new NextResponse('Page not found', { status: 404 });
     }
 
-    if (isResolve) {
-      return NextResponse.json(
-        { type: 'cbz', url: resolved.downloadUrl, headers, pageInfo, cacheKey },
-        { headers: { 'Cache-Control': 'no-store, max-age=0' } }
-      );
-    }
-
     // 6. Fetch the specific page from source
     const imageBuffer = await getRemoteCbzPage(resolved.downloadUrl, headers, pageInfo);
 
@@ -318,6 +359,25 @@ export async function GET(
     else if (nameLower.endsWith('.webp')) mimeType = 'image/webp';
     else if (nameLower.endsWith('.gif')) mimeType = 'image/gif';
     else if (nameLower.endsWith('.avif')) mimeType = 'image/avif';
+
+    if (isResolve) {
+      // Same lazy-cache fill as the other branches: park the extracted
+      // page in R2 and point the worker at the cached copy; on any
+      // cache-write failure, fall back to the raw CBZ config.
+      const cachedUrl = await populatePageCache(cacheKey, imageBuffer, mimeType);
+      if (cachedUrl) {
+        return NextResponse.json(
+          { type: 'redirect', url: cachedUrl, cacheKey },
+          { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+        );
+      }
+      return NextResponse.json(
+        { type: 'cbz', url: resolved.downloadUrl, headers, pageInfo, cacheKey },
+        { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+      );
+    }
+
+    after(() => populatePageCache(cacheKey, imageBuffer, mimeType));
 
     const responseHeaders = new Headers();
     responseHeaders.set('Content-Type', mimeType);
