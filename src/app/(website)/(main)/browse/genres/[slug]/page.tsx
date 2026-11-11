@@ -1,4 +1,4 @@
-export const revalidate = 3600;
+export const revalidate = 21600; // 6 hours (was 1) — genre listings change slowly
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -14,6 +14,21 @@ import { APP_URL, APP_NAME } from '@/lib/constants';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { resolveSocialImages } from '@/lib/seo';
 import { getCachedGenreList } from '@/lib/genres';
+
+// Pre-render every genre at build time. This is also what makes the
+// ISR classification engage on this dynamic-segment route — with
+// revalidate alone the route stayed ƒ (dynamic) and rendered on every
+// request (same lesson as the chapter reader page, PR #84). A genre
+// added later still renders on its first request and then caches.
+export async function generateStaticParams() {
+  try {
+    const genres = await prisma.genre.findMany({ select: { slug: true } });
+    return genres.map((g) => ({ slug: g.slug }));
+  } catch (error) {
+    console.warn('Failed to pre-render genre routes during build:', error);
+    return [];
+  }
+}
 
 const getCachedGenreDataInternal = unstable_cache(
   async (slug: string) => {

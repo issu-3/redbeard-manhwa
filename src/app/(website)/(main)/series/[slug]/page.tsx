@@ -1,4 +1,4 @@
-export const revalidate = 3600;
+export const revalidate = 10800; // 3 hours (was 1) — a series page rebuilds less often; a brand-new chapter can take up to ~3h to appear here (reader/sitemap paths are unaffected)
 
 import type { Metadata } from 'next';
 import Image from 'next/image';
