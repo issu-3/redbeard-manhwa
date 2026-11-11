@@ -3,6 +3,8 @@ import { SessionProvider } from '@/providers/session-provider';
 import { Toaster } from 'sonner';
 import { getCachedSettings } from '@/app/actions/public/settings';
 import { APP_URL } from '@/lib/constants';
+import { AdGlobalScripts } from '@/components/ads/AdGlobalScripts';
+import { MonetagHeadScript } from '@/components/ads/MonetagHeadScript';
 import { NativeInitializer } from '@/components/native/NativeInitializer';
 import { NetworkListener } from '@/components/shared/NetworkListener';
 
@@ -46,13 +48,13 @@ export default async function WebsiteLayout({
 
   return (
     <>
-      {/* Global popup-style ads (Adsterra pop-under + social bar and the
-          Monetag site tag, both fed from site settings) were removed on
-          2026-11-11 by owner decision: the pop-under hijacked the first
-          click on reader, browse and login pages, flinging readers into
-          ad tabs. Slot banners (AdRenderer / AdsterraAd / reader banner)
-          are unaffected. The DB settings keys remain but are no longer
-          injected anywhere. */}
+      <MonetagHeadScript 
+        scriptString={settings.ads_enabled_monetag === 'true' ? settings.ads_monetag_global_script : null} 
+      />
+      <AdGlobalScripts 
+        adsterraPopunder={settings.ads_enabled_adsterra === 'true' && settings.ads_adsterra_popunder ? Buffer.from(settings.ads_adsterra_popunder).toString('base64') : null}
+        adsterraSocialBar={settings.ads_enabled_adsterra === 'true' && settings.ads_adsterra_social_bar ? Buffer.from(settings.ads_adsterra_social_bar).toString('base64') : null}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
