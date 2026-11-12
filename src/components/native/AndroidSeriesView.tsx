@@ -22,8 +22,13 @@ type DisplayMode = 'compact' | 'comfortable';
 
 export function AndroidSeriesView({ series, chapters, onRefresh, isRefreshing }: { series: any, chapters: any[], onRefresh: () => void, isRefreshing: boolean }) {
   const router = useRouter();
-  const { savedSeries, addToLibrary, removeFromLibrary, saveChaptersToLibrary, activeUserId } = useAppLibraryStore();
-  const { downloads } = useDownloadStore();
+  // ⚡ Bolt Optimization: Use atomic selectors for store values
+  const savedSeries = useAppLibraryStore(state => state.savedSeries);
+  const addToLibrary = useAppLibraryStore(state => state.addToLibrary);
+  const removeFromLibrary = useAppLibraryStore(state => state.removeFromLibrary);
+  const saveChaptersToLibrary = useAppLibraryStore(state => state.saveChaptersToLibrary);
+  const activeUserId = useAppLibraryStore(state => state.activeUserId);
+  const downloads = useDownloadStore(state => state.downloads);
 
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [localChapters, setLocalChapters] = useState<Record<string, any>>({});
