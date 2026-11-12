@@ -49,17 +49,17 @@ function SortableImage({ id, url, pageNumber, onRemove, onReplace }: any) {
       </div>
 
       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-        <button type="button" {...attributes} {...listeners} className="p-2 bg-foreground/20 hover:bg-foreground/40 rounded-lg text-white cursor-grab active:cursor-grabbing">
-          <GripVertical className="h-5 w-5" />
+        <button type="button" aria-label={`Drag to reorder page ${pageNumber}`} {...attributes} {...listeners} className="p-2 bg-foreground/20 hover:bg-foreground/40 rounded-lg text-white cursor-grab active:cursor-grabbing">
+          <GripVertical className="h-5 w-5" aria-hidden="true" />
         </button>
         
-        <label className="p-2 bg-foreground/20 hover:bg-foreground/40 rounded-lg text-text-primary cursor-pointer">
-          <Upload className="h-5 w-5" />
-          <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+        <label aria-label={`Replace image for page ${pageNumber}`} className="p-2 bg-foreground/20 hover:bg-foreground/40 rounded-lg text-text-primary cursor-pointer">
+          <Upload className="h-5 w-5" aria-hidden="true" />
+          <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} tabIndex={-1} />
         </label>
         
-        <button type="button" onClick={() => onRemove(id)} className="p-2 bg-red-500/80 hover:bg-red-500 rounded-lg text-white">
-          <Trash2 className="h-5 w-5" />
+        <button type="button" aria-label={`Delete page ${pageNumber}`} onClick={() => onRemove(id)} className="p-2 bg-red-500/80 hover:bg-red-500 rounded-lg text-white">
+          <Trash2 className="h-5 w-5" aria-hidden="true" />
         </button>
       </div>
     </div>
