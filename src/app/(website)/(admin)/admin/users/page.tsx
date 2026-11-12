@@ -59,11 +59,11 @@ export default async function AdminUsersPage() {
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       {user.isBanned ? (
-                        <button className="rounded-lg p-2 text-green-500 hover:bg-green-500/10 transition-colors" title="Unban">
+                        <button aria-label={`Unban ${user.displayName || user.username || 'user'}`} className="rounded-lg p-2 text-green-500 hover:bg-green-500/10 transition-colors" title="Unban">
                           <CheckCircle className="h-4 w-4" />
                         </button>
                       ) : (
-                        <button className="rounded-lg p-2 text-red-500 hover:bg-red-500/10 transition-colors" title="Ban">
+                        <button aria-label={`Ban ${user.displayName || user.username || 'user'}`} className="rounded-lg p-2 text-red-500 hover:bg-red-500/10 transition-colors" title="Ban">
                           <Ban className="h-4 w-4" />
                         </button>
                       )}
