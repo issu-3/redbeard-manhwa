@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
     const isDev = process.env.NODE_ENV === 'development';
     const isValidCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
 
-    if (!isDev && !isValidCron && !request.nextUrl.searchParams.has('force')) {
+    // SECURITY: Removed unauthenticated `?force=true` bypass which allowed external DoS
+    if (!isDev && !isValidCron) {
       return NextResponse.json({ error: 'Unauthorized cron execution' }, { status: 401 });
     }
 
