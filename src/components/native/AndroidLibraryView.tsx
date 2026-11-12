@@ -28,8 +28,12 @@ type DisplayOption = 'grid' | 'compact' | 'list';
 
 export function AndroidLibraryView() {
   const router = useRouter();
-  const { downloads } = useDownloadStore();
-  const { savedSeries, hasHydrated, activeUserId, hydrateLibrary, removeFromLibrary } = useAppLibraryStore();
+  const downloads = useDownloadStore((state) => state.downloads);
+  const savedSeries = useAppLibraryStore((state) => state.savedSeries);
+  const hasHydrated = useAppLibraryStore((state) => state.hasHydrated);
+  const activeUserId = useAppLibraryStore((state) => state.activeUserId);
+  const hydrateLibrary = useAppLibraryStore((state) => state.hydrateLibrary);
+  const removeFromLibrary = useAppLibraryStore((state) => state.removeFromLibrary);
   const [mounted, setMounted] = useState(false);
 
   // Search State
