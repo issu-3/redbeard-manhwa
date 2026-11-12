@@ -4,7 +4,7 @@ import { memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Star, MessageSquare, BookOpen, Bookmark } from 'lucide-react';
+import { Star, MessageSquare, BookOpen, Bookmark, Eye } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 import { useAppLibraryStore } from '@/store/app-library-store';
 import type { SeriesCardData } from '@/types';
@@ -120,7 +120,7 @@ function SeriesCardComponent({ series, variant = 'default', index = 0 }: SeriesC
       className={isFeatured ? 'w-full' : isCompact ? 'w-full' : 'w-full'}
     >
       <Link href={`/series/${series.slug}`} prefetch={false} className="group block">
-        <div className="relative overflow-hidden rounded-2xl border border-transparent transition-all duration-300 group-hover:border-primary/30 group-hover:shadow-xl group-hover:shadow-primary/5 aspect-[3/4]">
+        <div className="relative overflow-hidden rounded-2xl border border-transparent transition-all duration-300 group-hover:border-primary/30 group-hover:shadow-xl group-hover:shadow-primary/5 aspect-[2/3]">
           <Image
             src={series.coverImage}
             alt={series.title}
@@ -188,14 +188,24 @@ function SeriesCardComponent({ series, variant = 'default', index = 0 }: SeriesC
         </div>
 
         <div className="mt-1.5 md:mt-2 px-1">
-          <h3 className={`line-clamp-2 font-semibold text-text-primary transition-colors group-hover:text-primary ${isCompact ? 'text-[11px] md:text-xs' : 'text-[13px] md:text-sm'}`}>
+          <h3 className={`line-clamp-2 min-h-[2lh] font-semibold text-text-primary transition-colors group-hover:text-primary ${isCompact ? 'text-[11px] md:text-xs' : 'text-[13px] md:text-sm'}`}>
             {series.title}
           </h3>
-          {!isCompact && (
-            <p className="mt-0.5 text-xs text-text-muted">
-              Chapter {series.latestChapterNumber ?? series.chapterCount}
-            </p>
-          )}
+          <div className={`mt-0.5 flex items-center gap-2 text-text-muted ${isCompact ? 'text-[11px] md:text-xs' : 'text-xs'}`}>
+            {series.averageRating > 0 && (
+              <span className="flex items-center gap-0.5">
+                <Star className="h-3 w-3 fill-warning text-warning" />
+                {series.averageRating.toFixed(1)}
+              </span>
+            )}
+            <span>Chapter {series.latestChapterNumber ?? series.chapterCount}</span>
+            {series.totalViews > 0 && (
+              <span className="flex items-center gap-0.5">
+                <Eye className="h-3 w-3" />
+                {formatNumber(series.totalViews)}
+              </span>
+            )}
+          </div>
         </div>
       </Link>
     </motion.div>
