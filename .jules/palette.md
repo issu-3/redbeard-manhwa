@@ -1,0 +1,3 @@
+## 2024-05-15 - Dynamic ARIA Labels in Reader Controls
+**Learning:** Icon-only interactive elements in the chapter reader (bookmark toggles, comment triggers) lacked context for screen readers. Using static ARIA labels is insufficient for stateful elements like bookmarks or unread comments.
+**Action:** When adding ARIA labels to stateful or dynamic icon-only buttons, always use template literals to reflect the current state (e.g., `aria-label={isSaved ? "Remove bookmark" : "Add bookmark"}`) to provide accurate screen reader feedback.
