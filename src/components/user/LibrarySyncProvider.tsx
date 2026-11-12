@@ -9,7 +9,11 @@ import { nativeUserId } from '@/components/native/NativeInitializer';
 
 export function LibrarySyncProvider() {
   const { data: session, status } = useSession();
-  const store = useAppLibraryStore();
+  const activeUserId = useAppLibraryStore((state) => state.activeUserId);
+  const hasHydrated = useAppLibraryStore((state) => state.hasHydrated);
+  const hydrateLibrary = useAppLibraryStore((state) => state.hydrateLibrary);
+  const setHasHydrated = useAppLibraryStore((state) => state.setHasHydrated);
+  const syncWithServer = useAppLibraryStore((state) => state.syncWithServer);
 
   // Track if we've already done the initial sync to avoid infinite loops on re-renders
   const hasSyncedRef = useRef(false);
@@ -22,11 +26,11 @@ export function LibrarySyncProvider() {
       console.log(`[LIBRARY_DEBUG] session status = ${status}`);
       console.log(`[LIBRARY_DEBUG] session userId = ${session?.user?.id}`);
       console.log(`[LIBRARY_DEBUG] nativeUserId = ${nativeUserId}`);
-      console.log(`[LIBRARY_DEBUG] store activeUserId = ${store.activeUserId}`);
-      console.log(`[LIBRARY_DEBUG] store hasHydrated = ${store.hasHydrated}`);
+      console.log(`[LIBRARY_DEBUG] activeUserId = ${activeUserId}`);
+      console.log(`[LIBRARY_DEBUG] hasHydrated = ${hasHydrated}`);
 
       // 1. Hydrate the local library into the UI immediately (Offline-First)
-      if (isNative && !store.hasHydrated) {
+      if (isNative && !hasHydrated) {
         try {
           console.log('[LIBRARY_DEBUG] app startup = hydrating locally');
 
@@ -44,15 +48,15 @@ export function LibrarySyncProvider() {
 
           if (currentUserId) {
             console.log('[LIBRARY_DEBUG] local storage read complete, hydrating user:', currentUserId);
-            await store.hydrateLibrary(currentUserId);
+            await hydrateLibrary(currentUserId);
           } else {
             console.log('[LIBRARY_DEBUG] no user found, marking hydration complete');
-            store.setHasHydrated(true);
+            setHasHydrated(true);
           }
           console.log('[LIBRARY_DEBUG] hydration complete, loading=false');
         } catch (error) {
           console.error('[LIBRARY_DEBUG] hydration error:', error);
-          store.setHasHydrated(true);
+          setHasHydrated(true);
         }
       }
 
@@ -60,9 +64,9 @@ export function LibrarySyncProvider() {
       if (status === 'loading') return;
 
       if (status === 'authenticated' && session?.user?.id) {
-        if (store.activeUserId !== session.user.id) {
+        if (activeUserId !== session.user.id) {
           console.log('[LIBRARY_DEBUG] user changed or just logged in, hydrating for:', session.user.id);
-          await store.hydrateLibrary(session.user.id);
+          await hydrateLibrary(session.user.id);
           return;
         }
 
@@ -74,7 +78,7 @@ export function LibrarySyncProvider() {
             if (res.ok) {
               const data = await res.json();
               if (data.series && Array.isArray(data.series)) {
-                await store.syncWithServer(session.user.id, data.series);
+                await syncWithServer(session.user.id, data.series);
               }
             } else {
               console.log(`[LIBRARY_DEBUG] background sync fetch failed with status: ${res.status}`);
@@ -91,7 +95,7 @@ export function LibrarySyncProvider() {
 
     performSync();
 
-  }, [session, status, store]);
+  }, [session, status, activeUserId, hasHydrated, hydrateLibrary, setHasHydrated, syncWithServer]);
 
   return null;
 }
