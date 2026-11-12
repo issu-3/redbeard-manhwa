@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Carousel } from '@/components/shared/Carousel';
-import { Clock, MessageSquare, Star } from 'lucide-react';
+import { Clock, MessageSquare, Star, Eye } from 'lucide-react';
 import { formatNumber, formatRelativeTime } from '@/lib/utils';
 import type { SeriesCardData } from '@/types';
 
@@ -30,7 +30,7 @@ export function RecentlyUpdatedCarousel({ updates }: { updates: RecentUpdate[] }
             prefetch={false}
             className="group block"
           >
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-surface">
+            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface">
               <Image
                 src={update.series.coverImage}
                 alt={update.series.title}
@@ -66,9 +66,24 @@ export function RecentlyUpdatedCarousel({ updates }: { updates: RecentUpdate[] }
             </div>
             
             <div className="mt-1.5 md:mt-2 px-1">
-              <h3 className="line-clamp-2 text-[13px] md:text-sm font-semibold text-text-primary group-hover:text-primary transition-colors" title={update.series.title}>
+              <h3 className="line-clamp-2 min-h-[2lh] text-[13px] md:text-sm font-semibold text-text-primary group-hover:text-primary transition-colors" title={update.series.title}>
                 {update.series.title}
               </h3>
+              <div className="mt-0.5 flex items-center gap-2 text-xs text-text-muted">
+                {update.series.averageRating > 0 && (
+                  <span className="flex items-center gap-0.5">
+                    <Star className="h-3 w-3 fill-warning text-warning" />
+                    {update.series.averageRating.toFixed(1)}
+                  </span>
+                )}
+                <span>Chapter {update.series.latestChapterNumber ?? update.series.chapterCount}</span>
+                {update.series.totalViews > 0 && (
+                  <span className="flex items-center gap-0.5">
+                    <Eye className="h-3 w-3" />
+                    {formatNumber(update.series.totalViews)}
+                  </span>
+                )}
+              </div>
             </div>
           </Link>
         </div>
